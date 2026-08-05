@@ -4,85 +4,120 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>40/Love — App Prototype</title>
-<meta name="description" content="Clickable prototype of 40/Love, the dating and social app for racquet sports players. Love at first serve.">
+<meta name="description" content="Clickable prototype of 40/Love, the dating and social app for racquet sports players. Serve. Rally. Connect.">
 <style>
   :root {
-    --court: #0F3D2E;
-    --ink: #132A21;
-    --chalk: #F6F4EC;
-    --optic: #CFE23F;
-    --rose: #E15A72;
-    --blue: #3E7C9B;
-    /* Derived shades (text-safe versions of the accents, green-biased neutrals) */
-    --rose-deep: #C23B55;
-    --blue-deep: #33677F;
-    --optic-deep: #6B7A1E;
-    --ink-soft: rgba(19, 42, 33, 0.62);
-    --ink-faint: rgba(19, 42, 33, 0.14);
-    --chalk-line: rgba(246, 244, 236, 0.85);
-    --serif: Georgia, 'Times New Roman', serif;
+    --night: #0A0B0D;
+    --panel: #101215;
+    --card: #17191D;
+    --card2: #1F2227;
+    --line: rgba(244, 246, 240, 0.13);
+    --text: #F4F6F0;
+    --dim: rgba(244, 246, 240, 0.62);
+    --optic: #D6F44F;
+    --optic-dim: rgba(214, 244, 79, 0.16);
+    --ok: #3DC96B;
+    --ink: #0A0B0D;
   }
 
   * { box-sizing: border-box; }
-
   html, body { margin: 0; padding: 0; }
 
   body {
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    background: var(--court);
-    color: var(--ink);
+    background: var(--night);
+    color: var(--text);
     min-height: 100vh;
   }
 
-  /* Court-line backdrop behind the phone frame */
+  /* ---------- Stage (desktop marketing composition) ---------- */
   .stage {
     min-height: 100vh;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 20px;
-    padding: 32px 16px;
+    gap: 72px;
+    padding: 40px 24px;
     background:
-      linear-gradient(rgba(246,244,236,0.08), rgba(246,244,236,0.08)) 50% 0 / 2px 100% no-repeat,
-      linear-gradient(rgba(246,244,236,0.08), rgba(246,244,236,0.08)) 0 50% / 100% 2px no-repeat,
-      var(--court);
+      radial-gradient(560px 560px at 88% 4%, rgba(214, 244, 79, 0.16), transparent 65%),
+      radial-gradient(700px 500px at 8% 100%, rgba(214, 244, 79, 0.05), transparent 60%),
+      var(--night);
   }
 
-  .stage-mark {
-    color: var(--chalk);
-    font-size: 28px;
-    font-weight: 900;
+  .promo { max-width: 340px; display: flex; flex-direction: column; gap: 30px; }
+  .promo-head {
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.12;
     letter-spacing: -0.02em;
+    text-wrap: balance;
   }
-  .stage-mark .slash { color: var(--optic); font-size: 1.15em; font-weight: 800; }
-  .stage-mark .love { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--rose); }
-  .stage-tag {
-    color: var(--chalk-line);
-    font-family: var(--serif);
-    font-style: italic;
+  .promo-head .hl { color: var(--optic); }
+  .promo-rule { height: 2px; background: var(--line); }
+  .promo-rows { display: flex; flex-direction: column; gap: 26px; }
+  .promo-row { display: flex; gap: 18px; align-items: flex-start; }
+  .promo-icon {
+    flex: 0 0 auto;
+    width: 58px; height: 58px;
+    border: 2px solid var(--optic);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+  }
+  .promo-icon svg { width: 26px; height: 26px; }
+  .promo-row h3 {
+    margin: 0 0 4px;
     font-size: 15px;
-    margin-top: -12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--optic);
   }
+  .promo-row p { margin: 0; font-size: 14.5px; color: var(--dim); line-height: 1.5; max-width: 22ch; }
+  .promo-foot { display: flex; flex-direction: column; gap: 8px; }
+  .promo-foot .tagline {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  /* Wordmark with tennis-ball "o" */
+  .wordmark {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    color: var(--text);
+  }
+  .wordmark .ball {
+    display: inline-block;
+    width: 0.82em; height: 0.82em;
+    vertical-align: -0.06em;
+    margin: 0 0.015em;
+  }
+  .wordmark .ball svg { width: 100%; height: 100%; display: block; }
 
   .phone {
-    width: 390px;
+    width: 392px;
     max-width: 100%;
-    height: 780px;
-    max-height: 85vh;
-    background: var(--chalk);
-    border-radius: 34px;
-    border: 10px solid #0A2A1F;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+    height: 800px;
+    max-height: 88vh;
+    background: var(--night);
+    border-radius: 38px;
+    border: 10px solid #1B1D21;
+    box-shadow: 0 0 0 2px rgba(214,244,79,0.10), 0 34px 70px rgba(0, 0, 0, 0.65);
     overflow: hidden;
     position: relative;
     display: flex;
     flex-direction: column;
   }
 
+  @media (max-width: 860px) { .promo { display: none; } .stage { gap: 0; } }
   @media (max-width: 520px) {
-    .stage { padding: 0; gap: 0; }
-    .stage-mark, .stage-tag { display: none; }
+    .stage { padding: 0; }
     .phone {
       width: 100%;
       height: 100vh;
@@ -94,640 +129,409 @@
     }
   }
 
-  /* ---------- Screens ---------- */
+  /* ---------- Base UI ---------- */
   .screen { display: none; flex-direction: column; flex: 1; min-height: 0; }
   .screen.active { display: flex; }
-
   .scroll { flex: 1; overflow-y: auto; min-height: 0; padding: 16px 18px 24px; }
 
   h1, h2, h3 { margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
-
   .eyebrow {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--ink-soft);
+    letter-spacing: 0.2em;
+    color: var(--dim);
   }
 
-  button {
-    font: inherit;
-    cursor: pointer;
-    border: 0;
-    border-radius: 12px;
-    -webkit-tap-highlight-color: transparent;
-  }
-  button:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
-    outline: 3px solid var(--blue);
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 12px; -webkit-tap-highlight-color: transparent; color: var(--text); background: none; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 3px solid var(--optic);
     outline-offset: 2px;
   }
 
-  .btn {
-    display: block;
-    width: 100%;
-    padding: 15px 18px;
-    font-size: 16px;
-    font-weight: 700;
-    border-radius: 12px;
-  }
-  .btn-primary { background: var(--court); color: var(--chalk); }
-  .btn-primary:hover { background: #14503C; }
-  .btn-ghost {
-    background: transparent;
-    color: var(--ink);
-    border: 2px solid var(--ink-faint);
-  }
-  .btn-ghost:hover { border-color: var(--ink); }
+  .btn { display: block; width: 100%; padding: 15px 18px; font-size: 16px; font-weight: 800; border-radius: 14px; }
+  .btn-primary { background: var(--optic); color: var(--ink); }
+  .btn-primary:hover { filter: brightness(1.07); }
+  .btn-ghost { background: transparent; color: var(--text); border: 2px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--text); }
 
-  input[type="text"], input[type="number"], input[type="email"], textarea {
+  input[type="text"], input[type="number"], textarea {
     width: 100%;
     padding: 13px 14px;
     font: inherit;
     font-size: 16px;
-    color: var(--ink);
-    background: #FFFDF7;
-    border: 2px solid var(--ink-faint);
+    color: var(--text);
+    background: var(--card);
+    border: 2px solid var(--line);
     border-radius: 12px;
   }
-  input:focus, textarea:focus { border-color: var(--court); outline: none; }
-  label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 6px; }
+  input::placeholder, textarea::placeholder { color: rgba(244,246,240,0.35); }
+  input:focus, textarea:focus { border-color: var(--optic); outline: none; }
+  label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 6px; color: var(--dim); }
 
   /* ---------- Welcome ---------- */
-  #screen-welcome {
-    background: var(--court);
-    color: var(--chalk);
-    justify-content: space-between;
-    padding: 48px 28px 36px;
+  #screen-welcome { justify-content: space-between; padding: 54px 28px 36px;
+    background: radial-gradient(420px 420px at 100% 0%, rgba(214,244,79,0.14), transparent 65%), var(--night); }
+  .welcome-top { display: flex; flex-direction: column; gap: 14px; }
+  .welcome-top .tagline {
+    font-size: 12px; font-weight: 800; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--optic);
   }
-  .welcome-top { display: flex; flex-direction: column; gap: 10px; }
-  .welcome-mark { font-size: 52px; font-weight: 900; letter-spacing: -0.03em; line-height: 1; }
-  .welcome-mark .slash { color: var(--optic); font-weight: 800; }
-  .welcome-mark .love { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--rose); }
-  .welcome-tag { font-family: var(--serif); font-style: italic; font-size: 20px; color: var(--chalk-line); }
+  .welcome-mark { font-size: 54px; }
   .welcome-line {
-    margin-top: 18px;
-    padding-top: 18px;
-    border-top: 2px solid rgba(246,244,236,0.25);
-    font-size: 15px;
-    line-height: 1.6;
-    color: var(--chalk-line);
-    max-width: 30ch;
+    margin: 10px 0 0; padding-top: 18px; border-top: 2px solid var(--line);
+    font-size: 15px; line-height: 1.6; color: var(--dim); max-width: 30ch;
   }
   .welcome-score {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 22px;
-    padding: 7px 12px;
-    border: 2px solid rgba(246,244,236,0.35);
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.06em;
-    align-self: flex-start;
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 20px;
+    padding: 7px 14px; border: 2px solid var(--line); border-radius: 999px;
+    font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em; align-self: flex-start; color: var(--optic);
   }
   .welcome-actions { display: flex; flex-direction: column; gap: 10px; }
-  #screen-welcome .btn-primary { background: var(--optic); color: var(--ink); }
-  #screen-welcome .btn-primary:hover { background: #DCEE55; }
-  #screen-welcome .btn-ghost { color: var(--chalk); border-color: rgba(246,244,236,0.4); }
-  #screen-welcome .btn-ghost:hover { border-color: var(--chalk); }
 
   /* ---------- Onboarding ---------- */
-  .ob-head { padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+  .ob-head { padding: 20px 18px 0; display: flex; flex-direction: column; gap: 14px; }
   .dots { display: flex; gap: 6px; }
-  .dots span {
-    width: 26px; height: 5px; border-radius: 3px;
-    background: var(--ink-faint);
-  }
-  .dots span.on { background: var(--court); }
+  .dots span { width: 26px; height: 5px; border-radius: 3px; background: var(--line); }
+  .dots span.on { background: var(--optic); }
   .ob-body { display: flex; flex-direction: column; gap: 16px; padding-top: 14px; }
-  .ob-foot { padding: 14px 18px 22px; display: flex; gap: 10px; }
+  .ob-foot { padding: 14px 18px 24px; display: flex; gap: 10px; }
   .ob-foot .btn-back { flex: 0 0 auto; width: auto; padding: 15px 18px; }
-  .hint { font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin: 0; }
+  .hint { font-size: 13px; color: var(--dim); line-height: 1.5; margin: 0; }
 
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
-    padding: 10px 15px;
-    border: 2px solid var(--ink-faint);
-    border-radius: 999px;
-    background: #FFFDF7;
-    color: var(--ink);
-    font-size: 14px;
-    font-weight: 600;
+    padding: 10px 15px; border: 2px solid var(--line); border-radius: 999px;
+    background: var(--card); color: var(--text); font-size: 14px; font-weight: 600;
   }
-  .chip[aria-pressed="true"] { background: var(--court); border-color: var(--court); color: var(--chalk); }
+  .chip[aria-pressed="true"] { background: var(--optic); border-color: var(--optic); color: var(--ink); }
 
   .mode-rows { display: flex; flex-direction: column; gap: 10px; }
   .mode-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    text-align: left;
-    padding: 14px;
-    background: #FFFDF7;
-    border: 2px solid var(--ink-faint);
-    border-radius: 14px;
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    padding: 14px; background: var(--card); border: 2px solid var(--line); border-radius: 14px;
   }
-  .mode-row[aria-pressed="true"] { border-color: var(--ink); }
-  .mode-row[aria-pressed="true"].m-date { border-color: var(--rose-deep); background: #FBEFF1; }
-  .mode-row[aria-pressed="true"].m-play { border-color: var(--optic-deep); background: #F6F8E3; }
-  .mode-row[aria-pressed="true"].m-friends { border-color: var(--blue-deep); background: #EBF2F5; }
-  .mode-emoji { font-size: 22px; }
+  .mode-row[aria-pressed="true"] { border-color: var(--optic); background: var(--optic-dim); }
+  .mode-row svg { width: 22px; height: 22px; flex: 0 0 auto; }
   .mode-name { font-weight: 800; font-size: 15px; }
-  .mode-desc { font-size: 13px; color: var(--ink-soft); }
-  .mode-check { margin-left: auto; font-weight: 800; visibility: hidden; }
+  .mode-desc { font-size: 13px; color: var(--dim); display: block; }
+  .mode-check { margin-left: auto; font-weight: 800; color: var(--optic); visibility: hidden; }
   .mode-row[aria-pressed="true"] .mode-check { visibility: visible; }
 
-  /* ---------- App bar + tab bar ---------- */
+  /* ---------- App bar ---------- */
   .appbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px 10px;
-    border-bottom: 2px solid var(--ink-faint);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 18px 10px;
   }
-  .appbar-mark { font-size: 19px; font-weight: 900; letter-spacing: -0.02em; }
-  .appbar-mark .slash { color: var(--optic-deep); }
-  .appbar-mark .love { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--rose-deep); }
-  .appbar-title { font-size: 17px; font-weight: 800; }
-  .icon-btn {
-    background: transparent;
-    padding: 6px;
-    border-radius: 10px;
-    color: var(--ink);
-    display: inline-flex;
+  .appbar .wordmark { font-size: 24px; }
+  .appbar-title { font-size: 18px; font-weight: 800; }
+  .icon-btn { padding: 7px; border-radius: 10px; display: inline-flex; color: var(--text); position: relative; }
+  .icon-btn:hover { background: var(--card2); }
+  .icon-btn svg { width: 22px; height: 22px; }
+  .bell-dot {
+    position: absolute; top: 4px; right: 4px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--optic); border: 2px solid var(--night);
   }
-  .icon-btn:hover { background: var(--ink-faint); }
 
+  /* ---------- Tab bar ---------- */
   .tabbar {
-    display: flex;
-    border-top: 2px solid var(--ink-faint);
-    background: #FFFDF7;
-    padding: 6px 4px calc(8px + env(safe-area-inset-bottom));
+    display: flex; border-top: 2px solid var(--line); background: var(--panel);
+    padding: 8px 4px calc(10px + env(safe-area-inset-bottom));
   }
   .tab {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    padding: 7px 2px;
-    background: transparent;
-    color: var(--ink-soft);
-    font-size: 11px;
-    font-weight: 700;
-    border-radius: 10px;
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 6px 2px; color: var(--dim); font-size: 10.5px; font-weight: 700; border-radius: 10px;
   }
   .tab svg { width: 22px; height: 22px; }
-  .tab.on { color: var(--court); }
+  .tab.on { color: var(--optic); }
 
-  /* ---------- Discover ---------- */
-  .mode-switch {
-    display: flex;
-    gap: 6px;
-    margin: 14px 18px 4px;
-    padding: 5px;
-    background: #ECE9DE;
-    border-radius: 999px;
-  }
-  .mode-seg {
-    flex: 1;
-    padding: 9px 6px;
-    border-radius: 999px;
-    background: transparent;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--ink-soft);
-  }
-  .mode-seg.on { color: var(--chalk); }
-  .mode-seg.on[data-mode="date"] { background: var(--rose-deep); }
-  .mode-seg.on[data-mode="play"] { background: var(--optic); color: var(--ink); }
-  .mode-seg.on[data-mode="friends"] { background: var(--blue-deep); }
+  /* ---------- Home ---------- */
+  .greet { padding: 6px 18px 0; }
+  .greet h1 { font-size: 24px; font-weight: 800; }
+  .greet p { margin: 3px 0 0; font-size: 14px; color: var(--dim); }
 
-  .deck-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 12px 18px 14px; }
+  .mode-pills { display: flex; gap: 8px; padding: 14px 18px 4px; overflow-x: auto; scrollbar-width: none; }
+  .mode-pills::-webkit-scrollbar { display: none; }
+  .mode-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 14px; border: 2px solid var(--line); border-radius: 999px;
+    background: var(--card); font-size: 13px; font-weight: 700; color: var(--text);
+    white-space: nowrap;
+  }
+  .mode-pill svg { width: 16px; height: 16px; }
+  .mode-pill.on { background: var(--optic); border-color: var(--optic); color: var(--ink); }
+
+  .home-scroll { flex: 1; overflow-y: auto; min-height: 0; padding: 10px 18px 16px; display: flex; flex-direction: column; gap: 14px; }
+
+  .topmatch {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 18px;
+    padding: 18px 16px;
+  }
+  .topmatch-mid { flex: 1; }
+  .topmatch h2 { font-size: 19px; font-weight: 800; }
+  .topmatch p { margin: 5px 0 12px; font-size: 13.5px; color: var(--dim); line-height: 1.45; max-width: 20ch; }
+  .topmatch-btn {
+    display: inline-block; background: var(--optic); color: var(--ink);
+    font-size: 13.5px; font-weight: 800; padding: 10px 16px; border-radius: 10px;
+  }
+  .topmatch-art { flex: 0 0 auto; width: 84px; height: 84px; }
+  .topmatch-art svg { width: 100%; height: 100%; }
+
+  /* Deck card */
+  .deck { position: relative; }
   .card {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    background: #FFFDF7;
-    border: 2px solid var(--ink-faint);
-    border-radius: 18px;
-    overflow: hidden;
-    touch-action: pan-y;
     position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 2px solid var(--line);
+    background: var(--card);
+    touch-action: pan-y;
   }
   .card.dragging { transition: none; }
-  .card.springing { transition: transform 0.25s ease; }
-  .stamp {
-    position: absolute;
-    top: 22px;
-    padding: 6px 14px;
-    border: 3px solid;
-    border-radius: 10px;
-    font-size: 20px;
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    transform: rotate(-12deg);
-    opacity: 0;
-    pointer-events: none;
-  }
-  .stamp-like { left: 18px; border-color: var(--court); color: var(--court); }
-  .stamp-pass { right: 18px; border-color: var(--rose-deep); color: var(--rose-deep); transform: rotate(12deg); }
-
+  .card.springing { transition: transform 0.25s ease, opacity 0.25s ease; }
   .card-photo {
-    flex: 0 0 46%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--chalk);
-    font-size: 56px;
-    font-weight: 900;
+    height: 330px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 84px; font-weight: 900; color: rgba(10,11,13,0.55);
     letter-spacing: 0.02em;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.25);
   }
-  .card-body { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; }
-  .card-name { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
-  .card-name .age { font-weight: 600; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-  .card-meta {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: var(--ink-soft);
-    font-variant-numeric: tabular-nums;
+  .badge-new {
+    position: absolute; top: 14px; left: 14px;
+    background: var(--optic); color: var(--ink);
+    font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+    padding: 6px 11px; border-radius: 999px;
   }
-  .tagrow { display: flex; flex-wrap: wrap; gap: 6px; }
-  .tag {
-    font-size: 12px;
-    font-weight: 700;
-    padding: 5px 10px;
-    border: 2px solid var(--ink-faint);
-    border-radius: 999px;
-    font-variant-numeric: tabular-nums;
-    background: var(--chalk);
+  .bookmark {
+    position: absolute; top: 10px; right: 10px;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(10, 11, 13, 0.55);
+    display: inline-flex; align-items: center; justify-content: center;
   }
-  .tag-sport { border-color: var(--court); color: var(--court); }
-  .card-bio { font-size: 14px; line-height: 1.55; margin: 0; }
-  .card-avail { font-size: 13px; color: var(--ink-soft); }
+  .bookmark svg { width: 19px; height: 19px; }
+  .bookmark.saved { color: var(--optic); }
+  .card-like {
+    position: absolute; right: 14px; top: 296px;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--optic); color: var(--ink);
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+  }
+  .card-like svg { width: 26px; height: 26px; }
+  .card-info {
+    padding: 14px 16px 16px;
+    background: linear-gradient(180deg, rgba(23,25,29,0.2), var(--card) 30%);
+    display: flex; flex-direction: column; gap: 7px;
+  }
+  .card-name { font-size: 23px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  .card-name .age { font-weight: 600; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .verified {
+    display: inline-flex; width: 19px; height: 19px; border-radius: 50%;
+    background: var(--ok); color: var(--ink); align-items: center; justify-content: center;
+  }
+  .verified svg { width: 11px; height: 11px; }
+  .card-line { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .card-line svg { width: 15px; height: 15px; flex: 0 0 auto; color: var(--optic); }
+  .card-bio { font-size: 13.5px; line-height: 1.5; margin: 3px 0 0; color: var(--dim); }
+  .stamp {
+    position: absolute; top: 24px; padding: 6px 14px;
+    border: 3px solid; border-radius: 10px;
+    font-size: 20px; font-weight: 900; letter-spacing: 0.06em;
+    transform: rotate(-12deg); opacity: 0; pointer-events: none;
+    background: rgba(10,11,13,0.5); z-index: 3;
+  }
+  .stamp-like { left: 16px; border-color: var(--optic); color: var(--optic); }
+  .stamp-pass { right: 16px; border-color: #E15A72; color: #E15A72; transform: rotate(12deg); }
 
-  .deck-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
-    padding-top: 14px;
-  }
+  .deck-actions { display: flex; align-items: center; justify-content: center; gap: 16px; padding-top: 4px; }
   .act {
-    width: 58px; height: 58px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    background: #FFFDF7;
-    border: 2px solid var(--ink-faint);
-    box-shadow: 0 3px 10px rgba(19,42,33,0.10);
+    width: 54px; height: 54px; border-radius: 50%;
+    background: var(--card2); border: 2px solid var(--line);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--text);
   }
-  .act:hover { transform: translateY(-2px); }
-  .act-pass { color: var(--ink-soft); font-weight: 800; }
-  .act-propose {
-    width: 68px; height: 68px;
-    background: var(--court);
-    border-color: var(--court);
-    font-size: 28px;
-  }
-  .act-like.c-date { border-color: var(--rose-deep); }
-  .act-like.c-play { border-color: var(--optic-deep); }
-  .act-like.c-friends { border-color: var(--blue-deep); }
-  .act-label {
-    text-align: center;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--ink-soft);
-    padding-top: 8px;
-  }
-
+  .act svg { width: 22px; height: 22px; }
+  .act:hover { transform: translateY(-2px); border-color: var(--dim); }
+  .act-like { width: 66px; height: 66px; background: var(--optic); border-color: var(--optic); color: var(--ink); }
+  .act-like svg { width: 30px; height: 30px; }
   .deck-empty {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    text-align: center;
-    padding: 24px;
-    border: 2px dashed var(--ink-faint);
-    border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; text-align: center; padding: 44px 24px;
+    border: 2px dashed var(--line); border-radius: 20px;
   }
   .deck-empty .big { font-size: 40px; }
 
-  /* ---------- Matches / chat ---------- */
-  .thread {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    text-align: left;
-    padding: 12px 10px;
-    background: transparent;
-    border-radius: 14px;
-    border-bottom: 2px solid var(--ink-faint);
+  /* ---------- Matches grid ---------- */
+  .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .match-cell {
+    background: var(--card); border: 2px solid var(--line); border-radius: 16px;
+    overflow: hidden; text-align: left; padding: 0; display: flex; flex-direction: column;
   }
-  .thread:hover { background: rgba(19,42,33,0.04); }
+  .match-photo {
+    height: 120px; display: flex; align-items: center; justify-content: center;
+    font-size: 38px; font-weight: 900; color: rgba(10,11,13,0.55);
+  }
+  .match-meta { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; }
+  .match-meta .n { font-weight: 800; font-size: 15px; }
+  .match-meta .s { font-size: 12px; color: var(--dim); }
+  .match-meta .go { margin-top: 7px; font-size: 12.5px; font-weight: 800; color: var(--optic); }
+
+  /* ---------- Chat ---------- */
+  .thread {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    padding: 12px 10px; border-radius: 14px; border-bottom: 2px solid var(--line);
+  }
+  .thread:hover { background: var(--card); }
   .ava {
-    flex: 0 0 auto;
-    width: 52px; height: 52px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--chalk);
-    font-weight: 800;
-    font-size: 18px;
+    flex: 0 0 auto; width: 52px; height: 52px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: rgba(10,11,13,0.6); font-weight: 900; font-size: 18px;
   }
   .thread-mid { flex: 1; min-width: 0; }
   .thread-name { font-weight: 800; font-size: 15px; }
-  .thread-prev {
-    font-size: 13px;
-    color: var(--ink-soft);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 2px;
-  }
+  .thread-prev { font-size: 13px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
   .thread-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
   .serve-badge {
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--optic-deep);
-    border: 2px solid var(--optic-deep);
-    padding: 3px 7px;
-    border-radius: 999px;
+    font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--optic); border: 2px solid var(--optic); padding: 3px 7px; border-radius: 999px;
   }
-  .unread-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rose-deep); }
+  .unread-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--optic); }
 
-  .chat-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    border-bottom: 2px solid var(--ink-faint);
-  }
+  .chat-head { display: flex; align-items: center; gap: 10px; padding: 14px; border-bottom: 2px solid var(--line); }
   .chat-head .ava { width: 40px; height: 40px; font-size: 15px; }
   .chat-head-name { font-weight: 800; }
-  .chat-head-sub { font-size: 12px; color: var(--ink-soft); }
+  .chat-head-sub { font-size: 12px; color: var(--dim); }
   .chat-log { flex: 1; overflow-y: auto; min-height: 0; padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; }
   .msg { max-width: 78%; display: flex; flex-direction: column; gap: 3px; }
-  .msg .bubble {
-    padding: 10px 13px;
-    border-radius: 16px;
-    font-size: 14px;
-    line-height: 1.45;
-  }
-  .msg .when { font-size: 11px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .msg .bubble { padding: 10px 13px; border-radius: 16px; font-size: 14px; line-height: 1.45; }
+  .msg .when { font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
   .msg.them { align-self: flex-start; }
-  .msg.them .bubble { background: #FFFDF7; border: 2px solid var(--ink-faint); border-bottom-left-radius: 6px; }
+  .msg.them .bubble { background: var(--card2); border-bottom-left-radius: 6px; }
   .msg.me { align-self: flex-end; align-items: flex-end; }
-  .msg.me .bubble { background: var(--court); color: var(--chalk); border-bottom-right-radius: 6px; }
-  .courtcard {
-    border: 2px solid var(--court);
-    border-radius: 14px;
-    overflow: hidden;
-    min-width: 200px;
-  }
-  .msg.me .courtcard { border-color: var(--optic); }
+  .msg.me .bubble { background: var(--optic); color: var(--ink); border-bottom-right-radius: 6px; font-weight: 600; }
+  .courtcard { border: 2px solid var(--optic); border-radius: 14px; overflow: hidden; min-width: 200px; }
   .courtcard-top {
-    background: var(--court);
-    color: var(--chalk);
-    padding: 7px 12px;
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    background: var(--optic); color: var(--ink); padding: 7px 12px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
   }
-  .courtcard-body { padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 3px; background: #FFFDF7; color: var(--ink); }
+  .courtcard-body { padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 3px; background: var(--card); color: var(--text); }
   .courtcard-body strong { font-size: 14px; }
-  .courtcard-body span { font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+  .courtcard-body span { font-variant-numeric: tabular-nums; color: var(--dim); }
   .chat-tools { display: flex; gap: 8px; padding: 8px 14px 0; }
   .tool-chip {
-    font-size: 12px;
-    font-weight: 700;
-    padding: 7px 12px;
-    border: 2px solid var(--court);
-    color: var(--court);
-    border-radius: 999px;
-    background: transparent;
+    font-size: 12px; font-weight: 800; padding: 8px 13px;
+    border: 2px solid var(--optic); color: var(--optic); border-radius: 999px;
   }
-  .tool-chip:hover { background: var(--court); color: var(--chalk); }
+  .tool-chip:hover { background: var(--optic); color: var(--ink); }
   .chat-input { display: flex; gap: 8px; padding: 10px 14px calc(14px + env(safe-area-inset-bottom)); }
   .chat-input input { flex: 1; border-radius: 999px; }
-  .chat-send {
-    flex: 0 0 auto;
-    padding: 0 20px;
-    border-radius: 999px;
-    background: var(--court);
-    color: var(--chalk);
-    font-weight: 800;
-  }
+  .chat-send { flex: 0 0 auto; padding: 0 20px; border-radius: 999px; background: var(--optic); color: var(--ink); font-weight: 800; }
 
   /* ---------- Events ---------- */
   .week-head {
-    font-size: 12px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--ink-soft);
-    margin: 18px 0 8px;
+    font-size: 12px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--dim); margin: 18px 0 8px;
   }
   .week-head:first-child { margin-top: 4px; }
   .event {
-    display: flex;
-    gap: 12px;
-    padding: 13px;
-    background: #FFFDF7;
-    border: 2px solid var(--ink-faint);
-    border-radius: 16px;
-    margin-bottom: 10px;
+    display: flex; gap: 12px; padding: 13px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 16px; margin-bottom: 10px;
   }
   .event-date {
-    flex: 0 0 auto;
-    width: 52px;
-    border: 2px solid var(--court);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 4px;
-    font-variant-numeric: tabular-nums;
+    flex: 0 0 auto; width: 52px; border: 2px solid var(--optic); border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8px 4px; font-variant-numeric: tabular-nums;
   }
-  .event-date .dow { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
-  .event-date .dom { font-size: 20px; font-weight: 900; }
+  .event-date .dow { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dim); }
+  .event-date .dom { font-size: 20px; font-weight: 900; color: var(--optic); }
   .event-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-  .event-title { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
-  .event-meta { font-size: 12.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .event-title { font-size: 15px; font-weight: 800; }
+  .event-meta { font-size: 12.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
   .event-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-  .event-tags .tag { font-size: 11px; padding: 3px 8px; }
-  .event-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 8px; }
-  .spots { font-size: 11px; font-weight: 700; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .join-btn {
-    font-size: 13px;
-    font-weight: 800;
-    padding: 8px 14px;
-    border-radius: 999px;
-    background: var(--court);
-    color: var(--chalk);
-    white-space: nowrap;
+  .tag {
+    font-size: 11px; font-weight: 700; padding: 4px 9px;
+    border: 2px solid var(--line); border-radius: 999px;
+    font-variant-numeric: tabular-nums; color: var(--dim);
   }
-  .join-btn.going { background: transparent; color: var(--court); border: 2px solid var(--court); }
+  .tag-sport { border-color: var(--optic); color: var(--optic); }
+  .event-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 8px; }
+  .spots { font-size: 11px; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .join-btn { font-size: 13px; font-weight: 800; padding: 8px 14px; border-radius: 999px; background: var(--optic); color: var(--ink); white-space: nowrap; }
+  .join-btn.going { background: transparent; color: var(--optic); border: 2px solid var(--optic); }
 
   /* ---------- Profile & settings ---------- */
   .profile-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    text-align: center;
-    padding: 22px 16px 18px;
-    background: #FFFDF7;
-    border: 2px solid var(--ink-faint);
-    border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+    padding: 22px 16px 18px; background: var(--card); border: 2px solid var(--line); border-radius: 18px;
   }
   .profile-card .ava { width: 84px; height: 84px; font-size: 30px; }
-  .stats {
-    display: flex;
-    gap: 8px;
-    margin-top: 14px;
-  }
-  .stat {
-    flex: 1;
-    border: 2px solid var(--ink-faint);
-    border-radius: 14px;
-    padding: 12px 8px;
-    text-align: center;
-    background: #FFFDF7;
-  }
-  .stat .num { font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; }
-  .stat .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-soft); margin-top: 2px; }
+  .tagrow { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .tagrow .tag { font-size: 12px; padding: 5px 10px; }
+  .stats { display: flex; gap: 8px; margin-top: 14px; }
+  .stat { flex: 1; border: 2px solid var(--line); border-radius: 14px; padding: 12px 8px; text-align: center; background: var(--card); }
+  .stat .num { font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--optic); }
+  .stat .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--dim); margin-top: 2px; }
   .bio-edit { margin-top: 14px; }
   .bio-edit textarea { min-height: 74px; resize: vertical; }
 
   .set-group { margin-bottom: 20px; }
-  .set-group h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-soft); margin-bottom: 8px; }
+  .set-group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--dim); margin-bottom: 8px; }
   .set-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 13px 14px;
-    background: #FFFDF7;
-    border: 2px solid var(--ink-faint);
-    border-radius: 14px;
-    margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 13px 14px; background: var(--card); border: 2px solid var(--line);
+    border-radius: 14px; margin-bottom: 8px;
   }
   .set-row .lab { font-size: 14px; font-weight: 700; }
-  .set-row .sub { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
-  .switch {
-    flex: 0 0 auto;
-    width: 50px; height: 30px;
-    border-radius: 999px;
-    background: var(--ink-faint);
-    position: relative;
-  }
+  .set-row .sub { font-size: 12px; color: var(--dim); margin-top: 2px; }
+  .switch { flex: 0 0 auto; width: 50px; height: 30px; border-radius: 999px; background: var(--card2); border: 2px solid var(--line); position: relative; }
   .switch::after {
-    content: "";
-    position: absolute;
-    top: 3px; left: 3px;
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    background: #FFFDF7;
-    transition: transform 0.15s ease;
+    content: ""; position: absolute; top: 2px; left: 2px;
+    width: 22px; height: 22px; border-radius: 50%; background: var(--dim);
+    transition: transform 0.15s ease, background 0.15s ease;
   }
-  .switch[aria-checked="true"] { background: var(--court); }
-  .switch[aria-checked="true"]::after { transform: translateX(20px); }
-  input[type="range"] { width: 100%; accent-color: var(--court); }
-  .range-val { font-variant-numeric: tabular-nums; font-weight: 800; }
+  .switch[aria-checked="true"] { background: var(--optic-dim); border-color: var(--optic); }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); background: var(--optic); }
+  input[type="range"] { width: 100%; accent-color: var(--optic); }
+  .range-val { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--optic); }
   .age-inputs { display: flex; align-items: center; gap: 8px; }
   .age-inputs input { width: 74px; text-align: center; font-variant-numeric: tabular-nums; }
-  .danger { color: var(--rose-deep); border: 2px solid var(--rose-deep); background: transparent; }
-  .danger:hover { background: var(--rose-deep); color: var(--chalk); }
+  .danger { display: block; width: 100%; padding: 14px; font-weight: 800; color: #E15A72; border: 2px solid #E15A72; border-radius: 14px; background: transparent; }
+  .danger:hover { background: #E15A72; color: var(--text); }
 
-  /* ---------- Sheet, modal, toast ---------- */
+  /* ---------- Overlays ---------- */
   .overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(10, 30, 22, 0.55);
-    display: none;
-    align-items: flex-end;
-    z-index: 30;
+    position: absolute; inset: 0; background: rgba(4, 5, 6, 0.7);
+    display: none; align-items: center; justify-content: center; padding: 24px; z-index: 30;
   }
   .overlay.open { display: flex; }
-  .overlay.center { align-items: center; justify-content: center; padding: 24px; }
-  .sheet {
-    width: 100%;
-    background: var(--chalk);
-    border-radius: 22px 22px 0 0;
-    padding: 20px 18px calc(22px + env(safe-area-inset-bottom));
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .sheet h2 { font-size: 19px; }
-  .sheet .sub { font-size: 13px; color: var(--ink-soft); margin: -8px 0 0; }
-  .pick-group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-soft); margin-bottom: 7px; }
-
   .match-modal {
-    background: var(--court);
-    color: var(--chalk);
-    border: 3px solid var(--optic);
-    border-radius: 22px;
-    padding: 28px 22px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    max-width: 320px;
-    width: 100%;
+    background: var(--panel); border: 3px solid var(--optic); border-radius: 22px;
+    padding: 28px 22px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    max-width: 320px; width: 100%;
   }
   .match-modal .score {
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    font-variant-numeric: tabular-nums;
-    color: var(--optic);
+    font-size: 13px; font-weight: 800; letter-spacing: 0.14em;
+    font-variant-numeric: tabular-nums; color: var(--optic);
   }
-  .match-modal h2 { font-size: 28px; }
-  .match-modal h2 em { font-family: var(--serif); color: var(--rose); }
+  .match-modal h2 { font-size: 27px; }
+  .match-modal h2 .hl { color: var(--optic); }
   .match-avas { display: flex; }
-  .match-avas .ava { width: 68px; height: 68px; font-size: 24px; border: 3px solid var(--chalk); }
+  .match-avas .ava { width: 68px; height: 68px; font-size: 24px; border: 3px solid var(--optic); }
   .match-avas .ava + .ava { margin-left: -14px; }
-  .match-modal p { margin: 0; font-size: 14px; color: var(--chalk-line); line-height: 1.5; }
-  .match-modal .btn-primary { background: var(--optic); color: var(--ink); }
-  .match-modal .btn-ghost { color: var(--chalk); border-color: rgba(246,244,236,0.4); }
+  .match-modal p { margin: 0; font-size: 14px; color: var(--dim); line-height: 1.5; }
 
   .toast {
-    position: absolute;
-    left: 50%;
-    bottom: 92px;
+    position: absolute; left: 50%; bottom: 96px;
     transform: translateX(-50%) translateY(8px);
-    background: var(--ink);
-    color: var(--chalk);
-    font-size: 13.5px;
-    font-weight: 600;
-    padding: 11px 18px;
-    border-radius: 999px;
-    opacity: 0;
-    pointer-events: none;
+    background: var(--card2); border: 2px solid var(--optic);
+    color: var(--text); font-size: 13.5px; font-weight: 600;
+    padding: 11px 18px; border-radius: 999px;
+    opacity: 0; pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
-    z-index: 40;
-    max-width: 85%;
-    text-align: center;
+    z-index: 40; max-width: 85%; text-align: center;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -738,18 +542,16 @@
 </head>
 <body>
 <div class="stage">
-  <div class="stage-mark" aria-hidden="true">40<span class="slash">/</span><span class="love">Love</span></div>
-  <p class="stage-tag" aria-hidden="true">Love at first serve. — clickable prototype</p>
 
   <div class="phone" id="phone">
 
     <!-- WELCOME -->
     <section class="screen active" id="screen-welcome" aria-label="Welcome">
       <div class="welcome-top">
-        <div class="welcome-mark">40<span class="slash">/</span><span class="love">Love</span></div>
-        <div class="welcome-tag">Love at first serve.</div>
-        <p class="welcome-line">Meet active singles through tennis, pickleball, padel and more — the first date is a game, not dinner.</p>
-        <div class="welcome-score">40 – LOVE</div>
+        <span class="tagline">Serve. Rally. Connect.</span>
+        <div class="wordmark welcome-mark" id="mark-welcome"></div>
+        <p class="welcome-line">Meet Indy's racquet-sports people — the first date is a game, not dinner.</p>
+        <span class="welcome-score">40 – LOVE</span>
       </div>
       <div class="welcome-actions">
         <button class="btn btn-primary" id="btn-create">Create profile</button>
@@ -757,7 +559,7 @@
       </div>
     </section>
 
-    <!-- ONBOARDING 1: name + age -->
+    <!-- ONBOARDING 1 -->
     <section class="screen" id="screen-ob1" aria-label="Your name and age">
       <div class="ob-head">
         <div class="dots"><span class="on"></span><span></span><span></span><span></span></div>
@@ -766,7 +568,7 @@
       <div class="scroll ob-body">
         <div>
           <label for="ob-name">First name</label>
-          <input type="text" id="ob-name" autocomplete="given-name" placeholder="e.g. Alex">
+          <input type="text" id="ob-name" autocomplete="given-name" placeholder="e.g. Aaron">
         </div>
         <div>
           <label for="ob-age">Age</label>
@@ -779,7 +581,7 @@
       </div>
     </section>
 
-    <!-- ONBOARDING 2: sports -->
+    <!-- ONBOARDING 2 -->
     <section class="screen" id="screen-ob2" aria-label="Pick your sports">
       <div class="ob-head">
         <div class="dots"><span class="on"></span><span class="on"></span><span></span><span></span></div>
@@ -801,7 +603,7 @@
       </div>
     </section>
 
-    <!-- ONBOARDING 3: skill -->
+    <!-- ONBOARDING 3 -->
     <section class="screen" id="screen-ob3" aria-label="Your skill level">
       <div class="ob-head">
         <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
@@ -815,7 +617,7 @@
           <button class="chip" aria-pressed="false" data-skill="Competitive">Competitive</button>
         </div>
         <div>
-          <label for="ob-rating">Official rating <span style="font-weight:400; color:var(--ink-soft)">(optional)</span></label>
+          <label for="ob-rating">Official rating <span style="font-weight:400">(optional)</span></label>
           <input type="text" id="ob-rating" placeholder="e.g. NTRP 3.5 or DUPR 4.0">
         </div>
         <p class="hint">Honest levels make better matches — nobody enjoys a 6–0, 6–0 first date.</p>
@@ -826,7 +628,7 @@
       </div>
     </section>
 
-    <!-- ONBOARDING 4: modes -->
+    <!-- ONBOARDING 4 -->
     <section class="screen" id="screen-ob4" aria-label="Choose your modes">
       <div class="ob-head">
         <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
@@ -834,32 +636,23 @@
       </div>
       <div class="scroll ob-body">
         <div class="mode-rows" id="ob-modes" role="group" aria-label="Modes">
-          <button class="mode-row m-date" aria-pressed="true" data-mode="date">
-            <span class="mode-emoji" aria-hidden="true">❤️</span>
-            <span>
-              <span class="mode-name">Date</span>
-              <span class="mode-desc" style="display:block">Find romantic matches</span>
-            </span>
+          <button class="mode-row" aria-pressed="true" data-mode="date">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
+            <span><span class="mode-name">Date Mode</span><span class="mode-desc">Find your perfect match</span></span>
             <span class="mode-check" aria-hidden="true">✓</span>
           </button>
-          <button class="mode-row m-play" aria-pressed="false" data-mode="play">
-            <span class="mode-emoji" aria-hidden="true">🎾</span>
-            <span>
-              <span class="mode-name">Play</span>
-              <span class="mode-desc" style="display:block">Find hitting &amp; practice partners</span>
-            </span>
+          <button class="mode-row" aria-pressed="false" data-mode="play">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>
+            <span><span class="mode-name">Play Mode</span><span class="mode-desc">Find players for your next match</span></span>
             <span class="mode-check" aria-hidden="true">✓</span>
           </button>
-          <button class="mode-row m-friends" aria-pressed="false" data-mode="friends">
-            <span class="mode-emoji" aria-hidden="true">👥</span>
-            <span>
-              <span class="mode-name">Friends</span>
-              <span class="mode-desc" style="display:block">Leagues, mixers &amp; social play</span>
-            </span>
+          <button class="mode-row" aria-pressed="false" data-mode="friends">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg>
+            <span><span class="mode-name">Friends Mode</span><span class="mode-desc">Expand your circle on and off the court</span></span>
             <span class="mode-check" aria-hidden="true">✓</span>
           </button>
         </div>
-        <p class="hint">Pick at least one — you can switch modes anytime from Discover.</p>
+        <p class="hint">Pick at least one — you can switch modes anytime from Home.</p>
       </div>
       <div class="ob-foot">
         <button class="btn btn-ghost btn-back" data-back="screen-ob3">Back</button>
@@ -867,30 +660,73 @@
       </div>
     </section>
 
-    <!-- MAIN: DISCOVER -->
-    <section class="screen" id="screen-discover" aria-label="Discover players">
+    <!-- HOME -->
+    <section class="screen" id="screen-home" aria-label="Home">
       <div class="appbar">
-        <div class="appbar-mark">40<span class="slash">/</span><span class="love">Love</span></div>
+        <button class="icon-btn" id="menu-btn" aria-label="Menu and settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h16"></path></svg>
+        </button>
+        <div class="wordmark" id="mark-home"></div>
+        <button class="icon-btn" id="bell-btn" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z"></path><path d="M10 19.5a2.2 2.2 0 0 0 4 0"></path></svg>
+          <span class="bell-dot" aria-hidden="true"></span>
+        </button>
       </div>
-      <div class="mode-switch" role="group" aria-label="Mode">
-        <button class="mode-seg on" data-mode="date">❤️ Date</button>
-        <button class="mode-seg" data-mode="play">🎾 Play</button>
-        <button class="mode-seg" data-mode="friends">👥 Friends</button>
+      <div class="greet">
+        <h1 id="greet-line">Good morning 👋</h1>
+        <p>Ready to rally?</p>
       </div>
-      <div class="deck-wrap" id="deck-wrap"></div>
+      <div class="mode-pills" role="group" aria-label="Mode" id="mode-pills">
+        <button class="mode-pill on" data-mode="date">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
+          Date Mode
+        </button>
+        <button class="mode-pill" data-mode="play">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>
+          Play Mode
+        </button>
+        <button class="mode-pill" data-mode="friends">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg>
+          Friends Mode
+        </button>
+      </div>
+      <div class="home-scroll" id="home-scroll">
+        <div class="topmatch">
+          <div class="topmatch-mid">
+            <h2>Top Match</h2>
+            <p>A great match is just a game away.</p>
+            <button class="topmatch-btn" id="view-matches">View Matches</button>
+          </div>
+          <div class="topmatch-art" aria-hidden="true">
+            <svg viewBox="0 0 84 84" fill="none">
+              <circle cx="42" cy="42" r="26" fill="#D6F44F"></circle>
+              <path d="M24 24c10 10 10 26 0 36" stroke="#0A0B0D" stroke-width="2.5" fill="none"></path>
+              <path d="M60 24c-10 10-10 26 0 36" stroke="#0A0B0D" stroke-width="2.5" fill="none"></path>
+              <path d="M42 50s-7-4.4-7-9.2c0-2.3 1.8-4.1 4-4.1 1.2 0 2.3.6 3 1.5.7-.9 1.8-1.5 3-1.5 2.2 0 4 1.8 4 4.1 0 4.8-7 9.2-7 9.2z" fill="#0A0B0D"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="deck" id="deck"></div>
+      </div>
     </section>
 
-    <!-- MAIN: MATCHES -->
-    <section class="screen" id="screen-matches" aria-label="Matches and messages">
+    <!-- MATCHES -->
+    <section class="screen" id="screen-matches" aria-label="Your matches">
       <div class="appbar"><h2 class="appbar-title">Matches</h2></div>
+      <div class="scroll" id="match-grid-wrap"></div>
+    </section>
+
+    <!-- CHAT LIST -->
+    <section class="screen" id="screen-chat" aria-label="Chats">
+      <div class="appbar"><h2 class="appbar-title">Chat</h2></div>
       <div class="scroll" id="thread-list"></div>
     </section>
 
-    <!-- CHAT -->
-    <section class="screen" id="screen-chat" aria-label="Chat">
+    <!-- CONVERSATION -->
+    <section class="screen" id="screen-convo" aria-label="Conversation">
       <div class="chat-head">
-        <button class="icon-btn" id="chat-back" aria-label="Back to matches">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+        <button class="icon-btn" id="chat-back" aria-label="Back to chats">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
         </button>
         <span class="ava" id="chat-ava"></span>
         <div>
@@ -908,18 +744,18 @@
       </div>
     </section>
 
-    <!-- MAIN: EVENTS -->
+    <!-- EVENTS -->
     <section class="screen" id="screen-events" aria-label="Events">
       <div class="appbar"><h2 class="appbar-title">Events</h2></div>
       <div class="scroll" id="event-list"></div>
     </section>
 
-    <!-- MAIN: PROFILE -->
+    <!-- PROFILE -->
     <section class="screen" id="screen-profile" aria-label="Your profile">
       <div class="appbar">
         <h2 class="appbar-title">Profile</h2>
         <button class="icon-btn" id="open-settings" aria-label="Settings">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"></path></svg>
         </button>
       </div>
       <div class="scroll" id="profile-body"></div>
@@ -928,8 +764,8 @@
     <!-- SETTINGS -->
     <section class="screen" id="screen-settings" aria-label="Settings">
       <div class="chat-head">
-        <button class="icon-btn" id="settings-back" aria-label="Back to profile">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+        <button class="icon-btn" id="settings-back" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
         </button>
         <div class="chat-head-name">Settings</div>
       </div>
@@ -937,15 +773,15 @@
         <div class="set-group">
           <h3>Modes</h3>
           <div class="set-row">
-            <div><div class="lab">❤️ Date</div><div class="sub">Romantic matches</div></div>
+            <div><div class="lab">Date Mode</div><div class="sub">Find your perfect match</div></div>
             <button class="switch" id="sw-date" role="switch" aria-checked="true" aria-label="Date mode"></button>
           </div>
           <div class="set-row">
-            <div><div class="lab">🎾 Play</div><div class="sub">Hitting partners</div></div>
+            <div><div class="lab">Play Mode</div><div class="sub">Find players for your next match</div></div>
             <button class="switch" id="sw-play" role="switch" aria-checked="false" aria-label="Play mode"></button>
           </div>
           <div class="set-row">
-            <div><div class="lab">👥 Friends</div><div class="sub">Leagues &amp; social play</div></div>
+            <div><div class="lab">Friends Mode</div><div class="sub">Expand your circle</div></div>
             <button class="switch" id="sw-friends" role="switch" aria-checked="false" aria-label="Friends mode"></button>
           </div>
         </div>
@@ -978,20 +814,24 @@
             <button class="switch" id="sw-notif-msg" role="switch" aria-checked="true" aria-label="Message notifications"></button>
           </div>
         </div>
-        <button class="btn danger" id="sign-out">Sign out</button>
-        <p class="hint" style="text-align:center; margin-top:12px;">40/Love prototype · not a real account</p>
+        <button class="danger" id="sign-out">Sign out</button>
+        <p class="hint" style="text-align:center; margin-top:12px;">40/Love prototype · Indianapolis · not a real account</p>
       </div>
     </section>
 
     <!-- Tab bar -->
     <nav class="tabbar" id="tabbar" style="display:none" aria-label="Main navigation">
-      <button class="tab on" data-screen="screen-discover">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M5.5 5.5c3 2.6 3 10.4 0 13M18.5 5.5c-3 2.6-3 10.4 0 13"></path></svg>
-        Discover
+      <button class="tab on" data-screen="screen-home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"></path></svg>
+        Home
       </button>
       <button class="tab" data-screen="screen-matches">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5c0 4.1-4 7.5-9 7.5-1 0-2-.13-2.9-.38L4 20l1.3-3.1C3.9 15.5 3 13.6 3 11.5 3 7.4 7 4 12 4s9 3.4 9 7.5z"></path></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
         Matches
+      </button>
+      <button class="tab" data-screen="screen-chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5c0 4.1-4 7.5-9 7.5-1 0-2-.13-2.9-.38L4 20l1.3-3.1C3.9 15.5 3 13.6 3 11.5 3 7.4 7 4 12 4s9 3.4 9 7.5z"></path></svg>
+        Chat
       </button>
       <button class="tab" data-screen="screen-events">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"></rect><path d="M3.5 10h17M8 2.8V7M16 2.8V7"></path></svg>
@@ -1003,47 +843,11 @@
       </button>
     </nav>
 
-    <!-- Propose-a-match sheet -->
-    <div class="overlay" id="propose-overlay">
-      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="propose-title">
-        <h2 id="propose-title">Propose a match</h2>
-        <p class="sub" id="propose-sub"></p>
-        <div class="pick-group">
-          <h3>Court</h3>
-          <div class="chips" id="pick-court">
-            <button class="chip" aria-pressed="true">Riverside Park Tennis Complex</button>
-            <button class="chip" aria-pressed="false">Tarkington Park</button>
-            <button class="chip" aria-pressed="false">Broad Ripple Park</button>
-          </div>
-        </div>
-        <div class="pick-group">
-          <h3>Day</h3>
-          <div class="chips" id="pick-day">
-            <button class="chip" aria-pressed="true">Sat</button>
-            <button class="chip" aria-pressed="false">Sun</button>
-            <button class="chip" aria-pressed="false">Tue</button>
-            <button class="chip" aria-pressed="false">Thu</button>
-          </div>
-        </div>
-        <div class="pick-group">
-          <h3>Time</h3>
-          <div class="chips" id="pick-time">
-            <button class="chip" aria-pressed="false">8:00 AM</button>
-            <button class="chip" aria-pressed="true">10:00 AM</button>
-            <button class="chip" aria-pressed="false">5:30 PM</button>
-            <button class="chip" aria-pressed="false">7:00 PM</button>
-          </div>
-        </div>
-        <button class="btn btn-primary" id="propose-send">Send match proposal</button>
-        <button class="btn btn-ghost" id="propose-cancel">Cancel</button>
-      </div>
-    </div>
-
     <!-- Match modal -->
-    <div class="overlay center" id="match-overlay">
+    <div class="overlay" id="match-overlay">
       <div class="match-modal" role="dialog" aria-modal="true" aria-labelledby="match-title">
         <div class="score">40 – LOVE</div>
-        <h2 id="match-title">It's a <em>Match Point!</em></h2>
+        <h2 id="match-title">It's a <span class="hl">Match Point!</span></h2>
         <div class="match-avas">
           <span class="ava" id="match-ava-me"></span>
           <span class="ava" id="match-ava-them"></span>
@@ -1056,33 +860,71 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </div>
+
+  <!-- Desktop marketing panel (decorative) -->
+  <aside class="promo" aria-hidden="true">
+    <div class="promo-head">More than<br>a match.<br><span class="hl">A community.</span></div>
+    <div class="promo-rule"></div>
+    <div class="promo-rows">
+      <div class="promo-row">
+        <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg></span>
+        <div><h3>Date Mode</h3><p>Find your perfect match.</p></div>
+      </div>
+      <div class="promo-row">
+        <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg></span>
+        <div><h3>Play Mode</h3><p>Find players for your next match.</p></div>
+      </div>
+      <div class="promo-row">
+        <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg></span>
+        <div><h3>Friends Mode</h3><p>Expand your circle on and off the court.</p></div>
+      </div>
+      <div class="promo-row">
+        <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"></rect><path d="M3.5 10h17M8 2.8V7M16 2.8V7"></path><path d="M9 15.5l2 2 4-4"></path></svg></span>
+        <div><h3>Events</h3><p>Tournaments, leagues &amp; socials near you.</p></div>
+      </div>
+    </div>
+    <div class="promo-foot">
+      <div class="wordmark" id="mark-promo" style="font-size:38px"></div>
+      <span class="tagline">Serve. Rally. Connect.</span>
+    </div>
+  </aside>
 </div>
 
 <script>
 (function () {
   'use strict';
 
+  /* ---------- Wordmark ---------- */
+  var BALL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#D6F44F"></circle><path d="M4.5 5.5c3.6 3.6 3.6 9.4 0 13" stroke="#0A0B0D" stroke-width="1.8" fill="none"></path><path d="M19.5 5.5c-3.6 3.6-3.6 9.4 0 13" stroke="#0A0B0D" stroke-width="1.8" fill="none"></path></svg>';
+  function renderMark(el) {
+    el.innerHTML = '40/L<span class="ball">' + BALL_SVG + '</span>ve';
+  }
+  ['mark-welcome', 'mark-home', 'mark-promo'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) renderMark(el);
+  });
+
   /* ---------- Data ---------- */
   var GRADS = [
-    ['#14503C', '#3E7C9B'], ['#0F3D2E', '#6B7A1E'], ['#C23B55', '#E15A72'],
-    ['#33677F', '#0F3D2E'], ['#6B7A1E', '#14503C'], ['#E15A72', '#33677F'],
-    ['#3E7C9B', '#6B7A1E'], ['#0F3D2E', '#C23B55'], ['#14503C', '#CFE23F'],
-    ['#33677F', '#E15A72'], ['#6B7A1E', '#3E7C9B'], ['#C23B55', '#0F3D2E']
+    ['#D6F44F', '#6E8F2C'], ['#8FD14F', '#2C6E4F'], ['#F2E86D', '#8F6E2C'],
+    ['#B7E04A', '#3D6E2C'], ['#D6F44F', '#4A7A6E'], ['#E0D24A', '#6E4F2C'],
+    ['#A3E04A', '#2C5A6E'], ['#D6F44F', '#7A5A2C'], ['#C9E858', '#3F5A20'],
+    ['#EAF48F', '#5A6E2C'], ['#B0D93F', '#2C4A3D'], ['#DDE84A', '#4F3D6E']
   ];
 
   var PROFILES = [
-    { id: 'maya',   name: 'Maya',   age: 31, dist: 1.2, sports: ['Tennis'], skill: 'Advanced', rating: 'NTRP 4.0', avail: 'Weekday evenings · Sat mornings', bio: 'Litigator by day, baseline grinder by night. Looking for someone who can keep a rally going — in conversation too.' },
-    { id: 'diego',  name: 'Diego',  age: 38, dist: 2.8, sports: ['Padel'], skill: 'Intermediate', rating: '', avail: 'Weekends', bio: 'Moved here from Madrid two years ago and still evangelizing padel to everyone I meet. First round of horchata is on me.' },
-    { id: 'priya',  name: 'Priya',  age: 29, dist: 0.8, sports: ['Tennis', 'Pickleball'], skill: 'Intermediate', rating: 'NTRP 3.5', avail: 'Sun + Wed evenings', bio: 'Product designer who treats every third ball like a drop-shot opportunity. Winner picks the coffee spot after.' },
-    { id: 'sam',    name: 'Sam',    age: 45, dist: 3.1, sports: ['Pickleball'], skill: 'Competitive', rating: 'DUPR 4.2', avail: 'Early mornings, most days', bio: 'Recovering marathoner, fully converted to the kitchen line. I play hard and brunch harder.' },
-    { id: 'elena',  name: 'Elena',  age: 52, dist: 1.9, sports: ['Pickleball'], skill: 'Intermediate', rating: 'DUPR 3.4', avail: 'Weekday mornings', bio: 'Retired teacher, new to the city, and pickleball has been the best welcome committee. Looking for rally partners who laugh between points.' },
-    { id: 'marcus', name: 'Marcus', age: 34, dist: 4.5, sports: ['Squash'], skill: 'Advanced', rating: '', avail: 'Tue + Thu after 6', bio: 'Architect who thinks best inside four glass walls. If you can hold a T, you already have my attention.' },
-    { id: 'jordan', name: 'Jordan', age: 27, dist: 0.4, sports: ['Tennis'], skill: 'Beginner', rating: '', avail: 'Flexible — I make time', bio: 'Six lessons in and completely hooked. Patient hitting partners appreciated; enthusiasm guaranteed in return.' },
-    { id: 'grace',  name: 'Grace',  age: 41, dist: 5.2, sports: ['Tennis', 'Padel'], skill: 'Advanced', rating: 'NTRP 4.5', avail: 'Sat + Sun mornings', bio: 'ER nurse with a wicked slice. Weekends are sacred court time — join me and see if you can break serve.' },
-    { id: 'theo',   name: 'Theo',   age: 58, dist: 2.2, sports: ['Racquetball'], skill: 'Intermediate', rating: '', avail: 'Mon/Wed/Fri lunch', bio: 'Thirty years of racquetball and still learning new angles. Great listener, better lob. Grandkids say I’m cool; verify in person.' },
-    { id: 'nadia',  name: 'Nadia',  age: 33, dist: 6.7, sports: ['Padel'], skill: 'Beginner', rating: '', avail: 'Weekend afternoons', bio: 'Food scientist who joined a padel league on a dare and stayed for the people. Post-game taco recommendations are my specialty.' },
-    { id: 'chris',  name: 'Chris',  age: 48, dist: 3.8, sports: ['Pickleball', 'Tennis'], skill: 'Advanced', rating: 'DUPR 4.0', avail: 'Evenings after 7', bio: 'Two kids, one dog, zero interest in small talk at bars. Ten minutes of doubles tells you more than any bio could.' },
-    { id: 'lena',   name: 'Lena',   age: 25, dist: 9.8, sports: ['Squash', 'Tennis'], skill: 'Competitive', rating: '', avail: 'Weekday evenings', bio: 'Grad student and former junior squash champ. Fair warning: I call every let. Looking for people who love the grind.' }
+    { id: 'maya',   name: 'Maya',   age: 31, dist: 1.2, sports: ['Tennis'], skill: 'Advanced', rating: '4.0', isNew: true,  verified: true,  avail: 'Weekday evenings · Sat mornings', bio: 'Litigator by day, baseline grinder by night. Looking for someone who can keep a rally going — in conversation too.' },
+    { id: 'diego',  name: 'Diego',  age: 38, dist: 2.8, sports: ['Padel', 'Pickleball'], skill: 'Intermediate', rating: '', isNew: true, verified: false, avail: 'Weekends', bio: 'Moved here from Madrid two years ago — converting Indy to padel one pickleball game at a time.' },
+    { id: 'priya',  name: 'Priya',  age: 29, dist: 0.8, sports: ['Tennis', 'Pickleball'], skill: 'Intermediate', rating: '3.5', isNew: true, verified: true, avail: 'Sun + Wed evenings', bio: 'Product designer who treats every third ball like a drop-shot opportunity. Winner picks the coffee spot after.' },
+    { id: 'sam',    name: 'Sam',    age: 45, dist: 3.1, sports: ['Pickleball'], skill: 'Competitive', rating: '4.2', isNew: false, verified: true, avail: 'Early mornings, most days', bio: 'Recovering marathoner, fully converted to the kitchen line. I play hard and brunch harder.' },
+    { id: 'elena',  name: 'Elena',  age: 52, dist: 1.9, sports: ['Pickleball'], skill: 'Intermediate', rating: '3.4', isNew: false, verified: true, avail: 'Weekday mornings', bio: 'Retired teacher, new to the city, and pickleball has been the best welcome committee.' },
+    { id: 'marcus', name: 'Marcus', age: 34, dist: 4.5, sports: ['Squash'], skill: 'Advanced', rating: '', isNew: false, verified: false, avail: 'Tue + Thu after 6', bio: 'Architect who thinks best inside four glass walls. If you can hold a T, you already have my attention.' },
+    { id: 'jordan', name: 'Jordan', age: 30, dist: 3.0, sports: ['Tennis', 'Pickleball'], skill: 'Advanced', rating: '4.0', isNew: true, verified: true, avail: 'Flexible — I make time', bio: 'Coach says my forehand is a weapon; my dog says I need to get out more. They can both be right.' },
+    { id: 'grace',  name: 'Grace',  age: 41, dist: 5.2, sports: ['Tennis', 'Padel'], skill: 'Advanced', rating: '4.5', isNew: false, verified: true, avail: 'Sat + Sun mornings', bio: 'ER nurse with a wicked slice. Weekends are sacred court time — see if you can break serve.' },
+    { id: 'theo',   name: 'Theo',   age: 58, dist: 2.2, sports: ['Racquetball'], skill: 'Intermediate', rating: '', isNew: false, verified: false, avail: 'Mon/Wed/Fri lunch', bio: 'Thirty years of racquetball and still learning new angles. Grandkids say I’m cool; verify in person.' },
+    { id: 'nadia',  name: 'Nadia',  age: 33, dist: 6.7, sports: ['Pickleball'], skill: 'Beginner', rating: '', isNew: false, verified: true, avail: 'Weekend afternoons', bio: 'Food scientist who joined a pickleball league on a dare and stayed for the people. Post-game taco recs are my specialty.' },
+    { id: 'chris',  name: 'Chris',  age: 48, dist: 3.8, sports: ['Pickleball', 'Tennis'], skill: 'Advanced', rating: '4.0', isNew: false, verified: true, avail: 'Evenings after 7', bio: 'Two kids, one dog, zero interest in small talk at bars. Ten minutes of doubles tells you more than any bio could.' },
+    { id: 'lena',   name: 'Lena',   age: 25, dist: 9.8, sports: ['Squash', 'Tennis'], skill: 'Competitive', rating: '', isNew: false, verified: false, avail: 'Weekday evenings', bio: 'Grad student and former junior squash champ. Fair warning: I call every let.' }
   ];
 
   var THREADS = [
@@ -1115,7 +957,7 @@
   var REPLIES = {
     maya:  'Deal. Saturday, 10am, bring your rude slice 😤',
     sam:   'That’s what I like to hear. See you at the kitchen line!',
-    priya: 'Right?? Okay — courts Thursday, coffee verdict after 🎾'
+    priya: 'Right?? Okay — Riverside Thursday, coffee verdict after 🎾'
   };
 
   var EVENTS = [
@@ -1128,9 +970,9 @@
   ];
 
   var MODE_CFG = {
-    date:    { likeIcon: '❤️', likeLabel: 'Like',            actLabel: 'Pass · Propose a match · Like',   klass: 'c-date' },
-    play:    { likeIcon: '🤝', likeLabel: 'Request to hit',  actLabel: 'Pass · Propose a match · Request to hit', klass: 'c-play' },
-    friends: { likeIcon: '👋', likeLabel: 'Wave',            actLabel: 'Pass · Propose a match · Wave',   klass: 'c-friends' }
+    date:    { likeName: 'Like' },
+    play:    { likeName: 'Request to hit' },
+    friends: { likeName: 'Wave' }
   };
 
   /* ---------- State ---------- */
@@ -1140,7 +982,10 @@
     mode: 'date',
     deckPos: 0,
     likeCount: 0,
+    history: [],
+    saved: {},
     matchedId: null,
+    matches: ['maya', 'sam', 'priya'],
     joined: {},
     replied: {},
     threads: THREADS,
@@ -1171,7 +1016,7 @@
     var idx = 0;
     for (var i = 0; i < id.length; i++) idx = (idx + id.charCodeAt(i)) % GRADS.length;
     var g = GRADS[idx];
-    return 'linear-gradient(135deg, ' + g[0] + ', ' + g[1] + ')';
+    return 'linear-gradient(150deg, ' + g[0] + ', ' + g[1] + ')';
   }
   function initials(name) {
     return name.trim().split(/\s+/).map(function (w) { return w.charAt(0).toUpperCase(); }).slice(0, 2).join('');
@@ -1191,14 +1036,15 @@
     toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
   }
 
-  var TABS = ['screen-discover', 'screen-matches', 'screen-events', 'screen-profile'];
+  var TABS = ['screen-home', 'screen-matches', 'screen-chat', 'screen-events', 'screen-profile'];
   function show(id) {
     $all('.screen').forEach(function (s) { s.classList.toggle('active', s.id === id); });
     var isTab = TABS.indexOf(id) !== -1;
     $('#tabbar').style.display = isTab ? 'flex' : 'none';
     $all('.tab').forEach(function (t) { t.classList.toggle('on', t.getAttribute('data-screen') === id); });
-    if (id === 'screen-discover') renderDeck();
-    if (id === 'screen-matches') renderThreads();
+    if (id === 'screen-home') { renderGreeting(); renderDeck(); }
+    if (id === 'screen-matches') renderMatches();
+    if (id === 'screen-chat') renderThreads();
     if (id === 'screen-events') renderEvents();
     if (id === 'screen-profile') renderProfile();
   }
@@ -1221,7 +1067,7 @@
   /* ---------- Welcome + onboarding ---------- */
   $('#btn-create').addEventListener('click', function () { show('screen-ob1'); });
   $('#btn-continue').addEventListener('click', function () {
-    if (state.user) { show('screen-discover'); }
+    if (state.user) { show('screen-home'); }
     else { toast('No saved profile on this device yet — create one!'); }
   });
   $all('.btn-back').forEach(function (b) {
@@ -1267,34 +1113,48 @@
     syncModeUI();
     syncSettings();
     toast('Welcome to the court, ' + state.user.name + '!');
-    show('screen-discover');
+    show('screen-home');
   });
 
-  /* ---------- Discover ---------- */
-  function syncModeUI() {
-    $all('.mode-seg').forEach(function (seg) {
-      seg.classList.toggle('on', seg.getAttribute('data-mode') === state.mode);
-    });
+  /* ---------- Home ---------- */
+  function renderGreeting() {
+    var h = new Date().getHours();
+    var part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+    var name = state.user ? ', ' + state.user.name : '';
+    $('#greet-line').textContent = 'Good ' + part + name + ' 👋';
   }
 
-  $all('.mode-seg').forEach(function (seg) {
-    seg.addEventListener('click', function () {
-      state.mode = seg.getAttribute('data-mode');
+  function syncModeUI() {
+    $all('.mode-pill').forEach(function (p) {
+      p.classList.toggle('on', p.getAttribute('data-mode') === state.mode);
+    });
+  }
+  $all('.mode-pill').forEach(function (p) {
+    p.addEventListener('click', function () {
+      state.mode = p.getAttribute('data-mode');
       syncModeUI();
       renderDeck();
     });
   });
 
+  $('#menu-btn').addEventListener('click', function () { syncSettings(); show('screen-settings'); });
+  $('#bell-btn').addEventListener('click', function () { toast('You’re all caught up 🎾'); });
+  $('#view-matches').addEventListener('click', function () { show('screen-matches'); });
+
   function currentProfile() {
     return state.deckPos < PROFILES.length ? PROFILES[state.deckPos] : null;
   }
 
+  function skillLabel(p) {
+    return p.rating ? p.rating + ' Skill Level' : p.skill;
+  }
+
   function renderDeck() {
-    var wrap = $('#deck-wrap');
+    var deck = $('#deck');
     var p = currentProfile();
     var cfg = MODE_CFG[state.mode];
     if (!p) {
-      wrap.innerHTML =
+      deck.innerHTML =
         '<div class="deck-empty">' +
         '<div class="big" aria-hidden="true">🎾</div>' +
         '<h2>That’s everyone nearby</h2>' +
@@ -1302,44 +1162,70 @@
         '</div>';
       return;
     }
-    var tags = p.sports.map(function (s) {
-      var r = p.rating && (s === p.sports[0]) ? ' · ' + p.rating : '';
-      return '<span class="tag tag-sport">' + esc(s) + r + '</span>';
-    }).join('');
-    wrap.innerHTML =
+    deck.innerHTML =
       '<div class="card springing" id="deck-card">' +
         '<div class="stamp stamp-like" id="stamp-like">' + (state.mode === 'date' ? 'LIKE' : state.mode === 'play' ? 'HIT?' : 'HEY!') + '</div>' +
         '<div class="stamp stamp-pass" id="stamp-pass">PASS</div>' +
         '<div class="card-photo" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</div>' +
-        '<div class="card-body">' +
-          '<div>' +
-            '<div class="card-name">' + esc(p.name) + ' <span class="age">' + p.age + '</span></div>' +
-            '<div class="card-meta">📍 ' + p.dist.toFixed(1) + ' mi away</div>' +
+        (p.isNew ? '<span class="badge-new">NEW</span>' : '') +
+        '<button class="bookmark' + (state.saved[p.id] ? ' saved' : '') + '" id="bookmark-btn" aria-label="Save ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="' + (state.saved[p.id] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"></path></svg>' +
+        '</button>' +
+        '<button class="card-like" id="card-like" aria-label="' + esc(cfg.likeName) + ' ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>' +
+        '</button>' +
+        '<div class="card-info">' +
+          '<div class="card-name">' + esc(p.name) + '<span class="age">' + p.age + '</span>' +
+            (p.verified ? '<span class="verified" aria-label="Verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>' : '') +
           '</div>' +
-          '<div class="tagrow">' + tags + '<span class="tag">' + esc(p.skill) + '</span></div>' +
+          '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>' + esc(p.sports.join(' & ')) + '</div>' +
+          '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s-6.5-5.4-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.6 12 21 12 21z"></path><circle cx="12" cy="10.2" r="2.4"></circle></svg>' + p.dist.toFixed(1) + ' miles away</div>' +
+          '<div class="card-line"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="14" width="3.4" height="6" rx="1"></rect><rect x="10.3" y="10" width="3.4" height="10" rx="1"></rect><rect x="16.6" y="5" width="3.4" height="15" rx="1"></rect></svg>' + esc(skillLabel(p)) + '</div>' +
           '<p class="card-bio">' + esc(p.bio) + '</p>' +
-          '<div class="card-avail">🕐 ' + esc(p.avail) + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="deck-actions">' +
-        '<button class="act act-pass" id="act-pass" aria-label="Pass on ' + esc(p.name) + '">✕</button>' +
-        '<button class="act act-propose" id="act-propose" aria-label="Propose a match with ' + esc(p.name) + '">🎾</button>' +
-        '<button class="act act-like ' + cfg.klass + '" id="act-like" aria-label="' + esc(cfg.likeLabel) + ' ' + esc(p.name) + '">' + cfg.likeIcon + '</button>' +
-      '</div>' +
-      '<div class="act-label">' + esc(cfg.actLabel) + '</div>';
+        '<button class="act" id="act-rewind" aria-label="Rewind last card">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"></path><path d="M4 9h9a7 7 0 1 1-6.7 9"></path></svg>' +
+        '</button>' +
+        '<button class="act" id="act-pass" aria-label="Pass on ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>' +
+        '</button>' +
+        '<button class="act act-like" id="act-like" aria-label="' + esc(cfg.likeName) + ' ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>' +
+        '</button>' +
+        '<button class="act" id="act-ace" aria-label="Ace — super like ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.7l5.9-.8z"></path></svg>' +
+        '</button>' +
+      '</div>';
 
-    $('#act-pass').addEventListener('click', function () { swipeOut(false); });
-    $('#act-like').addEventListener('click', function () { swipeOut(true); });
-    $('#act-propose').addEventListener('click', openPropose);
+    $('#act-pass').addEventListener('click', function () { swipeOut(false, false); });
+    $('#act-like').addEventListener('click', function () { swipeOut(true, false); });
+    $('#card-like').addEventListener('click', function () { swipeOut(true, false); });
+    $('#act-ace').addEventListener('click', function () { swipeOut(true, true); });
+    $('#act-rewind').addEventListener('click', rewind);
+    $('#bookmark-btn').addEventListener('click', function () {
+      state.saved[p.id] = !state.saved[p.id];
+      renderDeck();
+      toast(state.saved[p.id] ? 'Saved ' + p.name + ' for later' : 'Removed from saved');
+    });
     attachDrag($('#deck-card'));
   }
 
+  function rewind() {
+    if (!state.history.length) { toast('Nothing to rewind yet'); return; }
+    state.deckPos = state.history.pop();
+    renderDeck();
+    toast('Second serve — take another look');
+  }
+
   function advance() {
+    state.history.push(state.deckPos);
     state.deckPos += 1;
     renderDeck();
   }
 
-  function swipeOut(liked) {
+  function swipeOut(liked, ace) {
     var p = currentProfile();
     if (!p) return;
     var card = $('#deck-card');
@@ -1351,16 +1237,16 @@
     setTimeout(function () {
       if (liked) {
         state.likeCount += 1;
-        if (state.likeCount % 3 === 0) { openMatch(p); }
+        if (ace || state.likeCount % 3 === 0) { openMatch(p, ace); }
         else {
-          toast(state.mode === 'date' ? 'Liked ' + p.name + ' ❤️' : state.mode === 'play' ? 'Hit request sent to ' + p.name + ' 🤝' : 'You waved at ' + p.name + ' 👋');
+          toast(state.mode === 'date' ? 'Liked ' + p.name + ' ❤️' : state.mode === 'play' ? 'Hit request sent to ' + p.name : 'You waved at ' + p.name + ' 👋');
         }
       }
       advance();
     }, 180);
   }
 
-  /* Optional drag-to-swipe on the top card (buttons remain the primary path) */
+  /* Drag-to-swipe (buttons remain the primary path) */
   function attachDrag(card) {
     if (!card || !window.PointerEvent) return;
     var startX = 0, dx = 0, active = false;
@@ -1384,8 +1270,8 @@
       active = false;
       card.classList.remove('dragging');
       card.classList.add('springing');
-      if (dx > 90) { swipeOut(true); }
-      else if (dx < -90) { swipeOut(false); }
+      if (dx > 90) { swipeOut(true, false); }
+      else if (dx < -90) { swipeOut(false, false); }
       else {
         card.style.transform = '';
         $('#stamp-like').style.opacity = 0;
@@ -1396,42 +1282,17 @@
     card.addEventListener('pointercancel', release);
   }
 
-  /* ---------- Propose sheet ---------- */
-  singleSelect($('#pick-court'));
-  singleSelect($('#pick-day'));
-  singleSelect($('#pick-time'));
-
-  function openPropose() {
-    var p = currentProfile();
-    if (!p) return;
-    $('#propose-sub').textContent = 'Pick a court and time to send ' + p.name + ' a real first-date invite.';
-    $('#propose-overlay').classList.add('open');
-  }
-  $('#propose-cancel').addEventListener('click', function () {
-    $('#propose-overlay').classList.remove('open');
-  });
-  $('#propose-send').addEventListener('click', function () {
-    var p = currentProfile();
-    var court = $('#pick-court .chip[aria-pressed="true"]');
-    var day = $('#pick-day .chip[aria-pressed="true"]');
-    var time = $('#pick-time .chip[aria-pressed="true"]');
-    $('#propose-overlay').classList.remove('open');
-    if (p && court && day && time) {
-      toast('Match proposal sent to ' + p.name + ' — ' + day.textContent + ' ' + time.textContent + ' 🎾');
-    }
-    advance();
-  });
-
   /* ---------- Match modal ---------- */
-  function openMatch(p) {
+  function openMatch(p, ace) {
     state.matchedId = p.id;
+    if (state.matches.indexOf(p.id) === -1) state.matches.unshift(p.id);
     var me = $('#match-ava-me');
     var them = $('#match-ava-them');
     me.style.background = gradFor(state.user ? state.user.name : 'you');
     me.textContent = initials(state.user ? state.user.name : 'You');
     them.style.background = gradFor(p.id);
     them.textContent = initials(p.name);
-    $('#match-text').textContent = 'You and ' + p.name + ' liked each other. Skip the small talk — the court is the icebreaker.';
+    $('#match-text').textContent = (ace ? 'An ace! ' : '') + 'You and ' + p.name + ' matched. Skip the small talk — the court is the icebreaker.';
     $('#match-overlay').classList.add('open');
   }
   function ensureThread(id) {
@@ -1442,15 +1303,41 @@
   }
   $('#match-message').addEventListener('click', function () {
     $('#match-overlay').classList.remove('open');
-    var id = state.matchedId;
-    ensureThread(id);
-    openChat(id);
+    ensureThread(state.matchedId);
+    openConvo(state.matchedId);
   });
   $('#match-keep').addEventListener('click', function () {
     $('#match-overlay').classList.remove('open');
   });
 
-  /* ---------- Matches / chat ---------- */
+  /* ---------- Matches grid ---------- */
+  function renderMatches() {
+    var wrap = $('#match-grid-wrap');
+    if (!state.matches.length) {
+      wrap.innerHTML = '<div class="deck-empty"><div class="big" aria-hidden="true">🎾</div><h2>No matches yet</h2><p class="hint">Head Home and start swinging.</p></div>';
+      return;
+    }
+    wrap.innerHTML = '<div class="match-grid">' + state.matches.map(function (id) {
+      var p = profileById(id);
+      if (!p) return '';
+      return '<button class="match-cell" data-id="' + p.id + '">' +
+        '<span class="match-photo" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</span>' +
+        '<span class="match-meta">' +
+          '<span class="n">' + esc(p.name) + ', ' + p.age + '</span>' +
+          '<span class="s">' + esc(p.sports.join(' & ')) + '</span>' +
+          '<span class="go">Message →</span>' +
+        '</span>' +
+      '</button>';
+    }).join('') + '</div>';
+    $all('.match-cell').forEach(function (el) {
+      el.addEventListener('click', function () {
+        ensureThread(el.getAttribute('data-id'));
+        openConvo(el.getAttribute('data-id'));
+      });
+    });
+  }
+
+  /* ---------- Chat ---------- */
   function lastPreview(t) {
     if (!t.msgs.length) return 'New match — say hi!';
     var m = t.msgs[t.msgs.length - 1];
@@ -1461,7 +1348,7 @@
   function renderThreads() {
     var list = $('#thread-list');
     if (!state.threads.length) {
-      list.innerHTML = '<div class="deck-empty"><div class="big" aria-hidden="true">💬</div><h2>No matches yet</h2><p class="hint">Head to Discover and start swinging.</p></div>';
+      list.innerHTML = '<div class="deck-empty"><div class="big" aria-hidden="true">💬</div><h2>No chats yet</h2><p class="hint">Match with someone first — then it’s your serve.</p></div>';
       return;
     }
     list.innerHTML = state.threads.map(function (t) {
@@ -1480,7 +1367,7 @@
       '</button>';
     }).join('');
     $all('#thread-list .thread').forEach(function (el) {
-      el.addEventListener('click', function () { openChat(el.getAttribute('data-id')); });
+      el.addEventListener('click', function () { openConvo(el.getAttribute('data-id')); });
     });
   }
 
@@ -1519,7 +1406,7 @@
     log.scrollTop = log.scrollHeight;
   }
 
-  function openChat(id) {
+  function openConvo(id) {
     chatId = id;
     var p = profileById(id);
     var t = threadById(id);
@@ -1528,12 +1415,12 @@
     $('#chat-ava').style.background = gradFor(p.id);
     $('#chat-ava').textContent = initials(p.name);
     $('#chat-name').textContent = p.name;
-    $('#chat-sub').textContent = p.sports.join(' · ') + ' · ' + p.dist.toFixed(1) + ' mi';
+    $('#chat-sub').textContent = p.sports.join(' & ') + ' · ' + p.dist.toFixed(1) + ' mi';
     renderChatLog();
-    show('screen-chat');
+    show('screen-convo');
   }
 
-  $('#chat-back').addEventListener('click', function () { show('screen-matches'); });
+  $('#chat-back').addEventListener('click', function () { show('screen-chat'); });
 
   function deliverReply(id) {
     if (state.replied[id]) return;
@@ -1543,7 +1430,7 @@
       if (!t) return;
       t.msgs.push({ who: 'them', text: REPLIES[id] || 'Sounds great — see you on the court! 🎾', when: 'Just now' });
       t.yourServe = true;
-      if (chatId === id && $('#screen-chat').classList.contains('active')) { renderChatLog(); }
+      if (chatId === id && $('#screen-convo').classList.contains('active')) { renderChatLog(); }
       else { t.unread = true; }
     }, 1500);
   }
@@ -1623,17 +1510,17 @@
     body.innerHTML =
       '<div class="profile-card">' +
         '<span class="ava" style="background:' + gradFor(u.name) + '">' + esc(initials(u.name)) + '</span>' +
-        '<div class="card-name">' + esc(u.name) + ' <span class="age">' + u.age + '</span></div>' +
-        '<div class="tagrow" style="justify-content:center">' + tags + '</div>' +
+        '<div class="card-name" style="justify-content:center">' + esc(u.name) + '<span class="age">' + u.age + '</span></div>' +
+        '<div class="tagrow">' + tags + '</div>' +
       '</div>' +
       '<div class="stats">' +
-        '<div class="stat"><div class="num">' + state.threads.length + '</div><div class="lbl">Matches</div></div>' +
+        '<div class="stat"><div class="num">' + state.matches.length + '</div><div class="lbl">Matches</div></div>' +
         '<div class="stat"><div class="num">' + joinedCount + '</div><div class="lbl">Events</div></div>' +
         '<div class="stat"><div class="num">' + state.ralliesBase + '</div><div class="lbl">Rallies</div></div>' +
       '</div>' +
       '<div class="bio-edit">' +
         '<label for="bio-text">Bio</label>' +
-        '<textarea id="bio-text" placeholder="Tell players what you’re about — favorite courts, playing style, best post-match snack…">' + esc(u.bio || '') + '</textarea>' +
+        '<textarea id="bio-text" placeholder="Tell players what you’re about — favorite Indy courts, playing style, best post-match snack…">' + esc(u.bio || '') + '</textarea>' +
         '<p class="hint">Saved automatically when you tap away.</p>' +
       '</div>';
     $('#bio-text').addEventListener('blur', function () {
@@ -1681,13 +1568,16 @@
   });
 
   $('#open-settings').addEventListener('click', function () { syncSettings(); show('screen-settings'); });
-  $('#settings-back').addEventListener('click', function () { show('screen-profile'); });
+  $('#settings-back').addEventListener('click', function () {
+    show(state.user ? 'screen-home' : 'screen-welcome');
+  });
 
   $('#sign-out').addEventListener('click', function () {
     try { localStorage.removeItem(STORE_KEY); } catch (e) { /* nothing to clear */ }
     state.user = null;
     state.deckPos = 0;
     state.likeCount = 0;
+    state.history = [];
     $('#btn-continue').textContent = 'I already have an account';
     show('screen-welcome');
     toast('Signed out — see you court-side');

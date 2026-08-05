@@ -93,9 +93,20 @@ Competitive when generic.
 Sanctioned phrases: "Love at first serve." · "It's a Match Point!" (mutual
 match) · "Your serve" (your turn to reply) · "Meet on the court, not at a bar."
 
-## 8. Modes of the app UI
+## 8. The two surfaces
 
-The app prototype commits to a light, sporty in-app look (Chalk ground, Ink
-text, Court headers) — product UIs pick one world and execute it precisely.
-The landing page commits to the Court-green editorial world. Both are
-deliberate single-theme choices; keep contrast WCAG-legible everywhere.
+**The app — "Night Court" (founder-directed).** The product UI commits to a
+dark look set by the founder's reference design: near-black ground
+(`#0A0B0D`), dark cards (`#17191D`), a single bright Optic accent
+(`#D6F44F`) for actions and active states, white text. Mode identity comes
+from icons (heart / racquet / people), not per-mode colors. The wordmark on
+dark is white with the "o" in "Love" drawn as an Optic tennis ball;
+secondary tagline: **"Serve. Rally. Connect."** Verified badges use green
+`#3DC96B`; the pass/danger red `#E15A72` appears only for destructive or
+negative actions.
+
+**The landing page** keeps the Court-green editorial world from §3 (Chalk on
+Court, Optic + Match Rose accents).
+
+Both are deliberate single-theme commitments; keep contrast WCAG-legible
+everywhere.
