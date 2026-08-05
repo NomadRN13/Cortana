@@ -15,6 +15,7 @@ Three modes, one app:
 | Path | What it is |
 |------|------------|
 | [`mobile/`](mobile/) | **The real mobile app** (iOS + Android, React Native + Expo) — the store-bound codebase implementing the Night Court design with demo data. Run it on your phone today with Expo Go; ships to both stores via EAS once the backend is wired. |
+| [`supabase/`](supabase/) | **The backend as code** — the complete database: profiles, the matching engine (mutual-like/ace matches created by the DB itself), chat with court-time proposals, events, blocking/reports, waitlist, and row-level security throughout. Tested against Postgres 16; goes live with `supabase db push` ([setup guide](docs/backend-setup.md)). |
 | [`app/index.html`](app/index.html) | **Clickable app prototype** — the full MVP flow in a single browser file: onboarding, Discover (swipe + modes), Matches & chat, Events, Profile, Settings. The visual spec for the mobile app. |
 | [`landing/index.html`](landing/index.html) | **Waitlist landing page** — the pre-launch site: value prop, three modes, how it works, FAQ, and an email waitlist form. |
 | [`docs/business-plan.md`](docs/business-plan.md) | **Business plan** — market, competition, validation plan, go-to-market, revenue model, build options, 12-month milestones, risks. |
