@@ -535,6 +535,68 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* Action sheet (report/block) */
+  .sheet {
+    background: var(--panel); border: 2px solid var(--line); border-radius: 20px;
+    width: 100%; max-width: 320px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .sheet-title { font-size: 13px; font-weight: 700; color: var(--dim); text-align: center; padding: 8px 0 4px; }
+  .sheet button { width: 100%; padding: 14px; font-size: 15px; font-weight: 800; border-radius: 12px; background: var(--card); }
+  .sheet button:hover { background: var(--card2); }
+  .sheet .sheet-danger { color: #E15A72; }
+  .sheet .sheet-cancel { background: transparent; color: var(--dim); font-weight: 700; }
+
+  /* Notifications panel */
+  .notif-panel {
+    background: var(--panel); border: 2px solid var(--line); border-radius: 20px;
+    width: 100%; max-width: 340px; max-height: 70%; overflow-y: auto;
+    display: flex; flex-direction: column; padding: 14px;
+  }
+  .notif-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 10px; }
+  .notif-head h2 { font-size: 18px; }
+  .notif-clear { font-size: 12.5px; font-weight: 800; color: var(--optic); padding: 6px 10px; border-radius: 8px; }
+  .notif-item { display: flex; gap: 11px; padding: 11px 6px; border-top: 2px solid var(--line); align-items: flex-start; }
+  .notif-item .ico { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; background: var(--optic-dim); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
+  .notif-item .txt { font-size: 13.5px; line-height: 1.45; }
+  .notif-item .sub { font-size: 11.5px; color: var(--dim); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .notif-empty { text-align: center; color: var(--dim); font-size: 13.5px; padding: 18px 6px; }
+
+  /* Card more button */
+  .card-more {
+    position: absolute; top: 10px; right: 58px;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(10, 11, 13, 0.55);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .card-more svg { width: 19px; height: 19px; }
+
+  /* Saved strip on Matches */
+  .saved-head { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: var(--dim); margin: 0 0 8px; }
+  .saved-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 16px; scrollbar-width: none; }
+  .saved-strip::-webkit-scrollbar { display: none; }
+  .saved-cell {
+    flex: 0 0 auto; width: 86px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 10px 6px;
+  }
+  .saved-cell .ava { width: 44px; height: 44px; font-size: 16px; }
+  .saved-cell .n { font-size: 12px; font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .saved-like { width: 30px; height: 30px; border-radius: 50%; background: var(--optic); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; }
+  .saved-like svg { width: 14px; height: 14px; }
+
+  /* Photo picker */
+  .photo-pick { display: flex; align-items: center; gap: 14px; }
+  .photo-preview {
+    flex: 0 0 auto; width: 74px; height: 74px; border-radius: 50%;
+    border: 2px dashed var(--line); background: var(--card);
+    background-size: cover; background-position: center;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--dim); font-size: 24px;
+  }
+  .photo-preview.has { border-style: solid; border-color: var(--optic); color: transparent; }
+  .photo-btn { font-size: 13.5px; font-weight: 800; padding: 10px 14px; border: 2px solid var(--optic); color: var(--optic); border-radius: 999px; }
+  .photo-btn:hover { background: var(--optic); color: var(--ink); }
+  .ava.has-photo { background-size: cover; background-position: center; color: transparent; }
+
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
   }
@@ -574,7 +636,15 @@
           <label for="ob-age">Age</label>
           <input type="number" id="ob-age" inputmode="numeric" min="18" max="99" placeholder="e.g. 34">
         </div>
-        <p class="hint">Your name and age appear on your player card. You must be 18 or older.</p>
+        <div>
+          <label for="photo-input">Profile photo <span style="font-weight:400">(optional)</span></label>
+          <div class="photo-pick">
+            <span class="photo-preview" id="photo-preview" aria-hidden="true">📷</span>
+            <button class="photo-btn" id="photo-btn" type="button">Add photo</button>
+            <input type="file" id="photo-input" accept="image/*" style="display:none" aria-label="Choose profile photo">
+          </div>
+        </div>
+        <p class="hint">Your name, age, and photo appear on your player card. Photos stay on this device in the prototype. You must be 18 or older.</p>
       </div>
       <div class="ob-foot">
         <button class="btn btn-primary" id="ob1-next">Next</button>
@@ -733,6 +803,9 @@
           <div class="chat-head-name" id="chat-name"></div>
           <div class="chat-head-sub" id="chat-sub"></div>
         </div>
+        <button class="icon-btn" id="chat-more" aria-label="More options" style="margin-left:auto">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+        </button>
       </div>
       <div class="chat-log" id="chat-log"></div>
       <div class="chat-tools">
@@ -802,6 +875,10 @@
               <input type="number" id="age-max" value="55" min="18" max="99" aria-label="Maximum age">
             </div>
           </div>
+          <div class="set-row">
+            <div><div class="lab">Only my sports</div><div class="sub">Show only players who share a sport with you</div></div>
+            <button class="switch" id="sw-mysports" role="switch" aria-checked="false" aria-label="Only show players who share my sports"></button>
+          </div>
         </div>
         <div class="set-group">
           <h3>Notifications</h3>
@@ -855,6 +932,27 @@
         <p id="match-text"></p>
         <button class="btn btn-primary" id="match-message">Send a message</button>
         <button class="btn btn-ghost" id="match-keep">Keep playing</button>
+      </div>
+    </div>
+
+    <!-- Report / block sheet -->
+    <div class="overlay" id="more-overlay">
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+        <div class="sheet-title" id="sheet-title"></div>
+        <button id="sheet-report">Report</button>
+        <button class="sheet-danger" id="sheet-block">Block</button>
+        <button class="sheet-cancel" id="sheet-cancel">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Notifications panel -->
+    <div class="overlay" id="notif-overlay">
+      <div class="notif-panel" role="dialog" aria-modal="true" aria-labelledby="notif-title">
+        <div class="notif-head">
+          <h2 id="notif-title">Notifications</h2>
+          <button class="notif-clear" id="notif-clear">Clear all</button>
+        </div>
+        <div id="notif-list"></div>
       </div>
     </div>
 
@@ -984,12 +1082,20 @@
     likeCount: 0,
     history: [],
     saved: {},
+    blocked: {},
+    seen: {},
     matchedId: null,
     matches: ['maya', 'sam', 'priya'],
     joined: {},
     replied: {},
     threads: THREADS,
-    ralliesBase: 128
+    ralliesBase: 128,
+    prefs: { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false },
+    notifs: [
+      { ico: '❤️', txt: 'It’s a Match Point! You and Maya matched.', sub: 'Yesterday 9:05 PM' },
+      { ico: '🎾', txt: 'Your serve — Priya sent you two messages.', sub: 'Mon 6:21 PM' },
+      { ico: '📅', txt: 'Sunset Doubles Social is this Friday at 6:00 PM — 6 spots left.', sub: 'Mon 9:00 AM' }
+    ]
   };
 
   function loadUser() {
@@ -1064,6 +1170,51 @@
     });
   }
 
+  /* ---------- Photo picker ---------- */
+  var draftPhoto = null;
+  $('#photo-btn').addEventListener('click', function () { $('#photo-input').click(); });
+  $('#photo-input').addEventListener('change', function () {
+    var file = $('#photo-input').files && $('#photo-input').files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var size = 384;
+        var canvas = document.createElement('canvas');
+        var scale = Math.max(size / img.width, size / img.height);
+        canvas.width = Math.min(img.width * scale, size);
+        canvas.height = Math.min(img.height * scale, size);
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        draftPhoto = canvas.toDataURL('image/jpeg', 0.82);
+        if (state.user) {
+          state.user.photo = draftPhoto;
+          saveUser();
+          if ($('#screen-profile').classList.contains('active')) renderProfile();
+          toast('Photo updated');
+        } else {
+          var prev = $('#photo-preview');
+          prev.style.backgroundImage = 'url(' + draftPhoto + ')';
+          prev.classList.add('has');
+          $('#photo-btn').textContent = 'Change photo';
+        }
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  function applyPhoto(el, photo, fallbackBg) {
+    if (photo) {
+      el.classList.add('has-photo');
+      el.style.backgroundImage = 'url(' + photo + ')';
+    } else {
+      el.classList.remove('has-photo');
+      el.style.backgroundImage = '';
+      if (fallbackBg) el.style.background = fallbackBg;
+    }
+  }
+
   /* ---------- Welcome + onboarding ---------- */
   $('#btn-create').addEventListener('click', function () { show('screen-ob1'); });
   $('#btn-continue').addEventListener('click', function () {
@@ -1079,7 +1230,7 @@
     var age = parseInt($('#ob-age').value, 10);
     if (!name) { toast('Add your first name to continue'); return; }
     if (!age || age < 18 || age > 99) { toast('Enter an age between 18 and 99'); return; }
-    state.draft = { name: name, age: age };
+    state.draft = { name: name, age: age, photo: draftPhoto };
     show('screen-ob2');
   });
 
@@ -1138,11 +1289,84 @@
   });
 
   $('#menu-btn').addEventListener('click', function () { syncSettings(); show('screen-settings'); });
-  $('#bell-btn').addEventListener('click', function () { toast('You’re all caught up 🎾'); });
   $('#view-matches').addEventListener('click', function () { show('screen-matches'); });
 
+  /* ---------- Notifications ---------- */
+  function renderNotifs() {
+    $('#notif-list').innerHTML = state.notifs.length
+      ? state.notifs.map(function (n) {
+          return '<div class="notif-item"><span class="ico" aria-hidden="true">' + n.ico + '</span>' +
+            '<div><div class="txt">' + esc(n.txt) + '</div><div class="sub">' + esc(n.sub) + '</div></div></div>';
+        }).join('')
+      : '<div class="notif-empty">You’re all caught up 🎾</div>';
+    $('#bell-btn .bell-dot').style.display = state.notifs.length ? '' : 'none';
+  }
+  $('#bell-btn').addEventListener('click', function () {
+    renderNotifs();
+    $('#notif-overlay').classList.add('open');
+  });
+  $('#notif-clear').addEventListener('click', function () {
+    state.notifs = [];
+    renderNotifs();
+  });
+  $('#notif-overlay').addEventListener('click', function (ev) {
+    if (ev.target === $('#notif-overlay')) $('#notif-overlay').classList.remove('open');
+  });
+
+  /* ---------- Report / block ---------- */
+  var sheetCtx = { id: null, from: null };
+  function openSheet(id, from) {
+    var p = profileById(id);
+    if (!p) return;
+    sheetCtx = { id: id, from: from };
+    $('#sheet-title').textContent = p.name + ' · ' + p.sports.join(' & ');
+    $('#sheet-report').textContent = 'Report ' + p.name;
+    $('#sheet-block').textContent = 'Block ' + p.name;
+    $('#more-overlay').classList.add('open');
+  }
+  function closeSheet() { $('#more-overlay').classList.remove('open'); }
+  $('#sheet-cancel').addEventListener('click', closeSheet);
+  $('#more-overlay').addEventListener('click', function (ev) {
+    if (ev.target === $('#more-overlay')) closeSheet();
+  });
+  $('#sheet-report').addEventListener('click', function () {
+    var p = profileById(sheetCtx.id);
+    closeSheet();
+    if (sheetCtx.from === 'deck') { state.seen[sheetCtx.id] = true; renderDeck(); }
+    toast('Thanks — our safety team will review ' + (p ? p.name : 'this profile'));
+  });
+  $('#sheet-block').addEventListener('click', function () {
+    var id = sheetCtx.id;
+    var p = profileById(id);
+    closeSheet();
+    state.blocked[id] = true;
+    state.saved[id] = false;
+    state.matches = state.matches.filter(function (m) { return m !== id; });
+    state.threads = state.threads.filter(function (t) { return t.id !== id; });
+    if (sheetCtx.from === 'chat') { show('screen-chat'); }
+    else { renderDeck(); }
+    toast((p ? p.name : 'They') + ' won’t see you, and you won’t see them');
+  });
+
+  function eligible(p) {
+    if (state.blocked[p.id] || state.seen[p.id]) return false;
+    if (p.dist > state.prefs.radius) return false;
+    if (p.age < state.prefs.ageMin || p.age > state.prefs.ageMax) return false;
+    if (state.prefs.mySportsOnly && state.user && state.user.sports) {
+      var shares = p.sports.some(function (s) { return state.user.sports.indexOf(s) !== -1; });
+      if (!shares) return false;
+    }
+    return true;
+  }
+
+  function nextEligibleIndex(from) {
+    var i = from;
+    while (i < PROFILES.length && !eligible(PROFILES[i])) i += 1;
+    return i;
+  }
   function currentProfile() {
-    return state.deckPos < PROFILES.length ? PROFILES[state.deckPos] : null;
+    var i = nextEligibleIndex(state.deckPos);
+    return i < PROFILES.length ? PROFILES[i] : null;
   }
 
   function skillLabel(p) {
@@ -1170,6 +1394,9 @@
         (p.isNew ? '<span class="badge-new">NEW</span>' : '') +
         '<button class="bookmark' + (state.saved[p.id] ? ' saved' : '') + '" id="bookmark-btn" aria-label="Save ' + esc(p.name) + '">' +
           '<svg viewBox="0 0 24 24" fill="' + (state.saved[p.id] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"></path></svg>' +
+        '</button>' +
+        '<button class="card-more" id="card-more" aria-label="More options for ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>' +
         '</button>' +
         '<button class="card-like" id="card-like" aria-label="' + esc(cfg.likeName) + ' ' + esc(p.name) + '">' +
           '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>' +
@@ -1209,6 +1436,7 @@
       renderDeck();
       toast(state.saved[p.id] ? 'Saved ' + p.name + ' for later' : 'Removed from saved');
     });
+    $('#card-more').addEventListener('click', function () { openSheet(p.id, 'deck'); });
     attachDrag($('#deck-card'));
   }
 
@@ -1221,7 +1449,7 @@
 
   function advance() {
     state.history.push(state.deckPos);
-    state.deckPos += 1;
+    state.deckPos = nextEligibleIndex(state.deckPos) + 1;
     renderDeck();
   }
 
@@ -1290,6 +1518,7 @@
     var them = $('#match-ava-them');
     me.style.background = gradFor(state.user ? state.user.name : 'you');
     me.textContent = initials(state.user ? state.user.name : 'You');
+    applyPhoto(me, state.user && state.user.photo);
     them.style.background = gradFor(p.id);
     them.textContent = initials(p.name);
     $('#match-text').textContent = (ace ? 'An ace! ' : '') + 'You and ' + p.name + ' matched. Skip the small talk — the court is the icebreaker.';
@@ -1313,26 +1542,56 @@
   /* ---------- Matches grid ---------- */
   function renderMatches() {
     var wrap = $('#match-grid-wrap');
-    if (!state.matches.length) {
-      wrap.innerHTML = '<div class="deck-empty"><div class="big" aria-hidden="true">🎾</div><h2>No matches yet</h2><p class="hint">Head Home and start swinging.</p></div>';
-      return;
+    var savedIds = Object.keys(state.saved).filter(function (k) { return state.saved[k] && !state.blocked[k]; });
+    var savedHtml = '';
+    if (savedIds.length) {
+      savedHtml = '<div class="saved-head">Saved for later</div><div class="saved-strip">' +
+        savedIds.map(function (id) {
+          var p = profileById(id);
+          if (!p) return '';
+          return '<div class="saved-cell">' +
+            '<span class="ava" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</span>' +
+            '<span class="n">' + esc(p.name) + '</span>' +
+            '<button class="saved-like" data-id="' + p.id + '" aria-label="Like ' + esc(p.name) + '">' +
+              '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>' +
+            '</button>' +
+          '</div>';
+        }).join('') + '</div>';
     }
-    wrap.innerHTML = '<div class="match-grid">' + state.matches.map(function (id) {
-      var p = profileById(id);
-      if (!p) return '';
-      return '<button class="match-cell" data-id="' + p.id + '">' +
-        '<span class="match-photo" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</span>' +
-        '<span class="match-meta">' +
-          '<span class="n">' + esc(p.name) + ', ' + p.age + '</span>' +
-          '<span class="s">' + esc(p.sports.join(' & ')) + '</span>' +
-          '<span class="go">Message →</span>' +
-        '</span>' +
-      '</button>';
-    }).join('') + '</div>';
+    var gridHtml;
+    if (!state.matches.length) {
+      gridHtml = '<div class="deck-empty"><div class="big" aria-hidden="true">🎾</div><h2>No matches yet</h2><p class="hint">Head Home and start swinging.</p></div>';
+    } else {
+      gridHtml = '<div class="match-grid">' + state.matches.map(function (id) {
+        var p = profileById(id);
+        if (!p) return '';
+        return '<button class="match-cell" data-id="' + p.id + '">' +
+          '<span class="match-photo" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</span>' +
+          '<span class="match-meta">' +
+            '<span class="n">' + esc(p.name) + ', ' + p.age + '</span>' +
+            '<span class="s">' + esc(p.sports.join(' & ')) + '</span>' +
+            '<span class="go">Message →</span>' +
+          '</span>' +
+        '</button>';
+      }).join('') + '</div>';
+    }
+    wrap.innerHTML = savedHtml + gridHtml;
     $all('.match-cell').forEach(function (el) {
       el.addEventListener('click', function () {
         ensureThread(el.getAttribute('data-id'));
         openConvo(el.getAttribute('data-id'));
+      });
+    });
+    $all('.saved-like').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-id');
+        var p = profileById(id);
+        state.saved[id] = false;
+        state.seen[id] = true;
+        state.likeCount += 1;
+        if (state.likeCount % 3 === 0) { openMatch(p, false); }
+        else { toast('Liked ' + p.name + ' ❤️'); }
+        renderMatches();
       });
     });
   }
@@ -1421,6 +1680,7 @@
   }
 
   $('#chat-back').addEventListener('click', function () { show('screen-chat'); });
+  $('#chat-more').addEventListener('click', function () { if (chatId) openSheet(chatId, 'chat'); });
 
   function deliverReply(id) {
     if (state.replied[id]) return;
@@ -1509,9 +1769,10 @@
     var joinedCount = Object.keys(state.joined).filter(function (k) { return state.joined[k]; }).length;
     body.innerHTML =
       '<div class="profile-card">' +
-        '<span class="ava" style="background:' + gradFor(u.name) + '">' + esc(initials(u.name)) + '</span>' +
+        '<span class="ava' + (u.photo ? ' has-photo' : '') + '" style="background:' + gradFor(u.name) + (u.photo ? '; background-image:url(' + u.photo + '); background-size:cover; background-position:center' : '') + '">' + esc(initials(u.name)) + '</span>' +
         '<div class="card-name" style="justify-content:center">' + esc(u.name) + '<span class="age">' + u.age + '</span></div>' +
         '<div class="tagrow">' + tags + '</div>' +
+        '<button class="photo-btn" id="profile-photo-btn" type="button">' + (u.photo ? 'Change photo' : 'Add photo') + '</button>' +
       '</div>' +
       '<div class="stats">' +
         '<div class="stat"><div class="num">' + state.matches.length + '</div><div class="lbl">Matches</div></div>' +
@@ -1528,6 +1789,7 @@
       saveUser();
       toast('Bio saved');
     });
+    $('#profile-photo-btn').addEventListener('click', function () { $('#photo-input').click(); });
   }
 
   /* ---------- Settings ---------- */
@@ -1565,6 +1827,21 @@
 
   $('#radius').addEventListener('input', function () {
     $('#radius-val').textContent = $('#radius').value;
+    state.prefs.radius = parseInt($('#radius').value, 10) || 15;
+  });
+  $('#age-min').addEventListener('change', function () {
+    var v = parseInt($('#age-min').value, 10);
+    if (v >= 18 && v <= 99) state.prefs.ageMin = v;
+  });
+  $('#age-max').addEventListener('change', function () {
+    var v = parseInt($('#age-max').value, 10);
+    if (v >= 18 && v <= 99) state.prefs.ageMax = v;
+  });
+  $('#sw-mysports').addEventListener('click', function () {
+    var el = $('#sw-mysports');
+    var on = el.getAttribute('aria-checked') === 'true';
+    el.setAttribute('aria-checked', String(!on));
+    state.prefs.mySportsOnly = !on;
   });
 
   $('#open-settings').addEventListener('click', function () { syncSettings(); show('screen-settings'); });
@@ -1578,6 +1855,14 @@
     state.deckPos = 0;
     state.likeCount = 0;
     state.history = [];
+    state.saved = {};
+    state.blocked = {};
+    state.seen = {};
+    state.prefs = { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false };
+    draftPhoto = null;
+    $('#photo-preview').classList.remove('has');
+    $('#photo-preview').style.backgroundImage = '';
+    $('#photo-btn').textContent = 'Add photo';
     $('#btn-continue').textContent = 'I already have an account';
     show('screen-welcome');
     toast('Signed out — see you court-side');

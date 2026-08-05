@@ -21,6 +21,7 @@ Three modes, one app:
 | [`docs/pitch-deck.md`](docs/pitch-deck.md) | **Pitch deck** — 12 slides with speaker notes, ready to turn into a designed deck. |
 | [`docs/brand-guide.md`](docs/brand-guide.md) | **Brand & design guide** — the 40/Love identity: palette, typography, wordmark, voice. Everything above is built from it. |
 | [`docs/networking-team.md`](docs/networking-team.md) | **Agentic networking team** — six AI agents (defined in [`.claude/agents/`](.claude/agents/)) that run community-building: city scouting, club partnerships, social content, waitlist emails, mixer planning, and validation scoring. Agents draft; you send. |
+| [`docs/system-architecture.md`](docs/system-architecture.md) | **System architecture** — the technical blueprint for the real app: data model, matching engine, chat & court proposals, trust & safety, notifications, analytics, and a prototype→production map. Hand this plus the prototype to whoever builds the MVP. |
 
 ## Try the prototype
 
