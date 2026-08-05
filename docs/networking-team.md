@@ -1,11 +1,26 @@
-# 40/Love — Agentic Networking Team
+# 40/Love — The Agent Team
 
-Six AI agents, defined in `.claude/agents/`, that run the community-building
-and validation side of 40/Love (Phases 1 and 6 of the startup plan). Any
-Claude Code session opened on this repo can use them — just ask for an agent
-by name and give it a task.
+Ten AI agents, defined in `.claude/agents/`, split into two crews: the
+**networking crew** that builds the Indianapolis community (Phases 1 and 6
+of the startup plan) and the **product & launch crew** that ships the app.
+Any Claude Code session opened on this repo can use them — just ask for an
+agent by name and give it a task.
 
-## The team
+## Product & launch crew
+
+| Agent | Role | Typical ask |
+|---|---|---|
+| `backend-engineer` | Evolves the Supabase backend as tested migrations; keeps RLS airtight and the app's API layer in sync | "Have backend-engineer add a favorites table." |
+| `qa-tester` | Runs automated checks, writes beta test plans, triages tester feedback into a bug list | "Have qa-tester write the TestFlight round-1 test plan." |
+| `release-manager` | Owns the store checklist, listing copy, privacy questionnaires, review notes | "Ask release-manager what's blocking launch." |
+| `safety-support` | Triage recommendations for moderation reports, support reply drafts, community guidelines & code of conduct | "Have safety-support draft the event code of conduct." |
+
+Hard lines for this crew: backend-engineer never touches a production
+database; qa-tester reports failures verbatim and doesn't fix product code;
+release-manager never submits builds; safety-support recommends — a human
+makes every enforcement decision.
+
+## Networking crew
 
 | Agent | Role | Typical ask |
 |---|---|---|
