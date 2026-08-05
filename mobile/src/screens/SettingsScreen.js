@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
 import { useApp } from '../state';
+import { isBackendConfigured } from '../lib/supabase';
+import * as api from '../api/backend';
 
 export default function SettingsScreen({ navigation }) {
   const app = useApp();
@@ -39,6 +41,29 @@ export default function SettingsScreen({ navigation }) {
         },
       },
     ]);
+  };
+
+  const deleteAccount = () => {
+    Alert.alert(
+      'Delete your account?',
+      'This permanently deletes your profile, matches, and messages. It cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete forever',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (isBackendConfigured) await api.deleteAccount();
+              app.signOut();
+              navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+            } catch (e) {
+              Alert.alert('Couldn’t delete your account', (e && e.message) || 'Check your connection and try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -106,6 +131,9 @@ export default function SettingsScreen({ navigation }) {
         <Pressable style={styles.danger} onPress={signOut}>
           <Text style={{ color: colors.danger, fontWeight: '800', fontSize: 15 }}>Sign out</Text>
         </Pressable>
+        <Pressable style={styles.deleteLink} onPress={deleteAccount}>
+          <Text style={{ color: colors.dim, fontWeight: '700', fontSize: 13 }}>Delete my account</Text>
+        </Pressable>
         <Text style={[type.hint, { textAlign: 'center' }]}>40/Love · Indianapolis · demo build — not a real account</Text>
       </ScrollView>
     </SafeAreaView>
@@ -149,4 +177,5 @@ const styles = StyleSheet.create({
     alignItems: 'center', padding: 14,
     borderWidth: 2, borderColor: colors.danger, borderRadius: 14,
   },
+  deleteLink: { alignItems: 'center', paddingVertical: 6 },
 });

@@ -20,11 +20,11 @@ export default function WelcomeScreen({ navigation }) {
         </View>
       </View>
       <View style={{ gap: 10 }}>
-        <Btn label="Create profile" onPress={() => navigation.navigate('Onboarding')} />
+        <Btn label="Get started" onPress={() => navigation.navigate('SignIn')} />
         <Btn
           label={user ? `Continue as ${user.name}` : 'I already have an account'}
           kind="ghost"
-          onPress={() => navigation.navigate(user ? 'Main' : 'Onboarding')}
+          onPress={() => navigation.navigate(user ? 'Main' : 'SignIn')}
         />
       </View>
     </SafeAreaView>

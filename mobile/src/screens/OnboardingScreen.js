@@ -5,8 +5,19 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
 import { Btn, Chip, Avatar } from '../components/ui';
-import { useApp } from '../state';
+import { useApp, ageFromBirthdate } from '../state';
 import { SPORTS, SKILLS } from '../data/seed';
+
+// "MM/DD/YYYY" → "YYYY-MM-DD", or null if not a real calendar date
+function parseBirthdate(text) {
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(text.trim());
+  if (!m) return null;
+  const [, mm, dd, yyyy] = m;
+  const iso = `${yyyy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+  const d = new Date(`${iso}T12:00:00Z`);
+  if (Number.isNaN(d.getTime()) || d.getUTCMonth() + 1 !== Number(mm) || d.getUTCDate() !== Number(dd)) return null;
+  return iso;
+}
 
 const MODES = [
   { key: 'date', icon: 'heart-outline', name: 'Date Mode', desc: 'Find your perfect match' },
@@ -15,15 +26,16 @@ const MODES = [
 ];
 
 export default function OnboardingScreen({ navigation }) {
-  const { saveUser, setMode } = useApp();
+  const app = useApp();
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
-  const [age, setAge] = useState('');
+  const [birthdateText, setBirthdateText] = useState('');
   const [photo, setPhoto] = useState(null);
   const [sports, setSports] = useState([]);
   const [skill, setSkill] = useState(null);
   const [rating, setRating] = useState('');
   const [modes, setModes] = useState(['date']);
+  const [saving, setSaving] = useState(false);
 
   const pickPhoto = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -37,20 +49,38 @@ export default function OnboardingScreen({ navigation }) {
     if (!res.canceled && res.assets && res.assets[0]) setPhoto(res.assets[0].uri);
   };
 
-  const next = () => {
+  const next = async () => {
     if (step === 0) {
-      const a = parseInt(age, 10);
       if (!name.trim()) return Alert.alert('Almost there', 'Add your first name to continue.');
-      if (!a || a < 18 || a > 99) return Alert.alert('Almost there', 'Enter an age between 18 and 99.');
+      const iso = parseBirthdate(birthdateText);
+      const a = iso ? ageFromBirthdate(iso) : null;
+      if (!iso) return Alert.alert('Almost there', 'Enter your birthdate as MM/DD/YYYY.');
+      if (a < 18) return Alert.alert('40/Love is 18+', 'You must be 18 or older to join.');
+      if (a > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
     }
     if (step === 1 && !sports.length) return Alert.alert('Almost there', 'Pick at least one sport.');
     if (step === 2 && !skill) return Alert.alert('Almost there', 'Pick your skill level.');
     if (step === 3) {
       if (!modes.length) return Alert.alert('Almost there', 'Pick at least one mode.');
-      const user = { name: name.trim(), age: parseInt(age, 10), photo, sports, skill, rating: rating.trim(), modes, bio: '' };
-      saveUser(user);
-      setMode(modes[0]);
-      navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+      if (saving) return;
+      const iso = parseBirthdate(birthdateText);
+      const draft = {
+        name: name.trim(),
+        birthdate: iso,
+        age: ageFromBirthdate(iso),
+        photo, sports, skill,
+        rating: rating.trim(),
+        modes,
+        bio: '',
+      };
+      setSaving(true);
+      try {
+        await app.finishOnboarding(draft);
+        navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+      } catch (e) {
+        setSaving(false);
+        Alert.alert('Couldn’t save your profile', (e && e.message) || 'Check your connection and try again.');
+      }
       return;
     }
     setStep(step + 1);
@@ -78,8 +108,8 @@ export default function OnboardingScreen({ navigation }) {
             <Field label="First name">
               <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="e.g. Aaron" placeholderTextColor="rgba(244,246,240,0.35)" />
             </Field>
-            <Field label="Age">
-              <TextInput style={styles.input} value={age} onChangeText={setAge} keyboardType="number-pad" placeholder="e.g. 34" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={2} />
+            <Field label="Birthdate">
+              <TextInput style={styles.input} value={birthdateText} onChangeText={setBirthdateText} keyboardType="number-pad" placeholder="MM/DD/YYYY" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={10} />
             </Field>
             <Field label="Profile photo (optional)">
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
@@ -97,7 +127,7 @@ export default function OnboardingScreen({ navigation }) {
                 </Pressable>
               </View>
             </Field>
-            <Text style={type.hint}>Your name, age, and photo appear on your player card. You must be 18 or older.</Text>
+            <Text style={type.hint}>Your name, age, and photo appear on your player card — your exact birthdate never does. You must be 18 or older.</Text>
           </>
         )}
 
@@ -154,7 +184,7 @@ export default function OnboardingScreen({ navigation }) {
 
       <View style={styles.foot}>
         {step > 0 && <Btn label="Back" kind="ghost" style={{ flex: 0, paddingHorizontal: 22 }} onPress={() => setStep(step - 1)} />}
-        <Btn label={step === 3 ? 'Step on court' : 'Next'} style={{ flex: 1 }} onPress={next} />
+        <Btn label={step === 3 ? (saving ? 'Saving…' : 'Step on court') : 'Next'} style={{ flex: 1 }} onPress={next} />
       </View>
     </SafeAreaView>
   );

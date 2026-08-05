@@ -31,6 +31,18 @@ export async function deleteAccount() {
 
 // ---------- Profile ----------
 
+export async function getMyProfile() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*, user_sports(*)')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, approxLng, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly }) {
   const { data: { user } } = await supabase.auth.getUser();
   const { error } = await supabase.from('profiles').upsert({

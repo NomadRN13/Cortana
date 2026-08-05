@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppStateProvider, useApp } from './src/state';
 import { colors } from './src/theme';
 import WelcomeScreen from './src/screens/WelcomeScreen';
+import SignInScreen from './src/screens/SignInScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import MatchesScreen from './src/screens/MatchesScreen';
@@ -89,6 +90,7 @@ function Root() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={user ? 'Main' : 'Welcome'}>
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="SignIn" component={SignInScreen} />
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="Main" component={MainTabs} />
       <Stack.Screen name="Settings" component={SettingsScreen} />

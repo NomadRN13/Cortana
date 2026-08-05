@@ -3,9 +3,21 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS } from './data/seed';
+import { supabase, isBackendConfigured } from './lib/supabase';
+import * as api from './api/backend';
 
 const STORE_KEY = '40love.profile';
 const AppState = createContext(null);
+
+export function ageFromBirthdate(birthdate) {
+  const b = new Date(birthdate);
+  if (Number.isNaN(b.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - b.getFullYear();
+  const m = now.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age -= 1;
+  return age;
+}
 
 export function AppStateProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -24,6 +36,8 @@ export function AppStateProvider({ children }) {
   const [notifs, setNotifs] = useState(NOTIFICATIONS);
   const [prefs, setPrefs] = useState({ radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false });
 
+  const [session, setSession] = useState(null);
+
   useEffect(() => {
     AsyncStorage.getItem(STORE_KEY)
       .then((raw) => {
@@ -39,12 +53,87 @@ export function AppStateProvider({ children }) {
       .finally(() => setHydrated(true));
   }, []);
 
+  useEffect(() => {
+    if (!isBackendConfigured) return undefined;
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  // ---- Auth (real when the backend is configured, simulated in demo mode) ----
+
+  const requestCode = async (email) => {
+    if (isBackendConfigured) {
+      await api.signInWithEmail(email);
+    }
+    // Demo mode: no email is sent; any 6-digit code verifies.
+  };
+
+  // Returns { hasProfile } so the sign-in screen knows where to route next.
+  const verifyCode = async (email, code) => {
+    if (isBackendConfigured) {
+      await api.verifyOtp(email, code);
+      const remote = await api.getMyProfile();
+      if (remote) {
+        const localUser = {
+          name: remote.first_name,
+          age: ageFromBirthdate(remote.birthdate),
+          birthdate: remote.birthdate,
+          photo: user && user.photo ? user.photo : null,
+          sports: (remote.user_sports || []).map((s) => s.sport.charAt(0).toUpperCase() + s.sport.slice(1)),
+          skill: remote.user_sports && remote.user_sports[0]
+            ? remote.user_sports[0].level.charAt(0).toUpperCase() + remote.user_sports[0].level.slice(1)
+            : 'Intermediate',
+          rating: remote.user_sports && remote.user_sports[0] ? remote.user_sports[0].rating_label : '',
+          modes: remote.modes,
+          bio: remote.bio,
+        };
+        saveUser(localUser);
+        if (remote.modes && remote.modes.length) setMode(remote.modes[0]);
+        return { hasProfile: true };
+      }
+      return { hasProfile: false };
+    }
+    if (!/^\d{6}$/.test(code)) {
+      throw new Error('Enter the 6-digit code.');
+    }
+    return { hasProfile: !!user };
+  };
+
+  // Completes onboarding: local always; remote too when the backend is live.
+  const finishOnboarding = async (draft) => {
+    if (isBackendConfigured) {
+      await api.upsertMyProfile({
+        firstName: draft.name,
+        birthdate: draft.birthdate,
+        bio: draft.bio || '',
+        availabilityNote: '',
+        modes: draft.modes,
+        radiusMi: prefs.radius,
+        ageMin: prefs.ageMin,
+        ageMax: prefs.ageMax,
+        sameSportsOnly: prefs.mySportsOnly,
+      });
+      await api.setMySports(
+        draft.sports.map((s) => ({ sport: s.toLowerCase(), level: draft.skill.toLowerCase(), ratingLabel: draft.rating || '' }))
+      );
+      if (draft.photo) {
+        api.uploadProfilePhoto(draft.photo, 0).catch(() => {});
+      }
+    }
+    saveUser(draft);
+    setMode(draft.modes[0]);
+  };
+
   const saveUser = (u) => {
     setUser(u);
     AsyncStorage.setItem(STORE_KEY, JSON.stringify(u)).catch(() => {});
   };
 
   const signOut = () => {
+    if (isBackendConfigured) {
+      api.signOut().catch(() => {});
+    }
     AsyncStorage.removeItem(STORE_KEY).catch(() => {});
     setUser(null);
     setMode('date');
@@ -153,6 +242,7 @@ export function AppStateProvider({ children }) {
   const value = useMemo(
     () => ({
       user, hydrated, saveUser, signOut,
+      session, isBackendConfigured, requestCode, verifyCode, finishOnboarding,
       mode, setMode,
       currentProfile, advance, rewind, historyLength: history.length,
       registerLike,
@@ -160,7 +250,7 @@ export function AppStateProvider({ children }) {
       matches, threads, profileById, ensureThread, sendMessage, markRead,
       joined, setJoined, notifs, setNotifs, prefs, setPrefs,
     }),
-    [user, hydrated, mode, deckPos, history, likeCount, saved, blocked, seen, matches, threads, joined, replied, notifs, prefs]
+    [user, hydrated, session, mode, deckPos, history, likeCount, saved, blocked, seen, matches, threads, joined, replied, notifs, prefs]
   );
 
   return <AppState.Provider value={value}>{children}</AppState.Provider>;

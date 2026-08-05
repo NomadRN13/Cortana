@@ -7,16 +7,23 @@ HTML prototype in `../app/` is the visual spec.
 
 ## Current state
 
-**Demo build.** All screens work with seeded Indianapolis data and local
-state — the same experience as the HTML prototype, as a real native app:
+**Demo build with real auth flow.** All screens work with seeded
+Indianapolis data and local state — the same experience as the HTML
+prototype, as a real native app:
 
-- Welcome → 4-step onboarding (name/age/photo, sports, skill, modes)
+- Welcome → **sign in with email + 6-digit code** (real Supabase email OTP
+  when the backend env vars are set; simulated in demo mode — any 6-digit
+  code works, with a banner saying so)
+- 4-step onboarding (name/birthdate — 18+ enforced — photo, sports, skill,
+  modes); when the backend is live, finishing onboarding writes the profile,
+  sports, and photo to Supabase
 - Home: greeting, Date/Play/Friends mode pills, Top Match banner, discover
   deck with rewind / pass / like / ace, report & block, notifications panel
 - Matches grid + Saved-for-later strip
 - Chat with court-time proposal cards and demo replies
 - Events with RSVP, Profile with photo + bio, Settings with working
-  discovery filters
+  discovery filters, sign-out, and in-app **account deletion** (a store
+  requirement — calls the backend's `delete_account` when live)
 
 **Not yet wired:** real accounts, real matching, realtime chat, push — that
 is the Supabase backend described in `../docs/system-architecture.md`. Every
