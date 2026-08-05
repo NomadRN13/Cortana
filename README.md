@@ -20,6 +20,7 @@ Three modes, one app:
 | [`docs/feature-roadmap.md`](docs/feature-roadmap.md) | **Feature roadmap** — MVP scope and the releases after it, with success metrics per release. |
 | [`docs/pitch-deck.md`](docs/pitch-deck.md) | **Pitch deck** — 12 slides with speaker notes, ready to turn into a designed deck. |
 | [`docs/brand-guide.md`](docs/brand-guide.md) | **Brand & design guide** — the 40/Love identity: palette, typography, wordmark, voice. Everything above is built from it. |
+| [`docs/networking-team.md`](docs/networking-team.md) | **Agentic networking team** — six AI agents (defined in [`.claude/agents/`](.claude/agents/)) that run community-building: city scouting, club partnerships, social content, waitlist emails, mixer planning, and validation scoring. Agents draft; you send. |
 
 ## Try the prototype
 
