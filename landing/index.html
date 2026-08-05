@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>40/Love — The dating app for racquet sports people</title>
+<meta name="description" content="40/Love connects active singles through tennis, pickleball, padel and more — the first date is a game instead of dinner. Join the waitlist.">
+<style>
+  :root {
+    --court: #0F3D2E;
+    --court-deep: #0A2C21;
+    --ink: #132A21;
+    --chalk: #F6F4EC;
+    --optic: #CFE23F;
+    --rose: #E15A72;
+    --blue: #3E7C9B;
+    --rose-deep: #C23B55;
+    --chalk-dim: rgba(246, 244, 236, 0.72);
+    --chalk-line: rgba(246, 244, 236, 0.28);
+    --serif: Georgia, 'Times New Roman', serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--court);
+    color: var(--chalk);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3 { margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+  p { margin: 0; }
+  section { scroll-margin-top: 84px; }
+
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--optic);
+  }
+
+  .mark { font-weight: 900; letter-spacing: -0.03em; white-space: nowrap; }
+  .mark .slash { color: var(--optic); font-weight: 800; }
+  .mark .love { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--rose); }
+
+  button, .btn { font: inherit; cursor: pointer; }
+  a { color: var(--optic); }
+  button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--optic);
+    outline-offset: 3px;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(15, 61, 46, 0.92);
+    border-bottom: 2px solid var(--chalk-line);
+    backdrop-filter: blur(6px);
+  }
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+  .nav .mark { font-size: 22px; }
+  .nav-cta {
+    display: inline-block;
+    background: var(--optic);
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 14px;
+    padding: 10px 18px;
+    border-radius: 999px;
+  }
+  .nav-cta:hover { background: #DCEE55; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    padding: 72px 0 64px;
+    background:
+      linear-gradient(var(--chalk-line), var(--chalk-line)) 0 100% / 100% 2px no-repeat,
+      var(--court);
+  }
+  /* court corner ticks */
+  .hero::before, .hero::after {
+    content: "";
+    position: absolute;
+    width: 34px; height: 34px;
+    border: 3px solid var(--chalk-line);
+  }
+  .hero::before { top: 26px; left: 26px; border-right: 0; border-bottom: 0; }
+  .hero::after { bottom: 26px; right: 26px; border-left: 0; border-top: 0; }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    gap: 48px;
+    align-items: center;
+  }
+  .hero h1 {
+    font-size: clamp(42px, 6.5vw, 72px);
+    font-weight: 900;
+    line-height: 1.02;
+    margin: 18px 0 10px;
+  }
+  .hero h1 .serve {
+    display: block;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 0.52em;
+    color: var(--rose);
+    margin-top: 14px;
+  }
+  .hero-sub {
+    font-size: 18px;
+    color: var(--chalk-dim);
+    max-width: 46ch;
+    margin: 18px 0 30px;
+  }
+
+  .waitlist { display: flex; gap: 10px; flex-wrap: wrap; max-width: 480px; }
+  .waitlist input {
+    flex: 1 1 220px;
+    padding: 15px 18px;
+    font: inherit;
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--chalk);
+    border: 0;
+    border-radius: 12px;
+  }
+  .waitlist button {
+    flex: 0 0 auto;
+    padding: 15px 24px;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--optic);
+    border: 0;
+    border-radius: 12px;
+  }
+  .waitlist button:hover { background: #DCEE55; }
+  .form-note { font-size: 13px; color: var(--chalk-dim); margin-top: 12px; }
+  .form-error { font-size: 14px; color: var(--rose); font-weight: 600; margin-top: 10px; min-height: 1.2em; }
+  .form-success {
+    display: none;
+    padding: 18px 20px;
+    border: 2px solid var(--optic);
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    max-width: 480px;
+  }
+
+  /* Mini phone mockup */
+  .mini-phone {
+    justify-self: center;
+    width: 250px;
+    background: var(--chalk);
+    border-radius: 26px;
+    border: 8px solid var(--court-deep);
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    color: var(--ink);
+    transform: rotate(3deg);
+  }
+  .mp-photo {
+    height: 190px;
+    background: linear-gradient(135deg, #14503C, #3E7C9B);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--chalk);
+    font-size: 44px;
+    font-weight: 900;
+  }
+  .mp-body { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .mp-name { font-weight: 800; font-size: 17px; letter-spacing: -0.01em; }
+  .mp-name small { font-weight: 600; color: rgba(19,42,33,0.6); }
+  .mp-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .mp-tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border: 2px solid var(--court);
+    color: var(--court);
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
+  .mp-acts { display: flex; justify-content: center; gap: 14px; padding-top: 6px; }
+  .mp-act {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: 2px solid rgba(19,42,33,0.18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    background: #FFFDF7;
+  }
+  .mp-act.like { border-color: var(--rose-deep); }
+
+  /* ---------- Scoreboard strip ---------- */
+  .scorestrip {
+    border-bottom: 2px solid var(--chalk-line);
+    background: var(--court-deep);
+    overflow-x: auto;
+  }
+  .scorestrip-in {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 16px 24px;
+    min-width: max-content;
+    margin: 0 auto;
+  }
+  .score-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 2px solid var(--chalk-line);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .score-chip.is-date { border-color: var(--rose); color: var(--rose); }
+  .score-chip.is-play { border-color: var(--optic); color: var(--optic); }
+  .score-chip.is-friends { border-color: var(--blue); color: #9CC4D8; }
+
+  /* ---------- Sections ---------- */
+  .section { padding: 76px 0; border-bottom: 2px solid var(--chalk-line); }
+  .section-head { max-width: 56ch; margin-bottom: 40px; }
+  .section-head h2 {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 900;
+    margin-top: 12px;
+  }
+  .section-head p { color: var(--chalk-dim); margin-top: 12px; font-size: 16.5px; }
+
+  /* How it works — service box grid */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 2px solid var(--chalk-line);
+  }
+  .step { padding: 28px 24px 32px; }
+  .step + .step { border-left: 2px solid var(--chalk-line); }
+  .step-num {
+    font-size: 40px;
+    font-weight: 900;
+    color: var(--optic);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .step h3 { font-size: 19px; margin: 14px 0 8px; }
+  .step p { font-size: 15px; color: var(--chalk-dim); }
+
+  /* Modes */
+  .modes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .mode-card {
+    border: 2px solid var(--chalk-line);
+    border-top-width: 6px;
+    border-radius: 16px;
+    padding: 26px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mode-card.is-date { border-top-color: var(--rose); }
+  .mode-card.is-play { border-top-color: var(--optic); }
+  .mode-card.is-friends { border-top-color: var(--blue); }
+  .mode-card .emoji { font-size: 30px; }
+  .mode-card h3 { font-size: 21px; }
+  .mode-card p { font-size: 15px; color: var(--chalk-dim); }
+  .modes-note {
+    margin-top: 22px;
+    font-size: 15px;
+    color: var(--chalk-dim);
+    font-family: var(--serif);
+    font-style: italic;
+  }
+
+  /* Why a game beats dinner */
+  .args { display: flex; flex-direction: column; }
+  .arg {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 20px;
+    padding: 26px 0;
+    align-items: start;
+  }
+  .arg + .arg { border-top: 2px solid var(--chalk-line); }
+  .arg-score {
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    font-variant-numeric: tabular-nums;
+    color: var(--optic);
+    padding-top: 3px;
+  }
+  .arg h3 { font-size: 20px; margin-bottom: 6px; }
+  .arg p { color: var(--chalk-dim); font-size: 15.5px; max-width: 62ch; }
+
+  /* Founding members */
+  .perks { display: flex; flex-direction: column; gap: 0; border: 2px solid var(--chalk-line); }
+  .perk {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    font-size: 16.5px;
+    font-weight: 600;
+  }
+  .perk + .perk { border-top: 2px solid var(--chalk-line); }
+  .perk .tick { color: var(--optic); font-weight: 900; font-size: 18px; }
+
+  /* Cities */
+  .cities { display: flex; flex-wrap: wrap; gap: 10px; }
+  .city {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 18px;
+    border: 2px solid var(--chalk-line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--chalk);
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .city:hover { border-color: var(--optic); }
+  .city .count {
+    font-size: 12.5px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--optic);
+    min-width: 2ch;
+    text-align: center;
+  }
+  .cities-note { margin-top: 16px; font-size: 13.5px; color: var(--chalk-dim); }
+
+  /* FAQ */
+  .faq { display: flex; flex-direction: column; border: 2px solid var(--chalk-line); }
+  .faq details + details { border-top: 2px solid var(--chalk-line); }
+  .faq summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    font-size: 17px;
+    font-weight: 800;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; font-size: 22px; font-weight: 700; color: var(--optic); flex: 0 0 auto; }
+  .faq details[open] summary::after { content: "–"; }
+  .faq .faq-a { padding: 0 24px 22px; color: var(--chalk-dim); font-size: 15.5px; max-width: 70ch; }
+
+  /* Closing CTA */
+  .closing { padding: 84px 0; text-align: center; }
+  .closing h2 { font-size: clamp(30px, 4.6vw, 46px); font-weight: 900; }
+  .closing .serve { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--rose); }
+  .closing .waitlist { margin: 30px auto 0; justify-content: center; }
+  .closing .form-success { margin: 30px auto 0; }
+
+  /* Footer */
+  footer { border-top: 2px solid var(--chalk-line); background: var(--court-deep); }
+  .foot {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 34px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    font-size: 14px;
+    color: var(--chalk-dim);
+  }
+  .foot .mark { font-size: 19px; }
+  .foot-links { display: flex; gap: 20px; flex-wrap: wrap; }
+  .foot a { color: var(--chalk-dim); text-decoration: none; }
+  .foot a:hover { color: var(--optic); }
+
+  /* Reveal animation */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+  }
+
+  @media (max-width: 860px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+    .mini-phone { display: none; }
+    .steps { grid-template-columns: 1fr; }
+    .step + .step { border-left: 0; border-top: 2px solid var(--chalk-line); }
+    .modes { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <span class="mark">40<span class="slash">/</span><span class="love">Love</span></span>
+    <a class="nav-cta" href="#join">Join the waitlist</a>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">A dating app for racquet sports people</p>
+      <h1>The first date is a game.<span class="serve">Love at first serve.</span></h1>
+      <p class="hero-sub">40/Love connects active singles through the racquet sports they already love — tennis, pickleball, padel, racquetball, and squash. Match on sport, skill, and vibe, then meet on the court instead of across a table.</p>
+      <form class="waitlist" id="hero-form" novalidate>
+        <input type="email" id="hero-email" placeholder="you@example.com" aria-label="Email address" autocomplete="email">
+        <button type="submit">Join the waitlist</button>
+      </form>
+      <p class="form-success" id="hero-success">You're on the list — see you on the court. 🎾</p>
+      <p class="form-error" id="hero-error" role="alert" aria-live="polite"></p>
+      <p class="form-note">Launching city by city. Free for founding members.</p>
+    </div>
+    <div class="mini-phone" aria-hidden="true">
+      <div class="mp-photo">P</div>
+      <div class="mp-body">
+        <div class="mp-name">Priya <small>29</small></div>
+        <div class="mp-tags">
+          <span class="mp-tag">Tennis · NTRP 3.5</span>
+          <span class="mp-tag">0.8 mi</span>
+        </div>
+        <div class="mp-acts">
+          <span class="mp-act">✕</span>
+          <span class="mp-act">🎾</span>
+          <span class="mp-act like">❤️</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="scorestrip" aria-hidden="true">
+  <div class="scorestrip-in">
+    <span class="score-chip">40 – LOVE</span>
+    <span class="score-chip is-date">❤️ DATE</span>
+    <span class="score-chip is-play">🎾 PLAY</span>
+    <span class="score-chip is-friends">👥 FRIENDS</span>
+    <span class="score-chip">15 – 30 – 40 – ❤</span>
+  </div>
+</div>
+
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">How it works</p>
+      <h2>From match to match point in three steps.</h2>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Create your player profile</h3>
+        <p>Your sports, your level (NTRP, DUPR, or just "beginner and loving it"), your availability, and what you're here for.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Match on sport, skill &amp; vibe</h3>
+        <p>We surface people nearby who play what you play, at a level that makes for a real rally — not a lopsided one.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Meet on the court</h3>
+        <p>Propose a court, day, and time right in the chat. An hour of doubles says more than a week of texting.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="modes">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Three modes</p>
+      <h2>Dating is the headline. Playing is the point.</h2>
+    </div>
+    <div class="modes reveal">
+      <div class="mode-card is-date">
+        <span class="emoji" aria-hidden="true">❤️</span>
+        <h3>Date</h3>
+        <p>Find romantic matches who'd rather rally than sit through another interview over drinks.</p>
+      </div>
+      <div class="mode-card is-play">
+        <span class="emoji" aria-hidden="true">🎾</span>
+        <h3>Play</h3>
+        <p>Find hitting and practice partners at your level, on your schedule, at your courts.</p>
+      </div>
+      <div class="mode-card is-friends">
+        <span class="emoji" aria-hidden="true">👥</span>
+        <h3>Friends</h3>
+        <p>Meet people for leagues, round robins, and social mixers — your racquet community, in one place.</p>
+      </div>
+    </div>
+    <p class="modes-note reveal">Not dating? Play and Friends modes are for everyone.</p>
+  </div>
+</section>
+
+<section class="section" id="why">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Why it works</p>
+      <h2>A game beats dinner.</h2>
+    </div>
+    <div class="args">
+      <div class="arg reveal">
+        <span class="arg-score">15–0</span>
+        <div>
+          <h3>You already share something you love</h3>
+          <p>The hardest part of a first date is finding common ground. Yours is literally painted on the court before you say a word.</p>
+        </div>
+      </div>
+      <div class="arg reveal">
+        <span class="arg-score">30–0</span>
+        <div>
+          <h3>Rallying beats small talk</h3>
+          <p>An hour of play shows you how someone competes, laughs, loses, and celebrates. No résumé recital required.</p>
+        </div>
+      </div>
+      <div class="arg reveal">
+        <span class="arg-score">40–0</span>
+        <div>
+          <h3>Public courts, low pressure</h3>
+          <p>Daylight, public places, a natural end time, and an easy "same time next week?" if it clicks. First dates the comfortable way.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="founding">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Founding members</p>
+      <h2>Early birds get the court.</h2>
+      <p>Join the waitlist now and you're a founding member when we launch in your city.</p>
+    </div>
+    <div class="perks reveal">
+      <div class="perk"><span class="tick" aria-hidden="true">✓</span> Free premium for your first 6 months</div>
+      <div class="perk"><span class="tick" aria-hidden="true">✓</span> First invites to 40/Love Social Mixers and round robins</div>
+      <div class="perk"><span class="tick" aria-hidden="true">✓</span> A vote on which cities we launch next</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="cities">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">City by city</p>
+      <h2>We launch one city at a time — so your matches are actually nearby.</h2>
+      <p>A dating app only works when the people on it live near you. We build a full local community before moving to the next city. Vote for yours:</p>
+    </div>
+    <div class="cities reveal" id="city-list">
+      <button class="city" data-city="Austin">Austin <span class="count">0</span></button>
+      <button class="city" data-city="San Diego">San Diego <span class="count">0</span></button>
+      <button class="city" data-city="Miami">Miami <span class="count">0</span></button>
+      <button class="city" data-city="Phoenix">Phoenix <span class="count">0</span></button>
+      <button class="city" data-city="Denver">Denver <span class="count">0</span></button>
+      <button class="city" data-city="Your city?">Your city? <span class="count">0</span></button>
+    </div>
+    <p class="cities-note">Votes are stored on this device in this demo — the live site will count them for real.</p>
+  </div>
+</section>
+
+<section class="section" id="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">FAQ</p>
+      <h2>Before you ask.</h2>
+    </div>
+    <div class="faq reveal">
+      <details>
+        <summary>Is 40/Love only for dating?</summary>
+        <p class="faq-a">No — dating is one of three modes. Play mode finds you hitting partners and Friends mode is for leagues and social play. Plenty of members will never use Date mode, and that's the plan.</p>
+      </details>
+      <details>
+        <summary>Which sports are included?</summary>
+        <p class="faq-a">Tennis, pickleball, padel, racquetball, and squash at launch. You can list more than one — most players do.</p>
+      </details>
+      <details>
+        <summary>What skill level do I need?</summary>
+        <p class="faq-a">Any. You set your level — from "started last month" to tournament ratings like NTRP or DUPR — and we match you with people who make for a fun, competitive-enough rally.</p>
+      </details>
+      <details>
+        <summary>When does it launch?</summary>
+        <p class="faq-a">We're validating with players right now and launching in one city first. Waitlist members hear first — and the city with the most votes has a head start.</p>
+      </details>
+      <details>
+        <summary>How much will it cost?</summary>
+        <p class="faq-a">Free to join, match, and message. A premium tier with extras comes later — founding members get it free for 6 months.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="closing" id="join">
+  <div class="wrap">
+    <p class="eyebrow reveal">Your serve</p>
+    <h2 class="reveal">Meet someone on the court,<br><span class="serve">not at a bar.</span></h2>
+    <form class="waitlist" id="join-form" novalidate>
+      <input type="email" id="join-email" placeholder="you@example.com" aria-label="Email address" autocomplete="email">
+      <button type="submit">Join the waitlist</button>
+    </form>
+    <p class="form-success" id="join-success">You're on the list — see you on the court. 🎾</p>
+    <p class="form-error" id="join-error" role="alert" aria-live="polite"></p>
+  </div>
+</section>
+
+<footer>
+  <div class="foot">
+    <span class="mark">40<span class="slash">/</span><span class="love">Love</span></span>
+    <div class="foot-links">
+      <a href="mailto:hello@40love.app">hello@40love.app</a>
+      <a href="#top">Instagram @fortylove</a>
+      <a href="#top">TikTok @fortylove</a>
+    </div>
+    <span>© 2026 40/Love</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var LIST_KEY = '40love.waitlist';
+  var VOTE_KEY = '40love.cityvotes';
+
+  function readJson(key, fallback) {
+    try {
+      var v = JSON.parse(localStorage.getItem(key));
+      return v === null || v === undefined ? fallback : v;
+    } catch (e) { return fallback; }
+  }
+  function writeJson(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* private mode: demo continues in memory */ }
+  }
+
+  /* Waitlist forms */
+  function wireForm(formId, emailId, successId, errorId) {
+    var form = document.getElementById(formId);
+    var email = document.getElementById(emailId);
+    var success = document.getElementById(successId);
+    var error = document.getElementById(errorId);
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var val = email.value.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) {
+        error.textContent = 'That email doesn’t look right — check it and try again.';
+        return;
+      }
+      error.textContent = '';
+      var list = readJson(LIST_KEY, []);
+      if (list.indexOf(val) === -1) {
+        list.push(val);
+        writeJson(LIST_KEY, list);
+        success.textContent = 'You’re on the list — see you on the court. 🎾';
+      } else {
+        success.textContent = 'You’re already on the list — we’ll see you on the court. 🎾';
+      }
+      form.style.display = 'none';
+      success.style.display = 'block';
+    });
+  }
+  wireForm('hero-form', 'hero-email', 'hero-success', 'hero-error');
+  wireForm('join-form', 'join-email', 'join-success', 'join-error');
+
+  /* City votes */
+  var votes = readJson(VOTE_KEY, {});
+  var cityButtons = document.querySelectorAll('.city');
+  Array.prototype.forEach.call(cityButtons, function (btn) {
+    var name = btn.getAttribute('data-city');
+    var count = btn.querySelector('.count');
+    count.textContent = votes[name] || 0;
+    btn.addEventListener('click', function () {
+      votes[name] = (votes[name] || 0) + 1;
+      writeJson(VOTE_KEY, votes);
+      count.textContent = votes[name];
+    });
+  });
+
+  /* Scroll reveal */
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reveals = document.querySelectorAll('.reveal');
+  if (reduced || !('IntersectionObserver' in window)) {
+    Array.prototype.forEach.call(reveals, function (el) { el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          en.target.classList.add('in');
+          io.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    Array.prototype.forEach.call(reveals, function (el) { io.observe(el); });
+  }
+}());
+</script>
+</body>
+</html>

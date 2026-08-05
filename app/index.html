@@ -1,0 +1,1712 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>40/Love — App Prototype</title>
+<meta name="description" content="Clickable prototype of 40/Love, the dating and social app for racquet sports players. Love at first serve.">
+<style>
+  :root {
+    --court: #0F3D2E;
+    --ink: #132A21;
+    --chalk: #F6F4EC;
+    --optic: #CFE23F;
+    --rose: #E15A72;
+    --blue: #3E7C9B;
+    /* Derived shades (text-safe versions of the accents, green-biased neutrals) */
+    --rose-deep: #C23B55;
+    --blue-deep: #33677F;
+    --optic-deep: #6B7A1E;
+    --ink-soft: rgba(19, 42, 33, 0.62);
+    --ink-faint: rgba(19, 42, 33, 0.14);
+    --chalk-line: rgba(246, 244, 236, 0.85);
+    --serif: Georgia, 'Times New Roman', serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--court);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* Court-line backdrop behind the phone frame */
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 32px 16px;
+    background:
+      linear-gradient(rgba(246,244,236,0.08), rgba(246,244,236,0.08)) 50% 0 / 2px 100% no-repeat,
+      linear-gradient(rgba(246,244,236,0.08), rgba(246,244,236,0.08)) 0 50% / 100% 2px no-repeat,
+      var(--court);
+  }
+
+  .stage-mark {
+    color: var(--chalk);
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+  .stage-mark .slash { color: var(--optic); font-size: 1.15em; font-weight: 800; }
+  .stage-mark .love { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--rose); }
+  .stage-tag {
+    color: var(--chalk-line);
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 15px;
+    margin-top: -12px;
+  }
+
+  .phone {
+    width: 390px;
+    max-width: 100%;
+    height: 780px;
+    max-height: 85vh;
+    background: var(--chalk);
+    border-radius: 34px;
+    border: 10px solid #0A2A1F;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (max-width: 520px) {
+    .stage { padding: 0; gap: 0; }
+    .stage-mark, .stage-tag { display: none; }
+    .phone {
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      max-height: none;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+
+  /* ---------- Screens ---------- */
+  .screen { display: none; flex-direction: column; flex: 1; min-height: 0; }
+  .screen.active { display: flex; }
+
+  .scroll { flex: 1; overflow-y: auto; min-height: 0; padding: 16px 18px 24px; }
+
+  h1, h2, h3 { margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+  }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: 0;
+    border-radius: 12px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid var(--blue);
+    outline-offset: 2px;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 15px 18px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 12px;
+  }
+  .btn-primary { background: var(--court); color: var(--chalk); }
+  .btn-primary:hover { background: #14503C; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 2px solid var(--ink-faint);
+  }
+  .btn-ghost:hover { border-color: var(--ink); }
+
+  input[type="text"], input[type="number"], input[type="email"], textarea {
+    width: 100%;
+    padding: 13px 14px;
+    font: inherit;
+    font-size: 16px;
+    color: var(--ink);
+    background: #FFFDF7;
+    border: 2px solid var(--ink-faint);
+    border-radius: 12px;
+  }
+  input:focus, textarea:focus { border-color: var(--court); outline: none; }
+  label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 6px; }
+
+  /* ---------- Welcome ---------- */
+  #screen-welcome {
+    background: var(--court);
+    color: var(--chalk);
+    justify-content: space-between;
+    padding: 48px 28px 36px;
+  }
+  .welcome-top { display: flex; flex-direction: column; gap: 10px; }
+  .welcome-mark { font-size: 52px; font-weight: 900; letter-spacing: -0.03em; line-height: 1; }
+  .welcome-mark .slash { color: var(--optic); font-weight: 800; }
+  .welcome-mark .love { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--rose); }
+  .welcome-tag { font-family: var(--serif); font-style: italic; font-size: 20px; color: var(--chalk-line); }
+  .welcome-line {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 2px solid rgba(246,244,236,0.25);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--chalk-line);
+    max-width: 30ch;
+  }
+  .welcome-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 22px;
+    padding: 7px 12px;
+    border: 2px solid rgba(246,244,236,0.35);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.06em;
+    align-self: flex-start;
+  }
+  .welcome-actions { display: flex; flex-direction: column; gap: 10px; }
+  #screen-welcome .btn-primary { background: var(--optic); color: var(--ink); }
+  #screen-welcome .btn-primary:hover { background: #DCEE55; }
+  #screen-welcome .btn-ghost { color: var(--chalk); border-color: rgba(246,244,236,0.4); }
+  #screen-welcome .btn-ghost:hover { border-color: var(--chalk); }
+
+  /* ---------- Onboarding ---------- */
+  .ob-head { padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+  .dots { display: flex; gap: 6px; }
+  .dots span {
+    width: 26px; height: 5px; border-radius: 3px;
+    background: var(--ink-faint);
+  }
+  .dots span.on { background: var(--court); }
+  .ob-body { display: flex; flex-direction: column; gap: 16px; padding-top: 14px; }
+  .ob-foot { padding: 14px 18px 22px; display: flex; gap: 10px; }
+  .ob-foot .btn-back { flex: 0 0 auto; width: auto; padding: 15px 18px; }
+  .hint { font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin: 0; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 10px 15px;
+    border: 2px solid var(--ink-faint);
+    border-radius: 999px;
+    background: #FFFDF7;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .chip[aria-pressed="true"] { background: var(--court); border-color: var(--court); color: var(--chalk); }
+
+  .mode-rows { display: flex; flex-direction: column; gap: 10px; }
+  .mode-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    padding: 14px;
+    background: #FFFDF7;
+    border: 2px solid var(--ink-faint);
+    border-radius: 14px;
+  }
+  .mode-row[aria-pressed="true"] { border-color: var(--ink); }
+  .mode-row[aria-pressed="true"].m-date { border-color: var(--rose-deep); background: #FBEFF1; }
+  .mode-row[aria-pressed="true"].m-play { border-color: var(--optic-deep); background: #F6F8E3; }
+  .mode-row[aria-pressed="true"].m-friends { border-color: var(--blue-deep); background: #EBF2F5; }
+  .mode-emoji { font-size: 22px; }
+  .mode-name { font-weight: 800; font-size: 15px; }
+  .mode-desc { font-size: 13px; color: var(--ink-soft); }
+  .mode-check { margin-left: auto; font-weight: 800; visibility: hidden; }
+  .mode-row[aria-pressed="true"] .mode-check { visibility: visible; }
+
+  /* ---------- App bar + tab bar ---------- */
+  .appbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px 10px;
+    border-bottom: 2px solid var(--ink-faint);
+  }
+  .appbar-mark { font-size: 19px; font-weight: 900; letter-spacing: -0.02em; }
+  .appbar-mark .slash { color: var(--optic-deep); }
+  .appbar-mark .love { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--rose-deep); }
+  .appbar-title { font-size: 17px; font-weight: 800; }
+  .icon-btn {
+    background: transparent;
+    padding: 6px;
+    border-radius: 10px;
+    color: var(--ink);
+    display: inline-flex;
+  }
+  .icon-btn:hover { background: var(--ink-faint); }
+
+  .tabbar {
+    display: flex;
+    border-top: 2px solid var(--ink-faint);
+    background: #FFFDF7;
+    padding: 6px 4px calc(8px + env(safe-area-inset-bottom));
+  }
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 7px 2px;
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 10px;
+  }
+  .tab svg { width: 22px; height: 22px; }
+  .tab.on { color: var(--court); }
+
+  /* ---------- Discover ---------- */
+  .mode-switch {
+    display: flex;
+    gap: 6px;
+    margin: 14px 18px 4px;
+    padding: 5px;
+    background: #ECE9DE;
+    border-radius: 999px;
+  }
+  .mode-seg {
+    flex: 1;
+    padding: 9px 6px;
+    border-radius: 999px;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+  .mode-seg.on { color: var(--chalk); }
+  .mode-seg.on[data-mode="date"] { background: var(--rose-deep); }
+  .mode-seg.on[data-mode="play"] { background: var(--optic); color: var(--ink); }
+  .mode-seg.on[data-mode="friends"] { background: var(--blue-deep); }
+
+  .deck-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 12px 18px 14px; }
+  .card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #FFFDF7;
+    border: 2px solid var(--ink-faint);
+    border-radius: 18px;
+    overflow: hidden;
+    touch-action: pan-y;
+    position: relative;
+  }
+  .card.dragging { transition: none; }
+  .card.springing { transition: transform 0.25s ease; }
+  .stamp {
+    position: absolute;
+    top: 22px;
+    padding: 6px 14px;
+    border: 3px solid;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    transform: rotate(-12deg);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .stamp-like { left: 18px; border-color: var(--court); color: var(--court); }
+  .stamp-pass { right: 18px; border-color: var(--rose-deep); color: var(--rose-deep); transform: rotate(12deg); }
+
+  .card-photo {
+    flex: 0 0 46%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--chalk);
+    font-size: 56px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  }
+  .card-body { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; }
+  .card-name { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .card-name .age { font-weight: 600; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .tagrow { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border: 2px solid var(--ink-faint);
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+    background: var(--chalk);
+  }
+  .tag-sport { border-color: var(--court); color: var(--court); }
+  .card-bio { font-size: 14px; line-height: 1.55; margin: 0; }
+  .card-avail { font-size: 13px; color: var(--ink-soft); }
+
+  .deck-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding-top: 14px;
+  }
+  .act {
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: #FFFDF7;
+    border: 2px solid var(--ink-faint);
+    box-shadow: 0 3px 10px rgba(19,42,33,0.10);
+  }
+  .act:hover { transform: translateY(-2px); }
+  .act-pass { color: var(--ink-soft); font-weight: 800; }
+  .act-propose {
+    width: 68px; height: 68px;
+    background: var(--court);
+    border-color: var(--court);
+    font-size: 28px;
+  }
+  .act-like.c-date { border-color: var(--rose-deep); }
+  .act-like.c-play { border-color: var(--optic-deep); }
+  .act-like.c-friends { border-color: var(--blue-deep); }
+  .act-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    padding-top: 8px;
+  }
+
+  .deck-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    padding: 24px;
+    border: 2px dashed var(--ink-faint);
+    border-radius: 18px;
+  }
+  .deck-empty .big { font-size: 40px; }
+
+  /* ---------- Matches / chat ---------- */
+  .thread {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    padding: 12px 10px;
+    background: transparent;
+    border-radius: 14px;
+    border-bottom: 2px solid var(--ink-faint);
+  }
+  .thread:hover { background: rgba(19,42,33,0.04); }
+  .ava {
+    flex: 0 0 auto;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--chalk);
+    font-weight: 800;
+    font-size: 18px;
+  }
+  .thread-mid { flex: 1; min-width: 0; }
+  .thread-name { font-weight: 800; font-size: 15px; }
+  .thread-prev {
+    font-size: 13px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+  .thread-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .serve-badge {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--optic-deep);
+    border: 2px solid var(--optic-deep);
+    padding: 3px 7px;
+    border-radius: 999px;
+  }
+  .unread-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rose-deep); }
+
+  .chat-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 2px solid var(--ink-faint);
+  }
+  .chat-head .ava { width: 40px; height: 40px; font-size: 15px; }
+  .chat-head-name { font-weight: 800; }
+  .chat-head-sub { font-size: 12px; color: var(--ink-soft); }
+  .chat-log { flex: 1; overflow-y: auto; min-height: 0; padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 78%; display: flex; flex-direction: column; gap: 3px; }
+  .msg .bubble {
+    padding: 10px 13px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .msg .when { font-size: 11px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .msg.them { align-self: flex-start; }
+  .msg.them .bubble { background: #FFFDF7; border: 2px solid var(--ink-faint); border-bottom-left-radius: 6px; }
+  .msg.me { align-self: flex-end; align-items: flex-end; }
+  .msg.me .bubble { background: var(--court); color: var(--chalk); border-bottom-right-radius: 6px; }
+  .courtcard {
+    border: 2px solid var(--court);
+    border-radius: 14px;
+    overflow: hidden;
+    min-width: 200px;
+  }
+  .msg.me .courtcard { border-color: var(--optic); }
+  .courtcard-top {
+    background: var(--court);
+    color: var(--chalk);
+    padding: 7px 12px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .courtcard-body { padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 3px; background: #FFFDF7; color: var(--ink); }
+  .courtcard-body strong { font-size: 14px; }
+  .courtcard-body span { font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+  .chat-tools { display: flex; gap: 8px; padding: 8px 14px 0; }
+  .tool-chip {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 7px 12px;
+    border: 2px solid var(--court);
+    color: var(--court);
+    border-radius: 999px;
+    background: transparent;
+  }
+  .tool-chip:hover { background: var(--court); color: var(--chalk); }
+  .chat-input { display: flex; gap: 8px; padding: 10px 14px calc(14px + env(safe-area-inset-bottom)); }
+  .chat-input input { flex: 1; border-radius: 999px; }
+  .chat-send {
+    flex: 0 0 auto;
+    padding: 0 20px;
+    border-radius: 999px;
+    background: var(--court);
+    color: var(--chalk);
+    font-weight: 800;
+  }
+
+  /* ---------- Events ---------- */
+  .week-head {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    margin: 18px 0 8px;
+  }
+  .week-head:first-child { margin-top: 4px; }
+  .event {
+    display: flex;
+    gap: 12px;
+    padding: 13px;
+    background: #FFFDF7;
+    border: 2px solid var(--ink-faint);
+    border-radius: 16px;
+    margin-bottom: 10px;
+  }
+  .event-date {
+    flex: 0 0 auto;
+    width: 52px;
+    border: 2px solid var(--court);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .event-date .dow { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+  .event-date .dom { font-size: 20px; font-weight: 900; }
+  .event-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .event-title { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
+  .event-meta { font-size: 12.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .event-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .event-tags .tag { font-size: 11px; padding: 3px 8px; }
+  .event-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 8px; }
+  .spots { font-size: 11px; font-weight: 700; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .join-btn {
+    font-size: 13px;
+    font-weight: 800;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--court);
+    color: var(--chalk);
+    white-space: nowrap;
+  }
+  .join-btn.going { background: transparent; color: var(--court); border: 2px solid var(--court); }
+
+  /* ---------- Profile & settings ---------- */
+  .profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    padding: 22px 16px 18px;
+    background: #FFFDF7;
+    border: 2px solid var(--ink-faint);
+    border-radius: 18px;
+  }
+  .profile-card .ava { width: 84px; height: 84px; font-size: 30px; }
+  .stats {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .stat {
+    flex: 1;
+    border: 2px solid var(--ink-faint);
+    border-radius: 14px;
+    padding: 12px 8px;
+    text-align: center;
+    background: #FFFDF7;
+  }
+  .stat .num { font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .stat .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-soft); margin-top: 2px; }
+  .bio-edit { margin-top: 14px; }
+  .bio-edit textarea { min-height: 74px; resize: vertical; }
+
+  .set-group { margin-bottom: 20px; }
+  .set-group h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-soft); margin-bottom: 8px; }
+  .set-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 14px;
+    background: #FFFDF7;
+    border: 2px solid var(--ink-faint);
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+  .set-row .lab { font-size: 14px; font-weight: 700; }
+  .set-row .sub { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .switch {
+    flex: 0 0 auto;
+    width: 50px; height: 30px;
+    border-radius: 999px;
+    background: var(--ink-faint);
+    position: relative;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: #FFFDF7;
+    transition: transform 0.15s ease;
+  }
+  .switch[aria-checked="true"] { background: var(--court); }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); }
+  input[type="range"] { width: 100%; accent-color: var(--court); }
+  .range-val { font-variant-numeric: tabular-nums; font-weight: 800; }
+  .age-inputs { display: flex; align-items: center; gap: 8px; }
+  .age-inputs input { width: 74px; text-align: center; font-variant-numeric: tabular-nums; }
+  .danger { color: var(--rose-deep); border: 2px solid var(--rose-deep); background: transparent; }
+  .danger:hover { background: var(--rose-deep); color: var(--chalk); }
+
+  /* ---------- Sheet, modal, toast ---------- */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 30, 22, 0.55);
+    display: none;
+    align-items: flex-end;
+    z-index: 30;
+  }
+  .overlay.open { display: flex; }
+  .overlay.center { align-items: center; justify-content: center; padding: 24px; }
+  .sheet {
+    width: 100%;
+    background: var(--chalk);
+    border-radius: 22px 22px 0 0;
+    padding: 20px 18px calc(22px + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .sheet h2 { font-size: 19px; }
+  .sheet .sub { font-size: 13px; color: var(--ink-soft); margin: -8px 0 0; }
+  .pick-group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-soft); margin-bottom: 7px; }
+
+  .match-modal {
+    background: var(--court);
+    color: var(--chalk);
+    border: 3px solid var(--optic);
+    border-radius: 22px;
+    padding: 28px 22px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    max-width: 320px;
+    width: 100%;
+  }
+  .match-modal .score {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    font-variant-numeric: tabular-nums;
+    color: var(--optic);
+  }
+  .match-modal h2 { font-size: 28px; }
+  .match-modal h2 em { font-family: var(--serif); color: var(--rose); }
+  .match-avas { display: flex; }
+  .match-avas .ava { width: 68px; height: 68px; font-size: 24px; border: 3px solid var(--chalk); }
+  .match-avas .ava + .ava { margin-left: -14px; }
+  .match-modal p { margin: 0; font-size: 14px; color: var(--chalk-line); line-height: 1.5; }
+  .match-modal .btn-primary { background: var(--optic); color: var(--ink); }
+  .match-modal .btn-ghost { color: var(--chalk); border-color: rgba(246,244,236,0.4); }
+
+  .toast {
+    position: absolute;
+    left: 50%;
+    bottom: 92px;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--ink);
+    color: var(--chalk);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 11px 18px;
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 40;
+    max-width: 85%;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="stage-mark" aria-hidden="true">40<span class="slash">/</span><span class="love">Love</span></div>
+  <p class="stage-tag" aria-hidden="true">Love at first serve. — clickable prototype</p>
+
+  <div class="phone" id="phone">
+
+    <!-- WELCOME -->
+    <section class="screen active" id="screen-welcome" aria-label="Welcome">
+      <div class="welcome-top">
+        <div class="welcome-mark">40<span class="slash">/</span><span class="love">Love</span></div>
+        <div class="welcome-tag">Love at first serve.</div>
+        <p class="welcome-line">Meet active singles through tennis, pickleball, padel and more — the first date is a game, not dinner.</p>
+        <div class="welcome-score">40 – LOVE</div>
+      </div>
+      <div class="welcome-actions">
+        <button class="btn btn-primary" id="btn-create">Create profile</button>
+        <button class="btn btn-ghost" id="btn-continue">I already have an account</button>
+      </div>
+    </section>
+
+    <!-- ONBOARDING 1: name + age -->
+    <section class="screen" id="screen-ob1" aria-label="Your name and age">
+      <div class="ob-head">
+        <div class="dots"><span class="on"></span><span></span><span></span><span></span></div>
+        <h1>First things first</h1>
+      </div>
+      <div class="scroll ob-body">
+        <div>
+          <label for="ob-name">First name</label>
+          <input type="text" id="ob-name" autocomplete="given-name" placeholder="e.g. Alex">
+        </div>
+        <div>
+          <label for="ob-age">Age</label>
+          <input type="number" id="ob-age" inputmode="numeric" min="18" max="99" placeholder="e.g. 34">
+        </div>
+        <p class="hint">Your name and age appear on your player card. You must be 18 or older.</p>
+      </div>
+      <div class="ob-foot">
+        <button class="btn btn-primary" id="ob1-next">Next</button>
+      </div>
+    </section>
+
+    <!-- ONBOARDING 2: sports -->
+    <section class="screen" id="screen-ob2" aria-label="Pick your sports">
+      <div class="ob-head">
+        <div class="dots"><span class="on"></span><span class="on"></span><span></span><span></span></div>
+        <h1>What do you play?</h1>
+      </div>
+      <div class="scroll ob-body">
+        <div class="chips" id="ob-sports" role="group" aria-label="Sports">
+          <button class="chip" aria-pressed="false" data-sport="Tennis">Tennis</button>
+          <button class="chip" aria-pressed="false" data-sport="Pickleball">Pickleball</button>
+          <button class="chip" aria-pressed="false" data-sport="Padel">Padel</button>
+          <button class="chip" aria-pressed="false" data-sport="Racquetball">Racquetball</button>
+          <button class="chip" aria-pressed="false" data-sport="Squash">Squash</button>
+        </div>
+        <p class="hint">Pick everything you play — you'll match with people who share at least one sport.</p>
+      </div>
+      <div class="ob-foot">
+        <button class="btn btn-ghost btn-back" data-back="screen-ob1">Back</button>
+        <button class="btn btn-primary" id="ob2-next">Next</button>
+      </div>
+    </section>
+
+    <!-- ONBOARDING 3: skill -->
+    <section class="screen" id="screen-ob3" aria-label="Your skill level">
+      <div class="ob-head">
+        <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+        <h1>How's your game?</h1>
+      </div>
+      <div class="scroll ob-body">
+        <div class="chips" id="ob-skill" role="group" aria-label="Skill level">
+          <button class="chip" aria-pressed="false" data-skill="Beginner">Beginner</button>
+          <button class="chip" aria-pressed="false" data-skill="Intermediate">Intermediate</button>
+          <button class="chip" aria-pressed="false" data-skill="Advanced">Advanced</button>
+          <button class="chip" aria-pressed="false" data-skill="Competitive">Competitive</button>
+        </div>
+        <div>
+          <label for="ob-rating">Official rating <span style="font-weight:400; color:var(--ink-soft)">(optional)</span></label>
+          <input type="text" id="ob-rating" placeholder="e.g. NTRP 3.5 or DUPR 4.0">
+        </div>
+        <p class="hint">Honest levels make better matches — nobody enjoys a 6–0, 6–0 first date.</p>
+      </div>
+      <div class="ob-foot">
+        <button class="btn btn-ghost btn-back" data-back="screen-ob2">Back</button>
+        <button class="btn btn-primary" id="ob3-next">Next</button>
+      </div>
+    </section>
+
+    <!-- ONBOARDING 4: modes -->
+    <section class="screen" id="screen-ob4" aria-label="Choose your modes">
+      <div class="ob-head">
+        <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
+        <h1>What are you here for?</h1>
+      </div>
+      <div class="scroll ob-body">
+        <div class="mode-rows" id="ob-modes" role="group" aria-label="Modes">
+          <button class="mode-row m-date" aria-pressed="true" data-mode="date">
+            <span class="mode-emoji" aria-hidden="true">❤️</span>
+            <span>
+              <span class="mode-name">Date</span>
+              <span class="mode-desc" style="display:block">Find romantic matches</span>
+            </span>
+            <span class="mode-check" aria-hidden="true">✓</span>
+          </button>
+          <button class="mode-row m-play" aria-pressed="false" data-mode="play">
+            <span class="mode-emoji" aria-hidden="true">🎾</span>
+            <span>
+              <span class="mode-name">Play</span>
+              <span class="mode-desc" style="display:block">Find hitting &amp; practice partners</span>
+            </span>
+            <span class="mode-check" aria-hidden="true">✓</span>
+          </button>
+          <button class="mode-row m-friends" aria-pressed="false" data-mode="friends">
+            <span class="mode-emoji" aria-hidden="true">👥</span>
+            <span>
+              <span class="mode-name">Friends</span>
+              <span class="mode-desc" style="display:block">Leagues, mixers &amp; social play</span>
+            </span>
+            <span class="mode-check" aria-hidden="true">✓</span>
+          </button>
+        </div>
+        <p class="hint">Pick at least one — you can switch modes anytime from Discover.</p>
+      </div>
+      <div class="ob-foot">
+        <button class="btn btn-ghost btn-back" data-back="screen-ob3">Back</button>
+        <button class="btn btn-primary" id="ob4-done">Step on court</button>
+      </div>
+    </section>
+
+    <!-- MAIN: DISCOVER -->
+    <section class="screen" id="screen-discover" aria-label="Discover players">
+      <div class="appbar">
+        <div class="appbar-mark">40<span class="slash">/</span><span class="love">Love</span></div>
+      </div>
+      <div class="mode-switch" role="group" aria-label="Mode">
+        <button class="mode-seg on" data-mode="date">❤️ Date</button>
+        <button class="mode-seg" data-mode="play">🎾 Play</button>
+        <button class="mode-seg" data-mode="friends">👥 Friends</button>
+      </div>
+      <div class="deck-wrap" id="deck-wrap"></div>
+    </section>
+
+    <!-- MAIN: MATCHES -->
+    <section class="screen" id="screen-matches" aria-label="Matches and messages">
+      <div class="appbar"><h2 class="appbar-title">Matches</h2></div>
+      <div class="scroll" id="thread-list"></div>
+    </section>
+
+    <!-- CHAT -->
+    <section class="screen" id="screen-chat" aria-label="Chat">
+      <div class="chat-head">
+        <button class="icon-btn" id="chat-back" aria-label="Back to matches">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+        </button>
+        <span class="ava" id="chat-ava"></span>
+        <div>
+          <div class="chat-head-name" id="chat-name"></div>
+          <div class="chat-head-sub" id="chat-sub"></div>
+        </div>
+      </div>
+      <div class="chat-log" id="chat-log"></div>
+      <div class="chat-tools">
+        <button class="tool-chip" id="suggest-time">🎾 Suggest court time</button>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="chat-text" placeholder="Your serve…" aria-label="Message">
+        <button class="chat-send" id="chat-sendbtn">Send</button>
+      </div>
+    </section>
+
+    <!-- MAIN: EVENTS -->
+    <section class="screen" id="screen-events" aria-label="Events">
+      <div class="appbar"><h2 class="appbar-title">Events</h2></div>
+      <div class="scroll" id="event-list"></div>
+    </section>
+
+    <!-- MAIN: PROFILE -->
+    <section class="screen" id="screen-profile" aria-label="Your profile">
+      <div class="appbar">
+        <h2 class="appbar-title">Profile</h2>
+        <button class="icon-btn" id="open-settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"></path></svg>
+        </button>
+      </div>
+      <div class="scroll" id="profile-body"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="screen" id="screen-settings" aria-label="Settings">
+      <div class="chat-head">
+        <button class="icon-btn" id="settings-back" aria-label="Back to profile">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+        </button>
+        <div class="chat-head-name">Settings</div>
+      </div>
+      <div class="scroll">
+        <div class="set-group">
+          <h3>Modes</h3>
+          <div class="set-row">
+            <div><div class="lab">❤️ Date</div><div class="sub">Romantic matches</div></div>
+            <button class="switch" id="sw-date" role="switch" aria-checked="true" aria-label="Date mode"></button>
+          </div>
+          <div class="set-row">
+            <div><div class="lab">🎾 Play</div><div class="sub">Hitting partners</div></div>
+            <button class="switch" id="sw-play" role="switch" aria-checked="false" aria-label="Play mode"></button>
+          </div>
+          <div class="set-row">
+            <div><div class="lab">👥 Friends</div><div class="sub">Leagues &amp; social play</div></div>
+            <button class="switch" id="sw-friends" role="switch" aria-checked="false" aria-label="Friends mode"></button>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Discovery</h3>
+          <div class="set-row" style="flex-direction:column; align-items:stretch;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+              <span class="lab">Distance</span>
+              <span class="range-val"><span id="radius-val">15</span> mi</span>
+            </div>
+            <input type="range" id="radius" min="1" max="50" value="15" aria-label="Discovery radius in miles">
+          </div>
+          <div class="set-row">
+            <div class="lab">Age range</div>
+            <div class="age-inputs">
+              <input type="number" id="age-min" value="25" min="18" max="99" aria-label="Minimum age">
+              <span aria-hidden="true">–</span>
+              <input type="number" id="age-max" value="55" min="18" max="99" aria-label="Maximum age">
+            </div>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Notifications</h3>
+          <div class="set-row">
+            <div><div class="lab">New matches</div><div class="sub">It's a Match Point! alerts</div></div>
+            <button class="switch" id="sw-notif-match" role="switch" aria-checked="true" aria-label="New match notifications"></button>
+          </div>
+          <div class="set-row">
+            <div><div class="lab">Messages</div><div class="sub">When it's your serve</div></div>
+            <button class="switch" id="sw-notif-msg" role="switch" aria-checked="true" aria-label="Message notifications"></button>
+          </div>
+        </div>
+        <button class="btn danger" id="sign-out">Sign out</button>
+        <p class="hint" style="text-align:center; margin-top:12px;">40/Love prototype · not a real account</p>
+      </div>
+    </section>
+
+    <!-- Tab bar -->
+    <nav class="tabbar" id="tabbar" style="display:none" aria-label="Main navigation">
+      <button class="tab on" data-screen="screen-discover">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M5.5 5.5c3 2.6 3 10.4 0 13M18.5 5.5c-3 2.6-3 10.4 0 13"></path></svg>
+        Discover
+      </button>
+      <button class="tab" data-screen="screen-matches">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5c0 4.1-4 7.5-9 7.5-1 0-2-.13-2.9-.38L4 20l1.3-3.1C3.9 15.5 3 13.6 3 11.5 3 7.4 7 4 12 4s9 3.4 9 7.5z"></path></svg>
+        Matches
+      </button>
+      <button class="tab" data-screen="screen-events">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"></rect><path d="M3.5 10h17M8 2.8V7M16 2.8V7"></path></svg>
+        Events
+      </button>
+      <button class="tab" data-screen="screen-profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8.4" r="4"></circle><path d="M4.5 20.5c1.3-3.6 4.1-5.4 7.5-5.4s6.2 1.8 7.5 5.4"></path></svg>
+        Profile
+      </button>
+    </nav>
+
+    <!-- Propose-a-match sheet -->
+    <div class="overlay" id="propose-overlay">
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="propose-title">
+        <h2 id="propose-title">Propose a match</h2>
+        <p class="sub" id="propose-sub"></p>
+        <div class="pick-group">
+          <h3>Court</h3>
+          <div class="chips" id="pick-court">
+            <button class="chip" aria-pressed="true">Riverside Park Courts</button>
+            <button class="chip" aria-pressed="false">Eastside Racquet Club</button>
+            <button class="chip" aria-pressed="false">Sunset Rec Center</button>
+          </div>
+        </div>
+        <div class="pick-group">
+          <h3>Day</h3>
+          <div class="chips" id="pick-day">
+            <button class="chip" aria-pressed="true">Sat</button>
+            <button class="chip" aria-pressed="false">Sun</button>
+            <button class="chip" aria-pressed="false">Tue</button>
+            <button class="chip" aria-pressed="false">Thu</button>
+          </div>
+        </div>
+        <div class="pick-group">
+          <h3>Time</h3>
+          <div class="chips" id="pick-time">
+            <button class="chip" aria-pressed="false">8:00 AM</button>
+            <button class="chip" aria-pressed="true">10:00 AM</button>
+            <button class="chip" aria-pressed="false">5:30 PM</button>
+            <button class="chip" aria-pressed="false">7:00 PM</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="propose-send">Send match proposal</button>
+        <button class="btn btn-ghost" id="propose-cancel">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Match modal -->
+    <div class="overlay center" id="match-overlay">
+      <div class="match-modal" role="dialog" aria-modal="true" aria-labelledby="match-title">
+        <div class="score">40 – LOVE</div>
+        <h2 id="match-title">It's a <em>Match Point!</em></h2>
+        <div class="match-avas">
+          <span class="ava" id="match-ava-me"></span>
+          <span class="ava" id="match-ava-them"></span>
+        </div>
+        <p id="match-text"></p>
+        <button class="btn btn-primary" id="match-message">Send a message</button>
+        <button class="btn btn-ghost" id="match-keep">Keep playing</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Data ---------- */
+  var GRADS = [
+    ['#14503C', '#3E7C9B'], ['#0F3D2E', '#6B7A1E'], ['#C23B55', '#E15A72'],
+    ['#33677F', '#0F3D2E'], ['#6B7A1E', '#14503C'], ['#E15A72', '#33677F'],
+    ['#3E7C9B', '#6B7A1E'], ['#0F3D2E', '#C23B55'], ['#14503C', '#CFE23F'],
+    ['#33677F', '#E15A72'], ['#6B7A1E', '#3E7C9B'], ['#C23B55', '#0F3D2E']
+  ];
+
+  var PROFILES = [
+    { id: 'maya',   name: 'Maya',   age: 31, dist: 1.2, sports: ['Tennis'], skill: 'Advanced', rating: 'NTRP 4.0', avail: 'Weekday evenings · Sat mornings', bio: 'Litigator by day, baseline grinder by night. Looking for someone who can keep a rally going — in conversation too.' },
+    { id: 'diego',  name: 'Diego',  age: 38, dist: 2.8, sports: ['Padel'], skill: 'Intermediate', rating: '', avail: 'Weekends', bio: 'Moved here from Madrid two years ago and still evangelizing padel to everyone I meet. First round of horchata is on me.' },
+    { id: 'priya',  name: 'Priya',  age: 29, dist: 0.8, sports: ['Tennis', 'Pickleball'], skill: 'Intermediate', rating: 'NTRP 3.5', avail: 'Sun + Wed evenings', bio: 'Product designer who treats every third ball like a drop-shot opportunity. Winner picks the coffee spot after.' },
+    { id: 'sam',    name: 'Sam',    age: 45, dist: 3.1, sports: ['Pickleball'], skill: 'Competitive', rating: 'DUPR 4.2', avail: 'Early mornings, most days', bio: 'Recovering marathoner, fully converted to the kitchen line. I play hard and brunch harder.' },
+    { id: 'elena',  name: 'Elena',  age: 52, dist: 1.9, sports: ['Pickleball'], skill: 'Intermediate', rating: 'DUPR 3.4', avail: 'Weekday mornings', bio: 'Retired teacher, new to the city, and pickleball has been the best welcome committee. Looking for rally partners who laugh between points.' },
+    { id: 'marcus', name: 'Marcus', age: 34, dist: 4.5, sports: ['Squash'], skill: 'Advanced', rating: '', avail: 'Tue + Thu after 6', bio: 'Architect who thinks best inside four glass walls. If you can hold a T, you already have my attention.' },
+    { id: 'jordan', name: 'Jordan', age: 27, dist: 0.4, sports: ['Tennis'], skill: 'Beginner', rating: '', avail: 'Flexible — I make time', bio: 'Six lessons in and completely hooked. Patient hitting partners appreciated; enthusiasm guaranteed in return.' },
+    { id: 'grace',  name: 'Grace',  age: 41, dist: 5.2, sports: ['Tennis', 'Padel'], skill: 'Advanced', rating: 'NTRP 4.5', avail: 'Sat + Sun mornings', bio: 'ER nurse with a wicked slice. Weekends are sacred court time — join me and see if you can break serve.' },
+    { id: 'theo',   name: 'Theo',   age: 58, dist: 2.2, sports: ['Racquetball'], skill: 'Intermediate', rating: '', avail: 'Mon/Wed/Fri lunch', bio: 'Thirty years of racquetball and still learning new angles. Great listener, better lob. Grandkids say I’m cool; verify in person.' },
+    { id: 'nadia',  name: 'Nadia',  age: 33, dist: 6.7, sports: ['Padel'], skill: 'Beginner', rating: '', avail: 'Weekend afternoons', bio: 'Food scientist who joined a padel league on a dare and stayed for the people. Post-game taco recommendations are my specialty.' },
+    { id: 'chris',  name: 'Chris',  age: 48, dist: 3.8, sports: ['Pickleball', 'Tennis'], skill: 'Advanced', rating: 'DUPR 4.0', avail: 'Evenings after 7', bio: 'Two kids, one dog, zero interest in small talk at bars. Ten minutes of doubles tells you more than any bio could.' },
+    { id: 'lena',   name: 'Lena',   age: 25, dist: 9.8, sports: ['Squash', 'Tennis'], skill: 'Competitive', rating: '', avail: 'Weekday evenings', bio: 'Grad student and former junior squash champ. Fair warning: I call every let. Looking for people who love the grind.' }
+  ];
+
+  var THREADS = [
+    {
+      id: 'maya', unread: true, yourServe: true,
+      msgs: [
+        { who: 'them', text: 'Okay your backhand slice is genuinely rude 😄', when: 'Yesterday 8:42 PM' },
+        { who: 'me',   text: 'Years of being too lazy to hit topspin finally paying off', when: 'Yesterday 8:50 PM' },
+        { who: 'them', text: 'Rematch this weekend? Loser buys smoothies', when: 'Yesterday 9:03 PM' }
+      ]
+    },
+    {
+      id: 'sam', unread: false, yourServe: false,
+      msgs: [
+        { who: 'them', text: 'Great meeting you at the mixer! You held that kitchen line like a pro', when: 'Tue 7:15 PM' },
+        { who: 'me',   text: 'Ha, I was terrified the whole time. Let’s play again soon?', when: 'Tue 7:31 PM' },
+        { who: 'them', type: 'court', court: 'Sunset Rec Center', day: 'Sat', time: '9:00 AM', sport: 'Pickleball', when: 'Tue 7:40 PM' },
+        { who: 'me',   text: 'Booked it. Bringing my A-game and electrolytes', when: 'Tue 8:02 PM' }
+      ]
+    },
+    {
+      id: 'priya', unread: false, yourServe: true,
+      msgs: [
+        { who: 'them', text: 'So verdict on the new courts at Riverside?', when: 'Mon 6:20 PM' },
+        { who: 'them', text: 'Also I found a coffee place two blocks away. Strategic post-match option 👀', when: 'Mon 6:21 PM' }
+      ]
+    }
+  ];
+
+  var REPLIES = {
+    maya:  'Deal. Saturday, 10am, bring your rude slice 😤',
+    sam:   'That’s what I like to hear. See you at the kitchen line!',
+    priya: 'Right?? Okay — courts Thursday, coffee verdict after 🎾'
+  };
+
+  var EVENTS = [
+    { id: 'e1', week: 'This week', dow: 'Fri', dom: '7',  title: 'Sunset Doubles Social', venue: 'Riverside Park Courts', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6 },
+    { id: 'e2', week: 'This week', dow: 'Sat', dom: '8',  title: 'Beginner Pickleball Mixer', venue: 'Sunset Rec Center', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12 },
+    { id: 'e3', week: 'This week', dow: 'Sun', dom: '9',  title: '40/Love Round Robin', venue: 'Eastside Racquet Club', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3 },
+    { id: 'e4', week: 'Next week', dow: 'Wed', dom: '12', title: 'Padel Night Under the Lights', venue: 'Bayline Padel Center', time: '7:30 PM', sport: 'Padel', level: 'All levels', spots: 8 },
+    { id: 'e5', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Riverside Park Courts', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10 },
+    { id: 'e6', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Eastside Racquet Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5 }
+  ];
+
+  var MODE_CFG = {
+    date:    { likeIcon: '❤️', likeLabel: 'Like',            actLabel: 'Pass · Propose a match · Like',   klass: 'c-date' },
+    play:    { likeIcon: '🤝', likeLabel: 'Request to hit',  actLabel: 'Pass · Propose a match · Request to hit', klass: 'c-play' },
+    friends: { likeIcon: '👋', likeLabel: 'Wave',            actLabel: 'Pass · Propose a match · Wave',   klass: 'c-friends' }
+  };
+
+  /* ---------- State ---------- */
+  var STORE_KEY = '40love.profile';
+  var state = {
+    user: null,
+    mode: 'date',
+    deckPos: 0,
+    likeCount: 0,
+    matchedId: null,
+    joined: {},
+    replied: {},
+    threads: THREADS,
+    ralliesBase: 128
+  };
+
+  function loadUser() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return null;
+      var u = JSON.parse(raw);
+      if (u && typeof u.name === 'string' && u.name) return u;
+      return null;
+    } catch (e) { return null; }
+  }
+  function saveUser() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state.user)); } catch (e) { /* private mode: demo continues in memory */ }
+  }
+
+  /* ---------- Helpers ---------- */
+  function $(sel) { return document.querySelector(sel); }
+  function $all(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+  function profileById(id) {
+    for (var i = 0; i < PROFILES.length; i++) if (PROFILES[i].id === id) return PROFILES[i];
+    return null;
+  }
+  function gradFor(id) {
+    var idx = 0;
+    for (var i = 0; i < id.length; i++) idx = (idx + id.charCodeAt(i)) % GRADS.length;
+    var g = GRADS[idx];
+    return 'linear-gradient(135deg, ' + g[0] + ', ' + g[1] + ')';
+  }
+  function initials(name) {
+    return name.trim().split(/\s+/).map(function (w) { return w.charAt(0).toUpperCase(); }).slice(0, 2).join('');
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
+  }
+
+  var TABS = ['screen-discover', 'screen-matches', 'screen-events', 'screen-profile'];
+  function show(id) {
+    $all('.screen').forEach(function (s) { s.classList.toggle('active', s.id === id); });
+    var isTab = TABS.indexOf(id) !== -1;
+    $('#tabbar').style.display = isTab ? 'flex' : 'none';
+    $all('.tab').forEach(function (t) { t.classList.toggle('on', t.getAttribute('data-screen') === id); });
+    if (id === 'screen-discover') renderDeck();
+    if (id === 'screen-matches') renderThreads();
+    if (id === 'screen-events') renderEvents();
+    if (id === 'screen-profile') renderProfile();
+  }
+
+  function singleSelect(groupEl) {
+    groupEl.addEventListener('click', function (ev) {
+      var btn = ev.target.closest('.chip');
+      if (!btn) return;
+      $all('#' + groupEl.id + ' .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+    });
+  }
+  function multiSelect(groupEl) {
+    groupEl.addEventListener('click', function (ev) {
+      var btn = ev.target.closest('.chip, .mode-row');
+      if (!btn) return;
+      btn.setAttribute('aria-pressed', String(btn.getAttribute('aria-pressed') !== 'true'));
+    });
+  }
+
+  /* ---------- Welcome + onboarding ---------- */
+  $('#btn-create').addEventListener('click', function () { show('screen-ob1'); });
+  $('#btn-continue').addEventListener('click', function () {
+    if (state.user) { show('screen-discover'); }
+    else { toast('No saved profile on this device yet — create one!'); }
+  });
+  $all('.btn-back').forEach(function (b) {
+    b.addEventListener('click', function () { show(b.getAttribute('data-back')); });
+  });
+
+  $('#ob1-next').addEventListener('click', function () {
+    var name = $('#ob-name').value.trim();
+    var age = parseInt($('#ob-age').value, 10);
+    if (!name) { toast('Add your first name to continue'); return; }
+    if (!age || age < 18 || age > 99) { toast('Enter an age between 18 and 99'); return; }
+    state.draft = { name: name, age: age };
+    show('screen-ob2');
+  });
+
+  multiSelect($('#ob-sports'));
+  $('#ob2-next').addEventListener('click', function () {
+    var sports = $all('#ob-sports .chip[aria-pressed="true"]').map(function (c) { return c.getAttribute('data-sport'); });
+    if (!sports.length) { toast('Pick at least one sport'); return; }
+    state.draft.sports = sports;
+    show('screen-ob3');
+  });
+
+  singleSelect($('#ob-skill'));
+  $('#ob3-next').addEventListener('click', function () {
+    var sel = $('#ob-skill .chip[aria-pressed="true"]');
+    if (!sel) { toast('Pick your skill level'); return; }
+    state.draft.skill = sel.getAttribute('data-skill');
+    state.draft.rating = $('#ob-rating').value.trim();
+    show('screen-ob4');
+  });
+
+  multiSelect($('#ob-modes'));
+  $('#ob4-done').addEventListener('click', function () {
+    var modes = $all('#ob-modes .mode-row[aria-pressed="true"]').map(function (r) { return r.getAttribute('data-mode'); });
+    if (!modes.length) { toast('Pick at least one mode'); return; }
+    state.draft.modes = modes;
+    state.draft.bio = '';
+    state.user = state.draft;
+    delete state.draft;
+    saveUser();
+    state.mode = state.user.modes[0];
+    syncModeUI();
+    syncSettings();
+    toast('Welcome to the court, ' + state.user.name + '!');
+    show('screen-discover');
+  });
+
+  /* ---------- Discover ---------- */
+  function syncModeUI() {
+    $all('.mode-seg').forEach(function (seg) {
+      seg.classList.toggle('on', seg.getAttribute('data-mode') === state.mode);
+    });
+  }
+
+  $all('.mode-seg').forEach(function (seg) {
+    seg.addEventListener('click', function () {
+      state.mode = seg.getAttribute('data-mode');
+      syncModeUI();
+      renderDeck();
+    });
+  });
+
+  function currentProfile() {
+    return state.deckPos < PROFILES.length ? PROFILES[state.deckPos] : null;
+  }
+
+  function renderDeck() {
+    var wrap = $('#deck-wrap');
+    var p = currentProfile();
+    var cfg = MODE_CFG[state.mode];
+    if (!p) {
+      wrap.innerHTML =
+        '<div class="deck-empty">' +
+        '<div class="big" aria-hidden="true">🎾</div>' +
+        '<h2>That’s everyone nearby</h2>' +
+        '<p class="hint">You’ve seen all the players in range. Check back soon, or widen your radius in Settings.</p>' +
+        '</div>';
+      return;
+    }
+    var tags = p.sports.map(function (s) {
+      var r = p.rating && (s === p.sports[0]) ? ' · ' + p.rating : '';
+      return '<span class="tag tag-sport">' + esc(s) + r + '</span>';
+    }).join('');
+    wrap.innerHTML =
+      '<div class="card springing" id="deck-card">' +
+        '<div class="stamp stamp-like" id="stamp-like">' + (state.mode === 'date' ? 'LIKE' : state.mode === 'play' ? 'HIT?' : 'HEY!') + '</div>' +
+        '<div class="stamp stamp-pass" id="stamp-pass">PASS</div>' +
+        '<div class="card-photo" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</div>' +
+        '<div class="card-body">' +
+          '<div>' +
+            '<div class="card-name">' + esc(p.name) + ' <span class="age">' + p.age + '</span></div>' +
+            '<div class="card-meta">📍 ' + p.dist.toFixed(1) + ' mi away</div>' +
+          '</div>' +
+          '<div class="tagrow">' + tags + '<span class="tag">' + esc(p.skill) + '</span></div>' +
+          '<p class="card-bio">' + esc(p.bio) + '</p>' +
+          '<div class="card-avail">🕐 ' + esc(p.avail) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="deck-actions">' +
+        '<button class="act act-pass" id="act-pass" aria-label="Pass on ' + esc(p.name) + '">✕</button>' +
+        '<button class="act act-propose" id="act-propose" aria-label="Propose a match with ' + esc(p.name) + '">🎾</button>' +
+        '<button class="act act-like ' + cfg.klass + '" id="act-like" aria-label="' + esc(cfg.likeLabel) + ' ' + esc(p.name) + '">' + cfg.likeIcon + '</button>' +
+      '</div>' +
+      '<div class="act-label">' + esc(cfg.actLabel) + '</div>';
+
+    $('#act-pass').addEventListener('click', function () { swipeOut(false); });
+    $('#act-like').addEventListener('click', function () { swipeOut(true); });
+    $('#act-propose').addEventListener('click', openPropose);
+    attachDrag($('#deck-card'));
+  }
+
+  function advance() {
+    state.deckPos += 1;
+    renderDeck();
+  }
+
+  function swipeOut(liked) {
+    var p = currentProfile();
+    if (!p) return;
+    var card = $('#deck-card');
+    if (card) {
+      card.classList.add('springing');
+      card.style.transform = 'translateX(' + (liked ? '' : '-') + '480px) rotate(' + (liked ? '' : '-') + '14deg)';
+      card.style.opacity = '0';
+    }
+    setTimeout(function () {
+      if (liked) {
+        state.likeCount += 1;
+        if (state.likeCount % 3 === 0) { openMatch(p); }
+        else {
+          toast(state.mode === 'date' ? 'Liked ' + p.name + ' ❤️' : state.mode === 'play' ? 'Hit request sent to ' + p.name + ' 🤝' : 'You waved at ' + p.name + ' 👋');
+        }
+      }
+      advance();
+    }, 180);
+  }
+
+  /* Optional drag-to-swipe on the top card (buttons remain the primary path) */
+  function attachDrag(card) {
+    if (!card || !window.PointerEvent) return;
+    var startX = 0, dx = 0, active = false;
+    card.addEventListener('pointerdown', function (ev) {
+      if (ev.target.closest('button')) return;
+      active = true; startX = ev.clientX; dx = 0;
+      card.classList.add('dragging');
+      card.classList.remove('springing');
+      card.setPointerCapture(ev.pointerId);
+    });
+    card.addEventListener('pointermove', function (ev) {
+      if (!active) return;
+      dx = ev.clientX - startX;
+      card.style.transform = 'translateX(' + dx + 'px) rotate(' + (dx / 22) + 'deg)';
+      var op = Math.min(Math.abs(dx) / 90, 1);
+      $('#stamp-like').style.opacity = dx > 0 ? op : 0;
+      $('#stamp-pass').style.opacity = dx < 0 ? op : 0;
+    });
+    function release() {
+      if (!active) return;
+      active = false;
+      card.classList.remove('dragging');
+      card.classList.add('springing');
+      if (dx > 90) { swipeOut(true); }
+      else if (dx < -90) { swipeOut(false); }
+      else {
+        card.style.transform = '';
+        $('#stamp-like').style.opacity = 0;
+        $('#stamp-pass').style.opacity = 0;
+      }
+    }
+    card.addEventListener('pointerup', release);
+    card.addEventListener('pointercancel', release);
+  }
+
+  /* ---------- Propose sheet ---------- */
+  singleSelect($('#pick-court'));
+  singleSelect($('#pick-day'));
+  singleSelect($('#pick-time'));
+
+  function openPropose() {
+    var p = currentProfile();
+    if (!p) return;
+    $('#propose-sub').textContent = 'Pick a court and time to send ' + p.name + ' a real first-date invite.';
+    $('#propose-overlay').classList.add('open');
+  }
+  $('#propose-cancel').addEventListener('click', function () {
+    $('#propose-overlay').classList.remove('open');
+  });
+  $('#propose-send').addEventListener('click', function () {
+    var p = currentProfile();
+    var court = $('#pick-court .chip[aria-pressed="true"]');
+    var day = $('#pick-day .chip[aria-pressed="true"]');
+    var time = $('#pick-time .chip[aria-pressed="true"]');
+    $('#propose-overlay').classList.remove('open');
+    if (p && court && day && time) {
+      toast('Match proposal sent to ' + p.name + ' — ' + day.textContent + ' ' + time.textContent + ' 🎾');
+    }
+    advance();
+  });
+
+  /* ---------- Match modal ---------- */
+  function openMatch(p) {
+    state.matchedId = p.id;
+    var me = $('#match-ava-me');
+    var them = $('#match-ava-them');
+    me.style.background = gradFor(state.user ? state.user.name : 'you');
+    me.textContent = initials(state.user ? state.user.name : 'You');
+    them.style.background = gradFor(p.id);
+    them.textContent = initials(p.name);
+    $('#match-text').textContent = 'You and ' + p.name + ' liked each other. Skip the small talk — the court is the icebreaker.';
+    $('#match-overlay').classList.add('open');
+  }
+  function ensureThread(id) {
+    for (var i = 0; i < state.threads.length; i++) if (state.threads[i].id === id) return state.threads[i];
+    var t = { id: id, unread: false, yourServe: true, msgs: [] };
+    state.threads.unshift(t);
+    return t;
+  }
+  $('#match-message').addEventListener('click', function () {
+    $('#match-overlay').classList.remove('open');
+    var id = state.matchedId;
+    ensureThread(id);
+    openChat(id);
+  });
+  $('#match-keep').addEventListener('click', function () {
+    $('#match-overlay').classList.remove('open');
+  });
+
+  /* ---------- Matches / chat ---------- */
+  function lastPreview(t) {
+    if (!t.msgs.length) return 'New match — say hi!';
+    var m = t.msgs[t.msgs.length - 1];
+    if (m.type === 'court') return '🎾 ' + m.court + ' · ' + m.day + ' ' + m.time;
+    return (m.who === 'me' ? 'You: ' : '') + m.text;
+  }
+
+  function renderThreads() {
+    var list = $('#thread-list');
+    if (!state.threads.length) {
+      list.innerHTML = '<div class="deck-empty"><div class="big" aria-hidden="true">💬</div><h2>No matches yet</h2><p class="hint">Head to Discover and start swinging.</p></div>';
+      return;
+    }
+    list.innerHTML = state.threads.map(function (t) {
+      var p = profileById(t.id);
+      if (!p) return '';
+      return '<button class="thread" data-id="' + p.id + '">' +
+        '<span class="ava" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</span>' +
+        '<span class="thread-mid">' +
+          '<span class="thread-name">' + esc(p.name) + '</span>' +
+          '<span class="thread-prev" style="display:block">' + esc(lastPreview(t)) + '</span>' +
+        '</span>' +
+        '<span class="thread-side">' +
+          (t.yourServe ? '<span class="serve-badge">Your serve</span>' : '') +
+          (t.unread ? '<span class="unread-dot" aria-label="Unread"></span>' : '') +
+        '</span>' +
+      '</button>';
+    }).join('');
+    $all('#thread-list .thread').forEach(function (el) {
+      el.addEventListener('click', function () { openChat(el.getAttribute('data-id')); });
+    });
+  }
+
+  var chatId = null;
+  function threadById(id) {
+    for (var i = 0; i < state.threads.length; i++) if (state.threads[i].id === id) return state.threads[i];
+    return null;
+  }
+
+  function msgHtml(m) {
+    if (m.type === 'court') {
+      return '<div class="msg ' + (m.who === 'me' ? 'me' : 'them') + '">' +
+        '<div class="courtcard">' +
+          '<div class="courtcard-top">Court time</div>' +
+          '<div class="courtcard-body">' +
+            '<strong>' + esc(m.court) + '</strong>' +
+            '<span>' + esc(m.day) + ' · ' + esc(m.time) + ' · ' + esc(m.sport) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<span class="when">' + esc(m.when) + '</span>' +
+      '</div>';
+    }
+    return '<div class="msg ' + (m.who === 'me' ? 'me' : 'them') + '">' +
+      '<div class="bubble">' + esc(m.text) + '</div>' +
+      '<span class="when">' + esc(m.when) + '</span>' +
+    '</div>';
+  }
+
+  function renderChatLog() {
+    var t = threadById(chatId);
+    var log = $('#chat-log');
+    if (!t) { log.innerHTML = ''; return; }
+    log.innerHTML = t.msgs.length
+      ? t.msgs.map(msgHtml).join('')
+      : '<p class="hint" style="text-align:center">It’s a Match Point! Serve first — say hi. 🎾</p>';
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function openChat(id) {
+    chatId = id;
+    var p = profileById(id);
+    var t = threadById(id);
+    if (!p) return;
+    if (t) { t.unread = false; }
+    $('#chat-ava').style.background = gradFor(p.id);
+    $('#chat-ava').textContent = initials(p.name);
+    $('#chat-name').textContent = p.name;
+    $('#chat-sub').textContent = p.sports.join(' · ') + ' · ' + p.dist.toFixed(1) + ' mi';
+    renderChatLog();
+    show('screen-chat');
+  }
+
+  $('#chat-back').addEventListener('click', function () { show('screen-matches'); });
+
+  function deliverReply(id) {
+    if (state.replied[id]) return;
+    state.replied[id] = true;
+    setTimeout(function () {
+      var t = threadById(id);
+      if (!t) return;
+      t.msgs.push({ who: 'them', text: REPLIES[id] || 'Sounds great — see you on the court! 🎾', when: 'Just now' });
+      t.yourServe = true;
+      if (chatId === id && $('#screen-chat').classList.contains('active')) { renderChatLog(); }
+      else { t.unread = true; }
+    }, 1500);
+  }
+
+  function sendMsg() {
+    var input = $('#chat-text');
+    var text = input.value.trim();
+    if (!text || !chatId) return;
+    var t = ensureThread(chatId);
+    t.msgs.push({ who: 'me', text: text, when: 'Just now' });
+    t.yourServe = false;
+    input.value = '';
+    renderChatLog();
+    deliverReply(chatId);
+  }
+  $('#chat-sendbtn').addEventListener('click', sendMsg);
+  $('#chat-text').addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter') { ev.preventDefault(); sendMsg(); }
+  });
+
+  $('#suggest-time').addEventListener('click', function () {
+    if (!chatId) return;
+    var p = profileById(chatId);
+    var t = ensureThread(chatId);
+    t.msgs.push({
+      who: 'me', type: 'court',
+      court: 'Riverside Park Courts', day: 'Sat', time: '10:00 AM',
+      sport: (p && p.sports[0]) || 'Tennis', when: 'Just now'
+    });
+    t.yourServe = false;
+    renderChatLog();
+    deliverReply(chatId);
+  });
+
+  /* ---------- Events ---------- */
+  function renderEvents() {
+    var list = $('#event-list');
+    var weeks = [];
+    EVENTS.forEach(function (e) { if (weeks.indexOf(e.week) === -1) weeks.push(e.week); });
+    list.innerHTML = weeks.map(function (w) {
+      var rows = EVENTS.filter(function (e) { return e.week === w; }).map(function (e) {
+        var going = !!state.joined[e.id];
+        var spots = going ? e.spots - 1 : e.spots;
+        return '<div class="event">' +
+          '<div class="event-date"><span class="dow">' + esc(e.dow) + '</span><span class="dom">' + esc(e.dom) + '</span></div>' +
+          '<div class="event-mid">' +
+            '<div class="event-title">' + esc(e.title) + '</div>' +
+            '<div class="event-meta">' + esc(e.venue) + ' · ' + esc(e.time) + '</div>' +
+            '<div class="event-tags"><span class="tag tag-sport">' + esc(e.sport) + '</span><span class="tag">' + esc(e.level) + '</span></div>' +
+          '</div>' +
+          '<div class="event-side">' +
+            '<span class="spots">' + spots + ' spots left</span>' +
+            '<button class="join-btn' + (going ? ' going' : '') + '" data-id="' + e.id + '">' + (going ? 'Going ✓' : 'Join') + '</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      return '<div class="week-head">' + esc(w) + '</div>' + rows;
+    }).join('');
+    $all('#event-list .join-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-id');
+        state.joined[id] = !state.joined[id];
+        renderEvents();
+        if (state.joined[id]) toast('See you there! Added to your events 🎾');
+      });
+    });
+  }
+
+  /* ---------- Profile ---------- */
+  function renderProfile() {
+    var u = state.user;
+    var body = $('#profile-body');
+    if (!u) { body.innerHTML = '<p class="hint">No profile yet.</p>'; return; }
+    var tags = u.sports.map(function (s) { return '<span class="tag tag-sport">' + esc(s) + '</span>'; }).join('') +
+      '<span class="tag">' + esc(u.skill) + (u.rating ? ' · ' + esc(u.rating) : '') + '</span>';
+    var joinedCount = Object.keys(state.joined).filter(function (k) { return state.joined[k]; }).length;
+    body.innerHTML =
+      '<div class="profile-card">' +
+        '<span class="ava" style="background:' + gradFor(u.name) + '">' + esc(initials(u.name)) + '</span>' +
+        '<div class="card-name">' + esc(u.name) + ' <span class="age">' + u.age + '</span></div>' +
+        '<div class="tagrow" style="justify-content:center">' + tags + '</div>' +
+      '</div>' +
+      '<div class="stats">' +
+        '<div class="stat"><div class="num">' + state.threads.length + '</div><div class="lbl">Matches</div></div>' +
+        '<div class="stat"><div class="num">' + joinedCount + '</div><div class="lbl">Events</div></div>' +
+        '<div class="stat"><div class="num">' + state.ralliesBase + '</div><div class="lbl">Rallies</div></div>' +
+      '</div>' +
+      '<div class="bio-edit">' +
+        '<label for="bio-text">Bio</label>' +
+        '<textarea id="bio-text" placeholder="Tell players what you’re about — favorite courts, playing style, best post-match snack…">' + esc(u.bio || '') + '</textarea>' +
+        '<p class="hint">Saved automatically when you tap away.</p>' +
+      '</div>';
+    $('#bio-text').addEventListener('blur', function () {
+      state.user.bio = $('#bio-text').value.trim();
+      saveUser();
+      toast('Bio saved');
+    });
+  }
+
+  /* ---------- Settings ---------- */
+  function syncSettings() {
+    var modes = (state.user && state.user.modes) || ['date'];
+    $('#sw-date').setAttribute('aria-checked', String(modes.indexOf('date') !== -1));
+    $('#sw-play').setAttribute('aria-checked', String(modes.indexOf('play') !== -1));
+    $('#sw-friends').setAttribute('aria-checked', String(modes.indexOf('friends') !== -1));
+  }
+  function wireModeSwitch(id, mode) {
+    $(id).addEventListener('click', function () {
+      var el = $(id);
+      var on = el.getAttribute('aria-checked') === 'true';
+      if (on && state.user && state.user.modes.length === 1 && state.user.modes[0] === mode) {
+        toast('Keep at least one mode on');
+        return;
+      }
+      el.setAttribute('aria-checked', String(!on));
+      if (state.user) {
+        if (on) { state.user.modes = state.user.modes.filter(function (m) { return m !== mode; }); }
+        else if (state.user.modes.indexOf(mode) === -1) { state.user.modes.push(mode); }
+        saveUser();
+      }
+    });
+  }
+  wireModeSwitch('#sw-date', 'date');
+  wireModeSwitch('#sw-play', 'play');
+  wireModeSwitch('#sw-friends', 'friends');
+
+  $all('#sw-notif-match, #sw-notif-msg').forEach(function (el) {
+    el.addEventListener('click', function () {
+      el.setAttribute('aria-checked', String(el.getAttribute('aria-checked') !== 'true'));
+    });
+  });
+
+  $('#radius').addEventListener('input', function () {
+    $('#radius-val').textContent = $('#radius').value;
+  });
+
+  $('#open-settings').addEventListener('click', function () { syncSettings(); show('screen-settings'); });
+  $('#settings-back').addEventListener('click', function () { show('screen-profile'); });
+
+  $('#sign-out').addEventListener('click', function () {
+    try { localStorage.removeItem(STORE_KEY); } catch (e) { /* nothing to clear */ }
+    state.user = null;
+    state.deckPos = 0;
+    state.likeCount = 0;
+    $('#btn-continue').textContent = 'I already have an account';
+    show('screen-welcome');
+    toast('Signed out — see you court-side');
+  });
+
+  /* ---------- Tab bar ---------- */
+  $all('.tab').forEach(function (t) {
+    t.addEventListener('click', function () { show(t.getAttribute('data-screen')); });
+  });
+
+  /* ---------- Boot ---------- */
+  state.user = loadUser();
+  if (state.user) {
+    $('#btn-continue').textContent = 'Continue as ' + state.user.name;
+    if (state.user.modes && state.user.modes.length) { state.mode = state.user.modes[0]; }
+    syncModeUI();
+    syncSettings();
+  }
+}());
+</script>
+</body>
+</html>
