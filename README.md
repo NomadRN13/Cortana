@@ -14,7 +14,8 @@ Three modes, one app:
 
 | Path | What it is |
 |------|------------|
-| [`app/index.html`](app/index.html) | **Clickable app prototype** — the full MVP flow: onboarding, Discover (swipe + propose a match), Matches & chat, Events, Profile, Settings. Open it in any browser; no install, no server. |
+| [`mobile/`](mobile/) | **The real mobile app** (iOS + Android, React Native + Expo) — the store-bound codebase implementing the Night Court design with demo data. Run it on your phone today with Expo Go; ships to both stores via EAS once the backend is wired. |
+| [`app/index.html`](app/index.html) | **Clickable app prototype** — the full MVP flow in a single browser file: onboarding, Discover (swipe + modes), Matches & chat, Events, Profile, Settings. The visual spec for the mobile app. |
 | [`landing/index.html`](landing/index.html) | **Waitlist landing page** — the pre-launch site: value prop, three modes, how it works, FAQ, and an email waitlist form. |
 | [`docs/business-plan.md`](docs/business-plan.md) | **Business plan** — market, competition, validation plan, go-to-market, revenue model, build options, 12-month milestones, risks. |
 | [`docs/feature-roadmap.md`](docs/feature-roadmap.md) | **Feature roadmap** — MVP scope and the releases after it, with success metrics per release. |
@@ -22,6 +23,7 @@ Three modes, one app:
 | [`docs/brand-guide.md`](docs/brand-guide.md) | **Brand & design guide** — the 40/Love identity: palette, typography, wordmark, voice. Everything above is built from it. |
 | [`docs/networking-team.md`](docs/networking-team.md) | **Agentic networking team** — six AI agents (defined in [`.claude/agents/`](.claude/agents/)) that run community-building: city scouting, club partnerships, social content, waitlist emails, mixer planning, and validation scoring. Agents draft; you send. |
 | [`docs/system-architecture.md`](docs/system-architecture.md) | **System architecture** — the technical blueprint for the real app: data model, matching engine, chat & court proposals, trust & safety, notifications, analytics, and a prototype→production map. Hand this plus the prototype to whoever builds the MVP. |
+| [`docs/app-store-launch.md`](docs/app-store-launch.md) | **Store launch guide** — the path to the Apple App Store and Google Play: accounts and costs, dating-app policy requirements (moderation, 18+, account deletion), EAS build/submit flow, listing prep, and the Indy-first rollout. |
 
 ## Try the prototype
 
