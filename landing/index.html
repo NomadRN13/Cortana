@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>40/Love — The dating app for racquet sports people</title>
-<meta name="description" content="40/Love connects active singles through tennis, pickleball, padel and more — the first date is a game instead of dinner. Join the waitlist.">
+<meta name="description" content="40/Love connects active singles through tennis, pickleball and more — the first date is a game instead of dinner. Launching first in Indianapolis. Join the waitlist.">
 <style>
   :root {
     --court: #0F3D2E;
@@ -361,6 +361,17 @@
     min-width: 2ch;
     text-align: center;
   }
+  .city-launch {
+    border-color: var(--optic);
+    color: var(--optic);
+    cursor: default;
+  }
+  .city-launch .badge {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
   .cities-note { margin-top: 16px; font-size: 13.5px; color: var(--chalk-dim); }
 
   /* FAQ */
@@ -448,7 +459,7 @@
       </form>
       <p class="form-success" id="hero-success">You're on the list — see you on the court. 🎾</p>
       <p class="form-error" id="hero-error" role="alert" aria-live="polite"></p>
-      <p class="form-note">Launching city by city. Free for founding members.</p>
+      <p class="form-note">Launching first in Indianapolis. Free for founding members.</p>
     </div>
     <div class="mini-phone" aria-hidden="true">
       <div class="mp-photo">P</div>
@@ -582,15 +593,16 @@
   <div class="wrap">
     <div class="section-head reveal">
       <p class="eyebrow">City by city</p>
-      <h2>We launch one city at a time — so your matches are actually nearby.</h2>
-      <p>A dating app only works when the people on it live near you. We build a full local community before moving to the next city. Vote for yours:</p>
+      <h2>Indianapolis first. Then the city you vote for.</h2>
+      <p>A dating app only works when the people on it live near you — so we're building one full local community at a time, starting with Indy and its 65+ public pickleball courts. Vote for where we go next:</p>
     </div>
     <div class="cities reveal" id="city-list">
-      <button class="city" data-city="Austin">Austin <span class="count">0</span></button>
-      <button class="city" data-city="San Diego">San Diego <span class="count">0</span></button>
-      <button class="city" data-city="Miami">Miami <span class="count">0</span></button>
-      <button class="city" data-city="Phoenix">Phoenix <span class="count">0</span></button>
-      <button class="city" data-city="Denver">Denver <span class="count">0</span></button>
+      <span class="city city-launch">🎾 Indianapolis <span class="badge">Launch city</span></span>
+      <button class="city" data-city="Chicago">Chicago <span class="count">0</span></button>
+      <button class="city" data-city="Columbus">Columbus <span class="count">0</span></button>
+      <button class="city" data-city="Cincinnati">Cincinnati <span class="count">0</span></button>
+      <button class="city" data-city="Louisville">Louisville <span class="count">0</span></button>
+      <button class="city" data-city="Nashville">Nashville <span class="count">0</span></button>
       <button class="city" data-city="Your city?">Your city? <span class="count">0</span></button>
     </div>
     <p class="cities-note">Votes are stored on this device in this demo — the live site will count them for real.</p>
@@ -618,7 +630,7 @@
       </details>
       <details>
         <summary>When does it launch?</summary>
-        <p class="faq-a">We're validating with players right now and launching in one city first. Waitlist members hear first — and the city with the most votes has a head start.</p>
+        <p class="faq-a">Indianapolis is first — we're building the local community now, and waitlist members hear the launch date before anyone else. After Indy, the city with the most votes has a head start.</p>
       </details>
       <details>
         <summary>How much will it cost?</summary>
@@ -701,7 +713,7 @@
 
   /* City votes */
   var votes = readJson(VOTE_KEY, {});
-  var cityButtons = document.querySelectorAll('.city');
+  var cityButtons = document.querySelectorAll('button.city[data-city]');
   Array.prototype.forEach.call(cityButtons, function (btn) {
     var name = btn.getAttribute('data-city');
     var count = btn.querySelector('.count');

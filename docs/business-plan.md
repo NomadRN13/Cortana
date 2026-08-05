@@ -137,10 +137,18 @@ whether the fix is positioning (lead with Play mode?) or premise.
 - Waitlist landing page (built — `landing/index.html`) collecting emails and
   city votes.
 
-**City-first launch.** Pick city #1 by: courts per capita, pickleball scene
-strength, singles density, year-round outdoor weather, and where the founder
-has real community roots (this matters more than any statistic). Candidates to
-score: Austin, San Diego, Phoenix, Miami, Denver.
+**City-first launch — city #1 is Indianapolis.** Chosen on the launch
+criteria (courts per capita, pickleball scene strength, singles density,
+weather, founder community roots — the last mattering more than any
+statistic): Indy Parks operates 65+ public pickleball courts, the metro has
+at least five dedicated indoor pickleball facilities (one open 24/7) with
+The Picklr and Chicken N Pickle both investing locally, and Greater
+Indianapolis is one of the Midwest's largest tennis markets (50+ dedicated
+indoor courts, active USTA Central Indiana section with social formats like
+brewery-based "Tennis on Tap"). Indoor density de-risks the Midwest winter.
+Full scorecard and ranked partner targets: `outreach/indianapolis/targets.md`.
+Note: Indiana currently has no padel facilities — Indy launch copy leads
+with pickleball and tennis.
 
 **90-day city playbook:** 2 mixers/month from week 1 → app invite-only to
 mixer attendees and waitlist (scarcity + safety) → open the app when Discover
@@ -205,8 +213,10 @@ Plan the no-code exit: keep the brand, data export, and domain portable.
   verification, in-app report/block from v1.1, defaulting first meets to
   public courts and daytime slots, event-first meeting options, clear
   community guidelines.
-- **Seasonality** — outdoor sports dip in winter. Mitigate: southern/sunbelt
-  launch city, indoor club partnerships, event programming through winter.
+- **Seasonality** — outdoor sports dip in winter, and Indianapolis has real
+  winters. Mitigate: Indy's unusually deep indoor inventory (24/7 pickleball
+  clubs, 50+ indoor tennis courts) via club partnerships, and indoor event
+  programming November–March.
 - **Success churn** — couples leave dating apps. Mitigate: Play/Friends modes
   are the retention layer; "met on 40/Love" stories are marketing gold, not
   losses.

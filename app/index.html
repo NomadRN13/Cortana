@@ -1011,9 +1011,9 @@
         <div class="pick-group">
           <h3>Court</h3>
           <div class="chips" id="pick-court">
-            <button class="chip" aria-pressed="true">Riverside Park Courts</button>
-            <button class="chip" aria-pressed="false">Eastside Racquet Club</button>
-            <button class="chip" aria-pressed="false">Sunset Rec Center</button>
+            <button class="chip" aria-pressed="true">Riverside Park Tennis Complex</button>
+            <button class="chip" aria-pressed="false">Tarkington Park</button>
+            <button class="chip" aria-pressed="false">Broad Ripple Park</button>
           </div>
         </div>
         <div class="pick-group">
@@ -1099,7 +1099,7 @@
       msgs: [
         { who: 'them', text: 'Great meeting you at the mixer! You held that kitchen line like a pro', when: 'Tue 7:15 PM' },
         { who: 'me',   text: 'Ha, I was terrified the whole time. Let’s play again soon?', when: 'Tue 7:31 PM' },
-        { who: 'them', type: 'court', court: 'Sunset Rec Center', day: 'Sat', time: '9:00 AM', sport: 'Pickleball', when: 'Tue 7:40 PM' },
+        { who: 'them', type: 'court', court: 'Broad Ripple Park', day: 'Sat', time: '9:00 AM', sport: 'Pickleball', when: 'Tue 7:40 PM' },
         { who: 'me',   text: 'Booked it. Bringing my A-game and electrolytes', when: 'Tue 8:02 PM' }
       ]
     },
@@ -1119,12 +1119,12 @@
   };
 
   var EVENTS = [
-    { id: 'e1', week: 'This week', dow: 'Fri', dom: '7',  title: 'Sunset Doubles Social', venue: 'Riverside Park Courts', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6 },
-    { id: 'e2', week: 'This week', dow: 'Sat', dom: '8',  title: 'Beginner Pickleball Mixer', venue: 'Sunset Rec Center', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12 },
-    { id: 'e3', week: 'This week', dow: 'Sun', dom: '9',  title: '40/Love Round Robin', venue: 'Eastside Racquet Club', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3 },
-    { id: 'e4', week: 'Next week', dow: 'Wed', dom: '12', title: 'Padel Night Under the Lights', venue: 'Bayline Padel Center', time: '7:30 PM', sport: 'Padel', level: 'All levels', spots: 8 },
-    { id: 'e5', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Riverside Park Courts', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10 },
-    { id: 'e6', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Eastside Racquet Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5 }
+    { id: 'e1', week: 'This week', dow: 'Fri', dom: '7',  title: 'Sunset Doubles Social', venue: 'Riverside Park Tennis Complex', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6 },
+    { id: 'e2', week: 'This week', dow: 'Sat', dom: '8',  title: 'Beginner Pickleball Mixer', venue: 'Broad Ripple Park', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12 },
+    { id: 'e3', week: 'This week', dow: 'Sun', dom: '9',  title: '40/Love Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3 },
+    { id: 'e4', week: 'Next week', dow: 'Wed', dom: '12', title: 'Pickleball Under the Lights', venue: 'Ellenberger Park', time: '7:30 PM', sport: 'Pickleball', level: 'All levels', spots: 8 },
+    { id: 'e5', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Tarkington Park', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10 },
+    { id: 'e6', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Indy Pickleball Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5 }
   ];
 
   var MODE_CFG = {
@@ -1570,7 +1570,7 @@
     var t = ensureThread(chatId);
     t.msgs.push({
       who: 'me', type: 'court',
-      court: 'Riverside Park Courts', day: 'Sat', time: '10:00 AM',
+      court: 'Riverside Park Tennis Complex', day: 'Sat', time: '10:00 AM',
       sport: (p && p.sports[0]) || 'Tennis', when: 'Just now'
     });
     t.yourServe = false;

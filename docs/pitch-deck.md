@@ -78,7 +78,7 @@ nudge: the app's language keeps pushing toward meeting, not endless chatting.
 > ## Beachhead, not land-grab. *(all figures directional)*
 > - **TAM:** 40M+ US racquet-sport players
 > - **SAM:** active singles in racquet communities — millions
-> - **SOM:** one launch city: 5–10k members in 18 months
+> - **SOM:** launch city (Indianapolis): 5–10k members in 18 months
 > - US online dating: a multi-billion-dollar annual market
 
 **Speaker notes:** We size honestly: the wedge is one city's racquet community.
@@ -104,6 +104,7 @@ playbook.
 ## Slide 8 — Go-to-market
 
 > ## Community before code. One city at a time.
+> - **City #1: Indianapolis** — 65+ public pickleball courts, deep indoor scene
 > - @fortylove content: racquet culture × dating humor
 > - Club partnerships + **40/Love Social Mixers**
 > - Waitlist with city voting → invite-only soft launch
@@ -111,9 +112,11 @@ playbook.
 
 **Speaker notes:** The mixer is the demo: we host round robins built for
 meeting people, and the app is the take-home. Invite-only launch keeps early
-density high and creepiness low. City #1 chosen for courts per capita,
-pickleball scene, singles density, weather — and where we have real community
-roots.
+density high and creepiness low. Indianapolis wins on the criteria — courts
+per capita, one of the Midwest's strongest pickleball scenes, big indoor
+inventory for winter — plus our real community roots there, which matter more
+than any statistic. The scouted partner list (clubs, USTA Central Indiana,
+Indy Parks) is already in the repo.
 
 ## Slide 9 — Competition
 
@@ -134,8 +137,8 @@ won't grind out city by city.
 ## Slide 10 — Traction plan
 
 > ## Next 12 months.
-> - **M1–2:** 50–100 player interviews · waitlist live · first mixer
-> - **M3–5:** MVP built · 500+ waitlist in city #1
+> - **M1–2:** 50–100 player interviews · waitlist live · first Indy mixer
+> - **M3–5:** MVP built · 500+ waitlist in Indianapolis
 > - **M6:** invite-only soft launch · 2 mixers/month
 > - **M7–9:** public launch · 1,000+ members · events in-app
 > - **M10–12:** retention proof · premium beta · city #2 decision
