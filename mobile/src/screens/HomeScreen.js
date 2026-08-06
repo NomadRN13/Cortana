@@ -100,6 +100,17 @@ export default function HomeScreen({ navigation }) {
 
         {p ? (
           <DeckCard p={p} app={app} onLike={() => onLike(false)} onMore={onMore} />
+        ) : app.live && app.deckError ? (
+          <View style={styles.empty}>
+            <Text style={{ fontSize: 40 }}>📡</Text>
+            <Text style={[type.display, { fontSize: 20 }]}>Can't reach the court</Text>
+            <Text style={[type.hint, { textAlign: 'center' }]}>
+              We couldn't load players — check your connection and try again.
+            </Text>
+            <Pressable style={styles.retryBtn} onPress={() => app.retryDeck()}>
+              <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 13.5 }}>Try again</Text>
+            </Pressable>
+          </View>
         ) : (
           <View style={styles.empty}>
             <Text style={{ fontSize: 40 }}>🎾</Text>
@@ -303,6 +314,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', gap: 12, padding: 44,
     borderWidth: 2, borderStyle: 'dashed', borderColor: colors.line, borderRadius: 20,
   },
+  retryBtn: { backgroundColor: colors.optic, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 18, marginTop: 4 },
   overlay: { flex: 1, backgroundColor: 'rgba(4,5,6,0.7)', alignItems: 'center', justifyContent: 'center', padding: 24 },
   matchModal: {
     backgroundColor: colors.panel, borderWidth: 3, borderColor: colors.optic, borderRadius: 22,

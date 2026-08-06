@@ -3,22 +3,27 @@
 //  - LIVE: Supabase configured + session → every action reads/writes the
 //    real backend (schema in supabase/migrations/, client in src/api/backend.js).
 // Screens call the same actions in both modes.
+// This revision addresses the QA findings in outreach/launch/bugs.md
+// (B-01…B-17); fixes are tagged inline.
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS, EVENTS } from './data/seed';
 import { supabase, isBackendConfigured } from './lib/supabase';
 import * as api from './api/backend';
+import { registerForPush } from './lib/push';
 
 const STORE_KEY = '40love.profile';
+const SAVED_KEY = '40love.saved';
 const AppState = createContext(null);
 
+// B-10: compare calendar parts directly — no UTC/local drift.
 export function ageFromBirthdate(birthdate) {
-  const b = new Date(birthdate);
-  if (Number.isNaN(b.getTime())) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(birthdate));
+  if (!m) return null;
+  const [, y, mo, d] = m.map(Number);
   const now = new Date();
-  let age = now.getFullYear() - b.getFullYear();
-  const m = now.getMonth() - b.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age -= 1;
+  let age = now.getFullYear() - y;
+  if (now.getMonth() + 1 < mo || (now.getMonth() + 1 === mo && now.getDate() < d)) age -= 1;
   return age;
 }
 
@@ -32,7 +37,6 @@ function fmtWhen(ts) {
   return sameDay ? time : `${d.toLocaleDateString([], { weekday: 'short' })} ${time}`;
 }
 
-// RPC row → the profile shape screens render
 function mapDeckRow(row) {
   const sports = Array.isArray(row.sports) ? row.sports : [];
   return {
@@ -50,7 +54,6 @@ function mapDeckRow(row) {
   };
 }
 
-// profiles table row (+user_sports) → same shape (no distance available)
 function mapProfileRow(p) {
   const sports = p.user_sports || [];
   return {
@@ -78,6 +81,7 @@ function mapMsgRow(row, myId) {
 }
 
 const NOTIF_ICONS = { match: 'heart', message: 'chatbubble', court_time: 'tennisball', event_reminder: 'calendar', system: 'notifications' };
+const ALL_MODES = ['date', 'play', 'friends'];
 
 export function AppStateProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -93,6 +97,7 @@ export function AppStateProvider({ children }) {
   // live deck state
   const [liveDeck, setLiveDeck] = useState([]);
   const [liveIndex, setLiveIndex] = useState(0);
+  const [deckError, setDeckError] = useState(false);
 
   const [saved, setSaved] = useState({});
   const [blocked, setBlocked] = useState({});
@@ -104,7 +109,14 @@ export function AppStateProvider({ children }) {
   const [notifs, setNotifs] = useState(NOTIFICATIONS.map((n) => ({ ...n })));
   const [prefs, setPrefs] = useState({ radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false });
   const [liveEvents, setLiveEvents] = useState(null);
-  const cacheRef = useRef({}); // live: userId → mapped profile
+
+  const cacheRef = useRef({});        // userId → mapped profile (live)
+  const matchIdsRef = useRef({});     // otherUserId → matchId (live; B-01)
+  const threadsRef = useRef(threads); // avoid stale closures in async sends (B-01)
+  const deckReqRef = useRef(0);       // refresh staleness guard (B-16)
+  const prefsTimerRef = useRef(null); // debounce pref-driven deck refresh (B-12)
+
+  useEffect(() => { threadsRef.current = threads; }, [threads]);
 
   const live = isBackendConfigured && !!session;
   const myId = session && session.user ? session.user.id : null;
@@ -112,19 +124,28 @@ export function AppStateProvider({ children }) {
   // ---------- hydration ----------
 
   useEffect(() => {
-    AsyncStorage.getItem(STORE_KEY)
-      .then((raw) => {
-        if (raw) {
-          const u = JSON.parse(raw);
+    Promise.all([AsyncStorage.getItem(STORE_KEY), AsyncStorage.getItem(SAVED_KEY)])
+      .then(([rawUser, rawSaved]) => {
+        if (rawUser) {
+          const u = JSON.parse(rawUser);
           if (u && typeof u.name === 'string') {
             setUser(u);
             if (u.modes && u.modes.length) setMode(u.modes[0]);
           }
         }
+        if (rawSaved) {
+          const s = JSON.parse(rawSaved);
+          if (s && typeof s === 'object') setSaved(s); // B-15
+        }
       })
       .catch(() => {})
       .finally(() => setHydrated(true));
   }, []);
+
+  const persistSaved = (next) => {
+    setSaved(next);
+    AsyncStorage.setItem(SAVED_KEY, JSON.stringify(next)).catch(() => {});
+  };
 
   useEffect(() => {
     if (!isBackendConfigured) return undefined;
@@ -136,30 +157,47 @@ export function AppStateProvider({ children }) {
   // ---------- live loaders ----------
 
   const refreshDeck = async (m = mode) => {
+    const req = ++deckReqRef.current; // B-16: drop out-of-order responses
     try {
       const rows = await api.fetchDeck(m, 20);
+      if (req !== deckReqRef.current) return;
       const mapped = rows.map(mapDeckRow);
       mapped.forEach((p) => { cacheRef.current[p.id] = p; });
       setLiveDeck(mapped);
       setLiveIndex(0);
-    } catch (e) { /* offline or RLS hiccup: keep the current deck */ }
+      setDeckError(false);
+    } catch (e) {
+      if (req === deckReqRef.current) setDeckError(true); // B-17
+    }
   };
 
   const refreshMatchesAndThreads = async () => {
     try {
       const rows = await api.listMatches();
-      const otherIds = rows.map((m) => (m.user_a === myId ? m.user_b : m.user_a));
-      const profs = await api.getProfilesByIds(otherIds);
-      profs.forEach((p) => { cacheRef.current[p.id] = { ...mapProfileRow(p), ...(cacheRef.current[p.id] && { dist: cacheRef.current[p.id].dist }) }; });
-      setMatches(otherIds);
-      const msgLists = await Promise.all(rows.map((m) => api.listMessages(m.id).catch(() => [])));
-      setThreads(rows.map((m, i) => {
+      // B-06: a pair matched in two modes → one thread, newest match wins
+      const deduped = [];
+      const taken = new Set();
+      rows.forEach((m) => {
         const otherId = m.user_a === myId ? m.user_b : m.user_a;
+        if (taken.has(otherId)) return;
+        taken.add(otherId);
+        deduped.push({ ...m, otherId });
+      });
+      const profs = await api.getProfilesByIds(deduped.map((m) => m.otherId));
+      const msgLists = await Promise.all(deduped.map((m) => api.listMessages(m.id).catch(() => [])));
+      // B-01 path 2: all awaits done — commit state atomically at the end
+      profs.forEach((p) => {
+        const prevDist = cacheRef.current[p.id] ? cacheRef.current[p.id].dist : null;
+        cacheRef.current[p.id] = { ...mapProfileRow(p), dist: prevDist };
+      });
+      deduped.forEach((m) => { matchIdsRef.current[m.otherId] = m.id; });
+      setMatches(deduped.map((m) => m.otherId));
+      setThreads(deduped.map((m, i) => {
         const msgs = msgLists[i].map((r) => mapMsgRow(r, myId));
         const last = msgs[msgs.length - 1];
-        return { id: otherId, matchId: m.id, unread: false, yourServe: !!last && last.who === 'them', msgs };
+        return { id: m.otherId, matchId: m.id, unread: false, yourServe: !!last && last.who === 'them', msgs };
       }));
-    } catch (e) { /* keep current state */ }
+    } catch (e) { /* offline: keep current (empty in live — see live boot) */ }
   };
 
   const refreshEvents = async () => {
@@ -172,6 +210,7 @@ export function AppStateProvider({ children }) {
       setLiveEvents(rows.map((e) => {
         const d = new Date(e.starts_at);
         const rsvps = e.event_rsvps || [];
+        const going = rsvps.filter((r) => r.status === 'going' || r.status === 'checked_in');
         return {
           id: e.id,
           week: week(e.starts_at),
@@ -182,8 +221,8 @@ export function AppStateProvider({ children }) {
           time: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
           sport: cap(e.sport),
           level: e.level_range,
-          spotsLeft: Math.max(0, e.capacity - rsvps.length),
-          going: rsvps.some((r) => r.user_id === myId),
+          spotsLeft: Math.max(0, e.capacity - going.length), // B-13
+          going: going.some((r) => r.user_id === myId),
         };
       }));
     } catch (e) { /* keep current state */ }
@@ -207,7 +246,15 @@ export function AppStateProvider({ children }) {
 
   useEffect(() => {
     if (!live) return;
+    // B-05: live mode starts clean — no demo people for signed-in users
+    cacheRef.current = {};
+    matchIdsRef.current = {};
+    setMatches([]);
+    setThreads([]);
+    setNotifs([]);
+    setLiveEvents(null);
     api.updateMyProfile({ last_active_at: new Date().toISOString() }).catch(() => {});
+    registerForPush(api.registerPushToken).catch(() => {});
     refreshMatchesAndThreads().then(refreshNotifs);
     refreshEvents();
     refreshDeck(mode);
@@ -243,20 +290,28 @@ export function AppStateProvider({ children }) {
   };
 
   const updatePrefs = (next) => {
-    setPrefs(next);
+    // B-11: keep the range valid so the server write can't be rejected
+    const ageMin = Math.min(next.ageMin, next.ageMax);
+    const ageMax = Math.max(next.ageMin, next.ageMax);
+    const clean = { ...next, ageMin, ageMax };
+    setPrefs(clean);
     if (live) {
       api.updateMyProfile({
-        radius_mi: next.radius,
-        age_min: next.ageMin,
-        age_max: next.ageMax,
-        same_sports_only: next.mySportsOnly,
+        radius_mi: clean.radius,
+        age_min: clean.ageMin,
+        age_max: clean.ageMax,
+        same_sports_only: clean.mySportsOnly,
       }).catch(() => {});
+      // B-12: refetch the deck under the new prefs (debounced — sliders/typing)
+      if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
+      prefsTimerRef.current = setTimeout(() => refreshDeck(mode), 700);
     }
   };
 
   const signOut = () => {
     if (isBackendConfigured) api.signOut().catch(() => {});
     AsyncStorage.removeItem(STORE_KEY).catch(() => {});
+    AsyncStorage.removeItem(SAVED_KEY).catch(() => {});
     setUser(null);
     setMode('date');
     setDeckPos(0);
@@ -264,6 +319,7 @@ export function AppStateProvider({ children }) {
     setLikeCount(0);
     setLiveDeck([]);
     setLiveIndex(0);
+    setDeckError(false);
     setSaved({});
     setBlocked({});
     setSeen({});
@@ -271,14 +327,15 @@ export function AppStateProvider({ children }) {
     setThreads(THREADS);
     setNotifs(NOTIFICATIONS.map((n) => ({ ...n })));
     setPrefs({ radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false });
+    setLiveEvents(null);
     cacheRef.current = {};
+    matchIdsRef.current = {};
   };
 
   // ---------- auth ----------
 
   const requestCode = async (email) => {
     if (isBackendConfigured) await api.signInWithEmail(email);
-    // Demo mode: no email is sent; any 6-digit code verifies.
   };
 
   const verifyCode = async (email, code) => {
@@ -299,9 +356,7 @@ export function AppStateProvider({ children }) {
         };
         saveUser(localUser);
         if (remote.modes && remote.modes.length) setMode(remote.modes[0]);
-        setPrefs({
-          radius: remote.radius_mi, ageMin: remote.age_min, ageMax: remote.age_max, mySportsOnly: remote.same_sports_only,
-        });
+        setPrefs({ radius: remote.radius_mi, ageMin: remote.age_min, ageMax: remote.age_max, mySportsOnly: remote.same_sports_only });
         return { hasProfile: true };
       }
       return { hasProfile: false };
@@ -350,10 +405,16 @@ export function AppStateProvider({ children }) {
     return i;
   };
 
+  // B-03: the index of the card actually being rendered (skips blocked/seen)
+  const liveSkipFrom = (from) => {
+    let i = from;
+    while (i < liveDeck.length && (blocked[liveDeck[i].id] || seen[liveDeck[i].id])) i += 1;
+    return i;
+  };
+
   const currentProfile = () => {
     if (live) {
-      let i = liveIndex;
-      while (i < liveDeck.length && (blocked[liveDeck[i].id] || seen[liveDeck[i].id])) i += 1;
+      const i = liveSkipFrom(liveIndex);
       return i < liveDeck.length ? liveDeck[i] : null;
     }
     const i = nextEligibleIndex(deckPos);
@@ -362,9 +423,9 @@ export function AppStateProvider({ children }) {
 
   const advance = () => {
     if (live) {
-      const next = liveIndex + 1;
+      const next = liveSkipFrom(liveIndex) + 1; // B-03: advance past the rendered card
       setLiveIndex(next);
-      if (next >= liveDeck.length) refreshDeck(mode);
+      if (liveSkipFrom(next) >= liveDeck.length) refreshDeck(mode);
       return;
     }
     setHistory((h) => [...h, deckPos]);
@@ -379,10 +440,14 @@ export function AppStateProvider({ children }) {
     return true;
   };
 
-  const profileById = (id) => cacheRef.current[id] || PROFILES.find((p) => p.id === id) || null;
+  const profileById = (id) => cacheRef.current[id] || (!live && PROFILES.find((p) => p.id === id)) || null;
+
+  // ---------- matching ----------
 
   const ensureThread = (id) => {
-    setThreads((ts) => (ts.some((t) => t.id === id) ? ts : [{ id, unread: false, yourServe: true, msgs: [] }, ...ts]));
+    setThreads((ts) => (ts.some((t) => t.id === id)
+      ? ts
+      : [{ id, matchId: matchIdsRef.current[id] || null, unread: false, yourServe: true, msgs: [] }, ...ts]));
   };
 
   const addMatch = (id) => {
@@ -390,7 +455,6 @@ export function AppStateProvider({ children }) {
     ensureThread(id);
   };
 
-  // demo-only: every 3rd like (or an ace) is a match
   const registerLike = (id, ace) => {
     const n = likeCount + 1;
     setLikeCount(n);
@@ -399,7 +463,6 @@ export function AppStateProvider({ children }) {
     return isMatch;
   };
 
-  // Like/ace the current deck card. Resolves true when it's a Match Point.
   const swipeLike = async (p, ace) => {
     if (live) {
       advance();
@@ -407,10 +470,12 @@ export function AppStateProvider({ children }) {
         const match = await api.swipe(p.id, mode, ace ? 'ace' : 'like');
         if (match) {
           cacheRef.current[p.id] = p;
+          matchIdsRef.current[p.id] = match.id; // B-01: matchId known immediately
+          addMatch(p.id);
           refreshMatchesAndThreads();
           return true;
         }
-      } catch (e) { /* swipe lost offline — deck refresh will resurface them */ }
+      } catch (e) { /* offline: deck refresh will resurface them */ }
       return false;
     }
     const matched = registerLike(p.id, ace);
@@ -419,22 +484,22 @@ export function AppStateProvider({ children }) {
   };
 
   const swipePass = (p) => {
-    if (live) {
-      advance();
-      api.swipe(p.id, mode, 'pass').catch(() => {});
-      return;
-    }
     advance();
+    if (live) api.swipe(p.id, mode, 'pass').catch(() => {});
   };
 
-  // Like someone from the Saved strip (not the current deck card).
   const likeSaved = async (id) => {
-    setSaved((s) => ({ ...s, [id]: false }));
+    persistSaved({ ...saved, [id]: false });
     setSeen((s) => ({ ...s, [id]: true }));
     if (live) {
       try {
         const match = await api.swipe(id, mode, 'like');
-        if (match) { refreshMatchesAndThreads(); return true; }
+        if (match) {
+          matchIdsRef.current[id] = match.id;
+          addMatch(id);
+          refreshMatchesAndThreads();
+          return true;
+        }
       } catch (e) { /* ignore */ }
       return false;
     }
@@ -443,22 +508,56 @@ export function AppStateProvider({ children }) {
 
   // ---------- chat ----------
 
+  // B-01: creates the thread if it doesn't exist yet, so a first message
+  // right after a match is never dropped.
   const appendMsg = (id, msg) => {
-    setThreads((ts) => ts.map((t) => (t.id === id ? { ...t, yourServe: msg.who === 'them', msgs: [...t.msgs, msg] } : t)));
+    setThreads((ts) => {
+      if (ts.some((t) => t.id === id)) {
+        return ts.map((t) => (t.id === id ? { ...t, yourServe: msg.who === 'them', msgs: [...t.msgs, msg] } : t));
+      }
+      return [{ id, matchId: matchIdsRef.current[id] || null, unread: false, yourServe: msg.who === 'them', msgs: [msg] }, ...ts];
+    });
+  };
+
+  const upsertMsgById = (id, row) => {
+    setThreads((ts) => ts.map((t) => {
+      if (t.id !== id) return t;
+      const mapped = mapMsgRow(row, myId);
+      const exists = t.msgs.some((m) => m.id === mapped.id);
+      return {
+        ...t,
+        yourServe: exists ? t.yourServe : mapped.who === 'them',
+        msgs: exists ? t.msgs.map((m) => (m.id === mapped.id ? mapped : m)) : [...t.msgs, mapped],
+      };
+    }));
+  };
+
+  const resolveMatchId = async (id) => {
+    const t = threadsRef.current.find((x) => x.id === id);
+    if (t && t.matchId) return t.matchId;
+    if (matchIdsRef.current[id]) return matchIdsRef.current[id];
+    try {
+      const rows = await api.listMatches();
+      const row = rows.find((r) => r.user_a === id || r.user_b === id);
+      if (row) { matchIdsRef.current[id] = row.id; return row.id; }
+    } catch (e) { /* offline */ }
+    return null;
   };
 
   const sendMessage = (id, msg) => {
-    const thread = threads.find((t) => t.id === id);
     appendMsg(id, msg);
-    if (live && thread && thread.matchId) {
-      if (msg.kind === 'court') {
-        api.proposeCourtTime(thread.matchId, { venue: msg.court, day: msg.day, time: msg.time, sport: (msg.sport || 'tennis').toLowerCase() }).catch(() => {});
-      } else {
-        api.sendTextMessage(thread.matchId, msg.text).catch(() => {});
-      }
+    if (live) {
+      // B-01: never fall into the demo branch while live — resolve and send
+      resolveMatchId(id).then((matchId) => {
+        if (!matchId) return;
+        if (msg.kind === 'court') {
+          api.proposeCourtTime(matchId, { venue: msg.court, day: msg.day, time: msg.time, sport: (msg.sport || 'tennis').toLowerCase() }).catch(() => {});
+        } else {
+          api.sendTextMessage(matchId, msg.text).catch(() => {});
+        }
+      });
       return;
     }
-    // demo: one canned reply per thread
     if (!replied[id]) {
       setReplied((r) => ({ ...r, [id]: true }));
       setTimeout(() => {
@@ -467,18 +566,18 @@ export function AppStateProvider({ children }) {
     }
   };
 
-  // Live: new incoming messages for an open conversation
   const subscribeThread = (id) => {
-    const thread = threads.find((t) => t.id === id);
-    if (!live || !thread || !thread.matchId) return () => {};
-    return api.subscribeToMessages(thread.matchId, (row) => {
-      if (row.sender_id === myId) return; // own optimistic append already shown
-      appendMsg(id, mapMsgRow(row, myId));
+    const thread = threadsRef.current.find((t) => t.id === id);
+    const matchId = (thread && thread.matchId) || matchIdsRef.current[id];
+    if (!live || !matchId) return () => {};
+    return api.subscribeToMessages(matchId, (eventType, row) => {
+      if (eventType === 'INSERT' && row.sender_id === myId) return; // own optimistic append shown already
+      upsertMsgById(id, row); // B-08: UPDATEs (court accept/decline) land too
     });
   };
 
   const respondCourt = (threadId, msgIndex, accept) => {
-    const thread = threads.find((t) => t.id === threadId);
+    const thread = threadsRef.current.find((t) => t.id === threadId);
     if (!thread) return;
     const msg = thread.msgs[msgIndex];
     if (!msg || msg.kind !== 'court') return;
@@ -496,7 +595,7 @@ export function AppStateProvider({ children }) {
 
   const block = (id) => {
     setBlocked((b) => ({ ...b, [id]: true }));
-    setSaved((s) => ({ ...s, [id]: false }));
+    persistSaved({ ...saved, [id]: false });
     setMatches((m) => m.filter((x) => x !== id));
     setThreads((ts) => ts.filter((t) => t.id !== id));
     if (live) api.blockUser(id).then(() => refreshDeck(mode)).catch(() => {});
@@ -504,7 +603,11 @@ export function AppStateProvider({ children }) {
 
   const report = (id, fromDeck) => {
     if (fromDeck) setSeen((s) => ({ ...s, [id]: true }));
-    if (live) api.reportUser(id, 'Reported in-app', fromDeck ? 'deck' : 'chat').catch(() => {});
+    if (live) {
+      api.reportUser(id, 'Reported in-app', fromDeck ? 'deck' : 'chat').catch(() => {});
+      // B-04: permanently hide a reported profile from the reporter's deck
+      ALL_MODES.forEach((m) => api.swipe(id, m, 'pass').catch(() => {}));
+    }
   };
 
   // ---------- events ----------
@@ -515,10 +618,11 @@ export function AppStateProvider({ children }) {
     spotsLeft: joined[e.id] ? e.spots - 1 : e.spots,
     going: !!joined[e.id],
   }));
-  const events = live && liveEvents ? liveEvents : demoEvents;
+  const events = live ? (liveEvents || []) : demoEvents;
 
   const toggleJoin = (id) => {
-    if (live && liveEvents) {
+    if (live) {
+      if (!liveEvents) return;
       const ev = liveEvents.find((e) => e.id === id);
       if (!ev) return;
       const going = !ev.going;
@@ -544,9 +648,10 @@ export function AppStateProvider({ children }) {
     requestCode, verifyCode, finishOnboarding,
     updateBio, updatePhoto, updatePrefs, updateModes,
     mode, setMode,
-    currentProfile, advance, rewind,
+    currentProfile, advance, rewind, deckError,
+    retryDeck: () => refreshDeck(mode),
     swipeLike, swipePass, likeSaved, registerLike,
-    saved, setSaved, seen, setSeen, blocked, block, report,
+    saved, setSaved: persistSaved, seen, setSeen, blocked, block, report,
     matches, threads, profileById, ensureThread,
     sendMessage, subscribeThread, respondCourt, markRead,
     events, toggleJoin, joined,

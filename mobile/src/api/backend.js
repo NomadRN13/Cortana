@@ -95,8 +95,11 @@ export async function setMySports(sports) {
 export async function uploadProfilePhoto(localUri, position = 0) {
   const { data: { user } } = await supabase.auth.getUser();
   const path = `${user.id}/${position}.jpg`;
-  const file = await fetch(localUri).then((r) => r.arrayBuffer());
-  const { error: upErr } = await supabase.storage.from('photos').upload(path, file, {
+  // Read via expo-file-system: RN's fetch is unreliable for file:// bodies (QA B-09).
+  const FileSystem = require('expo-file-system');
+  const b64 = await FileSystem.readAsStringAsync(localUri, { encoding: FileSystem.EncodingType.Base64 });
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  const { error: upErr } = await supabase.storage.from('photos').upload(path, bytes.buffer, {
     contentType: 'image/jpeg',
     upsert: true,
   });
@@ -127,6 +130,7 @@ export async function swipe(targetId, mode, action) {
     .from('matches')
     .select('id, user_a, user_b, mode, created_at')
     .eq('mode', mode)
+    .is('closed_at', null)
     .or(`user_a.eq.${targetId},user_b.eq.${targetId}`)
     .maybeSingle();
   return data; // null = no match yet; row = It's a Match Point!
@@ -177,11 +181,13 @@ export async function respondCourtTime(messageId, accept) {
   return data;
 }
 
-export function subscribeToMessages(matchId, onMessage) {
-  // Realtime: new messages in this match arrive as they're sent.
+export function subscribeToMessages(matchId, onEvent) {
+  // Realtime: new messages arrive as INSERTs; court-time accept/decline
+  // arrives as an UPDATE to the proposal row (QA B-08).
   const channel = supabase
     .channel(`match:${matchId}`)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `match_id=eq.${matchId}` }, (payload) => onMessage(payload.new))
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `match_id=eq.${matchId}` }, (payload) => onEvent('INSERT', payload.new))
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `match_id=eq.${matchId}` }, (payload) => onEvent('UPDATE', payload.new))
     .subscribe();
   return () => supabase.removeChannel(channel);
 }
@@ -243,6 +249,17 @@ export async function markNotificationsRead() {
     .update({ read_at: new Date().toISOString() })
     .eq('user_id', user.id)
     .is('read_at', null);
+  if (error) throw error;
+}
+
+// ---------- Push ----------
+
+export async function registerPushToken(token, platform) {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase.from('push_tokens').upsert(
+    { user_id: user.id, token, platform, updated_at: new Date().toISOString() },
+    { onConflict: 'user_id,token' }
+  );
   if (error) throw error;
 }
 
