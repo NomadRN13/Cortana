@@ -20,13 +20,13 @@ export default function SettingsScreen({ navigation }) {
       return;
     }
     const modes = modeOn(m) ? u.modes.filter((x) => x !== m) : [...u.modes, m];
-    app.saveUser({ ...u, modes });
+    app.updateModes(modes);
   };
 
   const setRadius = (t) => {
     setRadiusText(t.replace(/[^0-9]/g, ''));
     const v = parseInt(t, 10);
-    if (v >= 1 && v <= 50) app.setPrefs({ ...app.prefs, radius: v });
+    if (v >= 1 && v <= 50) app.updatePrefs({ ...app.prefs, radius: v });
   };
 
   const signOut = () => {
@@ -102,7 +102,7 @@ export default function SettingsScreen({ navigation }) {
                 maxLength={2}
                 onEndEditing={(e) => {
                   const v = parseInt(e.nativeEvent.text, 10);
-                  if (v >= 18 && v <= 99) app.setPrefs({ ...app.prefs, ageMin: v });
+                  if (v >= 18 && v <= 99) app.updatePrefs({ ...app.prefs, ageMin: v });
                 }}
               />
               <Text style={{ color: colors.dim }}>–</Text>
@@ -113,7 +113,7 @@ export default function SettingsScreen({ navigation }) {
                 maxLength={2}
                 onEndEditing={(e) => {
                   const v = parseInt(e.nativeEvent.text, 10);
-                  if (v >= 18 && v <= 99) app.setPrefs({ ...app.prefs, ageMax: v });
+                  if (v >= 18 && v <= 99) app.updatePrefs({ ...app.prefs, ageMax: v });
                 }}
               />
             </View>
@@ -121,7 +121,7 @@ export default function SettingsScreen({ navigation }) {
           <Row label="Only my sports" sub="Show only players who share a sport with you">
             <Switch
               value={app.prefs.mySportsOnly}
-              onValueChange={(v) => app.setPrefs({ ...app.prefs, mySportsOnly: v })}
+              onValueChange={(v) => app.updatePrefs({ ...app.prefs, mySportsOnly: v })}
               trackColor={{ true: colors.opticDim }}
               thumbColor={app.prefs.mySportsOnly ? colors.optic : colors.dim}
             />

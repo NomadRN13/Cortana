@@ -4,49 +4,47 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, type } from '../theme';
 import { Tag } from '../components/ui';
 import { useApp } from '../state';
-import { EVENTS } from '../data/seed';
 
 export default function EventsScreen() {
   const app = useApp();
-  const weeks = [...new Set(EVENTS.map((e) => e.week))];
+  const weeks = [...new Set(app.events.map((e) => e.week))];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.night }} edges={['top']}>
       <Text style={[type.display, { fontSize: 18, paddingHorizontal: 18, paddingVertical: 14 }]}>Events</Text>
       <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 4 }}>
+        {app.events.length === 0 && (
+          <Text style={[type.hint, { textAlign: 'center', paddingVertical: 30 }]}>
+            No upcoming events yet — check back soon. 🎾
+          </Text>
+        )}
         {weeks.map((w) => (
           <View key={w}>
             <Text style={[type.eyebrow, { marginTop: 14, marginBottom: 8 }]}>{w}</Text>
-            {EVENTS.filter((e) => e.week === w).map((e) => {
-              const going = !!app.joined[e.id];
-              return (
-                <View key={e.id} style={styles.event}>
-                  <View style={styles.date}>
-                    <Text style={{ fontSize: 10, fontWeight: '800', color: colors.dim, letterSpacing: 0.6 }}>{e.dow.toUpperCase()}</Text>
-                    <Text style={{ fontSize: 20, fontWeight: '900', color: colors.optic }}>{e.dom}</Text>
-                  </View>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{e.title}</Text>
-                    <Text style={[type.hint, { fontSize: 12.5 }]}>{e.venue} · {e.time}</Text>
-                    <View style={{ flexDirection: 'row', gap: 5, flexWrap: 'wrap' }}>
-                      <Tag label={e.sport} accent />
-                      <Tag label={e.level} />
-                    </View>
-                  </View>
-                  <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', gap: 8 }}>
-                    <Text style={[type.hint, { fontSize: 11 }]}>{going ? e.spots - 1 : e.spots} spots left</Text>
-                    <Pressable
-                      style={[styles.join, going && styles.joinGoing]}
-                      onPress={() => app.setJoined({ ...app.joined, [e.id]: !going })}
-                    >
-                      <Text style={{ fontWeight: '800', fontSize: 13, color: going ? colors.optic : colors.ink }}>
-                        {going ? 'Going ✓' : 'Join'}
-                      </Text>
-                    </Pressable>
+            {app.events.filter((e) => e.week === w).map((e) => (
+              <View key={e.id} style={styles.event}>
+                <View style={styles.date}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: colors.dim, letterSpacing: 0.6 }}>{e.dow.toUpperCase()}</Text>
+                  <Text style={{ fontSize: 20, fontWeight: '900', color: colors.optic }}>{e.dom}</Text>
+                </View>
+                <View style={{ flex: 1, gap: 4 }}>
+                  <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{e.title}</Text>
+                  <Text style={[type.hint, { fontSize: 12.5 }]}>{e.venue} · {e.time}</Text>
+                  <View style={{ flexDirection: 'row', gap: 5, flexWrap: 'wrap' }}>
+                    <Tag label={e.sport} accent />
+                    <Tag label={e.level} />
                   </View>
                 </View>
-              );
-            })}
+                <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', gap: 8 }}>
+                  <Text style={[type.hint, { fontSize: 11 }]}>{e.spotsLeft} spots left</Text>
+                  <Pressable style={[styles.join, e.going && styles.joinGoing]} onPress={() => app.toggleJoin(e.id)}>
+                    <Text style={{ fontWeight: '800', fontSize: 13, color: e.going ? colors.optic : colors.ink }}>
+                      {e.going ? 'Going ✓' : 'Join'}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ))}
           </View>
         ))}
       </ScrollView>

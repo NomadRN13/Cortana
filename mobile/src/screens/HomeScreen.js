@@ -25,16 +25,21 @@ export default function HomeScreen({ navigation }) {
     return `Good ${part}${app.user ? `, ${app.user.name}` : ''} 👋`;
   };
 
-  const onLike = (ace) => {
+  const onLike = async (ace) => {
     if (!p) return;
-    const matched = app.registerLike(p.id, ace);
-    app.advance();
+    const matched = await app.swipeLike(p, ace);
     if (matched) setMatchWith(p);
+  };
+
+  const onRewind = () => {
+    if (!app.rewind()) {
+      Alert.alert('Rewind', app.live ? 'Live swipes can’t be taken back — rewind is coming with premium.' : 'Nothing to rewind yet.');
+    }
   };
 
   const onMore = () => {
     if (!p) return;
-    Alert.alert(p.name, `${p.sports.join(' & ')} · ${p.dist.toFixed(1)} mi`, [
+    Alert.alert(p.name, `${p.sports.join(' & ')}${p.dist != null ? ` · ${p.dist.toFixed(1)} mi` : ''}`, [
       {
         text: `Report ${p.name}`,
         onPress: () => {
@@ -107,8 +112,8 @@ export default function HomeScreen({ navigation }) {
 
         {p && (
           <View style={styles.actions}>
-            <ActionBtn icon="refresh" label="Rewind last card" onPress={() => app.rewind()} />
-            <ActionBtn icon="close" label={`Pass on ${p.name}`} onPress={() => app.advance()} />
+            <ActionBtn icon="refresh" label="Rewind last card" onPress={onRewind} />
+            <ActionBtn icon="close" label={`Pass on ${p.name}`} onPress={() => app.swipePass(p)} />
             <ActionBtn
               icon="heart"
               label={`${MODE_META[app.mode].likeVerb} ${p.name}`}
@@ -157,7 +162,7 @@ export default function HomeScreen({ navigation }) {
           <Pressable style={styles.notifPanel} onPress={() => {}}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={[type.display, { fontSize: 18 }]}>Notifications</Text>
-              <Pressable onPress={() => app.setNotifs([])} hitSlop={8}>
+              <Pressable onPress={() => app.clearNotifs()} hitSlop={8}>
                 <Text style={{ color: colors.optic, fontWeight: '800', fontSize: 12.5 }}>Clear all</Text>
               </Pressable>
             </View>
@@ -228,7 +233,7 @@ function DeckCard({ p, app, onLike, onMore }) {
           )}
         </View>
         <InfoRow icon="tennisball-outline" text={p.sports.join(' & ')} />
-        <InfoRow icon="location-outline" text={`${p.dist.toFixed(1)} miles away`} />
+        {p.dist != null && <InfoRow icon="location-outline" text={`${p.dist.toFixed(1)} miles away`} />}
         <InfoRow icon="stats-chart" text={p.rating ? `${p.rating} Skill Level` : p.skill} />
         <Text style={[type.hint, { marginTop: 3 }]}>{p.bio}</Text>
       </View>

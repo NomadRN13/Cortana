@@ -43,6 +43,23 @@ export async function getMyProfile() {
   return data;
 }
 
+export async function getProfilesByIds(ids) {
+  if (!ids.length) return [];
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*, user_sports(*)')
+    .in('id', ids);
+  if (error) throw error;
+  return data;
+}
+
+// Partial profile update (prefs, bio, activity ping) — only the given fields.
+export async function updateMyProfile(fields) {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase.from('profiles').update(fields).eq('id', user.id);
+  if (error) throw error;
+}
+
 export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, approxLng, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly }) {
   const { data: { user } } = await supabase.auth.getUser();
   const { error } = await supabase.from('profiles').upsert({

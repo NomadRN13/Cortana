@@ -11,11 +11,9 @@ export default function MatchesScreen({ navigation }) {
   const app = useApp();
   const savedIds = Object.keys(app.saved).filter((k) => app.saved[k] && !app.blocked[k]);
 
-  const likeFromSaved = (id) => {
+  const likeFromSaved = async (id) => {
     const p = app.profileById(id);
-    app.setSaved({ ...app.saved, [id]: false });
-    app.setSeen({ ...app.seen, [id]: true });
-    const matched = app.registerLike(id, false);
+    const matched = await app.likeSaved(id);
     if (matched) {
       Alert.alert("It's a Match Point!", `You and ${p.name} matched. The court is the icebreaker.`, [
         { text: 'Send a message', onPress: () => navigation.navigate('Chat', { screen: 'Conversation', params: { id }, initial: false }) },

@@ -666,6 +666,14 @@
 </footer>
 
 <script>
+  /* To collect real signups: deploy this page (see landing/README.md) and
+     paste your Supabase project's URL + anon PUBLIC key below. The anon key
+     is designed to be public; the database only lets it INSERT emails —
+     never read them. Left empty, the form runs in demo mode and saves to
+     the visitor's own browser. */
+  window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
+</script>
+<script>
 (function () {
   'use strict';
 
@@ -682,12 +690,48 @@
     try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* private mode: demo continues in memory */ }
   }
 
-  /* Waitlist forms */
+  /* Waitlist forms — POST to Supabase when configured, browser-only demo otherwise */
+  function backendReady() {
+    var cfg = window.FORTYLOVE || {};
+    return !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
+  }
+
+  function joinRemote(email) {
+    var cfg = window.FORTYLOVE;
+    return fetch(cfg.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/waitlist', {
+      method: 'POST',
+      headers: {
+        'apikey': cfg.SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ email: email, city: 'Indianapolis', source: 'landing' })
+    }).then(function (res) {
+      if (res.status === 201) return 'new';
+      if (res.status === 409) return 'duplicate';
+      return res.text().then(function (body) {
+        if (body && body.indexOf('23505') !== -1) return 'duplicate';
+        throw new Error('HTTP ' + res.status);
+      });
+    });
+  }
+
   function wireForm(formId, emailId, successId, errorId) {
     var form = document.getElementById(formId);
     var email = document.getElementById(emailId);
     var success = document.getElementById(successId);
     var error = document.getElementById(errorId);
+    var btn = form.querySelector('button');
+
+    function showSuccess(duplicate) {
+      success.textContent = duplicate
+        ? 'You’re already on the list — we’ll see you on the court. 🎾'
+        : 'You’re on the list — see you on the court. 🎾';
+      form.style.display = 'none';
+      success.style.display = 'block';
+    }
+
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
       var val = email.value.trim().toLowerCase();
@@ -696,16 +740,28 @@
         return;
       }
       error.textContent = '';
+
+      if (backendReady()) {
+        var prevLabel = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Joining…';
+        joinRemote(val)
+          .then(function (result) { showSuccess(result === 'duplicate'); })
+          .catch(function () {
+            error.textContent = 'Couldn’t join right now — check your connection and try again.';
+            btn.disabled = false;
+            btn.textContent = prevLabel;
+          });
+        return;
+      }
+
       var list = readJson(LIST_KEY, []);
-      if (list.indexOf(val) === -1) {
+      var duplicate = list.indexOf(val) !== -1;
+      if (!duplicate) {
         list.push(val);
         writeJson(LIST_KEY, list);
-        success.textContent = 'You’re on the list — see you on the court. 🎾';
-      } else {
-        success.textContent = 'You’re already on the list — we’ll see you on the court. 🎾';
       }
-      form.style.display = 'none';
-      success.style.display = 'block';
+      showSuccess(duplicate);
     });
   }
   wireForm('hero-form', 'hero-email', 'hero-success', 'hero-error');

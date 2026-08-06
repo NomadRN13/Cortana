@@ -13,7 +13,7 @@ export default function ProfileScreen({ navigation }) {
   const [bio, setBio] = useState(u ? u.bio : '');
   if (!u) return null;
 
-  const joinedCount = Object.values(app.joined).filter(Boolean).length;
+  const joinedCount = app.events.filter((e) => e.going).length;
 
   const changePhoto = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -25,7 +25,7 @@ export default function ProfileScreen({ navigation }) {
       quality: 0.7,
     });
     if (!res.canceled && res.assets && res.assets[0]) {
-      app.saveUser({ ...u, photo: res.assets[0].uri });
+      app.updatePhoto(res.assets[0].uri);
     }
   };
 
@@ -67,7 +67,7 @@ export default function ProfileScreen({ navigation }) {
             style={styles.bio}
             value={bio}
             onChangeText={setBio}
-            onBlur={() => app.saveUser({ ...u, bio: bio.trim() })}
+            onBlur={() => app.updateBio(bio.trim())}
             multiline
             placeholder="Tell players what you're about — favorite Indy courts, playing style, best post-match snack…"
             placeholderTextColor="rgba(244,246,240,0.35)"

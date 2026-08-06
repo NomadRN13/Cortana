@@ -19,6 +19,13 @@ export default function ConversationScreen({ route, navigation }) {
     app.markRead(id);
   }, [id]);
 
+  // Live mode: stream incoming messages for this conversation
+  useEffect(() => {
+    const unsubscribe = app.subscribeThread(id);
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, thread && thread.matchId, app.live]);
+
   useEffect(() => {
     if (listRef.current && thread && thread.msgs.length) {
       setTimeout(() => listRef.current && listRef.current.scrollToEnd({ animated: true }), 60);
@@ -47,8 +54,14 @@ export default function ConversationScreen({ route, navigation }) {
   };
 
   const more = () => {
-    Alert.alert(p.name, `${p.sports.join(' & ')} · ${p.dist.toFixed(1)} mi`, [
-      { text: `Report ${p.name}`, onPress: () => Alert.alert('Thank you', `Our safety team will review ${p.name}'s profile.`) },
+    Alert.alert(p.name, `${p.sports.join(' & ')}${p.dist != null ? ` · ${p.dist.toFixed(1)} mi` : ''}`, [
+      {
+        text: `Report ${p.name}`,
+        onPress: () => {
+          app.report(id, false);
+          Alert.alert('Thank you', `Our safety team will review ${p.name}'s profile.`);
+        },
+      },
       {
         text: `Block ${p.name}`,
         style: 'destructive',
@@ -70,7 +83,7 @@ export default function ConversationScreen({ route, navigation }) {
         <Avatar id={p.id} name={p.name} size={40} />
         <View style={{ flex: 1 }}>
           <Text style={{ color: colors.text, fontWeight: '800' }}>{p.name}</Text>
-          <Text style={[type.hint, { fontSize: 12 }]}>{p.sports.join(' & ')} · {p.dist.toFixed(1)} mi</Text>
+          <Text style={[type.hint, { fontSize: 12 }]}>{p.sports.join(' & ')}{p.dist != null ? ` · ${p.dist.toFixed(1)} mi` : ''}</Text>
         </View>
         <Pressable onPress={more} hitSlop={8} accessibilityLabel="More options">
           <Ionicons name="ellipsis-horizontal" size={22} color={colors.text} />
@@ -86,9 +99,10 @@ export default function ConversationScreen({ route, navigation }) {
           ListEmptyComponent={
             <Text style={[type.hint, { textAlign: 'center' }]}>It's a Match Point! Serve first — say hi. 🎾</Text>
           }
-          renderItem={({ item: m }) => {
+          renderItem={({ item: m, index }) => {
             const mine = m.who === 'me';
             if (m.kind === 'court') {
+              const status = m.status || 'proposed';
               return (
                 <View style={[styles.msg, mine ? styles.mine : styles.theirs]}>
                   <View style={styles.courtCard}>
@@ -98,6 +112,22 @@ export default function ConversationScreen({ route, navigation }) {
                     <View style={{ padding: 12, gap: 3 }}>
                       <Text style={{ color: colors.text, fontWeight: '800', fontSize: 14 }}>{m.court}</Text>
                       <Text style={[type.hint, { fontSize: 13 }]}>{m.day} · {m.time} · {m.sport}</Text>
+                      {status === 'accepted' && (
+                        <Text style={{ color: colors.ok, fontWeight: '800', fontSize: 12.5 }}>Accepted — see you out there ✓</Text>
+                      )}
+                      {status === 'declined' && (
+                        <Text style={[type.hint, { fontSize: 12.5 }]}>Declined — suggest another time</Text>
+                      )}
+                      {!mine && status === 'proposed' && (
+                        <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+                          <Pressable style={styles.courtBtn} onPress={() => app.respondCourt(id, index, true)}>
+                            <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 12.5 }}>Accept</Text>
+                          </Pressable>
+                          <Pressable style={[styles.courtBtn, styles.courtBtnGhost]} onPress={() => app.respondCourt(id, index, false)}>
+                            <Text style={{ color: colors.text, fontWeight: '800', fontSize: 12.5 }}>Decline</Text>
+                          </Pressable>
+                        </View>
+                      )}
                     </View>
                   </View>
                   <Text style={styles.when}>{m.when}</Text>
@@ -155,6 +185,8 @@ const styles = StyleSheet.create({
   when: { fontSize: 11, color: colors.dim },
   courtCard: { borderWidth: 2, borderColor: colors.optic, borderRadius: 14, overflow: 'hidden', minWidth: 200, backgroundColor: colors.card },
   courtTop: { backgroundColor: colors.optic, paddingVertical: 7, paddingHorizontal: 12 },
+  courtBtn: { backgroundColor: colors.optic, borderRadius: 999, paddingVertical: 7, paddingHorizontal: 14 },
+  courtBtnGhost: { backgroundColor: 'transparent', borderWidth: 2, borderColor: colors.line },
   toolChip: { borderWidth: 2, borderColor: colors.optic, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 13 },
   inputRow: { flexDirection: 'row', gap: 8, padding: 14 },
   input: {
