@@ -77,10 +77,28 @@ Free tier covers the alpha (500 MB database, 50k monthly active users'
 worth of auth, 1 GB storage). Upgrade to Pro (~$25/mo) around the public
 Indy beta for daily backups and no project pausing.
 
+## Push notifications (one-time, ~10 minutes)
+
+Built and wired: the app registers each signed-in device's push token
+(`push_tokens` table, tested), and a serverless function
+(`supabase/functions/send-push`) relays every new `notifications` row —
+match, message, court-time — to the recipient's phones via Expo. To turn
+it on:
+
+1. Deploy the function: `supabase functions deploy send-push --no-verify-jwt`
+2. Set its secret: `supabase secrets set PUSH_WEBHOOK_SECRET=<a long random string>`
+3. Dashboard → Database → Webhooks → create webhook: table
+   `notifications`, event INSERT, HTTP POST to the function's URL, add
+   header `x-webhook-secret` with the same secret.
+4. Push credentials for store builds are handled by EAS automatically
+   (`eas credentials` if prompted). Note: remote push doesn't work inside
+   the Expo Go preview app — it works in EAS development/TestFlight builds;
+   the code degrades silently in Expo Go.
+
+Dead tokens (app uninstalled) are pruned automatically after a failed send.
+
 ## What's deliberately NOT built yet
 
-- **Push notifications** — the `notifications` table is the source of truth;
-  wiring Expo Push tokens to it is a v1.1 task (architecture §7).
 - **Admin dashboard** — at alpha volume, moderation happens in the Supabase
   dashboard directly: Table Editor → `reports` (triage), `profile_photos`
   (approve), `events` (create). A proper admin app comes later.

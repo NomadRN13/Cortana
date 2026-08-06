@@ -37,6 +37,12 @@
         {
           "photosPermission": "40/Love uses your photo library so you can add profile photos."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#D6F44F"
+        }
       ]
     ],
     "extra": {
