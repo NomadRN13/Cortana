@@ -30,6 +30,15 @@ wrong behavior a beta tester will hit. **Minor** = edge case / divergence.
 | B-16 | Minor | Rapid mode switching can land the wrong deck / record swipes under the wrong mode | Each mode change fires `refreshDeck(mode)` with no request-cancellation or staleness guard (`state.js:217-220, 138-146`); out-of-order responses let a previous mode's deck render while `swipeLike` sends the **current** `mode` (:407) — a swipe recorded in a mode the card wasn't surfaced for, and possible silent unique-violations. Needs slow network + fast toggling. | mobile/src/state.js (`refreshDeck` race) | Fixed |
 | B-17 | Polish | Failed deck fetch shows "That's everyone nearby" instead of an offline/error state | `refreshDeck`'s catch keeps an empty deck silently (`state.js:145`); airplane-mode sign-in reads as "you've seen all the players in range" (`HomeScreen.js:104-110`), which is false and discouraging for a launch-city beta. | mobile/src/state.js / HomeScreen empty state | Fixed |
 
+## Round-2 findings (from writing the test plan) — 2026-08-06
+
+| ID | Severity | Title | Repro / trace | Suspected area | Status |
+|----|----------|-------|---------------|----------------|--------|
+| B-18 | Major | No migration provisions the `photos` storage bucket or its policies — photo upload fails silently on a fresh project | `uploadProfilePhoto` targets `storage.from('photos')` but nothing in `supabase/` creates it; both call sites swallow errors | supabase/migrations | Fixed (20260806000003 creates bucket + own-folder policies) |
+| B-19 | Major | Location never collected — radius filter passes everyone, no distances on cards, despite the v0.1 roadmap promise | No expo-location anywhere; `finishOnboarding` never sends `approxLat/approxLng`, so `miles_between` is null for all pairs | mobile (onboarding + live boot) | Fixed (coarse ~1km location at onboarding + refresh on live boot; permission-denied degrades to no distances) |
+| B-20 | Polish | Demo wording shipped in live builds (sign-out alert, Settings footer) | `SettingsScreen.js` strings assumed demo mode | mobile/src/screens/SettingsScreen.js | Fixed (mode-aware copy) |
+| B-21 | Minor | First liker gets no live "Match Point!" — only the second swiper sees it in the moment | No realtime subscription on `matches`/`notifications`; notifications refresh only at boot | mobile + realtime publication | Open (v1.1 — needs notifications realtime) |
+
 ## Fix pass — 2026-08-06
 
 All Blocker/Major findings and most Minors addressed in the same-day fix

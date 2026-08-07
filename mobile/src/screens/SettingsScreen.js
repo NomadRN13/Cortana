@@ -30,7 +30,7 @@ export default function SettingsScreen({ navigation }) {
   };
 
   const signOut = () => {
-    Alert.alert('Sign out?', 'Your local demo profile will be cleared.', [
+    Alert.alert('Sign out?', app.live ? 'You can sign back in anytime with your email.' : 'Your local demo profile will be cleared.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign out',
@@ -134,7 +134,9 @@ export default function SettingsScreen({ navigation }) {
         <Pressable style={styles.deleteLink} onPress={deleteAccount}>
           <Text style={{ color: colors.dim, fontWeight: '700', fontSize: 13 }}>Delete my account</Text>
         </Pressable>
-        <Text style={[type.hint, { textAlign: 'center' }]}>40/Love · Indianapolis · demo build — not a real account</Text>
+        <Text style={[type.hint, { textAlign: 'center' }]}>
+          {app.live ? '40/Love · Indianapolis · beta' : '40/Love · Indianapolis · demo build — not a real account'}
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );

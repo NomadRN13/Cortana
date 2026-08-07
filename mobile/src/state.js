@@ -11,6 +11,7 @@ import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS, EVENTS } from './data
 import { supabase, isBackendConfigured } from './lib/supabase';
 import * as api from './api/backend';
 import { registerForPush } from './lib/push';
+import { getCoarseLocation } from './lib/location';
 
 const STORE_KEY = '40love.profile';
 const SAVED_KEY = '40love.saved';
@@ -255,6 +256,15 @@ export function AppStateProvider({ children }) {
     setLiveEvents(null);
     api.updateMyProfile({ last_active_at: new Date().toISOString() }).catch(() => {});
     registerForPush(api.registerPushToken).catch(() => {});
+    // Refresh coarse (~1 km) location so distances and the radius filter work;
+    // refetch the deck once it lands.
+    getCoarseLocation().then((loc) => {
+      if (loc) {
+        api.updateMyProfile({ approx_lat: loc.lat, approx_lng: loc.lng })
+          .then(() => refreshDeck(mode))
+          .catch(() => {});
+      }
+    });
     refreshMatchesAndThreads().then(refreshNotifs);
     refreshEvents();
     refreshDeck(mode);
@@ -367,6 +377,7 @@ export function AppStateProvider({ children }) {
 
   const finishOnboarding = async (draft) => {
     if (isBackendConfigured) {
+      const loc = await getCoarseLocation();
       await api.upsertMyProfile({
         firstName: draft.name,
         birthdate: draft.birthdate,
@@ -377,6 +388,8 @@ export function AppStateProvider({ children }) {
         ageMin: prefs.ageMin,
         ageMax: prefs.ageMax,
         sameSportsOnly: prefs.mySportsOnly,
+        approxLat: loc ? loc.lat : null,
+        approxLng: loc ? loc.lng : null,
       });
       await api.setMySports(
         draft.sports.map((s) => ({ sport: s.toLowerCase(), level: draft.skill.toLowerCase(), ratingLabel: draft.rating || '' }))

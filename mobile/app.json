@@ -19,7 +19,8 @@
       "supportsTablet": false,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "40/Love uses your photo library so you can add profile photos.",
-        "NSCameraUsageDescription": "40/Love uses your camera so you can take a profile photo."
+        "NSCameraUsageDescription": "40/Love uses your camera so you can take a profile photo.",
+        "NSLocationWhenInUseUsageDescription": "40/Love uses your approximate location to show players and events near you. Your exact location is never stored."
       }
     },
     "android": {
@@ -29,7 +30,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0B0D"
       },
-      "permissions": ["android.permission.READ_MEDIA_IMAGES", "android.permission.CAMERA"]
+      "permissions": ["android.permission.READ_MEDIA_IMAGES", "android.permission.CAMERA", "android.permission.ACCESS_COARSE_LOCATION"]
     },
     "plugins": [
       [
@@ -42,6 +43,12 @@
         "expo-notifications",
         {
           "color": "#D6F44F"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "40/Love uses your approximate location to show players and events near you. Your exact location is never stored."
         }
       ]
     ],

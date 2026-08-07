@@ -25,6 +25,7 @@
     "expo-file-system": "~18.1.0",
     "expo-image-picker": "~16.1.0",
     "expo-linear-gradient": "~14.1.0",
+    "expo-location": "~18.1.0",
     "expo-notifications": "~0.31.0",
     "expo-status-bar": "~2.2.0",
     "react": "19.0.0",
