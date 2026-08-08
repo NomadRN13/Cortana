@@ -34,27 +34,33 @@ policies — pass an automated test suite against Postgres 16.
 
 ## One-time setup
 
-1. **Create the project** — [supabase.com](https://supabase.com) → New
-   project (free tier). Pick a strong database password and the `us-east-1`
-   region (closest to Indianapolis).
+Two paths — pick ONE:
 
-2. **Push the schema** — on your computer, from this repo:
+**Path A (no terminal): the one-paste SQL.** Create the project at
+[supabase.com](https://supabase.com) (free tier, strong DB password,
+`us-east-1` region — closest to Indianapolis), then Dashboard → SQL Editor →
+paste ALL of `supabase/setup.sql` → Run. That provisions the entire
+database, the photo bucket + its policies, realtime, and push tokens in one
+shot. (You'll still deploy the push function later via Path B's script or
+skip push for the first alpha.)
+
+**Path B (terminal): the script.** After creating the project:
 
    ```bash
    npm install -g supabase
    supabase login
-   supabase init          # creates supabase/config.toml locally (keeps migrations/)
-   supabase link --project-ref YOUR_PROJECT_REF   # ref is in your project's URL
-   supabase db push       # applies supabase/migrations/ — the whole backend
+   ./scripts/setup-supabase.sh YOUR_PROJECT_REF
    ```
 
-3. **Create the photo bucket** — Dashboard → Storage → New bucket named
-   `photos`, **private**. Then add two policies on the bucket: authenticated
-   users can upload to a path starting with their own user id, and can read
-   any file (the app only surfaces photos whose database row is approved).
+   It links, applies every migration (schema, push tokens, realtime, photo
+   bucket), deploys the push function with a generated secret, and prints
+   the three remaining dashboard clicks.
 
-4. **Turn on email sign-in** — Dashboard → Authentication → Providers →
-   Email: enable "Email OTP". Leave everything else off for now.
+Then, on either path:
+
+4. **Turn on email sign-in** — Dashboard → Authentication → Sign In / Up →
+   Email: enable. Check the "Magic Link" email template contains
+   `{{ .Token }}` so the email carries the 6-digit code.
 
 5. **Connect the app** — in `mobile/`:
 
