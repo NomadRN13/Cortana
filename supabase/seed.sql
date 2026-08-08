@@ -19,20 +19,28 @@ insert into auth.users (id, email) values
   ('00000000-0000-4000-8000-000000000012', 'lena@demo.40love.app');
 
 insert into public.profiles
-  (id, first_name, birthdate, bio, approx_lat, approx_lng, availability_note, modes, verified_at, created_at) values
-  ('00000000-0000-4000-8000-00000000000a', 'Aaron',  '1992-04-15', 'Founder demo account.', 39.78, -86.16, 'Evenings + weekends', '{date,play}', now(), now() - interval '30 days'),
-  ('00000000-0000-4000-8000-000000000001', 'Maya',   '1995-03-14', 'Litigator by day, baseline grinder by night. Looking for someone who can keep a rally going — in conversation too.', 39.79, -86.17, 'Weekday evenings · Sat mornings', '{date,play}', now(), now() - interval '3 days'),
-  ('00000000-0000-4000-8000-000000000002', 'Diego',  '1988-02-02', 'Moved here from Madrid two years ago — converting Indy to padel one pickleball game at a time.', 39.75, -86.12, 'Weekends', '{date,friends}', null, now() - interval '5 days'),
-  ('00000000-0000-4000-8000-000000000003', 'Priya',  '1997-05-20', 'Product designer who treats every third ball like a drop-shot opportunity. Winner picks the coffee spot after.', 39.78, -86.15, 'Sun + Wed evenings', '{date,play}', now(), now() - interval '2 days'),
-  ('00000000-0000-4000-8000-000000000004', 'Sam',    '1981-04-11', 'Recovering marathoner, fully converted to the kitchen line. I play hard and brunch harder.', 39.82, -86.19, 'Early mornings, most days', '{date,play,friends}', now(), now() - interval '60 days'),
-  ('00000000-0000-4000-8000-000000000005', 'Elena',  '1974-06-30', 'Retired teacher, new to the city, and pickleball has been the best welcome committee.', 39.80, -86.13, 'Weekday mornings', '{date,friends}', now(), now() - interval '90 days'),
-  ('00000000-0000-4000-8000-000000000006', 'Marcus', '1992-01-25', 'Architect who thinks best inside four glass walls. If you can hold a T, you already have my attention.', 39.72, -86.10, 'Tue + Thu after 6', '{date}', null, now() - interval '45 days'),
-  ('00000000-0000-4000-8000-000000000007', 'Jordan', '1996-07-19', 'Coach says my forehand is a weapon; my dog says I need to get out more. They can both be right.', 39.74, -86.20, 'Flexible — I make time', '{date,play}', now(), now() - interval '1 day'),
-  ('00000000-0000-4000-8000-000000000008', 'Grace',  '1985-03-08', 'ER nurse with a wicked slice. Weekends are sacred court time — see if you can break serve.', 39.85, -86.10, 'Sat + Sun mornings', '{date,play}', now(), now() - interval '120 days'),
-  ('00000000-0000-4000-8000-000000000009', 'Theo',   '1968-05-15', 'Thirty years of racquetball and still learning new angles. Grandkids say I''m cool; verify in person.', 39.76, -86.19, 'Mon/Wed/Fri lunch', '{play,friends}', null, now() - interval '200 days'),
-  ('00000000-0000-4000-8000-000000000010', 'Nadia',  '1993-04-22', 'Food scientist who joined a pickleball league on a dare and stayed for the people. Post-game taco recs are my specialty.', 39.87, -86.05, 'Weekend afternoons', '{date,friends}', now(), now() - interval '15 days'),
-  ('00000000-0000-4000-8000-000000000011', 'Chris',  '1978-06-10', 'Two kids, one dog, zero interest in small talk at bars. Ten minutes of doubles tells you more than any bio could.', 39.73, -86.22, 'Evenings after 7', '{date,play}', now(), now() - interval '75 days'),
-  ('00000000-0000-4000-8000-000000000012', 'Lena',   '2001-03-30', 'Grad student and former junior squash champ. Fair warning: I call every let.', 39.90, -86.02, 'Weekday evenings', '{date,play}', null, now() - interval '10 days');
+  (id, first_name, birthdate, bio, approx_lat, approx_lng, availability_note, modes, gender, seeking, verified_at, created_at) values
+  ('00000000-0000-4000-8000-00000000000a', 'Aaron',  '1992-04-15', 'Founder demo account.', 39.78, -86.16, 'Evenings + weekends', '{date,play}', 'man', '{woman}', now(), now() - interval '30 days'),
+  ('00000000-0000-4000-8000-000000000001', 'Maya',   '1995-03-14', 'Litigator by day, baseline grinder by night. Looking for someone who can keep a rally going — in conversation too.', 39.79, -86.17, 'Weekday evenings · Sat mornings', '{date,play}', 'woman', '{man}', now(), now() - interval '3 days'),
+  ('00000000-0000-4000-8000-000000000002', 'Diego',  '1988-02-02', 'Moved here from Madrid two years ago — converting Indy to padel one pickleball game at a time.', 39.75, -86.12, 'Weekends', '{date,friends}', 'man', '{woman}', null, now() - interval '5 days'),
+  ('00000000-0000-4000-8000-000000000003', 'Priya',  '1997-05-20', 'Product designer who treats every third ball like a drop-shot opportunity. Winner picks the coffee spot after.', 39.78, -86.15, 'Sun + Wed evenings', '{date,play}', 'woman', '{man}', now(), now() - interval '2 days'),
+  ('00000000-0000-4000-8000-000000000004', 'Sam',    '1981-04-11', 'Recovering marathoner, fully converted to the kitchen line. I play hard and brunch harder.', 39.82, -86.19, 'Early mornings, most days', '{date,play,friends}', 'woman', '{man}', now(), now() - interval '60 days'),
+  ('00000000-0000-4000-8000-000000000005', 'Elena',  '1974-06-30', 'Retired teacher, new to the city, and pickleball has been the best welcome committee.', 39.80, -86.13, 'Weekday mornings', '{date,friends}', 'woman', '{man}', now(), now() - interval '90 days'),
+  ('00000000-0000-4000-8000-000000000006', 'Marcus', '1992-01-25', 'Architect who thinks best inside four glass walls. If you can hold a T, you already have my attention.', 39.72, -86.10, 'Tue + Thu after 6', '{date}', 'man', '{man}', null, now() - interval '45 days'),
+  ('00000000-0000-4000-8000-000000000007', 'Jordan', '1996-07-19', 'Coach says my forehand is a weapon; my dog says I need to get out more. They can both be right.', 39.74, -86.20, 'Flexible — I make time', '{date,play}', 'woman', '{man,woman}', now(), now() - interval '1 day'),
+  ('00000000-0000-4000-8000-000000000008', 'Grace',  '1985-03-08', 'ER nurse with a wicked slice. Weekends are sacred court time — see if you can break serve.', 39.85, -86.10, 'Sat + Sun mornings', '{date,play}', 'woman', '{man}', now(), now() - interval '120 days'),
+  ('00000000-0000-4000-8000-000000000009', 'Theo',   '1968-05-15', 'Thirty years of racquetball and still learning new angles. Grandkids say I''m cool; verify in person.', 39.76, -86.19, 'Mon/Wed/Fri lunch', '{play,friends}', 'man', '{woman}', null, now() - interval '200 days'),
+  ('00000000-0000-4000-8000-000000000010', 'Nadia',  '1993-04-22', 'Food scientist who joined a pickleball league on a dare and stayed for the people. Post-game taco recs are my specialty.', 39.87, -86.05, 'Weekend afternoons', '{date,friends}', 'woman', '{man,woman}', now(), now() - interval '15 days'),
+  ('00000000-0000-4000-8000-000000000011', 'Chris',  '1978-06-10', 'Two kids, one dog, zero interest in small talk at bars. Ten minutes of doubles tells you more than any bio could.', 39.73, -86.22, 'Evenings after 7', '{date,play}', 'man', '{woman}', now(), now() - interval '75 days'),
+  ('00000000-0000-4000-8000-000000000012', 'Lena',   '2001-03-30', 'Grad student and former junior squash champ. Fair warning: I call every let.', 39.90, -86.02, 'Weekday evenings', '{date,play}', 'woman', '{woman}', null, now() - interval '10 days');
+
+-- Play/Friends preference flavor (everyone else keeps the open defaults):
+-- Lena only wants women's singles; Grace does doubles + mixed with women;
+-- Marcus wants men's singles; Elena's friends circle is women.
+update public.profiles set play_games = '{singles}', play_pref = 'women' where id = '00000000-0000-4000-8000-000000000012';
+update public.profiles set play_games = '{doubles,mixed_doubles}', play_pref = 'women' where id = '00000000-0000-4000-8000-000000000008';
+update public.profiles set play_games = '{singles}', play_pref = 'men' where id = '00000000-0000-4000-8000-000000000006';
+update public.profiles set friends_pref = 'women' where id = '00000000-0000-4000-8000-000000000005';
 
 insert into public.user_sports (user_id, sport, level, rating_label) values
   ('00000000-0000-4000-8000-00000000000a', 'tennis', 'advanced', 'NTRP 4.0'),

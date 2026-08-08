@@ -25,6 +25,30 @@ const MODES = [
   { key: 'friends', icon: 'people-outline', name: 'Friends Mode', desc: 'Expand your circle on and off the court' },
 ];
 
+const GENDERS = [
+  { key: 'woman', label: 'Woman' },
+  { key: 'man', label: 'Man' },
+  { key: 'nonbinary', label: 'Nonbinary' },
+];
+
+const SEEKING = [
+  { key: 'woman', label: 'Women' },
+  { key: 'man', label: 'Men' },
+  { key: 'nonbinary', label: 'Nonbinary people' },
+];
+
+const GAMES = [
+  { key: 'singles', label: 'Singles' },
+  { key: 'doubles', label: 'Doubles' },
+  { key: 'mixed_doubles', label: 'Mixed doubles' },
+];
+
+const PARTNER_PREFS = [
+  { key: 'women', label: 'Women' },
+  { key: 'men', label: 'Men' },
+  { key: 'everyone', label: 'Everyone' },
+];
+
 export default function OnboardingScreen({ navigation }) {
   const app = useApp();
   const [step, setStep] = useState(0);
@@ -35,6 +59,11 @@ export default function OnboardingScreen({ navigation }) {
   const [skill, setSkill] = useState(null);
   const [rating, setRating] = useState('');
   const [modes, setModes] = useState(['date']);
+  const [gender, setGender] = useState(null);
+  const [seeking, setSeeking] = useState([]);
+  const [playGames, setPlayGames] = useState(['singles', 'doubles', 'mixed_doubles']);
+  const [playPref, setPlayPref] = useState('everyone');
+  const [friendsPref, setFriendsPref] = useState('everyone');
   const [saving, setSaving] = useState(false);
 
   const pickPhoto = async () => {
@@ -57,17 +86,29 @@ export default function OnboardingScreen({ navigation }) {
       if (!iso) return Alert.alert('Almost there', 'Enter your birthdate as MM/DD/YYYY.');
       if (a < 18) return Alert.alert('40/Love is 18+', 'You must be 18 or older to join.');
       if (a > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
+      if (!gender) return Alert.alert('Almost there', 'Tell us who you are so matching works.');
     }
     if (step === 1 && !sports.length) return Alert.alert('Almost there', 'Pick at least one sport.');
     if (step === 2 && !skill) return Alert.alert('Almost there', 'Pick your skill level.');
     if (step === 3) {
       if (!modes.length) return Alert.alert('Almost there', 'Pick at least one mode.');
+      if (modes.includes('date') && !seeking.length) {
+        return Alert.alert('Almost there', 'Tell us who you’d like to date — pick at least one.');
+      }
+      if (modes.includes('play') && !playGames.length) {
+        return Alert.alert('Almost there', 'Pick at least one game type for Play mode.');
+      }
       if (saving) return;
       const iso = parseBirthdate(birthdateText);
       const draft = {
         name: name.trim(),
         birthdate: iso,
         age: ageFromBirthdate(iso),
+        gender,
+        seeking: modes.includes('date') ? seeking : [],
+        playGames,
+        playPref,
+        friendsPref,
         photo, sports, skill,
         rating: rating.trim(),
         modes,
@@ -110,6 +151,13 @@ export default function OnboardingScreen({ navigation }) {
             </Field>
             <Field label="Birthdate">
               <TextInput style={styles.input} value={birthdateText} onChangeText={setBirthdateText} keyboardType="number-pad" placeholder="MM/DD/YYYY" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={10} />
+            </Field>
+            <Field label="I am">
+              <View style={styles.chips}>
+                {GENDERS.map((g) => (
+                  <Chip key={g.key} label={g.label} active={gender === g.key} onPress={() => setGender(g.key)} />
+                ))}
+              </View>
             </Field>
             <Field label="Profile photo (optional)">
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
@@ -161,23 +209,66 @@ export default function OnboardingScreen({ navigation }) {
             {MODES.map((m) => {
               const on = modes.includes(m.key);
               return (
-                <Pressable
-                  key={m.key}
-                  onPress={() => toggle(modes, setModes, m.key)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: on }}
-                  style={[styles.modeRow, on && { borderColor: colors.optic, backgroundColor: colors.opticDim }]}
-                >
-                  <Ionicons name={m.icon} size={22} color={colors.text} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{m.name}</Text>
-                    <Text style={type.hint}>{m.desc}</Text>
-                  </View>
-                  {on && <Ionicons name="checkmark" size={20} color={colors.optic} />}
-                </Pressable>
+                <View key={m.key}>
+                  <Pressable
+                    onPress={() => toggle(modes, setModes, m.key)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                    style={[styles.modeRow, on && { borderColor: colors.optic, backgroundColor: colors.opticDim }]}
+                  >
+                    <Ionicons name={m.icon} size={22} color={colors.text} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{m.name}</Text>
+                      <Text style={type.hint}>{m.desc}</Text>
+                    </View>
+                    {on && <Ionicons name="checkmark" size={20} color={colors.optic} />}
+                  </Pressable>
+                  {m.key === 'date' && on && (
+                    <View style={styles.seekingBox}>
+                      <Text style={styles.boxLabel}>Looking to date</Text>
+                      <View style={styles.chips}>
+                        {SEEKING.map((s) => (
+                          <Chip key={s.key} label={s.label} active={seeking.includes(s.key)} onPress={() => toggle(seeking, setSeeking, s.key)} />
+                        ))}
+                      </View>
+                      <Text style={[type.hint, { marginTop: 8 }]}>
+                        Pick everyone you're open to — you'll only match with people looking for someone like you, too.
+                      </Text>
+                    </View>
+                  )}
+                  {m.key === 'play' && on && (
+                    <View style={styles.seekingBox}>
+                      <Text style={styles.boxLabel}>Game types</Text>
+                      <View style={styles.chips}>
+                        {GAMES.map((g) => (
+                          <Chip key={g.key} label={g.label} active={playGames.includes(g.key)} onPress={() => toggle(playGames, setPlayGames, g.key)} />
+                        ))}
+                      </View>
+                      <Text style={[styles.boxLabel, { marginTop: 12 }]}>Play singles/doubles with</Text>
+                      <View style={styles.chips}>
+                        {PARTNER_PREFS.map((p) => (
+                          <Chip key={p.key} label={p.label} active={playPref === p.key} onPress={() => setPlayPref(p.key)} />
+                        ))}
+                      </View>
+                      <Text style={[type.hint, { marginTop: 8 }]}>
+                        Mixed doubles is open to everyone by nature.
+                      </Text>
+                    </View>
+                  )}
+                  {m.key === 'friends' && on && (
+                    <View style={styles.seekingBox}>
+                      <Text style={styles.boxLabel}>Meet</Text>
+                      <View style={styles.chips}>
+                        {PARTNER_PREFS.map((p) => (
+                          <Chip key={p.key} label={p.label} active={friendsPref === p.key} onPress={() => setFriendsPref(p.key)} />
+                        ))}
+                      </View>
+                    </View>
+                  )}
+                </View>
               );
             })}
-            <Text style={type.hint}>Pick at least one — you can switch modes anytime from Home.</Text>
+            <Text style={type.hint}>Pick at least one — you can switch modes anytime from Home. Play and Friends are for everyone, whatever your dating preference.</Text>
           </>
         )}
       </ScrollView>
@@ -242,5 +333,15 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     borderRadius: 14,
   },
+  seekingBox: {
+    marginTop: 8,
+    marginLeft: 14,
+    padding: 14,
+    borderLeftWidth: 2,
+    borderLeftColor: colors.optic,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+  },
+  boxLabel: { fontSize: 13, fontWeight: '700', color: colors.dim, marginBottom: 8 },
   foot: { flexDirection: 'row', gap: 10, padding: 18 },
 });

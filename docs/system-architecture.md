@@ -56,6 +56,9 @@ Core tables (Postgres):
 users            id · phone/email · created_at · last_active_at
 profiles         user_id · first_name · birthdate · bio · verified_at
                  location (geohash, ~1km precision — never exact)
+                 gender [woman|man|nonbinary] · seeking (gender[], Date mode)
+                 play_games [singles|doubles|mixed_doubles] · play_pref
+                 [women|men|everyone] · friends_pref [women|men|everyone]
                  availability_note · discovery_prefs (radius, age range,
                  sports_only) · modes_enabled [date|play|friends]
 profile_photos   user_id · storage_path · position · moderation_status
@@ -96,9 +99,16 @@ MVP matching is a filtered query plus a ranking score — no ML needed at one
 city scale:
 
 **Candidate filter (hard rules):** within radius · inside each other's age
-ranges · at least one mode in common · no prior swipe by actor on target ·
-no block either direction · active in the last 30 days · (optional pref)
-shares a sport.
+ranges · at least one mode in common · **in Date mode, a mutual gender fit:
+their gender is in my "seeking" AND mine is in theirs (all pairings
+first-class — woman↔man, woman↔woman, man↔man, nonbinary in any
+combination)** · **in Play mode, a shared game type (singles / doubles /
+mixed doubles), with both players' play-with preference (women / men /
+everyone) honored for singles and doubles — mixed doubles is open by
+nature** · **in Friends mode, a mutual meet preference (defaults to
+everyone)** · dating preference never leaks across modes · no prior
+swipe by actor on target · no block either direction · active in the last
+30 days · (optional pref) shares a sport.
 
 **Ranking score (soft ordering):**
 

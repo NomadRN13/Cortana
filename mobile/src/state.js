@@ -83,6 +83,10 @@ function mapMsgRow(row, myId) {
 
 const NOTIF_ICONS = { match: 'heart', message: 'chatbubble', court_time: 'tennisball', event_reminder: 'calendar', system: 'notifications' };
 const ALL_MODES = ['date', 'play', 'friends'];
+const ALL_GAMES = ['singles', 'doubles', 'mixed_doubles'];
+
+const prefOk = (pref, g) =>
+  !pref || pref === 'everyone' || (pref === 'men' && g === 'man') || (pref === 'women' && g === 'woman');
 
 export function AppStateProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -293,6 +297,34 @@ export function AppStateProvider({ children }) {
     if (live) api.uploadProfilePhoto(uri, 0).catch(() => {});
   };
 
+  const updateDating = (gender, seeking) => {
+    if (user) saveUser({ ...user, gender, seeking });
+    if (live) {
+      api.updateMyProfile({ gender: gender || null, seeking: seeking || [] }).catch(() => {});
+      if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
+      prefsTimerRef.current = setTimeout(() => refreshDeck(mode), 700);
+    }
+  };
+
+  const updatePlay = (playGames, playPref) => {
+    const games = playGames && playGames.length ? playGames : ALL_GAMES;
+    if (user) saveUser({ ...user, playGames: games, playPref: playPref || 'everyone' });
+    if (live) {
+      api.updateMyProfile({ play_games: games, play_pref: playPref || 'everyone' }).catch(() => {});
+      if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
+      prefsTimerRef.current = setTimeout(() => refreshDeck(mode), 700);
+    }
+  };
+
+  const updateFriendsPref = (friendsPref) => {
+    if (user) saveUser({ ...user, friendsPref: friendsPref || 'everyone' });
+    if (live) {
+      api.updateMyProfile({ friends_pref: friendsPref || 'everyone' }).catch(() => {});
+      if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
+      prefsTimerRef.current = setTimeout(() => refreshDeck(mode), 700);
+    }
+  };
+
   const updateModes = (modes) => {
     if (user) saveUser({ ...user, modes });
     if (live) api.updateMyProfile({ modes }).catch(() => {});
@@ -357,6 +389,11 @@ export function AppStateProvider({ children }) {
           name: remote.first_name,
           age: ageFromBirthdate(remote.birthdate),
           birthdate: remote.birthdate,
+          gender: remote.gender || null,
+          seeking: remote.seeking || [],
+          playGames: remote.play_games || ALL_GAMES,
+          playPref: remote.play_pref || 'everyone',
+          friendsPref: remote.friends_pref || 'everyone',
           photo: user && user.photo ? user.photo : null,
           sports: (remote.user_sports || []).map((s) => cap(s.sport)),
           skill: remote.user_sports && remote.user_sports[0] ? cap(remote.user_sports[0].level) : 'Intermediate',
@@ -390,6 +427,11 @@ export function AppStateProvider({ children }) {
         sameSportsOnly: prefs.mySportsOnly,
         approxLat: loc ? loc.lat : null,
         approxLng: loc ? loc.lng : null,
+        gender: draft.gender,
+        seeking: draft.seeking,
+        playGames: draft.playGames,
+        playPref: draft.playPref,
+        friendsPref: draft.friendsPref,
       });
       await api.setMySports(
         draft.sports.map((s) => ({ sport: s.toLowerCase(), level: draft.skill.toLowerCase(), ratingLabel: draft.rating || '' }))
@@ -406,6 +448,28 @@ export function AppStateProvider({ children }) {
     if (blocked[p.id] || seen[p.id]) return false;
     if (p.dist > prefs.radius) return false;
     if (p.age < prefs.ageMin || p.age > prefs.ageMax) return false;
+    // Date mode: the fit must be mutual — they're what I'm looking for AND
+    // I'm what they're looking for. Play/Friends are for everyone.
+    if (mode === 'date' && user && user.gender && user.seeking && user.seeking.length) {
+      if (!p.gender || !p.seeking) return false;
+      if (!user.seeking.includes(p.gender)) return false;
+      if (!p.seeking.includes(user.gender)) return false;
+    }
+    // Play mode: shared game type; singles/doubles honor both players'
+    // play-with preference; mixed doubles is open by nature.
+    if (mode === 'play' && user) {
+      const myGames = (user.playGames && user.playGames.length ? user.playGames : ALL_GAMES);
+      const theirGames = (p.playGames && p.playGames.length ? p.playGames : ALL_GAMES);
+      const overlap = myGames.filter((g) => theirGames.includes(g));
+      if (!overlap.length) return false;
+      const ok = overlap.some((g) =>
+        g === 'mixed_doubles' || (prefOk(user.playPref, p.gender) && prefOk(p.playPref, user.gender)));
+      if (!ok) return false;
+    }
+    // Friends mode: mutual meet preference (defaults to everyone).
+    if (mode === 'friends' && user) {
+      if (!(prefOk(user.friendsPref, p.gender) && prefOk(p.friendsPref, user.gender))) return false;
+    }
     if (prefs.mySportsOnly && user && user.sports) {
       if (!p.sports.some((s) => user.sports.includes(s))) return false;
     }
@@ -659,7 +723,7 @@ export function AppStateProvider({ children }) {
     user, hydrated, saveUser, signOut,
     session, live, isBackendConfigured,
     requestCode, verifyCode, finishOnboarding,
-    updateBio, updatePhoto, updatePrefs, updateModes,
+    updateBio, updatePhoto, updatePrefs, updateModes, updateDating, updatePlay, updateFriendsPref,
     mode, setMode,
     currentProfile, advance, rewind, deckError,
     retryDeck: () => refreshDeck(mode),

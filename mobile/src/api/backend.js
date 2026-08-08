@@ -60,7 +60,7 @@ export async function updateMyProfile(fields) {
   if (error) throw error;
 }
 
-export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, approxLng, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly }) {
+export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, approxLng, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly, gender, seeking, playGames, playPref, friendsPref }) {
   const { data: { user } } = await supabase.auth.getUser();
   const { error } = await supabase.from('profiles').upsert({
     id: user.id,
@@ -76,6 +76,11 @@ export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, ap
     age_min: ageMin,
     age_max: ageMax,
     same_sports_only: sameSportsOnly,
+    gender: gender || null,
+    seeking: seeking || [],
+    play_games: playGames && playGames.length ? playGames : ['singles', 'doubles', 'mixed_doubles'],
+    play_pref: playPref || 'everyone',
+    friends_pref: friendsPref || 'everyone',
     last_active_at: new Date().toISOString(),
   });
   if (error) throw error;

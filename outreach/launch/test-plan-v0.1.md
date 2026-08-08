@@ -45,6 +45,17 @@ sorting it out is our job, not yours.
       each of you a different job.
 - [ ] When the app asks to **send you notifications, tap Allow** — Test 11
       needs it.
+- [ ] **Dating preference setup (matters for every matching test):** during
+      onboarding, set "Looking to date" so it **includes your partner's
+      gender**, and have your partner do the same — otherwise you two will
+      correctly never see each other in Date mode. Any pairing works:
+      40/Love treats woman–woman and man–man matching exactly the same as
+      woman–man. If your pair doesn't want to set that, do the matching
+      tests in **Play mode** instead (Play ignores dating preference), and
+      note that on your results sheet. Bonus check while you're there: with
+      preferences that DON'T fit each other, confirm you *can't* see each
+      other in Date mode but *can* in Play mode — that's the filter doing
+      its job.
 
 ### Three FIRST-RUN CHECKS
 

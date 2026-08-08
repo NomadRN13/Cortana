@@ -208,6 +208,12 @@
   .chip[aria-pressed="true"] { background: var(--optic); border-color: var(--optic); color: var(--ink); }
 
   .mode-rows { display: flex; flex-direction: column; gap: 10px; }
+  .seeking-box {
+    margin-left: 14px; padding: 14px;
+    border-left: 2px solid var(--optic);
+    background: var(--card); border-radius: 12px;
+  }
+  .seeking-box[hidden] { display: none; }
   .mode-row {
     display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
     padding: 14px; background: var(--card); border: 2px solid var(--line); border-radius: 14px;
@@ -637,6 +643,14 @@
           <input type="number" id="ob-age" inputmode="numeric" min="18" max="99" placeholder="e.g. 34">
         </div>
         <div>
+          <label>I am</label>
+          <div class="chips" id="ob-gender" role="group" aria-label="I am">
+            <button class="chip" aria-pressed="false" data-gender="woman">Woman</button>
+            <button class="chip" aria-pressed="false" data-gender="man">Man</button>
+            <button class="chip" aria-pressed="false" data-gender="nonbinary">Nonbinary</button>
+          </div>
+        </div>
+        <div>
           <label for="photo-input">Profile photo <span style="font-weight:400">(optional)</span></label>
           <div class="photo-pick">
             <span class="photo-preview" id="photo-preview" aria-hidden="true">📷</span>
@@ -711,18 +725,50 @@
             <span><span class="mode-name">Date Mode</span><span class="mode-desc">Find your perfect match</span></span>
             <span class="mode-check" aria-hidden="true">✓</span>
           </button>
+          <div class="seeking-box" id="seeking-box">
+            <label>Looking to date</label>
+            <div class="chips" id="ob-seeking" role="group" aria-label="Looking to date">
+              <button class="chip" aria-pressed="false" data-seek="woman">Women</button>
+              <button class="chip" aria-pressed="false" data-seek="man">Men</button>
+              <button class="chip" aria-pressed="false" data-seek="nonbinary">Nonbinary people</button>
+            </div>
+            <p class="hint" style="margin-top:8px">Pick everyone you're open to — you'll only match with people looking for someone like you, too.</p>
+          </div>
           <button class="mode-row" aria-pressed="false" data-mode="play">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>
             <span><span class="mode-name">Play Mode</span><span class="mode-desc">Find players for your next match</span></span>
             <span class="mode-check" aria-hidden="true">✓</span>
           </button>
+          <div class="seeking-box" id="play-box" hidden>
+            <label>Game types</label>
+            <div class="chips" id="ob-playgames" role="group" aria-label="Game types">
+              <button class="chip" aria-pressed="true" data-game="singles">Singles</button>
+              <button class="chip" aria-pressed="true" data-game="doubles">Doubles</button>
+              <button class="chip" aria-pressed="true" data-game="mixed_doubles">Mixed doubles</button>
+            </div>
+            <label style="margin-top:12px">Play singles/doubles with</label>
+            <div class="chips" id="ob-playpref" role="group" aria-label="Play singles and doubles with">
+              <button class="chip" aria-pressed="false" data-pref="women">Women</button>
+              <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+              <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
+            </div>
+            <p class="hint" style="margin-top:8px">Mixed doubles is open to everyone by nature.</p>
+          </div>
           <button class="mode-row" aria-pressed="false" data-mode="friends">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg>
             <span><span class="mode-name">Friends Mode</span><span class="mode-desc">Expand your circle on and off the court</span></span>
             <span class="mode-check" aria-hidden="true">✓</span>
           </button>
+          <div class="seeking-box" id="friends-box" hidden>
+            <label>Meet</label>
+            <div class="chips" id="ob-friendspref" role="group" aria-label="Meet">
+              <button class="chip" aria-pressed="false" data-pref="women">Women</button>
+              <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+              <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
+            </div>
+          </div>
         </div>
-        <p class="hint">Pick at least one — you can switch modes anytime from Home.</p>
+        <p class="hint">Pick at least one — you can switch modes anytime from Home. Play and Friends are for everyone, whatever your dating preference.</p>
       </div>
       <div class="ob-foot">
         <button class="btn btn-ghost btn-back" data-back="screen-ob3">Back</button>
@@ -856,6 +902,63 @@
           <div class="set-row">
             <div><div class="lab">Friends Mode</div><div class="sub">Expand your circle</div></div>
             <button class="switch" id="sw-friends" role="switch" aria-checked="false" aria-label="Friends mode"></button>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Dating</h3>
+          <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div>
+              <span class="lab">I am</span>
+              <div class="chips" id="set-gender" style="margin-top:8px">
+                <button class="chip" aria-pressed="false" data-gender="woman">Woman</button>
+                <button class="chip" aria-pressed="false" data-gender="man">Man</button>
+                <button class="chip" aria-pressed="false" data-gender="nonbinary">Nonbinary</button>
+              </div>
+            </div>
+            <div>
+              <span class="lab">Looking to date</span>
+              <div class="chips" id="set-seeking" style="margin-top:8px">
+                <button class="chip" aria-pressed="false" data-seek="woman">Women</button>
+                <button class="chip" aria-pressed="false" data-seek="man">Men</button>
+                <button class="chip" aria-pressed="false" data-seek="nonbinary">Nonbinary people</button>
+              </div>
+            </div>
+            <p class="hint">Date mode only shows people who fit what you're looking for — and who are looking for someone like you.</p>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Play</h3>
+          <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div>
+              <span class="lab">Game types</span>
+              <div class="chips" id="set-playgames" style="margin-top:8px">
+                <button class="chip" aria-pressed="true" data-game="singles">Singles</button>
+                <button class="chip" aria-pressed="true" data-game="doubles">Doubles</button>
+                <button class="chip" aria-pressed="true" data-game="mixed_doubles">Mixed doubles</button>
+              </div>
+            </div>
+            <div>
+              <span class="lab">Play singles/doubles with</span>
+              <div class="chips" id="set-playpref" style="margin-top:8px">
+                <button class="chip" aria-pressed="false" data-pref="women">Women</button>
+                <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+                <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
+              </div>
+            </div>
+            <p class="hint">Play mode shows players who want the same game types. Mixed doubles is open to everyone by nature.</p>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Friends</h3>
+          <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div>
+              <span class="lab">Meet</span>
+              <div class="chips" id="set-friendspref" style="margin-top:8px">
+                <button class="chip" aria-pressed="false" data-pref="women">Women</button>
+                <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+                <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
+              </div>
+            </div>
           </div>
         </div>
         <div class="set-group">
@@ -1011,18 +1114,18 @@
   ];
 
   var PROFILES = [
-    { id: 'maya',   name: 'Maya',   age: 31, dist: 1.2, sports: ['Tennis'], skill: 'Advanced', rating: '4.0', isNew: true,  verified: true,  avail: 'Weekday evenings · Sat mornings', bio: 'Litigator by day, baseline grinder by night. Looking for someone who can keep a rally going — in conversation too.' },
-    { id: 'diego',  name: 'Diego',  age: 38, dist: 2.8, sports: ['Padel', 'Pickleball'], skill: 'Intermediate', rating: '', isNew: true, verified: false, avail: 'Weekends', bio: 'Moved here from Madrid two years ago — converting Indy to padel one pickleball game at a time.' },
-    { id: 'priya',  name: 'Priya',  age: 29, dist: 0.8, sports: ['Tennis', 'Pickleball'], skill: 'Intermediate', rating: '3.5', isNew: true, verified: true, avail: 'Sun + Wed evenings', bio: 'Product designer who treats every third ball like a drop-shot opportunity. Winner picks the coffee spot after.' },
-    { id: 'sam',    name: 'Sam',    age: 45, dist: 3.1, sports: ['Pickleball'], skill: 'Competitive', rating: '4.2', isNew: false, verified: true, avail: 'Early mornings, most days', bio: 'Recovering marathoner, fully converted to the kitchen line. I play hard and brunch harder.' },
-    { id: 'elena',  name: 'Elena',  age: 52, dist: 1.9, sports: ['Pickleball'], skill: 'Intermediate', rating: '3.4', isNew: false, verified: true, avail: 'Weekday mornings', bio: 'Retired teacher, new to the city, and pickleball has been the best welcome committee.' },
-    { id: 'marcus', name: 'Marcus', age: 34, dist: 4.5, sports: ['Squash'], skill: 'Advanced', rating: '', isNew: false, verified: false, avail: 'Tue + Thu after 6', bio: 'Architect who thinks best inside four glass walls. If you can hold a T, you already have my attention.' },
-    { id: 'jordan', name: 'Jordan', age: 30, dist: 3.0, sports: ['Tennis', 'Pickleball'], skill: 'Advanced', rating: '4.0', isNew: true, verified: true, avail: 'Flexible — I make time', bio: 'Coach says my forehand is a weapon; my dog says I need to get out more. They can both be right.' },
-    { id: 'grace',  name: 'Grace',  age: 41, dist: 5.2, sports: ['Tennis', 'Padel'], skill: 'Advanced', rating: '4.5', isNew: false, verified: true, avail: 'Sat + Sun mornings', bio: 'ER nurse with a wicked slice. Weekends are sacred court time — see if you can break serve.' },
-    { id: 'theo',   name: 'Theo',   age: 58, dist: 2.2, sports: ['Racquetball'], skill: 'Intermediate', rating: '', isNew: false, verified: false, avail: 'Mon/Wed/Fri lunch', bio: 'Thirty years of racquetball and still learning new angles. Grandkids say I’m cool; verify in person.' },
-    { id: 'nadia',  name: 'Nadia',  age: 33, dist: 6.7, sports: ['Pickleball'], skill: 'Beginner', rating: '', isNew: false, verified: true, avail: 'Weekend afternoons', bio: 'Food scientist who joined a pickleball league on a dare and stayed for the people. Post-game taco recs are my specialty.' },
-    { id: 'chris',  name: 'Chris',  age: 48, dist: 3.8, sports: ['Pickleball', 'Tennis'], skill: 'Advanced', rating: '4.0', isNew: false, verified: true, avail: 'Evenings after 7', bio: 'Two kids, one dog, zero interest in small talk at bars. Ten minutes of doubles tells you more than any bio could.' },
-    { id: 'lena',   name: 'Lena',   age: 25, dist: 9.8, sports: ['Squash', 'Tennis'], skill: 'Competitive', rating: '', isNew: false, verified: false, avail: 'Weekday evenings', bio: 'Grad student and former junior squash champ. Fair warning: I call every let.' }
+    { id: 'maya',   name: 'Maya',   age: 31, gender: 'woman', seeking: ['man'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 1.2, sports: ['Tennis'], skill: 'Advanced', rating: '4.0', isNew: true,  verified: true,  avail: 'Weekday evenings · Sat mornings', bio: 'Litigator by day, baseline grinder by night. Looking for someone who can keep a rally going — in conversation too.' },
+    { id: 'diego',  name: 'Diego',  age: 38, gender: 'man', seeking: ['woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 2.8, sports: ['Padel', 'Pickleball'], skill: 'Intermediate', rating: '', isNew: true, verified: false, avail: 'Weekends', bio: 'Moved here from Madrid two years ago — converting Indy to padel one pickleball game at a time.' },
+    { id: 'priya',  name: 'Priya',  age: 29, gender: 'woman', seeking: ['man'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 0.8, sports: ['Tennis', 'Pickleball'], skill: 'Intermediate', rating: '3.5', isNew: true, verified: true, avail: 'Sun + Wed evenings', bio: 'Product designer who treats every third ball like a drop-shot opportunity. Winner picks the coffee spot after.' },
+    { id: 'sam',    name: 'Sam',    age: 45, gender: 'woman', seeking: ['man'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 3.1, sports: ['Pickleball'], skill: 'Competitive', rating: '4.2', isNew: false, verified: true, avail: 'Early mornings, most days', bio: 'Recovering marathoner, fully converted to the kitchen line. I play hard and brunch harder.' },
+    { id: 'elena',  name: 'Elena',  age: 52, gender: 'woman', seeking: ['man'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'women', dist: 1.9, sports: ['Pickleball'], skill: 'Intermediate', rating: '3.4', isNew: false, verified: true, avail: 'Weekday mornings', bio: 'Retired teacher, new to the city, and pickleball has been the best welcome committee.' },
+    { id: 'marcus', name: 'Marcus', age: 34, gender: 'man', seeking: ['man'], playGames: ['singles'], playPref: 'men', friendsPref: 'everyone', dist: 4.5, sports: ['Squash'], skill: 'Advanced', rating: '', isNew: false, verified: false, avail: 'Tue + Thu after 6', bio: 'Architect who thinks best inside four glass walls. If you can hold a T, you already have my attention.' },
+    { id: 'jordan', name: 'Jordan', age: 30, gender: 'woman', seeking: ['man','woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 3.0, sports: ['Tennis', 'Pickleball'], skill: 'Advanced', rating: '4.0', isNew: true, verified: true, avail: 'Flexible — I make time', bio: 'Coach says my forehand is a weapon; my dog says I need to get out more. They can both be right.' },
+    { id: 'grace',  name: 'Grace',  age: 41, gender: 'woman', seeking: ['man'], playGames: ['doubles','mixed_doubles'], playPref: 'women', friendsPref: 'everyone', dist: 5.2, sports: ['Tennis', 'Padel'], skill: 'Advanced', rating: '4.5', isNew: false, verified: true, avail: 'Sat + Sun mornings', bio: 'ER nurse with a wicked slice. Weekends are sacred court time — see if you can break serve.' },
+    { id: 'theo',   name: 'Theo',   age: 58, gender: 'man', seeking: ['woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 2.2, sports: ['Racquetball'], skill: 'Intermediate', rating: '', isNew: false, verified: false, avail: 'Mon/Wed/Fri lunch', bio: 'Thirty years of racquetball and still learning new angles. Grandkids say I’m cool; verify in person.' },
+    { id: 'nadia',  name: 'Nadia',  age: 33, gender: 'woman', seeking: ['man','woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 6.7, sports: ['Pickleball'], skill: 'Beginner', rating: '', isNew: false, verified: true, avail: 'Weekend afternoons', bio: 'Food scientist who joined a pickleball league on a dare and stayed for the people. Post-game taco recs are my specialty.' },
+    { id: 'chris',  name: 'Chris',  age: 48, gender: 'man', seeking: ['woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 3.8, sports: ['Pickleball', 'Tennis'], skill: 'Advanced', rating: '4.0', isNew: false, verified: true, avail: 'Evenings after 7', bio: 'Two kids, one dog, zero interest in small talk at bars. Ten minutes of doubles tells you more than any bio could.' },
+    { id: 'lena',   name: 'Lena',   age: 25, gender: 'woman', seeking: ['woman'], playGames: ['singles'], playPref: 'women', friendsPref: 'everyone', dist: 9.8, sports: ['Squash', 'Tennis'], skill: 'Competitive', rating: '', isNew: false, verified: false, avail: 'Weekday evenings', bio: 'Grad student and former junior squash champ. Fair warning: I call every let.' }
   ];
 
   var THREADS = [
@@ -1072,6 +1175,11 @@
     play:    { likeName: 'Request to hit' },
     friends: { likeName: 'Wave' }
   };
+
+  var ALL_GAMES = ['singles', 'doubles', 'mixed_doubles'];
+  function prefOk(pref, g) {
+    return !pref || pref === 'everyone' || (pref === 'men' && g === 'man') || (pref === 'women' && g === 'woman');
+  }
 
   /* ---------- State ---------- */
   var STORE_KEY = '40love.profile';
@@ -1225,12 +1333,15 @@
     b.addEventListener('click', function () { show(b.getAttribute('data-back')); });
   });
 
+  singleSelect($('#ob-gender'));
   $('#ob1-next').addEventListener('click', function () {
     var name = $('#ob-name').value.trim();
     var age = parseInt($('#ob-age').value, 10);
+    var genderSel = $('#ob-gender .chip[aria-pressed="true"]');
     if (!name) { toast('Add your first name to continue'); return; }
     if (!age || age < 18 || age > 99) { toast('Enter an age between 18 and 99'); return; }
-    state.draft = { name: name, age: age, photo: draftPhoto };
+    if (!genderSel) { toast('Tell us who you are so matching works'); return; }
+    state.draft = { name: name, age: age, gender: genderSel.getAttribute('data-gender'), photo: draftPhoto };
     show('screen-ob2');
   });
 
@@ -1252,10 +1363,41 @@
   });
 
   multiSelect($('#ob-modes'));
+  function syncSeekingBox() {
+    function modeOn(m) {
+      return $('#ob-modes .mode-row[data-mode="' + m + '"]').getAttribute('aria-pressed') === 'true';
+    }
+    $('#seeking-box').hidden = !modeOn('date');
+    $('#play-box').hidden = !modeOn('play');
+    $('#friends-box').hidden = !modeOn('friends');
+  }
+  $('#ob-modes').addEventListener('click', function (ev) {
+    if (ev.target.closest('.mode-row')) syncSeekingBox();
+  });
+  syncSeekingBox();
+  // Single-select behavior for the preference chip groups (they sit inside
+  // #ob-modes, whose generic handler multi-toggles — this corrects after it).
+  ['ob-playpref', 'ob-friendspref'].forEach(function (id) {
+    document.getElementById(id).addEventListener('click', function (ev) {
+      var btn = ev.target.closest('.chip');
+      if (!btn) return;
+      $all('#' + id + ' .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+    });
+  });
   $('#ob4-done').addEventListener('click', function () {
     var modes = $all('#ob-modes .mode-row[aria-pressed="true"]').map(function (r) { return r.getAttribute('data-mode'); });
+    var seeking = $all('#ob-seeking .chip[aria-pressed="true"]').map(function (c) { return c.getAttribute('data-seek'); });
+    var playGames = $all('#ob-playgames .chip[aria-pressed="true"]').map(function (c) { return c.getAttribute('data-game'); });
+    var playPrefSel = $('#ob-playpref .chip[aria-pressed="true"]');
+    var friendsPrefSel = $('#ob-friendspref .chip[aria-pressed="true"]');
     if (!modes.length) { toast('Pick at least one mode'); return; }
+    if (modes.indexOf('date') !== -1 && !seeking.length) { toast('Tell us who you’d like to date — pick at least one'); return; }
+    if (modes.indexOf('play') !== -1 && !playGames.length) { toast('Pick at least one game type for Play mode'); return; }
     state.draft.modes = modes;
+    state.draft.seeking = modes.indexOf('date') !== -1 ? seeking : [];
+    state.draft.playGames = playGames.length ? playGames : ['singles', 'doubles', 'mixed_doubles'];
+    state.draft.playPref = playPrefSel ? playPrefSel.getAttribute('data-pref') : 'everyone';
+    state.draft.friendsPref = friendsPrefSel ? friendsPrefSel.getAttribute('data-pref') : 'everyone';
     state.draft.bio = '';
     state.user = state.draft;
     delete state.draft;
@@ -1352,6 +1494,29 @@
     if (state.blocked[p.id] || state.seen[p.id]) return false;
     if (p.dist > state.prefs.radius) return false;
     if (p.age < state.prefs.ageMin || p.age > state.prefs.ageMax) return false;
+    // Date mode: mutual fit — they're who I'm looking for AND I'm who
+    // they're looking for. Play/Friends are for everyone.
+    if (state.mode === 'date' && state.user && state.user.gender && state.user.seeking && state.user.seeking.length) {
+      if (!p.gender || !p.seeking) return false;
+      if (state.user.seeking.indexOf(p.gender) === -1) return false;
+      if (p.seeking.indexOf(state.user.gender) === -1) return false;
+    }
+    // Play mode: shared game type; singles/doubles honor both players'
+    // play-with preference; mixed doubles is open by nature.
+    if (state.mode === 'play' && state.user) {
+      var myGames = (state.user.playGames && state.user.playGames.length) ? state.user.playGames : ALL_GAMES;
+      var theirGames = (p.playGames && p.playGames.length) ? p.playGames : ALL_GAMES;
+      var overlap = myGames.filter(function (g) { return theirGames.indexOf(g) !== -1; });
+      if (!overlap.length) return false;
+      var playOk = overlap.some(function (g) {
+        return g === 'mixed_doubles' || (prefOk(state.user.playPref, p.gender) && prefOk(p.playPref, state.user.gender));
+      });
+      if (!playOk) return false;
+    }
+    // Friends mode: mutual meet preference (defaults to everyone).
+    if (state.mode === 'friends' && state.user) {
+      if (!(prefOk(state.user.friendsPref, p.gender) && prefOk(p.friendsPref, state.user.gender))) return false;
+    }
     if (state.prefs.mySportsOnly && state.user && state.user.sports) {
       var shares = p.sports.some(function (s) { return state.user.sports.indexOf(s) !== -1; });
       if (!shares) return false;
@@ -1798,7 +1963,65 @@
     $('#sw-date').setAttribute('aria-checked', String(modes.indexOf('date') !== -1));
     $('#sw-play').setAttribute('aria-checked', String(modes.indexOf('play') !== -1));
     $('#sw-friends').setAttribute('aria-checked', String(modes.indexOf('friends') !== -1));
+    var g = state.user && state.user.gender;
+    $all('#set-gender .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(c.getAttribute('data-gender') === g));
+    });
+    var seeking = (state.user && state.user.seeking) || [];
+    $all('#set-seeking .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(seeking.indexOf(c.getAttribute('data-seek')) !== -1));
+    });
+    var games = (state.user && state.user.playGames) || ALL_GAMES;
+    $all('#set-playgames .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(games.indexOf(c.getAttribute('data-game')) !== -1));
+    });
+    var ppref = (state.user && state.user.playPref) || 'everyone';
+    $all('#set-playpref .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(c.getAttribute('data-pref') === ppref));
+    });
+    var fpref = (state.user && state.user.friendsPref) || 'everyone';
+    $all('#set-friendspref .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(c.getAttribute('data-pref') === fpref));
+    });
   }
+
+  $('#set-playgames').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    btn.setAttribute('aria-pressed', String(btn.getAttribute('aria-pressed') !== 'true'));
+    var games = $all('#set-playgames .chip[aria-pressed="true"]').map(function (c) { return c.getAttribute('data-game'); });
+    state.user.playGames = games.length ? games : ALL_GAMES;
+    saveUser();
+  });
+  $('#set-playpref').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    $all('#set-playpref .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+    state.user.playPref = btn.getAttribute('data-pref');
+    saveUser();
+  });
+  $('#set-friendspref').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    $all('#set-friendspref .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+    state.user.friendsPref = btn.getAttribute('data-pref');
+    saveUser();
+  });
+
+  $('#set-gender').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    $all('#set-gender .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+    state.user.gender = btn.getAttribute('data-gender');
+    saveUser();
+  });
+  $('#set-seeking').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    btn.setAttribute('aria-pressed', String(btn.getAttribute('aria-pressed') !== 'true'));
+    state.user.seeking = $all('#set-seeking .chip[aria-pressed="true"]').map(function (c) { return c.getAttribute('data-seek'); });
+    saveUser();
+  });
   function wireModeSwitch(id, mode) {
     $(id).addEventListener('click', function () {
       var el = $(id);

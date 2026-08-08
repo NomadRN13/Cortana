@@ -3,9 +3,31 @@ import { View, Text, ScrollView, TextInput, StyleSheet, Pressable, Switch, Alert
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
+import { Chip } from '../components/ui';
 import { useApp } from '../state';
 import { isBackendConfigured } from '../lib/supabase';
 import * as api from '../api/backend';
+
+const GENDERS = [
+  { key: 'woman', label: 'Woman' },
+  { key: 'man', label: 'Man' },
+  { key: 'nonbinary', label: 'Nonbinary' },
+];
+const SEEKING = [
+  { key: 'woman', label: 'Women' },
+  { key: 'man', label: 'Men' },
+  { key: 'nonbinary', label: 'Nonbinary people' },
+];
+const GAMES = [
+  { key: 'singles', label: 'Singles' },
+  { key: 'doubles', label: 'Doubles' },
+  { key: 'mixed_doubles', label: 'Mixed doubles' },
+];
+const PARTNER_PREFS = [
+  { key: 'women', label: 'Women' },
+  { key: 'men', label: 'Men' },
+  { key: 'everyone', label: 'Everyone' },
+];
 
 export default function SettingsScreen({ navigation }) {
   const app = useApp();
@@ -87,6 +109,90 @@ export default function SettingsScreen({ navigation }) {
           <Row label="Friends Mode" sub="Expand your circle">
             <Switch value={modeOn('friends')} onValueChange={() => toggleMode('friends')} trackColor={{ true: colors.opticDim }} thumbColor={modeOn('friends') ? colors.optic : colors.dim} />
           </Row>
+        </Group>
+
+        <Group title="Dating">
+          <View style={styles.datingBox}>
+            <Text style={styles.datingLabel}>I am</Text>
+            <View style={styles.chipRow}>
+              {GENDERS.map((g) => (
+                <Chip
+                  key={g.key}
+                  label={g.label}
+                  active={u && u.gender === g.key}
+                  onPress={() => app.updateDating(g.key, (u && u.seeking) || [])}
+                />
+              ))}
+            </View>
+            <Text style={[styles.datingLabel, { marginTop: 14 }]}>Looking to date</Text>
+            <View style={styles.chipRow}>
+              {SEEKING.map((s) => {
+                const cur = (u && u.seeking) || [];
+                const on = cur.includes(s.key);
+                return (
+                  <Chip
+                    key={s.key}
+                    label={s.label}
+                    active={on}
+                    onPress={() => app.updateDating((u && u.gender) || null, on ? cur.filter((x) => x !== s.key) : [...cur, s.key])}
+                  />
+                );
+              })}
+            </View>
+            <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
+              Date mode only shows people who fit what you're looking for — and who are looking for someone like you.
+            </Text>
+          </View>
+        </Group>
+
+        <Group title="Play">
+          <View style={styles.datingBox}>
+            <Text style={styles.datingLabel}>Game types</Text>
+            <View style={styles.chipRow}>
+              {GAMES.map((g) => {
+                const cur = (u && u.playGames) || ['singles', 'doubles', 'mixed_doubles'];
+                const on = cur.includes(g.key);
+                return (
+                  <Chip
+                    key={g.key}
+                    label={g.label}
+                    active={on}
+                    onPress={() => app.updatePlay(on ? cur.filter((x) => x !== g.key) : [...cur, g.key], (u && u.playPref) || 'everyone')}
+                  />
+                );
+              })}
+            </View>
+            <Text style={[styles.datingLabel, { marginTop: 14 }]}>Play singles/doubles with</Text>
+            <View style={styles.chipRow}>
+              {PARTNER_PREFS.map((p) => (
+                <Chip
+                  key={p.key}
+                  label={p.label}
+                  active={((u && u.playPref) || 'everyone') === p.key}
+                  onPress={() => app.updatePlay((u && u.playGames) || ['singles', 'doubles', 'mixed_doubles'], p.key)}
+                />
+              ))}
+            </View>
+            <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
+              Play mode shows players who want the same game types. Mixed doubles is open to everyone by nature.
+            </Text>
+          </View>
+        </Group>
+
+        <Group title="Friends">
+          <View style={styles.datingBox}>
+            <Text style={styles.datingLabel}>Meet</Text>
+            <View style={styles.chipRow}>
+              {PARTNER_PREFS.map((p) => (
+                <Chip
+                  key={p.key}
+                  label={p.label}
+                  active={((u && u.friendsPref) || 'everyone') === p.key}
+                  onPress={() => app.updateFriendsPref(p.key)}
+                />
+              ))}
+            </View>
+          </View>
         </Group>
 
         <Group title="Discovery">
@@ -180,4 +286,10 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: colors.danger, borderRadius: 14,
   },
   deleteLink: { alignItems: 'center', paddingVertical: 6 },
+  datingBox: {
+    padding: 13, backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line,
+    borderRadius: 14, marginBottom: 8,
+  },
+  datingLabel: { color: colors.text, fontWeight: '700', fontSize: 14, marginBottom: 8 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 });
