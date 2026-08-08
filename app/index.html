@@ -603,6 +603,86 @@
   .photo-btn:hover { background: var(--optic); color: var(--ink); }
   .ava.has-photo { background-size: cover; background-position: center; color: transparent; }
 
+  /* ---------- Interactivity & motion ---------- */
+  @keyframes screenIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .screen.active { animation: screenIn 0.22s ease; }
+
+  .act, .btn, .chip, .join-btn, .mode-pill, .tool-chip, .chat-send, .topmatch-btn, .icon-btn, .tab {
+    transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .act:active, .btn:active, .chip:active, .join-btn:active, .mode-pill:active,
+  .tool-chip:active, .chat-send:active, .topmatch-btn:active { transform: scale(0.94); }
+
+  @keyframes wiggle { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-14deg); } 60% { transform: rotate(11deg); } }
+  .bookmark.saved svg { animation: wiggle 0.4s ease; }
+
+  @keyframes ballBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+  #mark-welcome .ball { animation: ballBounce 2.4s ease-in-out infinite; }
+
+  /* Deck stack: the next card peeks out behind the top card */
+  .deck-stack { position: relative; }
+  .card-behind {
+    position: absolute; inset: 0;
+    transform: scale(0.94) translateY(16px);
+    opacity: 0.55;
+    pointer-events: none;
+    border-radius: 20px; overflow: hidden;
+    border: 2px solid var(--line); background: var(--card);
+  }
+  .deck { position: relative; }
+  .card { position: relative; z-index: 1; }
+  .card .card-photo { cursor: pointer; }
+
+  /* Match Point: modal pop + confetti */
+  @keyframes popIn { 0% { transform: scale(0.72); opacity: 0; } 70% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); } }
+  .overlay.open .match-modal { animation: popIn 0.3s ease; }
+  .confetti {
+    position: absolute; top: 42%; left: 50%;
+    font-size: 22px; pointer-events: none; z-index: 50;
+    animation: confettiFly 1.15s ease-out forwards;
+  }
+  @keyframes confettiFly {
+    0% { transform: translate(-50%, -50%) scale(0.5) rotate(0deg); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.1) rotate(var(--rot)); opacity: 0; }
+  }
+
+  /* Chat typing indicator */
+  .typing-bubble { display: inline-flex; gap: 4px; padding: 14px; background: var(--card2); border-radius: 16px; border-bottom-left-radius: 6px; }
+  .typing-bubble i {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--dim); font-style: normal;
+    animation: typingBlink 1s infinite;
+  }
+  .typing-bubble i:nth-child(2) { animation-delay: 0.15s; }
+  .typing-bubble i:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes typingBlink { 0%, 60%, 100% { opacity: 0.3; transform: none; } 30% { opacity: 1; transform: translateY(-3px); } }
+  @keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .chat-log .msg { animation: msgIn 0.18s ease; }
+
+  /* Profile detail sheet */
+  .profile-sheet {
+    background: var(--panel); border: 2px solid var(--line); border-radius: 22px;
+    width: 100%; max-width: 340px; max-height: 86%; overflow-y: auto;
+  }
+  @keyframes sheetUp { from { transform: translateY(26px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .overlay.open .profile-sheet { animation: sheetUp 0.25s ease; }
+  .psheet-photo {
+    height: 190px; display: flex; align-items: center; justify-content: center;
+    font-size: 64px; font-weight: 900; color: rgba(10, 11, 13, 0.55);
+  }
+  .psheet-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .psheet-actions { display: flex; justify-content: center; gap: 14px; padding: 6px 0 2px; }
+  .psheet-close { align-self: center; padding: 10px 18px; color: var(--dim); font-weight: 700; font-size: 13px; }
+
+  /* Expandable event cards */
+  .event { cursor: pointer; transition: border-color 0.15s ease; }
+  .event.expanded { border-color: var(--optic); }
+  .event-extra { display: none; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .event.expanded .event-extra { display: flex; }
+  .going-row { display: flex; align-items: center; gap: 6px; }
+  .going-row .ava { width: 26px; height: 26px; font-size: 10px; }
+  .going-row .ava + .ava { margin-left: -10px; }
+  .going-label { font-size: 12px; color: var(--dim); margin-left: 4px; }
+
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
   }
@@ -1023,6 +1103,30 @@
       </button>
     </nav>
 
+    <!-- Profile detail sheet -->
+    <div class="overlay" id="psheet-overlay">
+      <div class="profile-sheet" role="dialog" aria-modal="true" aria-labelledby="psheet-name">
+        <div class="psheet-photo" id="psheet-photo"></div>
+        <div class="psheet-body">
+          <div class="card-name" id="psheet-name"></div>
+          <div id="psheet-rows"></div>
+          <p class="card-bio" id="psheet-bio"></p>
+          <div class="psheet-actions">
+            <button class="act" id="psheet-pass" aria-label="Pass">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+            </button>
+            <button class="act act-like" id="psheet-like" aria-label="Like">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
+            </button>
+            <button class="act" id="psheet-ace" aria-label="Ace — super like">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.7l5.9-.8z"></path></svg>
+            </button>
+          </div>
+          <button class="psheet-close" id="psheet-close">Close</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Match modal -->
     <div class="overlay" id="match-overlay">
       <div class="match-modal" role="dialog" aria-modal="true" aria-labelledby="match-title">
@@ -1162,12 +1266,12 @@
   };
 
   var EVENTS = [
-    { id: 'e1', week: 'This week', dow: 'Fri', dom: '7',  title: 'Sunset Doubles Social', venue: 'Riverside Park Tennis Complex', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6 },
-    { id: 'e2', week: 'This week', dow: 'Sat', dom: '8',  title: 'Beginner Pickleball Mixer', venue: 'Broad Ripple Park', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12 },
-    { id: 'e3', week: 'This week', dow: 'Sun', dom: '9',  title: '40/Love Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3 },
-    { id: 'e4', week: 'Next week', dow: 'Wed', dom: '12', title: 'Pickleball Under the Lights', venue: 'Ellenberger Park', time: '7:30 PM', sport: 'Pickleball', level: 'All levels', spots: 8 },
-    { id: 'e5', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Tarkington Park', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10 },
-    { id: 'e6', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Indy Pickleball Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5 }
+    { id: 'e1', week: 'This week', dow: 'Fri', dom: '7',  title: 'Sunset Doubles Social', venue: 'Riverside Park Tennis Complex', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6, desc: 'Round-robin doubles as the sun goes down — partners rotate every 20 minutes, so you\'ll play with everyone.' },
+    { id: 'e2', week: 'This week', dow: 'Sat', dom: '8',  title: 'Beginner Pickleball Mixer', venue: 'Broad Ripple Park', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12, desc: 'Never held a paddle? Perfect. Loaner paddles, patient people, and zero judgment.' },
+    { id: 'e3', week: 'This week', dow: 'Sun', dom: '9',  title: '40/Love Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3, desc: 'The signature 40/Love format: short sets, rotating partners, and a built-in social break.' },
+    { id: 'e4', week: 'Next week', dow: 'Wed', dom: '12', title: 'Pickleball Under the Lights', venue: 'Ellenberger Park', time: '7:30 PM', sport: 'Pickleball', level: 'All levels', spots: 8, desc: 'Indy\'s biggest public pickleball site, under the lights. Music on, stakes low.' },
+    { id: 'e5', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Tarkington Park', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10, desc: '45 minutes of cardio tennis, then coffee at the Tarkington café — the date part is optional.' },
+    { id: 'e6', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Indy Pickleball Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5, desc: 'Season kickoff for the ladder league. Come claim a rung.' }
   ];
 
   var MODE_CFG = {
@@ -1180,6 +1284,8 @@
   function prefOk(pref, g) {
     return !pref || pref === 'everyone' || (pref === 'men' && g === 'man') || (pref === 'women' && g === 'woman');
   }
+  var REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GAME_LABELS = { singles: 'Singles', doubles: 'Doubles', mixed_doubles: 'Mixed doubles' };
 
   /* ---------- State ---------- */
   var STORE_KEY = '40love.profile';
@@ -1195,6 +1301,7 @@
     matchedId: null,
     matches: ['maya', 'sam', 'priya'],
     joined: {},
+    expandedEvents: {},
     replied: {},
     threads: THREADS,
     ralliesBase: 128,
@@ -1548,10 +1655,30 @@
         '<div class="big" aria-hidden="true">🎾</div>' +
         '<h2>That’s everyone nearby</h2>' +
         '<p class="hint">You’ve seen all the players in range. Check back soon, or widen your radius in Settings.</p>' +
+        '<button class="btn btn-ghost" id="reset-deck" style="width:auto; padding:12px 20px;">New balls — reset the deck</button>' +
         '</div>';
+      $('#reset-deck').addEventListener('click', function () {
+        state.seen = {};
+        state.deckPos = 0;
+        state.history = [];
+        renderDeck();
+        toast('Fresh balls! The deck is reset 🎾');
+      });
       return;
     }
+    // the card peeking out behind the top one
+    var nextP = null;
+    for (var ni = state.deckPos + 1; ni < PROFILES.length; ni++) {
+      if (PROFILES[ni].id !== p.id && eligible(PROFILES[ni])) { nextP = PROFILES[ni]; break; }
+    }
+    var behindHtml = nextP
+      ? '<div class="card-behind" aria-hidden="true">' +
+          '<div class="card-photo" style="background:' + gradFor(nextP.id) + '">' + esc(initials(nextP.name)) + '</div>' +
+          '<div class="card-info"><div class="card-name">' + esc(nextP.name) + '<span class="age">' + nextP.age + '</span></div></div>' +
+        '</div>'
+      : '';
     deck.innerHTML =
+      '<div class="deck-stack">' + behindHtml +
       '<div class="card springing" id="deck-card">' +
         '<div class="stamp stamp-like" id="stamp-like">' + (state.mode === 'date' ? 'LIKE' : state.mode === 'play' ? 'HIT?' : 'HEY!') + '</div>' +
         '<div class="stamp stamp-pass" id="stamp-pass">PASS</div>' +
@@ -1575,6 +1702,7 @@
           '<div class="card-line"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="14" width="3.4" height="6" rx="1"></rect><rect x="10.3" y="10" width="3.4" height="10" rx="1"></rect><rect x="16.6" y="5" width="3.4" height="15" rx="1"></rect></svg>' + esc(skillLabel(p)) + '</div>' +
           '<p class="card-bio">' + esc(p.bio) + '</p>' +
         '</div>' +
+      '</div>' +
       '</div>' +
       '<div class="deck-actions">' +
         '<button class="act" id="act-rewind" aria-label="Rewind last card">' +
@@ -1602,6 +1730,11 @@
       toast(state.saved[p.id] ? 'Saved ' + p.name + ' for later' : 'Removed from saved');
     });
     $('#card-more').addEventListener('click', function () { openSheet(p.id, 'deck'); });
+    $('#deck-card').addEventListener('click', function (ev) {
+      if (ev.target.closest('button')) return;
+      if (suppressCardClick) { suppressCardClick = false; return; }
+      openPSheet(p);
+    });
     attachDrag($('#deck-card'));
   }
 
@@ -1639,7 +1772,33 @@
     }, 180);
   }
 
+  /* ---------- Profile detail sheet ---------- */
+  function openPSheet(p) {
+    var photo = $('#psheet-photo');
+    photo.style.background = gradFor(p.id);
+    photo.textContent = initials(p.name);
+    $('#psheet-name').innerHTML = esc(p.name) + '<span class="age">' + p.age + '</span>' +
+      (p.verified ? '<span class="verified" aria-label="Verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>' : '');
+    var games = (p.playGames && p.playGames.length ? p.playGames : ALL_GAMES).map(function (g) { return GAME_LABELS[g]; }).join(' · ');
+    $('#psheet-rows').innerHTML =
+      '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>' + esc(p.sports.join(' & ')) + ' · ' + esc(p.rating ? p.rating + ' Skill Level' : p.skill) + '</div>' +
+      '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s-6.5-5.4-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.6 12 21 12 21z"></path><circle cx="12" cy="10.2" r="2.4"></circle></svg>' + p.dist.toFixed(1) + ' miles away</div>' +
+      '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>' + esc(p.avail) + '</div>' +
+      '<div class="card-line"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="14" width="3.4" height="6" rx="1"></rect><rect x="10.3" y="10" width="3.4" height="10" rx="1"></rect><rect x="16.6" y="5" width="3.4" height="15" rx="1"></rect></svg>' + games + '</div>';
+    $('#psheet-bio').textContent = p.bio;
+    $('#psheet-overlay').classList.add('open');
+  }
+  function closePSheet() { $('#psheet-overlay').classList.remove('open'); }
+  $('#psheet-close').addEventListener('click', closePSheet);
+  $('#psheet-overlay').addEventListener('click', function (ev) {
+    if (ev.target === $('#psheet-overlay')) closePSheet();
+  });
+  $('#psheet-pass').addEventListener('click', function () { closePSheet(); swipeOut(false, false); });
+  $('#psheet-like').addEventListener('click', function () { closePSheet(); swipeOut(true, false); });
+  $('#psheet-ace').addEventListener('click', function () { closePSheet(); swipeOut(true, true); });
+
   /* Drag-to-swipe (buttons remain the primary path) */
+  var suppressCardClick = false;
   function attachDrag(card) {
     if (!card || !window.PointerEvent) return;
     var startX = 0, dx = 0, active = false;
@@ -1661,6 +1820,7 @@
     function release() {
       if (!active) return;
       active = false;
+      if (Math.abs(dx) > 6) suppressCardClick = true;
       card.classList.remove('dragging');
       card.classList.add('springing');
       if (dx > 90) { swipeOut(true, false); }
@@ -1676,6 +1836,23 @@
   }
 
   /* ---------- Match modal ---------- */
+  function throwConfetti() {
+    if (REDUCED_MOTION) return;
+    var overlay = $('#match-overlay');
+    var emo = ['🎾', '❤️', '✨'];
+    for (var i = 0; i < 14; i++) {
+      var s = document.createElement('span');
+      s.className = 'confetti';
+      s.textContent = emo[i % emo.length];
+      s.style.setProperty('--dx', (Math.random() * 300 - 150).toFixed(0) + 'px');
+      s.style.setProperty('--dy', (Math.random() * -240 + 30).toFixed(0) + 'px');
+      s.style.setProperty('--rot', (Math.random() * 540 - 270).toFixed(0) + 'deg');
+      s.style.animationDelay = (Math.random() * 0.15).toFixed(2) + 's';
+      overlay.appendChild(s);
+      (function (el) { setTimeout(function () { el.remove(); }, 1500); })(s);
+    }
+  }
+
   function openMatch(p, ace) {
     state.matchedId = p.id;
     if (state.matches.indexOf(p.id) === -1) state.matches.unshift(p.id);
@@ -1688,6 +1865,7 @@
     them.textContent = initials(p.name);
     $('#match-text').textContent = (ace ? 'An ace! ' : '') + 'You and ' + p.name + ' matched. Skip the small talk — the court is the icebreaker.';
     $('#match-overlay').classList.add('open');
+    throwConfetti();
   }
   function ensureThread(id) {
     for (var i = 0; i < state.threads.length; i++) if (state.threads[i].id === id) return state.threads[i];
@@ -1765,6 +1943,7 @@
   function lastPreview(t) {
     if (!t.msgs.length) return 'New match — say hi!';
     var m = t.msgs[t.msgs.length - 1];
+    if (m.typing) return 'typing…';
     if (m.type === 'court') return '🎾 ' + m.court + ' · ' + m.day + ' ' + m.time;
     return (m.who === 'me' ? 'You: ' : '') + m.text;
   }
@@ -1802,6 +1981,9 @@
   }
 
   function msgHtml(m) {
+    if (m.typing) {
+      return '<div class="msg them is-typing" aria-label="Typing"><div class="typing-bubble"><i></i><i></i><i></i></div></div>';
+    }
     if (m.type === 'court') {
       return '<div class="msg ' + (m.who === 'me' ? 'me' : 'them') + '">' +
         '<div class="courtcard">' +
@@ -1850,14 +2032,25 @@
   function deliverReply(id) {
     if (state.replied[id]) return;
     state.replied[id] = true;
+    // they start "typing"…
     setTimeout(function () {
       var t = threadById(id);
       if (!t) return;
+      t.msgs.push({ who: 'them', typing: true });
+      if (chatId === id && $('#screen-convo').classList.contains('active')) renderChatLog();
+    }, 500);
+    // …then the reply lands
+    setTimeout(function () {
+      var t = threadById(id);
+      if (!t) return;
+      for (var i = t.msgs.length - 1; i >= 0; i--) {
+        if (t.msgs[i].typing) { t.msgs.splice(i, 1); break; }
+      }
       t.msgs.push({ who: 'them', text: REPLIES[id] || 'Sounds great — see you on the court! 🎾', when: 'Just now' });
       t.yourServe = true;
       if (chatId === id && $('#screen-convo').classList.contains('active')) { renderChatLog(); }
       else { t.unread = true; }
-    }, 1500);
+    }, 1800);
   }
 
   function sendMsg() {
@@ -1896,15 +2089,25 @@
     var weeks = [];
     EVENTS.forEach(function (e) { if (weeks.indexOf(e.week) === -1) weeks.push(e.week); });
     list.innerHTML = weeks.map(function (w) {
-      var rows = EVENTS.filter(function (e) { return e.week === w; }).map(function (e) {
+      var rows = EVENTS.filter(function (e) { return e.week === w; }).map(function (e, wi) {
         var going = !!state.joined[e.id];
         var spots = going ? e.spots - 1 : e.spots;
-        return '<div class="event">' +
+        var idx = EVENTS.indexOf(e);
+        var attendees = [PROFILES[(idx * 3) % PROFILES.length], PROFILES[(idx * 3 + 4) % PROFILES.length], PROFILES[(idx * 3 + 8) % PROFILES.length]];
+        var avas = attendees.map(function (a) {
+          return '<span class="ava" style="background:' + gradFor(a.id) + '">' + esc(initials(a.name)) + '</span>';
+        }).join('');
+        var goingCount = 3 + ((idx * 5) % 7) + (going ? 1 : 0);
+        return '<div class="event' + (state.expandedEvents[e.id] ? ' expanded' : '') + '" data-id="' + e.id + '" role="button" tabindex="0" aria-expanded="' + (state.expandedEvents[e.id] ? 'true' : 'false') + '">' +
           '<div class="event-date"><span class="dow">' + esc(e.dow) + '</span><span class="dom">' + esc(e.dom) + '</span></div>' +
           '<div class="event-mid">' +
             '<div class="event-title">' + esc(e.title) + '</div>' +
             '<div class="event-meta">' + esc(e.venue) + ' · ' + esc(e.time) + '</div>' +
             '<div class="event-tags"><span class="tag tag-sport">' + esc(e.sport) + '</span><span class="tag">' + esc(e.level) + '</span></div>' +
+            '<div class="event-extra">' +
+              '<p class="hint" style="margin:0">' + esc(e.desc || '') + '</p>' +
+              '<div class="going-row">' + avas + '<span class="going-label">+' + goingCount + ' going' + (going ? ' · including you' : '') + '</span></div>' +
+            '</div>' +
           '</div>' +
           '<div class="event-side">' +
             '<span class="spots">' + spots + ' spots left</span>' +
@@ -1914,8 +2117,18 @@
       }).join('');
       return '<div class="week-head">' + esc(w) + '</div>' + rows;
     }).join('');
+    $all('#event-list .event').forEach(function (el) {
+      el.addEventListener('click', function (ev) {
+        if (ev.target.closest('.join-btn')) return;
+        var id = el.getAttribute('data-id');
+        state.expandedEvents[id] = !state.expandedEvents[id];
+        el.classList.toggle('expanded', state.expandedEvents[id]);
+        el.setAttribute('aria-expanded', String(!!state.expandedEvents[id]));
+      });
+    });
     $all('#event-list .join-btn').forEach(function (b) {
-      b.addEventListener('click', function () {
+      b.addEventListener('click', function (ev) {
+        ev.stopPropagation();
         var id = b.getAttribute('data-id');
         state.joined[id] = !state.joined[id];
         renderEvents();
@@ -1955,6 +2168,22 @@
       toast('Bio saved');
     });
     $('#profile-photo-btn').addEventListener('click', function () { $('#photo-input').click(); });
+    // stat numbers count up
+    if (!REDUCED_MOTION) {
+      $all('#profile-body .stat .num').forEach(function (el) {
+        var target = parseInt(el.textContent, 10);
+        if (!target) return;
+        var start = null;
+        el.textContent = '0';
+        function tick(ts) {
+          if (start === null) start = ts;
+          var k = Math.min(1, (ts - start) / 600);
+          el.textContent = String(Math.round(target * k));
+          if (k < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }
   }
 
   /* ---------- Settings ---------- */
