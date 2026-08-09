@@ -22,11 +22,18 @@ build step. It runs in two modes:
    Settings → API). The anon key is designed to be public — publishing it
    in the page is safe and normal.
 
-2. **Deploy** — any static host works; all are free at this scale:
-   - **Netlify:** drag the `landing/` folder onto [app.netlify.com/drop](https://app.netlify.com/drop). Done.
-   - **Vercel:** `npx vercel landing/`
+2. **Deploy** — the assembled website lives in `site/` (landing page at `/`,
+   the clickable prototype at `/demo`, favicon included). Any static host
+   works; all are free at this scale:
+   - **Netlify:** drag the `site/` folder onto [app.netlify.com/drop](https://app.netlify.com/drop). Done.
+   - **Vercel:** `npx vercel site/`
    - **GitHub Pages:** repo Settings → Pages → serve from the branch,
-     `/landing` folder.
+     `/site` folder.
+
+   After editing `landing/index.html` or `app/index.html`, re-run
+   `./scripts/build-site.sh` to refresh `site/`, then re-deploy. (Step 1's
+   Supabase keys go into `landing/index.html` — rebuild after pasting them,
+   or paste them into `site/index.html` directly before dragging.)
 
 3. **Custom domain** (recommended before promoting it): buy `40love.app`
    or similar (~$15/yr) and point it at the host. Update the Instagram/
