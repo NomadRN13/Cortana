@@ -1,9 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
 import { Wordmark, Btn } from '../components/ui';
 import { useApp } from '../state';
+
+const MODES = [
+  { icon: 'heart-outline', name: 'Date Mode', desc: 'Find your perfect match.' },
+  { icon: 'tennisball-outline', name: 'Play Mode', desc: 'Find players for your next match.' },
+  { icon: 'people-outline', name: 'Friends Mode', desc: 'Expand your circle on and off the court.' },
+];
 
 export default function WelcomeScreen({ navigation }) {
   const { user } = useApp();
@@ -18,6 +25,19 @@ export default function WelcomeScreen({ navigation }) {
         <View style={styles.score}>
           <Text style={styles.scoreText}>40 – LOVE</Text>
         </View>
+      </View>
+      <View style={{ gap: 18 }}>
+        {MODES.map((m) => (
+          <View key={m.name} style={styles.modeRow}>
+            <View style={styles.modeIcon}>
+              <Ionicons name={m.icon} size={21} color={colors.text} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.modeName}>{m.name}</Text>
+              <Text style={[type.hint, { fontSize: 13.5 }]}>{m.desc}</Text>
+            </View>
+          </View>
+        ))}
       </View>
       <View style={{ gap: 10 }}>
         <Btn label="Get started" onPress={() => navigation.navigate('SignIn')} />
@@ -59,4 +79,14 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   scoreText: { fontSize: 13, fontWeight: '800', letterSpacing: 1.2, color: colors.optic },
+  modeRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  modeIcon: {
+    width: 48, height: 48, borderRadius: 24,
+    borderWidth: 2, borderColor: colors.optic,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  modeName: {
+    fontSize: 13, fontWeight: '800', textTransform: 'uppercase',
+    letterSpacing: 1, color: colors.optic, marginBottom: 2,
+  },
 });
