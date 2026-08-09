@@ -105,8 +105,10 @@ secondary tagline: **"Serve. Rally. Connect."** Verified badges use green
 `#3DC96B`; the pass/danger red `#E15A72` appears only for destructive or
 negative actions.
 
-**The landing page** keeps the Court-green editorial world from §3 (Chalk on
-Court, Optic + Match Rose accents).
+**The landing page** shares the Night Court world (founder-directed): night
+ground, Optic accents, the ball-o wordmark — one brand across the website
+and the app. The §3 court-green palette remains available for print/event
+materials where a daylight look fits.
 
-Both are deliberate single-theme commitments; keep contrast WCAG-legible
-everywhere.
+Both surfaces are a deliberate single-theme commitment; keep contrast
+WCAG-legible everywhere.

@@ -8,16 +8,17 @@
 <link rel="icon" type="image/png" href="/favicon.png">
 <style>
   :root {
-    --court: #0F3D2E;
-    --court-deep: #0A2C21;
-    --ink: #132A21;
-    --chalk: #F6F4EC;
-    --optic: #CFE23F;
+    /* Night Court — matches the app (brand guide §8) */
+    --court: #0A0B0D;
+    --court-deep: #121418;
+    --ink: #0A0B0D;
+    --chalk: #F4F6F0;
+    --optic: #D6F44F;
     --rose: #E15A72;
     --blue: #3E7C9B;
     --rose-deep: #C23B55;
-    --chalk-dim: rgba(246, 244, 236, 0.72);
-    --chalk-line: rgba(246, 244, 236, 0.28);
+    --chalk-dim: rgba(244, 246, 240, 0.62);
+    --chalk-line: rgba(244, 246, 240, 0.14);
     --serif: Georgia, 'Times New Roman', serif;
   }
 
@@ -49,7 +50,9 @@
 
   .mark { font-weight: 900; letter-spacing: -0.03em; white-space: nowrap; }
   .mark .slash { color: var(--optic); font-weight: 800; }
-  .mark .love { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--rose); }
+  .mark .love { font-weight: 900; color: var(--chalk); }
+  .ballo { display: inline-block; width: 0.82em; height: 0.82em; vertical-align: -0.06em; margin: 0 0.015em; }
+  .ballo svg { width: 100%; height: 100%; display: block; }
 
   button, .btn { font: inherit; cursor: pointer; }
   a { color: var(--optic); }
@@ -63,7 +66,7 @@
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgba(15, 61, 46, 0.92);
+    background: rgba(10, 11, 13, 0.92);
     border-bottom: 2px solid var(--chalk-line);
     backdrop-filter: blur(6px);
   }
@@ -120,11 +123,10 @@
   }
   .hero h1 .serve {
     display: block;
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 400;
-    font-size: 0.52em;
-    color: var(--rose);
+    font-weight: 800;
+    font-size: 0.42em;
+    letter-spacing: 0.01em;
+    color: var(--optic);
     margin-top: 14px;
   }
   .hero-sub {
@@ -158,7 +160,7 @@
   .waitlist button:hover { background: #DCEE55; }
   .form-note { font-size: 13px; color: var(--chalk-dim); margin-top: 12px; }
   .demo-cta { margin-top: 8px; font-size: 14px; }
-  .demo-cta a { color: var(--optic); font-weight: 800; text-decoration: none; border-bottom: 2px solid rgba(207, 226, 63, 0.35); padding-bottom: 1px; }
+  .demo-cta a { color: var(--optic); font-weight: 800; text-decoration: none; border-bottom: 2px solid rgba(214, 244, 79, 0.35); padding-bottom: 1px; }
   .demo-cta a:hover { border-bottom-color: var(--optic); }
   .form-error { font-size: 14px; color: var(--rose); font-weight: 600; margin-top: 10px; min-height: 1.2em; }
   .form-success {
@@ -175,49 +177,50 @@
   .mini-phone {
     justify-self: center;
     width: 250px;
-    background: var(--chalk);
+    background: #17191D;
     border-radius: 26px;
-    border: 8px solid var(--court-deep);
-    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.4);
+    border: 8px solid #1B1D21;
+    box-shadow: 0 0 0 2px rgba(214, 244, 79, 0.12), 0 24px 50px rgba(0, 0, 0, 0.55);
     overflow: hidden;
-    color: var(--ink);
+    color: var(--chalk);
     transform: rotate(3deg);
   }
   .mp-photo {
     height: 190px;
-    background: linear-gradient(135deg, #14503C, #3E7C9B);
+    background: linear-gradient(135deg, #B7E04A, #3D6E2C);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--chalk);
+    color: rgba(10, 11, 13, 0.55);
     font-size: 44px;
     font-weight: 900;
   }
   .mp-body { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 8px; }
   .mp-name { font-weight: 800; font-size: 17px; letter-spacing: -0.01em; }
-  .mp-name small { font-weight: 600; color: rgba(19,42,33,0.6); }
+  .mp-name small { font-weight: 600; color: var(--chalk-dim); }
   .mp-tags { display: flex; gap: 5px; flex-wrap: wrap; }
   .mp-tag {
     font-size: 10.5px;
     font-weight: 700;
     padding: 4px 9px;
-    border: 2px solid var(--court);
-    color: var(--court);
+    border: 2px solid var(--chalk-line);
+    color: var(--chalk-dim);
     border-radius: 999px;
     font-variant-numeric: tabular-nums;
   }
+  .mp-tag.is-sport { border-color: var(--optic); color: var(--optic); }
   .mp-acts { display: flex; justify-content: center; gap: 14px; padding-top: 6px; }
   .mp-act {
     width: 42px; height: 42px;
     border-radius: 50%;
-    border: 2px solid rgba(19,42,33,0.18);
+    border: 2px solid var(--chalk-line);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 17px;
-    background: #FFFDF7;
+    background: #1F2227;
   }
-  .mp-act.like { border-color: var(--rose-deep); }
+  .mp-act.like { border-color: var(--optic); background: var(--optic); }
 
   /* ---------- Scoreboard strip ---------- */
   .scorestrip {
@@ -247,9 +250,9 @@
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
-  .score-chip.is-date { border-color: var(--rose); color: var(--rose); }
+  .score-chip.is-date { border-color: var(--optic); color: var(--optic); }
   .score-chip.is-play { border-color: var(--optic); color: var(--optic); }
-  .score-chip.is-friends { border-color: var(--blue); color: #9CC4D8; }
+  .score-chip.is-friends { border-color: var(--optic); color: var(--optic); }
 
   /* ---------- Sections ---------- */
   .section { padding: 76px 0; border-bottom: 2px solid var(--chalk-line); }
@@ -294,9 +297,7 @@
     flex-direction: column;
     gap: 10px;
   }
-  .mode-card.is-date { border-top-color: var(--rose); }
-  .mode-card.is-play { border-top-color: var(--optic); }
-  .mode-card.is-friends { border-top-color: var(--blue); }
+  .mode-card.is-date, .mode-card.is-play, .mode-card.is-friends { border-top-color: var(--optic); }
   .mode-card .emoji { font-size: 30px; }
   .mode-card h3 { font-size: 21px; }
   .mode-card p { font-size: 15px; color: var(--chalk-dim); }
@@ -304,8 +305,6 @@
     margin-top: 22px;
     font-size: 15px;
     color: var(--chalk-dim);
-    font-family: var(--serif);
-    font-style: italic;
   }
 
   /* Why a game beats dinner */
@@ -400,7 +399,7 @@
   /* Closing CTA */
   .closing { padding: 84px 0; text-align: center; }
   .closing h2 { font-size: clamp(30px, 4.6vw, 46px); font-weight: 900; }
-  .closing .serve { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--rose); }
+  .closing .serve { font-weight: 800; color: var(--optic); }
   .closing .waitlist { margin: 30px auto 0; justify-content: center; }
   .closing .form-success { margin: 30px auto 0; }
 
@@ -446,7 +445,7 @@
 
 <header>
   <div class="nav">
-    <span class="mark">40<span class="slash">/</span><span class="love">Love</span></span>
+    <span class="mark" role="img" aria-label="40/Love">40<span class="slash">/</span>L<span class="ballo" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#D6F44F"></circle><path d="M4.5 5.5c3.6 3.6 3.6 9.4 0 13" stroke="#0A0B0D" stroke-width="1.8" fill="none"></path><path d="M19.5 5.5c-3.6 3.6-3.6 9.4 0 13" stroke="#0A0B0D" stroke-width="1.8" fill="none"></path></svg></span>ve</span>
     <a class="nav-cta" href="#join">Join the waitlist</a>
   </div>
 </header>
@@ -660,7 +659,7 @@
 
 <footer>
   <div class="foot">
-    <span class="mark">40<span class="slash">/</span><span class="love">Love</span></span>
+    <span class="mark" role="img" aria-label="40/Love">40<span class="slash">/</span>L<span class="ballo" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#D6F44F"></circle><path d="M4.5 5.5c3.6 3.6 3.6 9.4 0 13" stroke="#0A0B0D" stroke-width="1.8" fill="none"></path><path d="M19.5 5.5c-3.6 3.6-3.6 9.4 0 13" stroke="#0A0B0D" stroke-width="1.8" fill="none"></path></svg></span>ve</span>
     <div class="foot-links">
       <a href="/demo/">Try the demo</a>
       <a href="mailto:hello@40love.app">hello@40love.app</a>
