@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
 import { Avatar } from '../components/ui';
+import { TypingDots } from '../components/motion';
 import { useApp } from '../state';
 import { COURTS } from '../data/seed';
 
@@ -101,6 +102,13 @@ export default function ConversationScreen({ route, navigation }) {
           }
           renderItem={({ item: m, index }) => {
             const mine = m.who === 'me';
+            if (m.typing) {
+              return (
+                <View style={[styles.msg, styles.theirs]}>
+                  <TypingDots />
+                </View>
+              );
+            }
             if (m.kind === 'court') {
               const status = m.status || 'proposed';
               return (

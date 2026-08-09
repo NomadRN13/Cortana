@@ -11,7 +11,7 @@ export default function WelcomeScreen({ navigation }) {
     <SafeAreaView style={styles.wrap}>
       <View style={{ gap: 14 }}>
         <Text style={[type.eyebrow, { color: colors.optic }]}>Serve. Rally. Connect.</Text>
-        <Wordmark size={54} />
+        <Wordmark size={54} bounce />
         <Text style={styles.line}>
           Meet Indy's racquet-sports people — the first date is a game, not dinner.
         </Text>

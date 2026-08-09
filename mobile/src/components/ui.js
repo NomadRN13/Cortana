@@ -4,12 +4,14 @@ import { Text, View, Pressable, StyleSheet, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radii, gradientFor, initials } from '../theme';
+import { Bouncy } from './motion';
 
-export function Wordmark({ size = 24 }) {
+export function Wordmark({ size = 24, bounce = false }) {
+  const ball = <Ionicons name="tennisball" size={size * 0.82} color={colors.optic} style={{ marginHorizontal: 1 }} />;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       <Text style={{ fontSize: size, fontWeight: '800', color: colors.text, letterSpacing: -0.5 }}>40/L</Text>
-      <Ionicons name="tennisball" size={size * 0.82} color={colors.optic} style={{ marginHorizontal: 1 }} />
+      {bounce ? <Bouncy>{ball}</Bouncy> : ball}
       <Text style={{ fontSize: size, fontWeight: '800', color: colors.text, letterSpacing: -0.5 }}>ve</Text>
     </View>
   );
@@ -45,7 +47,7 @@ export function Btn({ label, onPress, kind = 'primary', style }) {
       style={({ pressed }) => [
         styles.btn,
         kind === 'primary' ? styles.btnPrimary : kind === 'danger' ? styles.btnDanger : styles.btnGhost,
-        pressed && { opacity: 0.85 },
+        pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
         style,
       ]}
     >
@@ -67,7 +69,7 @@ export function Chip({ label, active, onPress }) {
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
-      style={[styles.chip, active && styles.chipActive]}
+      style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && { transform: [{ scale: 0.95 }] }]}
     >
       <Text style={[styles.chipLabel, active && { color: colors.ink }]}>{label}</Text>
     </Pressable>

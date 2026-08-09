@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { colors, type } from '../theme';
 import { Avatar, Tag } from '../components/ui';
+import { CountUpText } from '../components/motion';
 import { useApp } from '../state';
 
 export default function ProfileScreen({ navigation }) {
@@ -82,7 +83,7 @@ export default function ProfileScreen({ navigation }) {
 function Stat({ num, label }) {
   return (
     <View style={styles.stat}>
-      <Text style={{ fontSize: 22, fontWeight: '900', color: colors.optic }}>{num}</Text>
+      <CountUpText value={num} style={{ fontSize: 22, fontWeight: '900', color: colors.optic }} />
       <Text style={{ fontSize: 11, fontWeight: '700', color: colors.dim, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 2 }}>
         {label}
       </Text>

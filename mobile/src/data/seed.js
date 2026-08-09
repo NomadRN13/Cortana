@@ -18,12 +18,12 @@ export const PROFILES = [
 ];
 
 export const EVENTS = [
-  { id: 'e1', week: 'This week', dow: 'Fri', dom: '7', title: 'Sunset Doubles Social', venue: 'Riverside Park Tennis Complex', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6 },
-  { id: 'e2', week: 'This week', dow: 'Sat', dom: '8', title: 'Beginner Pickleball Mixer', venue: 'Broad Ripple Park', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12 },
-  { id: 'e3', week: 'This week', dow: 'Sun', dom: '9', title: '40/Love Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3 },
-  { id: 'e4', week: 'Next week', dow: 'Wed', dom: '12', title: 'Pickleball Under the Lights', venue: 'Ellenberger Park', time: '7:30 PM', sport: 'Pickleball', level: 'All levels', spots: 8 },
-  { id: 'e5', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Tarkington Park', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10 },
-  { id: 'e6', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Indy Pickleball Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5 },
+  { id: 'e1', week: 'This week', dow: 'Fri', dom: '7', title: 'Sunset Doubles Social', venue: 'Riverside Park Tennis Complex', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6, desc: "Round-robin doubles as the sun goes down — partners rotate every 20 minutes, so you'll play with everyone." },
+  { id: 'e2', week: 'This week', dow: 'Sat', dom: '8', title: 'Beginner Pickleball Mixer', venue: 'Broad Ripple Park', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12, desc: "Never held a paddle? Perfect. Loaner paddles, patient people, and zero judgment." },
+  { id: 'e3', week: 'This week', dow: 'Sun', dom: '9', title: '40/Love Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3, desc: "The signature 40/Love format: short sets, rotating partners, and a built-in social break." },
+  { id: 'e4', week: 'Next week', dow: 'Wed', dom: '12', title: 'Pickleball Under the Lights', venue: 'Ellenberger Park', time: '7:30 PM', sport: 'Pickleball', level: 'All levels', spots: 8, desc: "Indy's biggest public pickleball site, under the lights. Music on, stakes low." },
+  { id: 'e5', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Tarkington Park', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10, desc: "45 minutes of cardio tennis, then coffee at the Tarkington café — the date part is optional." },
+  { id: 'e6', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Indy Pickleball Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5, desc: "Season kickoff for the ladder league. Come claim a rung." },
 ];
 
 export const THREADS = [

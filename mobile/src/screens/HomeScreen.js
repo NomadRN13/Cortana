@@ -4,8 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, type, gradientFor, initials } from '../theme';
-import { Wordmark, Avatar, Btn } from '../components/ui';
+import { Wordmark, Avatar, Btn, Tag } from '../components/ui';
+import { SwipeableCard, Confetti, useReduceMotion } from '../components/motion';
 import { useApp } from '../state';
+
+const GAME_LABELS = { singles: 'Singles', doubles: 'Doubles', mixed_doubles: 'Mixed doubles' };
 
 const MODE_META = {
   date: { label: 'Date Mode', icon: 'heart-outline', likeVerb: 'Like' },
@@ -17,7 +20,10 @@ export default function HomeScreen({ navigation }) {
   const app = useApp();
   const [matchWith, setMatchWith] = useState(null);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [sheetP, setSheetP] = useState(null);
+  const reducedMotion = useReduceMotion();
   const p = app.currentProfile();
+  const nextP = app.peekNext();
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -25,10 +31,15 @@ export default function HomeScreen({ navigation }) {
     return `Good ${part}${app.user ? `, ${app.user.name}` : ''} 👋`;
   };
 
-  const onLike = async (ace) => {
-    if (!p) return;
-    const matched = await app.swipeLike(p, ace);
-    if (matched) setMatchWith(p);
+  const likeProfile = async (prof, ace) => {
+    const matched = await app.swipeLike(prof, ace);
+    if (matched) setMatchWith(prof);
+  };
+  const onLike = (ace) => { if (p) likeProfile(p, ace); };
+  const sheetAction = (fn) => {
+    const prof = sheetP;
+    setSheetP(null);
+    if (prof) fn(prof);
   };
 
   const onRewind = () => {
@@ -99,7 +110,26 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {p ? (
-          <DeckCard p={p} app={app} onLike={() => onLike(false)} onMore={onMore} />
+          <View>
+            {nextP && (
+              <View style={styles.cardBehind} pointerEvents="none">
+                <LinearGradient colors={gradientFor(nextP.id)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cardPhoto}>
+                  <Text style={styles.cardInitials}>{initials(nextP.name)}</Text>
+                </LinearGradient>
+                <View style={{ padding: 16 }}>
+                  <Text style={[type.display, { fontSize: 23 }]}>{nextP.name} <Text style={{ color: colors.dim, fontWeight: '600' }}>{nextP.age}</Text></Text>
+                </View>
+              </View>
+            )}
+            <SwipeableCard
+              key={p.id}
+              onSwipeRight={() => onLike(false)}
+              onSwipeLeft={() => app.swipePass(p)}
+              onTap={() => setSheetP(p)}
+            >
+              <DeckCard p={p} app={app} onLike={() => onLike(false)} onMore={onMore} />
+            </SwipeableCard>
+          </View>
         ) : app.live && app.deckError ? (
           <View style={styles.empty}>
             <Text style={{ fontSize: 40 }}>📡</Text>
@@ -118,6 +148,11 @@ export default function HomeScreen({ navigation }) {
             <Text style={[type.hint, { textAlign: 'center' }]}>
               You've seen all the players in range. Check back soon, or widen your radius in Settings.
             </Text>
+            <Pressable style={styles.retryBtn} onPress={() => app.resetDeck()}>
+              <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 13.5 }}>
+                {app.live ? 'Check again' : 'New balls — reset the deck'}
+              </Text>
+            </Pressable>
           </View>
         )}
 
@@ -139,6 +174,7 @@ export default function HomeScreen({ navigation }) {
       {/* Match Point modal */}
       <Modal visible={!!matchWith} transparent animationType="fade" onRequestClose={() => setMatchWith(null)}>
         <View style={styles.overlay}>
+          {!reducedMotion && <Confetti />}
           <View style={styles.matchModal}>
             <Text style={{ color: colors.optic, fontWeight: '800', letterSpacing: 2, fontSize: 13 }}>40 – LOVE</Text>
             <Text style={[type.display, { fontSize: 27 }]}>
@@ -165,6 +201,48 @@ export default function HomeScreen({ navigation }) {
             <Btn label="Keep playing" kind="ghost" style={{ alignSelf: 'stretch' }} onPress={() => setMatchWith(null)} />
           </View>
         </View>
+      </Modal>
+
+      {/* Profile detail sheet */}
+      <Modal visible={!!sheetP} transparent animationType="slide" onRequestClose={() => setSheetP(null)}>
+        <Pressable style={styles.sheetBackdrop} onPress={() => setSheetP(null)}>
+          <Pressable style={styles.sheetCard} onPress={() => {}}>
+            {sheetP && (
+              <ScrollView>
+                <LinearGradient colors={gradientFor(sheetP.id)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sheetPhoto}>
+                  <Text style={[styles.cardInitials, { fontSize: 64 }]}>{initials(sheetP.name)}</Text>
+                </LinearGradient>
+                <View style={{ padding: 16, gap: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={[type.display, { fontSize: 23 }]}>{sheetP.name}</Text>
+                    <Text style={{ fontSize: 23, fontWeight: '600', color: colors.dim }}>{sheetP.age}</Text>
+                    {sheetP.verified && (
+                      <View style={styles.verified}>
+                        <Ionicons name="checkmark" size={11} color={colors.ink} />
+                      </View>
+                    )}
+                  </View>
+                  <InfoRow icon="tennisball-outline" text={`${sheetP.sports.join(' & ')} · ${sheetP.rating ? `${sheetP.rating} Skill Level` : sheetP.skill}`} />
+                  {sheetP.dist != null && <InfoRow icon="location-outline" text={`${sheetP.dist.toFixed(1)} miles away`} />}
+                  {!!sheetP.avail && <InfoRow icon="time-outline" text={sheetP.avail} />}
+                  <InfoRow
+                    icon="stats-chart"
+                    text={((sheetP.playGames && sheetP.playGames.length ? sheetP.playGames : ['singles', 'doubles', 'mixed_doubles']).map((g) => GAME_LABELS[g]).join(' · '))}
+                  />
+                  <Text style={[type.hint, { marginTop: 4 }]}>{sheetP.bio}</Text>
+                  <View style={styles.sheetActions}>
+                    <ActionBtn icon="close" label={`Pass on ${sheetP.name}`} onPress={() => sheetAction((prof) => app.swipePass(prof))} />
+                    <ActionBtn icon="heart" label={`Like ${sheetP.name}`} big onPress={() => sheetAction((prof) => likeProfile(prof, false))} />
+                    <ActionBtn icon="star-outline" label={`Ace ${sheetP.name}`} onPress={() => sheetAction((prof) => likeProfile(prof, true))} />
+                  </View>
+                  <Pressable onPress={() => setSheetP(null)} style={{ alignSelf: 'center', padding: 10 }}>
+                    <Text style={{ color: colors.dim, fontWeight: '700', fontSize: 13 }}>Close</Text>
+                  </Pressable>
+                </View>
+              </ScrollView>
+            )}
+          </Pressable>
+        </Pressable>
       </Modal>
 
       {/* Notifications */}
@@ -291,6 +369,18 @@ const styles = StyleSheet.create({
   },
   topmatchBtn: { alignSelf: 'flex-start', backgroundColor: colors.optic, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10 },
   card: { borderRadius: 20, overflow: 'hidden', borderWidth: 2, borderColor: colors.line, backgroundColor: colors.card },
+  cardBehind: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    borderRadius: 20, overflow: 'hidden', borderWidth: 2, borderColor: colors.line, backgroundColor: colors.card,
+    opacity: 0.55, transform: [{ scale: 0.94 }, { translateY: 16 }],
+  },
+  sheetBackdrop: { flex: 1, backgroundColor: 'rgba(4,5,6,0.7)', justifyContent: 'flex-end' },
+  sheetCard: {
+    backgroundColor: colors.panel, borderTopLeftRadius: 22, borderTopRightRadius: 22,
+    borderWidth: 2, borderColor: colors.line, maxHeight: '86%', overflow: 'hidden',
+  },
+  sheetPhoto: { height: 190, alignItems: 'center', justifyContent: 'center' },
+  sheetActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, paddingTop: 8 },
   cardPhoto: { height: 330, alignItems: 'center', justifyContent: 'center' },
   cardInitials: { fontSize: 84, fontWeight: '900', color: 'rgba(10,11,13,0.55)' },
   badgeNew: { position: 'absolute', top: 14, left: 14, backgroundColor: colors.optic, paddingVertical: 6, paddingHorizontal: 11, borderRadius: 999 },

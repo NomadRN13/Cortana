@@ -8,6 +8,7 @@ import { useApp } from '../state';
 function preview(t) {
   if (!t.msgs.length) return 'New match — say hi!';
   const m = t.msgs[t.msgs.length - 1];
+  if (m.typing) return 'typing…';
   if (m.kind === 'court') return `🎾 ${m.court} · ${m.day} ${m.time}`;
   return `${m.who === 'me' ? 'You: ' : ''}${m.text}`;
 }

@@ -228,6 +228,8 @@ export function AppStateProvider({ children }) {
           level: e.level_range,
           spotsLeft: Math.max(0, e.capacity - going.length), // B-13
           going: going.some((r) => r.user_id === myId),
+          goingCount: going.length,
+          desc: '',
         };
       }));
     } catch (e) { /* keep current state */ }
@@ -517,6 +519,26 @@ export function AppStateProvider({ children }) {
     return true;
   };
 
+  // The card peeking out behind the top one.
+  const peekNext = () => {
+    if (live) {
+      const cur = liveSkipFrom(liveIndex);
+      const next = liveSkipFrom(cur + 1);
+      return next < liveDeck.length ? liveDeck[next] : null;
+    }
+    const cur = nextEligibleIndex(deckPos);
+    const next = nextEligibleIndex(cur + 1);
+    return next < PROFILES.length ? PROFILES[next] : null;
+  };
+
+  // Demo: refill the deck so a demo never dead-ends. Live: just refetch.
+  const resetDeck = () => {
+    if (live) { refreshDeck(mode); return; }
+    setSeen({});
+    setDeckPos(0);
+    setHistory([]);
+  };
+
   const profileById = (id) => cacheRef.current[id] || (!live && PROFILES.find((p) => p.id === id)) || null;
 
   // ---------- matching ----------
@@ -635,11 +657,24 @@ export function AppStateProvider({ children }) {
       });
       return;
     }
+    // demo: they "type" for a moment, then one canned reply per thread
     if (!replied[id]) {
       setReplied((r) => ({ ...r, [id]: true }));
       setTimeout(() => {
-        appendMsg(id, { who: 'them', text: CANNED_REPLIES[id] || 'Sounds great — see you on the court! 🎾', when: 'Just now' });
-      }, 1500);
+        appendMsg(id, { who: 'them', typing: true });
+      }, 500);
+      setTimeout(() => {
+        setThreads((ts) => ts.map((t) => (t.id === id
+          ? {
+              ...t,
+              yourServe: true,
+              msgs: [
+                ...t.msgs.filter((m) => !m.typing),
+                { who: 'them', text: CANNED_REPLIES[id] || 'Sounds great — see you on the court! 🎾', when: 'Just now' },
+              ],
+            }
+          : t)));
+      }, 1800);
     }
   };
 
@@ -689,12 +724,22 @@ export function AppStateProvider({ children }) {
 
   // ---------- events ----------
 
-  const demoEvents = EVENTS.map((e) => ({
+  const demoEvents = EVENTS.map((e, idx) => ({
     id: e.id, week: e.week, dow: e.dow, dom: e.dom, title: e.title, venue: e.venue,
     time: e.time, sport: e.sport, level: e.level,
     spotsLeft: joined[e.id] ? e.spots - 1 : e.spots,
     going: !!joined[e.id],
+    goingCount: 3 + ((idx * 5) % 7) + (joined[e.id] ? 1 : 0),
+    desc: e.desc || '',
   }));
+
+  // Demo-only attendee preview for expanded event cards (live shows counts).
+  const eventAttendees = (eventId) => {
+    if (live) return [];
+    const idx = EVENTS.findIndex((e) => e.id === eventId);
+    if (idx === -1) return [];
+    return [0, 4, 8].map((o) => PROFILES[(idx * 3 + o) % PROFILES.length]);
+  };
   const events = live ? (liveEvents || []) : demoEvents;
 
   const toggleJoin = (id) => {
@@ -725,13 +770,13 @@ export function AppStateProvider({ children }) {
     requestCode, verifyCode, finishOnboarding,
     updateBio, updatePhoto, updatePrefs, updateModes, updateDating, updatePlay, updateFriendsPref,
     mode, setMode,
-    currentProfile, advance, rewind, deckError,
+    currentProfile, advance, rewind, deckError, peekNext, resetDeck,
     retryDeck: () => refreshDeck(mode),
     swipeLike, swipePass, likeSaved, registerLike,
     saved, setSaved: persistSaved, seen, setSeen, blocked, block, report,
     matches, threads, profileById, ensureThread,
     sendMessage, subscribeThread, respondCourt, markRead,
-    events, toggleJoin, joined,
+    events, toggleJoin, joined, eventAttendees,
     notifs, clearNotifs, prefs,
   };
 
