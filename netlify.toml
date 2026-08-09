@@ -1,0 +1,9 @@
+# 40/Love — Netlify configuration
+# With the repo linked to Netlify, every push rebuilds and deploys the site:
+#   landing page at /   ·   clickable prototype at /demo   ·   favicon
+# The build reassembles site/ from the source pages, so deploys can never
+# serve a stale copy.
+
+[build]
+  command = "bash scripts/build-site.sh"
+  publish = "site"

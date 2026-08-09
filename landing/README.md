@@ -22,18 +22,22 @@ build step. It runs in two modes:
    Settings → API). The anon key is designed to be public — publishing it
    in the page is safe and normal.
 
-2. **Deploy** — the assembled website lives in `site/` (landing page at `/`,
-   the clickable prototype at `/demo`, favicon included). Any static host
-   works; all are free at this scale:
-   - **Netlify:** drag the `site/` folder onto [app.netlify.com/drop](https://app.netlify.com/drop). Done.
-   - **Vercel:** `npx vercel site/`
-   - **GitHub Pages:** repo Settings → Pages → serve from the branch,
-     `/site` folder.
+2. **Deploy** — two ways:
 
+   **Connected to GitHub (recommended — auto-updates on every push):**
+   the repo has a `netlify.toml` that tells Netlify to rebuild the site
+   from source (`bash scripts/build-site.sh`, publish `site/`). In Netlify:
+   your site → Site configuration → Build & deploy → Link repository →
+   GitHub → pick this repo and the working branch. From then on every push
+   deploys automatically — no zips, no drags.
+
+   **Manual (no account linking):** drag the `site/` folder (or a zip of
+   its contents) onto [app.netlify.com/drop](https://app.netlify.com/drop).
    After editing `landing/index.html` or `app/index.html`, re-run
-   `./scripts/build-site.sh` to refresh `site/`, then re-deploy. (Step 1's
-   Supabase keys go into `landing/index.html` — rebuild after pasting them,
-   or paste them into `site/index.html` directly before dragging.)
+   `./scripts/build-site.sh` and re-drag.
+
+   (Step 1's Supabase keys go into `landing/index.html` — commit and push
+   on the connected flow, or rebuild + re-drag on the manual flow.)
 
 3. **Custom domain** (recommended before promoting it): buy `40love.app`
    or similar (~$15/yr) and point it at the host. Update the Instagram/
