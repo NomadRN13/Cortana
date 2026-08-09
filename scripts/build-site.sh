@@ -13,9 +13,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 rm -rf site
-mkdir -p site/demo
+mkdir -p site/demo site/privacy site/terms
 cp landing/index.html site/index.html
 cp app/index.html site/demo/index.html
+cp landing/privacy.html site/privacy/index.html
+cp landing/terms.html site/terms/index.html
 cp mobile/assets/icon.png site/favicon.png
 
 echo "site/ assembled:"
