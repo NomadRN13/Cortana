@@ -49,6 +49,12 @@ export default function ProfileScreen({ navigation }) {
             {u.sports.map((s) => <Tag key={s} label={s} accent />)}
             <Tag label={u.rating ? `${u.skill} · ${u.rating}` : u.skill} />
           </View>
+          {u.phoneVerified && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Ionicons name="checkmark-circle" size={15} color={colors.ok} />
+              <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.ok }}>Phone verified</Text>
+            </View>
+          )}
           <Pressable onPress={changePhoto} style={styles.photoBtn}>
             <Text style={{ color: colors.optic, fontWeight: '800', fontSize: 13.5 }}>
               {u.photo ? 'Change photo' : 'Add photo'}

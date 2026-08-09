@@ -22,6 +22,28 @@ export async function signOut() {
   await supabase.auth.signOut();
 }
 
+// ---------- Phone verification ----------
+// Attaches the number to the auth user (Supabase sends the SMS code) and,
+// once verified, syncs the trusted flag onto the profile via an RPC that
+// only believes auth's own confirmation.
+
+export async function startPhoneVerification(phoneE164) {
+  const { error } = await supabase.auth.updateUser({ phone: phoneE164 });
+  if (error) throw error;
+}
+
+export async function confirmPhoneVerification(phoneE164, token) {
+  const { error } = await supabase.auth.verifyOtp({ phone: phoneE164, token, type: 'phone_change' });
+  if (error) throw error;
+  return syncPhoneVerification();
+}
+
+export async function syncPhoneVerification() {
+  const { data, error } = await supabase.rpc('sync_phone_verification');
+  if (error) throw error;
+  return data === true;
+}
+
 export async function deleteAccount() {
   // In-app account deletion — required by both app stores.
   const { error } = await supabase.rpc('delete_account');

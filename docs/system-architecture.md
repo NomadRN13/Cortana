@@ -146,7 +146,11 @@ function so tuning never needs an app release.
 - **Report → queue → action:** every report lands in the admin dashboard
   with context (profile, recent messages if from chat). Target SLA: reviewed
   within 24h. Actions: dismiss, warn, photo removal, suspend, ban.
-  Bans are by phone number hash, not just account.
+  Bans are by phone number hash, not just account — and the raw material for
+  that is now collected: every signup verifies a phone by SMS (migration
+  `20260806000007`; number lives in `auth.users`, verified flag on
+  `profiles.phone_verified_at`), so a banned number can't just re-register
+  with a fresh email.
 - **Blocking** takes effect instantly and silently, exactly as prototyped.
 - **First-meet nudges:** when a court proposal is accepted in Date mode, the
   app suggests public courts and shares safety basics. Public-court-first is

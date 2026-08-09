@@ -65,6 +65,11 @@ export default function OnboardingScreen({ navigation }) {
   const [playPref, setPlayPref] = useState('everyone');
   const [friendsPref, setFriendsPref] = useState('everyone');
   const [saving, setSaving] = useState(false);
+  const [phoneText, setPhoneText] = useState('');
+  const [phoneE164, setPhoneE164] = useState(null); // set once a code has been sent
+  const [phoneCode, setPhoneCode] = useState('');
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [phoneBusy, setPhoneBusy] = useState(false);
 
   const pickPhoto = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -78,6 +83,33 @@ export default function OnboardingScreen({ navigation }) {
     if (!res.canceled && res.assets && res.assets[0]) setPhoto(res.assets[0].uri);
   };
 
+  const sendPhoneCode = async () => {
+    if (phoneBusy) return;
+    setPhoneBusy(true);
+    try {
+      const e164 = await app.requestPhoneCode(phoneText);
+      setPhoneE164(e164);
+      setPhoneCode('');
+    } catch (e) {
+      Alert.alert('Couldn’t send the code', (e && e.message) || 'Check the number and try again.');
+    } finally {
+      setPhoneBusy(false);
+    }
+  };
+
+  const confirmPhoneCode = async () => {
+    if (phoneBusy) return;
+    setPhoneBusy(true);
+    try {
+      await app.verifyPhoneCode(phoneE164, phoneCode);
+      setPhoneVerified(true);
+    } catch (e) {
+      Alert.alert('Couldn’t verify', (e && e.message) || 'Check the code and try again.');
+    } finally {
+      setPhoneBusy(false);
+    }
+  };
+
   const next = async () => {
     if (step === 0) {
       if (!name.trim()) return Alert.alert('Almost there', 'Add your first name to continue.');
@@ -88,9 +120,12 @@ export default function OnboardingScreen({ navigation }) {
       if (a > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
       if (!gender) return Alert.alert('Almost there', 'Tell us who you are so matching works.');
     }
-    if (step === 1 && !sports.length) return Alert.alert('Almost there', 'Pick at least one sport.');
-    if (step === 2 && !skill) return Alert.alert('Almost there', 'Pick your skill level.');
-    if (step === 3) {
+    if (step === 1 && !phoneVerified) {
+      return Alert.alert('Almost there', 'Verify your phone number to continue — it keeps 40/Love real people only.');
+    }
+    if (step === 2 && !sports.length) return Alert.alert('Almost there', 'Pick at least one sport.');
+    if (step === 3 && !skill) return Alert.alert('Almost there', 'Pick your skill level.');
+    if (step === 4) {
       if (!modes.length) return Alert.alert('Almost there', 'Pick at least one mode.');
       if (modes.includes('date') && !seeking.length) {
         return Alert.alert('Almost there', 'Tell us who you’d like to date — pick at least one.');
@@ -109,6 +144,8 @@ export default function OnboardingScreen({ navigation }) {
         playGames,
         playPref,
         friendsPref,
+        phone: phoneE164,
+        phoneVerified,
         photo, sports, skill,
         rating: rating.trim(),
         modes,
@@ -130,13 +167,13 @@ export default function OnboardingScreen({ navigation }) {
   const toggle = (list, setList, item) =>
     setList(list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
 
-  const titles = ['First things first', 'What do you play?', "How's your game?", 'What are you here for?'];
+  const titles = ['First things first', 'Prove you’re real', 'What do you play?', "How's your game?", 'What are you here for?'];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.night }}>
       <View style={styles.head}>
         <View style={{ flexDirection: 'row', gap: 6 }}>
-          {[0, 1, 2, 3].map((i) => (
+          {[0, 1, 2, 3, 4].map((i) => (
             <View key={i} style={[styles.dot, i <= step && { backgroundColor: colors.optic }]} />
           ))}
         </View>
@@ -181,6 +218,63 @@ export default function OnboardingScreen({ navigation }) {
 
         {step === 1 && (
           <>
+            {!phoneVerified ? (
+              <>
+                <Field label="Mobile number">
+                  <TextInput
+                    style={styles.input}
+                    value={phoneText}
+                    onChangeText={setPhoneText}
+                    keyboardType="phone-pad"
+                    placeholder="(317) 555-0142"
+                    placeholderTextColor="rgba(244,246,240,0.35)"
+                    editable={!phoneE164}
+                  />
+                </Field>
+                {!phoneE164 ? (
+                  <Btn label={phoneBusy ? 'Sending…' : 'Text me a code'} onPress={sendPhoneCode} />
+                ) : (
+                  <>
+                    <Field label={`Enter the 6-digit code we texted ${phoneE164}`}>
+                      <TextInput
+                        style={styles.input}
+                        value={phoneCode}
+                        onChangeText={setPhoneCode}
+                        keyboardType="number-pad"
+                        placeholder="••••••"
+                        placeholderTextColor="rgba(244,246,240,0.35)"
+                        maxLength={6}
+                      />
+                    </Field>
+                    <Btn label={phoneBusy ? 'Checking…' : 'Verify'} onPress={confirmPhoneCode} />
+                    <View style={{ flexDirection: 'row', gap: 22, justifyContent: 'center' }}>
+                      <Pressable onPress={sendPhoneCode} disabled={phoneBusy} accessibilityRole="button">
+                        <Text style={{ color: colors.optic, fontWeight: '800', fontSize: 13.5 }}>Resend code</Text>
+                      </Pressable>
+                      <Pressable onPress={() => { setPhoneE164(null); setPhoneCode(''); }} accessibilityRole="button">
+                        <Text style={{ color: colors.dim, fontWeight: '800', fontSize: 13.5 }}>Change number</Text>
+                      </Pressable>
+                    </View>
+                  </>
+                )}
+              </>
+            ) : (
+              <View style={styles.verifiedRow}>
+                <Ionicons name="checkmark-circle" size={22} color={colors.ok} />
+                <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>Phone verified — {phoneE164}</Text>
+              </View>
+            )}
+            <Text style={type.hint}>
+              A one-time text keeps 40/Love real people only. Your number is never shown to other members and never used for marketing.
+            </Text>
+            {!app.isBackendConfigured && (
+              <Text style={[type.hint, { color: colors.optic }]}>Demo mode: no text is actually sent — enter any 6-digit code.</Text>
+            )}
+          </>
+        )}
+
+        {step === 2 && (
+          <>
             <View style={styles.chips}>
               {SPORTS.map((s) => (
                 <Chip key={s} label={s} active={sports.includes(s)} onPress={() => toggle(sports, setSports, s)} />
@@ -190,7 +284,7 @@ export default function OnboardingScreen({ navigation }) {
           </>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <>
             <View style={styles.chips}>
               {SKILLS.map((s) => (
@@ -204,7 +298,7 @@ export default function OnboardingScreen({ navigation }) {
           </>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <>
             {MODES.map((m) => {
               const on = modes.includes(m.key);
@@ -275,7 +369,7 @@ export default function OnboardingScreen({ navigation }) {
 
       <View style={styles.foot}>
         {step > 0 && <Btn label="Back" kind="ghost" style={{ flex: 0, paddingHorizontal: 22 }} onPress={() => setStep(step - 1)} />}
-        <Btn label={step === 3 ? (saving ? 'Saving…' : 'Step on court') : 'Next'} style={{ flex: 1 }} onPress={next} />
+        <Btn label={step === 4 ? (saving ? 'Saving…' : 'Step on court') : 'Next'} style={{ flex: 1 }} onPress={next} />
       </View>
     </SafeAreaView>
   );
@@ -343,5 +437,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   boxLabel: { fontSize: 13, fontWeight: '700', color: colors.dim, marginBottom: 8 },
+  verifiedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 14,
+    backgroundColor: colors.card,
+    borderWidth: 2,
+    borderColor: colors.ok,
+    borderRadius: 14,
+  },
   foot: { flexDirection: 'row', gap: 10, padding: 18 },
 });

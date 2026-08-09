@@ -83,3 +83,21 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
   manual approval step (dashboard → profile_photos → approve) is the
   moderation queue at alpha volume — remember it for the reviewer account's
   photos before submission.
+
+## Update — 2026-08-09 (SMS phone verification added)
+
+- **Phone verification shipped (code):** onboarding now requires a one-time
+  SMS code before a profile can be created (mobile step 2 of 5; prototype
+  simulates the text). Backend: `profiles.phone_verified_at` +
+  `sync_phone_verification()` RPC (migration `20260806000007`), which only
+  trusts auth's own `phone_confirmed_at` — the client cannot fake it.
+- **New founder setup item (blocks live signups):** configure Twilio as the
+  SMS provider in Supabase — Dashboard → Authentication → Sign In / Up →
+  Phone. Steps + costs (~$1.15/mo number, ~$0.008/text) in
+  `docs/backend-setup.md`. Until configured, live signups stall at the
+  phone step; the demo is unaffected.
+- **Privacy paperwork updated:** phone number added to the privacy policy's
+  "What we collect", the Apple App Privacy table, and the Play Data Safety
+  table (`store-listing.md`) — it moved OFF both "not collected" lists.
+  Reviewer notes now flag that the review account must have a pre-verified
+  phone or a Supabase test-phone fixed OTP.

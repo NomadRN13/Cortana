@@ -382,6 +382,32 @@ export function AppStateProvider({ children }) {
     if (isBackendConfigured) await api.signInWithEmail(email);
   };
 
+  // US numbers → E.164 (+1XXXXXXXXXX); null if it isn't a real-looking number
+  const toE164 = (raw) => {
+    const digits = String(raw).replace(/\D/g, '');
+    if (digits.length === 10) return `+1${digits}`;
+    if (digits.length === 11 && digits[0] === '1') return `+${digits}`;
+    return null;
+  };
+
+  const requestPhoneCode = async (raw) => {
+    const e164 = toE164(raw);
+    if (!e164) throw new Error('Enter a 10-digit US phone number.');
+    if (isBackendConfigured) await api.startPhoneVerification(e164);
+    // Demo mode: no SMS is sent; any 6-digit code verifies.
+    return e164;
+  };
+
+  const verifyPhoneCode = async (e164, code) => {
+    if (!/^\d{6}$/.test(code)) throw new Error('Enter the 6-digit code.');
+    if (isBackendConfigured) {
+      const ok = await api.confirmPhoneVerification(e164, code);
+      if (!ok) throw new Error('That code didn’t match — check the newest text or resend.');
+    }
+    if (user) saveUser({ ...user, phoneVerified: true });
+    return true;
+  };
+
   const verifyCode = async (email, code) => {
     if (isBackendConfigured) {
       await api.verifyOtp(email, code);
@@ -396,6 +422,7 @@ export function AppStateProvider({ children }) {
           playGames: remote.play_games || ALL_GAMES,
           playPref: remote.play_pref || 'everyone',
           friendsPref: remote.friends_pref || 'everyone',
+          phoneVerified: !!remote.phone_verified_at,
           photo: user && user.photo ? user.photo : null,
           sports: (remote.user_sports || []).map((s) => cap(s.sport)),
           skill: remote.user_sports && remote.user_sports[0] ? cap(remote.user_sports[0].level) : 'Intermediate',
@@ -438,6 +465,8 @@ export function AppStateProvider({ children }) {
       await api.setMySports(
         draft.sports.map((s) => ({ sport: s.toLowerCase(), level: draft.skill.toLowerCase(), ratingLabel: draft.rating || '' }))
       );
+      // The phone was verified before this profile row existed — stamp it now.
+      if (draft.phoneVerified) await api.syncPhoneVerification().catch(() => {});
       if (draft.photo) api.uploadProfilePhoto(draft.photo, 0).catch(() => {});
     }
     saveUser(draft);
@@ -768,6 +797,7 @@ export function AppStateProvider({ children }) {
     user, hydrated, saveUser, signOut,
     session, live, isBackendConfigured,
     requestCode, verifyCode, finishOnboarding,
+    requestPhoneCode, verifyPhoneCode,
     updateBio, updatePhoto, updatePrefs, updateModes, updateDating, updatePlay, updateFriendsPref,
     mode, setMode,
     currentProfile, advance, rewind, deckError, peekNext, resetDeck,

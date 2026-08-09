@@ -38,6 +38,9 @@ sorting it out is our job, not yours.
 - [ ] A **real email address you can open on that phone** — sign-in works by
       emailing you a 6-digit code. No password, so the email must actually
       arrive.
+- [ ] A **phone number that can receive texts** on that phone — signup
+      verifies you're a real person with a one-time SMS code (Test 3 covers
+      it). Your number is never shown to other testers.
 - [ ] A **testing partner**. Most of the important tests — matching, chat,
       court-time, blocking — need **two phones side by side**. Pair up before
       you start and stay in the same room (or on a call) with your partner.
@@ -71,15 +74,21 @@ you've finished the whole plan.
 
 ### For the founder only — pre-flight (do before inviting testers)
 
-- [ ] All three migrations pushed to the production Supabase project
-      (initial schema, `push_tokens`, `realtime_messages` — the realtime one
-      is the B-07 fix; without it chat silently never delivers).
+- [ ] **Every** migration in `supabase/migrations/` pushed to the production
+      Supabase project (or `supabase/setup.sql` run once) — including
+      `realtime_messages` (the B-07 fix; without it chat silently never
+      delivers) and `phone_verification`.
 - [ ] A **`photos` storage bucket exists** with upload/read policies for
-      signed-in users. **No migration creates it** — if it's missing, photo
-      upload (Test 5) will fail with no visible error.
+      signed-in users (created by the `photos_bucket` migration / setup.sql;
+      verify in Dashboard → Storage) — if it's missing, photo upload
+      (Test 5) fails with no visible error.
 - [ ] The Supabase email template for sign-in includes the **6-digit code**
       (`{{ .Token }}`) — the default magic-link-only template leaves testers
       with no code to type.
+- [ ] **Phone/SMS provider configured** (Authentication → Sign In / Up →
+      Phone → Twilio; see `docs/backend-setup.md`) and the
+      `20260806000007_phone_verification` migration applied — without both,
+      every tester stalls at the "Prove you're real" step in Test 3.
 - [ ] `send-push` edge function deployed, `PUSH_WEBHOOK_SECRET` set, and the
       database webhook on `notifications` INSERT configured (Test 11 depends
       on this whole chain).
@@ -145,14 +154,26 @@ The app is 18+ — this must be impossible to get around.
 4. Now type an impossible date: **02/30/1990**. Tap **Next**.
 5. **You should see:** *"Enter your birthdate as MM/DD/YYYY."* — the fake
    date is refused.
-6. Enter your **real** birthdate, then finish the remaining steps: pick your
-   sports, your skill level, and at least **Date Mode** (turn on Play Mode
-   too — you'll want it later). Skip the photo for now — that's Test 5.
-7. Tap **Step on court**.
+6. Enter your **real** birthdate and continue. The next step is **"Prove
+   you're real"** — phone verification by text:
+   - Tap **Next** without doing anything. **You should see:** it refuses to
+     continue until your phone is verified.
+   - Type your **real mobile number** and tap **Text me a code**. A text
+     should arrive within a few seconds.
+   - Type a **wrong** code first (000000) — it must be politely rejected.
+   - Type the **real** code — you should see **"Phone verified"** with a
+     green check, and Next now works. (No text after a minute? Tap **Resend
+     code** once; still nothing → FAIL, tell the founder — the SMS provider
+     may not be configured.)
+7. Finish the remaining steps: pick your sports, your skill level, and at
+   least **Date Mode** (turn on Play Mode too — you'll want it later). Skip
+   the photo for now — that's Test 5.
+8. Tap **Step on court**.
 
 **You should see:** both bad birthdates rejected with plain-English messages,
-and your real one accepted. You land on the Home screen with your name in
-the greeting.
+your real one accepted, the phone step impossible to skip, the code text
+arriving fast, and the wrong code rejected. You land on the Home screen with
+your name in the greeting.
 
 - [ ] PASS  - [ ] FAIL
 

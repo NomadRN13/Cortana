@@ -125,6 +125,7 @@ purposes:
 | Apple data type | What it actually is (code reference) | Linked | Purpose |
 |---|---|---|---|
 | Contact Info → Email Address | Sign-in via one-time email code; no passwords (`signInWithEmail`). Also the waitlist form. | Yes | App Functionality (account) |
+| Contact Info → Phone Number | Verified once by SMS at signup (`startPhoneVerification`); stored in auth, never shown to members, never used for marketing — anti-fake-account / ban enforcement only | Yes | App Functionality (account security) |
 | Contact Info → Name | **First name only** — `profiles.first_name`; last names don't exist in the schema | Yes | App Functionality |
 | Sensitive Info | Gender identity + who the user wants to date (`profiles.gender`, `seeking`) — sexual orientation can be inferred, so declare it | Yes | App Functionality (Date-mode matching) |
 | Location → Coarse Location | ~1 km approximation; the client rounds to 2 decimals **before upload** (`upsertMyProfile`), columns are `numeric(5,2)` — precise location never reaches the server | Yes | App Functionality (distance matching) |
@@ -137,9 +138,9 @@ purposes:
 | Other Data | Birthdate (`profiles.birthdate`) — 18+ enforcement and age display; never shown raw to other users, only computed age | Yes | App Functionality |
 
 **Not collected** (declare "Data Not Collected" for these): precise location,
-phone number, physical address, contacts, health & fitness, financial info,
-purchases, browsing history, search history, diagnostics/crash data (no crash
-SDK is installed), advertising data.
+physical address, contacts, health & fitness, financial info, purchases,
+browsing history, search history, diagnostics/crash data (no crash SDK is
+installed), advertising data.
 
 ---
 
@@ -243,6 +244,7 @@ Per data type (Collected / Shared / Purpose / Optional):
 | Play data type | Collected | Shared | Purpose | Optional? |
 |---|---|---|---|---|
 | Personal info → Email address | Yes | No | Account management (one-time-code sign-in) | No — required to sign in |
+| Personal info → Phone number | Yes (verified once by SMS at signup; never shown to members) | No | Account management / fraud prevention (keeps the community real people; ban enforcement) | No — required at signup |
 | Personal info → Name | Yes (first name only) | No | App functionality (shown on your profile) | No |
 | Personal info → Date of birth ("Other info") | Yes | No | App functionality (18+ enforcement; only your age is shown) | No |
 | Personal info → Sexual orientation | Yes (inferable from gender + dating preferences) | No | App functionality (Date-mode matching) | **Yes** — only needed for Date mode; Play/Friends modes work without it |
@@ -283,6 +285,13 @@ review notes fields. Same substance for both.
 > verification step. [FILL IN — confirm the fixed-OTP bypass is configured
 > for the review account before submission.]
 >
+> **Phone verification note:** new signups verify a phone number by SMS
+> (anti-fake-account measure; the number is never shown to other members).
+> The review account is already past this step, so no phone or SMS access
+> is needed to review. [FILL IN — confirm the review account is seeded
+> with a verified phone, or configure Supabase's test-phone fixed OTP for
+> it, before submission.]
+>
 > **Safety features, where to find them:**
 > - Block / Report: on any profile card in the Discover deck, and from any
 >   conversation — both open a menu with "Report <name>" and "Block
@@ -295,7 +304,8 @@ review notes fields. Same substance for both.
 > - 18+ gate: birthdate at signup; under-18 birthdates are rejected by both
 >   the client and a database constraint.
 >
-> **Privacy:** the app collects an email, first name (no last names exist in
+> **Privacy:** the app collects an email, a phone number (verified once by
+> SMS at signup, never shown to members), first name (no last names exist in
 > the product), birthdate, sports/skill, photos, and an approximate location
 > rounded to ~1 km on the device — exact coordinates never reach our
 > servers. No ads, no tracking SDKs, no data sale. Privacy policy:
@@ -323,9 +333,14 @@ For both stores' "What's new" field:
 ## Open items before any form is filed as final
 
 1. Deploy `/privacy` and `/terms` (both consoles require the live URL).
-2. Fix `delete_account()` to also purge the user's photo objects from
-   storage — until then the deletion answers above overstate reality.
-3. Seed the review account + configure its fixed OTP; fill both [FILL IN]s.
-4. If the app ever adds analytics, crash reporting, phone numbers, precise
-   location, or any new data type: **both privacy forms must be re-filed
-   before the next release.**
+2. ~~Fix `delete_account()` to also purge the user's photo objects from
+   storage~~ — done (migration `20260806000006_privacy_hardening.sql`).
+3. Seed the review account + configure its fixed OTP (email AND phone —
+   Supabase supports test phone numbers with a fixed code); fill the
+   [FILL IN]s.
+4. Configure the SMS provider (Twilio) in Supabase before any live build
+   ships — see `docs/backend-setup.md` — or signups will stall at the
+   phone step.
+5. If the app ever adds analytics, crash reporting, precise location, or
+   any new data type: **both privacy forms must be re-filed before the
+   next release.**

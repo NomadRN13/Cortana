@@ -77,11 +77,32 @@ Then, on either path:
    12 demo players, run the contents of `supabase/seed.sql` in Dashboard →
    SQL Editor. Never run the seed against the real launch project.
 
+## Text-message (SMS) phone verification (one-time, ~15 minutes)
+
+Onboarding asks every new member to verify a phone number by text — that's
+what keeps the app real people only. The app and database are already wired;
+Supabase just needs an SMS provider to actually send the texts:
+
+1. Create a [Twilio](https://www.twilio.com) account and buy a US phone
+   number (~$1.15/month).
+2. In Twilio Console, note your **Account SID**, **Auth Token**, and create
+   a **Messaging Service** (add the number to it) — copy its SID.
+3. Supabase Dashboard → Authentication → Sign In / Up → **Phone**: enable,
+   pick Twilio, paste the three values. Leave "Phone confirmations" on.
+4. Test: run the app, sign up, enter your own cell number — the code should
+   arrive within a few seconds.
+
+Until this is configured, live signups will see "couldn't send the code" at
+the phone step (the demo/prototype simulates the text, so it's unaffected).
+Cost: about $0.008 per verification text in the US — a few dollars a month
+at alpha volume.
+
 ## Costs
 
 Free tier covers the alpha (500 MB database, 50k monthly active users'
 worth of auth, 1 GB storage). Upgrade to Pro (~$25/mo) around the public
-Indy beta for daily backups and no project pausing.
+Indy beta for daily backups and no project pausing. SMS verification adds
+Twilio's ~$1.15/mo number plus ~$0.008 per signup text.
 
 ## Push notifications (one-time, ~10 minutes)
 
