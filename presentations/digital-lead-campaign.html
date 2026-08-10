@@ -1,0 +1,487 @@
+<title>Digital Lead Campaign</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* ============================== TOKENS ============================== */
+:root{
+  color-scheme: light;
+  --navy:#0E1E33; --navy-deep:#0A1626;
+  --paper:#F7F3EA; --paper-2:#F1EBDC;
+  --card:#FBFAF6; --card-2:#F3EEE1;
+  --ink:#171309; --ink-2:#4A4436; --muted:#8A8272;
+  --brass:#8A6A1E; --brass-bright:#B0842F; --brass-line:#CBB275;
+  --hair:#E4DDCB; --hair-2:#D8CFB8;
+  --series:#2a78d6; --series-soft:#cfe0f6; --series-ink:#1c5cab;
+  --good:#0A7A2E; --good-mark:#0ca30c; --good-soft:#cdeccf;
+  --bad:#B23A2E; --bad-mark:#d03b3b; --bad-soft:#f4d6d1;
+  --shadow: 0 1px 2px rgba(23,19,9,.04), 0 12px 34px -18px rgba(23,19,9,.22);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --navy:#0C1B2E; --navy-deep:#081321;
+    --paper:#0E1E33; --paper-2:#0B1728;
+    --card:#12243D; --card-2:#0E1E33;
+    --ink:#F5F1E6; --ink-2:#BCB6A5; --muted:#837C6C;
+    --brass:#D6AC5C; --brass-bright:#C79A46; --brass-line:#7A5F2A;
+    --hair:rgba(245,241,230,.12); --hair-2:rgba(245,241,230,.18);
+    --series:#3987e5; --series-soft:#1b3355; --series-ink:#7fb0ec;
+    --good:#37C05F; --good-mark:#2fbf58; --good-soft:#123a20;
+    --bad:#E76A5A; --bad-mark:#e06a5a; --bad-soft:#3d1a15;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 16px 40px -20px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --navy:#0C1B2E; --navy-deep:#081321;
+  --paper:#0E1E33; --paper-2:#0B1728;
+  --card:#12243D; --card-2:#0E1E33;
+  --ink:#F5F1E6; --ink-2:#BCB6A5; --muted:#837C6C;
+  --brass:#D6AC5C; --brass-bright:#C79A46; --brass-line:#7A5F2A;
+  --hair:rgba(245,241,230,.12); --hair-2:rgba(245,241,230,.18);
+  --series:#3987e5; --series-soft:#1b3355; --series-ink:#7fb0ec;
+  --good:#37C05F; --good-mark:#2fbf58; --good-soft:#123a20;
+  --bad:#E76A5A; --bad-mark:#e06a5a; --bad-soft:#3d1a15;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 16px 40px -20px rgba(0,0,0,.6);
+}
+
+/* ============================== BASE ============================== */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;line-height:1.5}
+.deck{scroll-snap-type:y mandatory;height:100vh;overflow-y:scroll;scroll-behavior:smooth}
+.slide{scroll-snap-align:start;min-height:100vh;position:relative;
+  padding:clamp(20px,3.4vh,44px) clamp(20px,6vw,96px);
+  display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.wrap{width:100%;max-width:1160px;margin:0 auto}
+
+/* type scale */
+h1,h2,h3{margin:0;font-family:var(--serif);font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+.eyebrow{font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--brass);display:flex;align-items:center;gap:.6em}
+.eyebrow::before{content:"";width:26px;height:1.5px;background:var(--brass-line)}
+.lede{font-size:clamp(.98rem,1.5vw,1.18rem);color:var(--ink-2);line-height:1.4;max-width:64ch}
+p{margin:0 0 .7em}
+strong{color:var(--ink);font-weight:600}
+.serif{font-family:var(--serif)}
+
+/* ============================== NAV / CHROME ============================== */
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--brass-bright);width:0;z-index:60;transition:width .2s ease}
+.dots{position:fixed;right:clamp(10px,2vw,26px);top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:11px;z-index:55}
+.dots button{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--brass-line);
+  background:transparent;padding:0;cursor:pointer;transition:all .2s;opacity:.55}
+.dots button:hover{opacity:1}
+.dots button[aria-current="true"]{background:var(--brass-bright);border-color:var(--brass-bright);
+  opacity:1;transform:scale(1.25)}
+.counter{position:fixed;left:clamp(16px,3vw,34px);bottom:18px;z-index:55;
+  font-size:.72rem;letter-spacing:.12em;color:var(--muted);font-variant-numeric:tabular-nums}
+.counter b{color:var(--ink);font-weight:600}
+.counter .cbrand{color:var(--ink-2);font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.hint{transition:opacity .3s}
+body.on-cover .counter{opacity:0;pointer-events:none}
+.hint{position:fixed;right:clamp(16px,3vw,34px);bottom:18px;z-index:55;
+  font-size:.68rem;letter-spacing:.1em;color:var(--muted);display:flex;gap:.5em;align-items:center}
+.hint kbd{font-family:var(--sans);border:1px solid var(--hair-2);border-radius:4px;
+  padding:1px 5px;font-size:.62rem;background:var(--card)}
+
+/* ============================== COVER ============================== */
+.cover{background:
+    radial-gradient(120% 90% at 88% -10%, rgba(176,132,47,.14), transparent 55%),
+    linear-gradient(180deg,var(--navy) 0%,var(--navy-deep) 100%);
+  color:#F5F1E6;justify-content:space-between}
+.cover .eyebrow{color:var(--brass-bright)}
+.cover .eyebrow::before{background:var(--brass-bright)}
+.cover-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
+.cover-logo{font-family:var(--serif);font-size:1.05rem;letter-spacing:.02em}
+.cover-logo b{color:var(--brass-bright);font-weight:600}
+.cover-mid{margin:auto 0}
+.cover h1{font-size:clamp(2.6rem,7vw,5rem);line-height:1.02;color:#FBF8EF;max-width:16ch}
+.cover h1 .em{color:var(--brass-bright)}
+.cover-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+  font-size:.82rem;color:#9A9482}
+.cover-bottom .r{text-align:right}
+.cover-bottom b{color:#E7E0CE;font-weight:600}
+
+/* ============================== SECTION HEADERS ============================== */
+.kicker{display:flex;align-items:baseline;gap:14px;margin-bottom:13px}
+.kicker .no{font-family:var(--serif);font-size:1rem;color:var(--brass);font-variant-numeric:tabular-nums}
+h2.title{font-size:clamp(1.5rem,2.9vw,2.35rem);line-height:1.05;max-width:24ch}
+.sub{margin-top:11px;max-width:66ch}
+
+/* ============================== CARDS / GRID ============================== */
+.grid{display:grid;gap:clamp(12px,1.6vw,20px)}
+.card{background:var(--card);border:1px solid var(--hair);border-radius:14px;padding:clamp(16px,2vw,24px);box-shadow:var(--shadow)}
+.card.flat{box-shadow:none;background:var(--card-2)}
+
+/* funnel & market cards */
+.cardrow{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(10px,1.4vw,16px)}
+.fcard{background:var(--card);border:1px solid var(--hair);border-radius:14px;padding:clamp(14px,1.9vw,20px) 12px;text-align:center;box-shadow:var(--shadow)}
+.fcard .fv{font-family:var(--serif);font-size:clamp(1.5rem,2.8vw,2.15rem);font-weight:600;font-variant-numeric:tabular-nums;line-height:1;color:var(--ink)}
+.fcard .fv.pos{color:var(--good)} .fcard .fv.brass{color:var(--brass)}
+.fcard .fl{font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:10px}
+.fcard .fs{font-size:.8rem;color:var(--ink-2);margin-top:5px;line-height:1.25}
+.funnel{display:flex;align-items:stretch;gap:6px}
+.funnel .fcard{flex:1;min-width:0}
+.funnel .farrow{display:flex;align-items:center;color:var(--brass-bright);font-size:1.3rem;font-weight:700;flex:0 0 auto}
+
+/* navy band */
+.band{background:linear-gradient(180deg,var(--navy),var(--navy-deep));color:#F5F1E6;border-radius:14px;
+  padding:clamp(16px,2.2vw,22px) clamp(20px,3vw,28px);margin-top:18px;display:flex;justify-content:space-between;
+  align-items:center;gap:clamp(16px,3vw,28px);flex-wrap:wrap}
+.band .b-l{flex:1;min-width:260px}
+.band .b-k{font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--brass-bright);margin-bottom:8px}
+.band .b-t{font-size:clamp(1rem,1.7vw,1.22rem);line-height:1.35;max-width:64ch}
+.band .b-t b{color:#FBF8EF}
+.band .b-n{text-align:center;border-left:1px solid rgba(203,178,117,.35);padding-left:clamp(18px,3vw,28px)}
+.band .b-n .n{font-family:var(--serif);font-size:clamp(2rem,4.5vw,2.9rem);color:var(--brass-bright);line-height:1;font-variant-numeric:tabular-nums}
+.band .b-n .l{font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:#9A9482;margin-top:8px;max-width:22ch;display:inline-block;line-height:1.3}
+.callout{background:var(--card-2);border:1px solid var(--hair);border-radius:12px;padding:clamp(14px,1.8vw,18px);font-size:.95rem;color:var(--ink-2);line-height:1.5}
+.callout b{color:var(--brass)}
+
+/* ============================== CHARTS ============================== */
+.chart{font-variant-numeric:tabular-nums}
+.chart .row{display:grid;grid-template-columns:var(--lab,150px) 1fr;align-items:center;gap:14px;margin:9px 0}
+.chart .rlab{font-size:.9rem;color:var(--ink-2);text-align:right;line-height:1.15}
+.chart .rlab small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.02em}
+.bar{position:relative;height:26px;display:flex;align-items:center}
+.bar .fill{height:22px;border-radius:0 4px 4px 0;background:var(--series);min-width:3px;
+  transition:width 1s cubic-bezier(.22,1,.36,1)}
+.bar .fill.blue{background:var(--series)}
+.bar .val{font-size:.9rem;font-weight:600;color:var(--ink);margin-left:10px;white-space:nowrap}
+.chart .axis{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:6px;padding-left:var(--lab,150px)}
+.chart figcaption{font-size:.8rem;color:var(--muted);margin-top:14px;line-height:1.4}
+
+/* table */
+.tbl{width:100%;border-collapse:collapse;font-size:.92rem;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{text-align:right;padding:7px 12px;border-bottom:1px solid var(--hair)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl thead th{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;border-bottom:1px solid var(--hair-2)}
+.tbl tbody tr.anchor td:first-child{font-weight:600;color:var(--ink)}
+.tbl tbody tr.total td{border-top:1.5px solid var(--brass-line);border-bottom:none;font-weight:700;color:var(--ink);padding-top:11px}
+.tbl tbody tr.total td:first-child{font-family:var(--serif)}
+.tbl-scroll{overflow-x:auto}
+
+/* two-col / list / ask */
+.two{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(20px,4vw,56px);align-items:start}
+.list{display:grid;gap:11px;margin-top:4px}
+.list .li{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start}
+.list .li .m{width:26px;height:26px;border-radius:7px;background:var(--card-2);border:1px solid var(--hair);
+  display:grid;place-items:center;color:var(--brass);font-weight:700;font-size:.85rem;margin-top:1px}
+.list .li .t b{display:block;color:var(--ink);font-size:.98rem}
+.list .li .t span{color:var(--ink-2);font-size:.9rem}
+.fund{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--hair);border-radius:12px;overflow:hidden}
+.fund .fi{background:var(--card);padding:11px 16px;display:grid;gap:3px}
+.fund .fi .fl{font-weight:700;font-size:.95rem;display:flex;justify-content:space-between;gap:10px}
+.fund .fi .fl b{color:var(--brass);font-variant-numeric:tabular-nums;font-family:var(--serif);font-weight:600}
+.fund .fi .fd{font-size:.84rem;color:var(--ink-2)}
+.bottomline{background:linear-gradient(180deg,var(--navy),var(--navy-deep));color:#F5F1E6;
+  border-radius:14px;padding:clamp(16px,2.2vw,24px) clamp(20px,3vw,30px);display:flex;justify-content:space-between;
+  align-items:center;gap:24px;flex-wrap:wrap;margin-top:16px}
+.bottomline .bl-t{font-family:var(--serif);font-size:clamp(1.15rem,2.4vw,1.6rem);max-width:30ch;line-height:1.2}
+.bottomline .bl-n{text-align:right}
+.bottomline .bl-n .n{font-family:var(--serif);font-size:clamp(2rem,5vw,3.2rem);color:var(--brass-bright);line-height:1;font-variant-numeric:tabular-nums}
+.bottomline .bl-n .l{font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:#9A9482;margin-top:8px}
+
+/* footnote / disclaimer */
+.foot{font-size:.82rem;color:var(--muted);line-height:1.55;max-width:80ch}
+.foot b{color:var(--ink-2)}
+details.data{margin-top:14px;font-size:.82rem}
+details.data summary{cursor:pointer;color:var(--brass);font-weight:600;letter-spacing:.02em}
+details.data summary:hover{color:var(--brass-bright)}
+
+/* focus */
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--brass-bright);outline-offset:3px;border-radius:4px}
+
+/* responsive */
+@media (max-width:820px){
+  .two,.fund,.chart .row,.grid[style]{grid-template-columns:1fr!important}
+  .cardrow{grid-template-columns:repeat(2,1fr)}
+  .funnel{flex-wrap:wrap}.funnel .farrow{display:none}.funnel .fcard{min-width:42%}
+  .chart .row{gap:5px}.chart .rlab{text-align:left}.chart .axis{padding-left:0}
+  .band .b-n{border-left:none;padding-left:0;text-align:left}
+  .bottomline{flex-direction:column;align-items:flex-start}.bottomline .bl-n{text-align:left}
+  .dots{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+  html,.deck{scroll-behavior:auto}
+}
+@media print{
+  .dots,.counter,.hint,.progress{display:none}
+  .deck{height:auto;overflow:visible}
+  .slide{min-height:auto;page-break-after:always;padding:40px}
+}
+</style>
+
+<div class="progress" id="progress"></div>
+<nav class="dots" id="dots" aria-label="Slide navigation"></nav>
+<div class="counter"><span class="cbrand">Jones Real Estate</span>&nbsp;&nbsp;·&nbsp;&nbsp;<b id="cur">01</b> / <span id="tot">8</span></div>
+<div class="hint"><kbd>↓</kbd><kbd>↑</kbd> to navigate</div>
+
+<main class="deck" id="deck">
+
+  <!-- 1 — COVER -->
+  <section class="slide cover" data-title="Cover">
+    <div class="wrap cover-top">
+      <div class="cover-logo"><b>JONES</b> REAL ESTATE</div>
+      <div class="eyebrow">Confidential · Prepared for Lender Review</div>
+    </div>
+    <div class="wrap cover-mid">
+      <h1>Digital <span class="em">Lead</span> Campaign</h1>
+    </div>
+    <div class="wrap cover-bottom">
+      <div>Presented by <b>Jones Real Estate Team</b> · North-Central Indiana</div>
+      <div class="r"><b>8-ZIP digital lead program</b></div>
+    </div>
+  </section>
+
+  <!-- 2 — THE OPPORTUNITY (market size) -->
+  <section class="slide" data-title="The opportunity">
+    <div class="wrap">
+      <div class="kicker"><span class="no">01</span><span class="eyebrow">The opportunity</span></div>
+      <h2 class="title">Eight ZIP codes, one measurable lead market.</h2>
+      <p class="sub lede">The campaign targets eight north-central Indiana ZIP codes — a defined, addressable market with a steady monthly supply of buyer and seller connections and clear room to grow share.</p>
+      <div class="cardrow" style="margin-top:24px" data-stack>
+        <div class="fcard"><div class="fv">8</div><div class="fl">Target ZIP codes</div><div class="fs">north-central Indiana</div></div>
+        <div class="fcard"><div class="fv">~$215K</div><div class="fl">Avg home value</div><div class="fs">$151K–$293K range</div></div>
+        <div class="fcard"><div class="fv">~346</div><div class="fl">Connections / yr</div><div class="fs">buyer &amp; seller leads in-market</div></div>
+        <div class="fcard"><div class="fv pos">~7 / mo</div><div class="fl">Leads available</div><div class="fs">not yet captured — headroom</div></div>
+      </div>
+      <div class="band">
+        <div class="b-l">
+          <div class="b-k">The footprint</div>
+          <div class="b-t"><b>46970 · 46975 · 46936 · 47359 · 46901 · 47336 · 46979 · 46928</b><br>North-central Indiana · average home value ~$215K · share of voice today ranges 8% to nearly 200%.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 — THE CAMPAIGN (coverage table) -->
+  <section class="slide" data-title="The campaign">
+    <div class="wrap">
+      <div class="kicker"><span class="no">02</span><span class="eyebrow">The campaign</span></div>
+      <h2 class="title">Where the $2,606 a month goes.</h2>
+      <p class="sub lede">Budget is allocated ZIP-by-ZIP against home value, lead supply, and share of voice — the whole plan is measurable and adjustable down to the postal code.</p>
+      <div class="card" style="margin-top:18px">
+        <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>ZIP</th><th>Avg. home value</th><th>Connections / mo</th><th>Add'l leads / mo</th><th>Share of voice</th><th>Budget / mo</th></tr></thead>
+          <tbody>
+            <tr><td>46970</td><td>$203K</td><td>8.5</td><td>2.3</td><td>61.9%</td><td>$900</td></tr>
+            <tr><td>46975</td><td>$247K</td><td>6.4</td><td>1.6</td><td>71.4%</td><td>$539</td></tr>
+            <tr><td>46936</td><td>$238K</td><td>4.9</td><td>&lt;1</td><td>135.8%</td><td>$565</td></tr>
+            <tr><td>47359</td><td>$164K</td><td>4.1</td><td>&lt;1</td><td>198.7%</td><td>$100</td></tr>
+            <tr><td>46901</td><td>$191K</td><td>1.9</td><td>&lt;1</td><td>7.7%</td><td>$222</td></tr>
+            <tr><td>47336</td><td>$151K</td><td>1.5</td><td>&lt;1</td><td>108.6%</td><td>$80</td></tr>
+            <tr><td>46979</td><td>$293K</td><td>1.0</td><td>&lt;1</td><td>47.3%</td><td>$148</td></tr>
+            <tr><td>46928</td><td>$233K</td><td>&lt;1</td><td>&lt;1</td><td>40.5%</td><td>$52</td></tr>
+            <tr class="total"><td>8 ZIP codes</td><td>~$215K avg</td><td>28.8</td><td>~6.9</td><td>—</td><td>$2,606</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <figcaption style="font-size:.8rem;color:var(--muted);margin-top:12px">Connections, additional leads, share of voice and budget are from the live campaign dashboard; “&lt;1” is counted as ~0.5 in the totals. $2,606/mo = $31,272/yr, at ~$90 per connection.</figcaption>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 — RETURN ON AD SPEND (funnel) -->
+  <section class="slide" data-title="Return on ad spend">
+    <div class="wrap">
+      <div class="kicker"><span class="no">03</span><span class="eyebrow">Return on ad spend</span></div>
+      <h2 class="title">The spend pays for itself — and then some.</h2>
+      <p class="sub lede">Trace one year of spend through the funnel at a deliberately conservative 2% close rate: the commissions earned outrun the ad budget with margin to spare.</p>
+      <div class="funnel" style="margin-top:24px" data-stack>
+        <div class="fcard"><div class="fv brass">$31,272</div><div class="fl">Ad spend / yr</div><div class="fs">$2,606 per month</div></div>
+        <div class="farrow">→</div>
+        <div class="fcard"><div class="fv">346</div><div class="fl">Connections</div><div class="fs">$90 per connection</div></div>
+        <div class="farrow">→</div>
+        <div class="fcard"><div class="fv">~7</div><div class="fl">Closings / yr</div><div class="fs">2% of connections</div></div>
+        <div class="farrow">→</div>
+        <div class="fcard"><div class="fv pos">$41,581</div><div class="fl">Gross commission</div><div class="fs">2.82% × home value</div></div>
+      </div>
+      <div class="band">
+        <div class="b-l">
+          <div class="b-k">Return on ad spend</div>
+          <div class="b-t"><b>$1.33 in commission for every $1 spent</b> — about <b>+$10,309 net</b> over the year (gross commission less ad spend, before brokerage split and taxes).</div>
+        </div>
+        <div class="b-n"><div class="n">1.33×</div><div class="l">return on ad spend, at a 2% close</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 — DOWNSIDE PROTECTION (close-rate sensitivity) -->
+  <section class="slide" data-title="Downside protection">
+    <div class="wrap">
+      <div class="kicker"><span class="no">04</span><span class="eyebrow">Downside protection</span></div>
+      <h2 class="title">Profitable above a 1.5% close rate.</h2>
+      <p class="sub lede">The whole model turns on one number — how often a connection becomes a closing. Break-even sits at just 1.5%, comfortably below the 2% modeled, and every point above that is profit.</p>
+      <div class="card" style="margin-top:20px">
+        <div class="eyebrow" style="color:var(--series-ink)">Net contribution by close rate — ad spend held flat at $31,272</div>
+        <div class="chart" style="margin-top:16px" data-anim>
+          <div class="row" style="--lab:210px"><div class="rlab">3.0% close rate</div><div class="bar"><div class="fill blue" data-w="100"></div><span class="val">+$31,100</span></div></div>
+          <div class="row" style="--lab:210px"><div class="rlab">2.5% close rate</div><div class="bar"><div class="fill blue" data-w="66.6"></div><span class="val">+$20,705</span></div></div>
+          <div class="row" style="--lab:210px"><div class="rlab">2.0% close rate<small>plan</small></div><div class="bar"><div class="fill blue" data-w="33.1"></div><span class="val" style="color:var(--good)">+$10,309</span></div></div>
+          <div class="row" style="--lab:210px"><div class="rlab" style="color:var(--bad)">1.5% close rate<small>break-even</small></div><div class="bar"><div class="fill" data-w="1.6" style="background:var(--hair-2)"></div><span class="val" style="color:var(--muted)">≈ $0</span></div></div>
+          <div class="axis" style="--lab:210px"><span>$0</span><span>+$31,100</span></div>
+        </div>
+        <figcaption>Net contribution = gross commission less the $31,272 ad spend, before brokerage split and taxes. A 1.5% close on internet leads is a low bar with disciplined, fast follow-up.</figcaption>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 — EFFICIENCY & HEADROOM -->
+  <section class="slide" data-title="Efficiency & headroom">
+    <div class="wrap">
+      <div class="kicker"><span class="no">05</span><span class="eyebrow">Efficiency &amp; headroom</span></div>
+      <h2 class="title">Efficient today, with clear room to scale.</h2>
+      <p class="sub lede">The current spend is disciplined — and three ZIP codes are barely tapped, so added budget has somewhere productive to go.</p>
+      <div class="cardrow" style="margin-top:22px" data-stack>
+        <div class="fcard"><div class="fv">$90</div><div class="fl">Blended cost / connection</div><div class="fs">as low as $24 in 47359</div></div>
+        <div class="fcard"><div class="fv pos">3</div><div class="fl">ZIPs under 50% voice</div><div class="fs">46901, 46928, 46979</div></div>
+        <div class="fcard"><div class="fv">~83</div><div class="fl">Leads / yr available</div><div class="fs">~7/mo not yet captured</div></div>
+        <div class="fcard"><div class="fv brass">7.7%</div><div class="fl">Lowest share of voice</div><div class="fs">46901 — wide open</div></div>
+      </div>
+      <div class="callout" style="margin-top:20px"><b>Where to lean in:</b> 46901 (Kokomo) holds just 7.7% share of voice in a $191K market, and 47359 already converts at $24 per connection. Budget added here compounds — more voice where the market is open, more leads where they're cheapest.</div>
+    </div>
+  </section>
+
+  <!-- 7 — THE ASK -->
+  <section class="slide" data-title="The ask">
+    <div class="wrap">
+      <div class="kicker"><span class="no">06</span><span class="eyebrow">The ask</span></div>
+      <h2 class="title">Back a proven, measurable lead channel.</h2>
+      <p class="sub lede">The current $2,606/mo already returns more than it costs at a conservative close rate — every dollar is tracked to a ZIP, a connection, and a closing.</p>
+      <div class="two" style="margin-top:18px">
+        <div>
+          <div class="eyebrow" style="color:var(--brass);margin-bottom:14px">What the capital funds</div>
+          <div class="fund" data-stack>
+            <div class="fi"><div class="fl">Sustain the 8-ZIP program <b>$2,606/mo</b></div><div class="fd">346 connections a year, all attributable.</div></div>
+            <div class="fi"><div class="fl">Capture available leads <b>+ headroom</b></div><div class="fd">~7/mo extra leads already in reach.</div></div>
+            <div class="fi"><div class="fl">Win the open ZIPs <b>targeted</b></div><div class="fd">Lift share of voice where it's under 50%.</div></div>
+            <div class="fi"><div class="fl">Track every dollar <b>included</b></div><div class="fd">ZIP → connection → closing, measured monthly.</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="eyebrow" style="color:var(--brass);margin-bottom:14px">What the lender is backing</div>
+          <div class="list" data-stack>
+            <div class="li"><div class="m">✓</div><div class="t"><b>Positive unit economics</b><span>$1.33 in commission per $1 of ad spend.</span></div></div>
+            <div class="li"><div class="m">✓</div><div class="t"><b>A low break-even</b><span>Profitable above a 1.5% close rate.</span></div></div>
+            <div class="li"><div class="m">✓</div><div class="t"><b>Fully measurable</b><span>Leads, cost, and share of voice tracked by ZIP.</span></div></div>
+            <div class="li"><div class="m">✓</div><div class="t"><b>Room to grow</b><span>Open ZIPs and unclaimed leads to scale into.</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="bottomline">
+        <div class="bl-t">A tracked, ROI-positive lead channel — funded to hold ground and take the open ZIPs.</div>
+        <div class="bl-n"><div class="n">1.33×</div><div class="l">on ad spend</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 — METHODOLOGY -->
+  <section class="slide" data-title="Methodology">
+    <div class="wrap">
+      <div class="kicker"><span class="no">07</span><span class="eyebrow">Methodology &amp; assumptions</span></div>
+      <h2 class="title">The numbers behind the numbers.</h2>
+      <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:14px;gap:clamp(18px,3vw,40px)" data-stack>
+        <div>
+          <div class="list" data-stack>
+            <div class="li"><div class="m">§</div><div class="t"><b>Ad spend</b><span>$2,606/mo = $31,272/yr, summed across the 8 ZIPs.</span></div></div>
+            <div class="li"><div class="m">§</div><div class="t"><b>Connections</b><span>From the live campaign dashboard: ~28.8/mo (~346/yr).</span></div></div>
+            <div class="li"><div class="m">§</div><div class="t"><b>Closings</b><span>2% of connections — a deliberately conservative close rate.</span></div></div>
+            <div class="li"><div class="m">§</div><div class="t"><b>Commission</b><span>2.82% × each ZIP's average home value, net of ad spend.</span></div></div>
+          </div>
+          <details class="data" open>
+            <summary>Close-rate sensitivity</summary>
+            <div class="tbl-scroll" style="margin-top:10px">
+            <table class="tbl">
+              <thead><tr><th>Close rate</th><th>Gross commission</th><th>Net vs. ad spend</th></tr></thead>
+              <tbody>
+                <tr><td>1.5% · break-even</td><td>$31,186</td><td>≈ $0</td></tr>
+                <tr class="anchor"><td>2.0% · plan</td><td>$41,581</td><td>+$10,309</td></tr>
+                <tr><td>2.5%</td><td>$51,977</td><td>+$20,705</td></tr>
+                <tr><td>3.0%</td><td>$62,372</td><td>+$31,100</td></tr>
+              </tbody>
+            </table>
+            </div>
+          </details>
+        </div>
+        <div>
+          <div class="card flat">
+            <div class="eyebrow" style="color:var(--brass)">Assumptions &amp; disclosures</div>
+            <p class="foot" style="margin-top:12px">
+              <b>Dashboard vs. modeled.</b> Connections, additional leads, share of voice and per-ZIP budgets are pulled from the live campaign dashboard. Close rate (2%) and commission (2.82%) are modeled assumptions.<br><br>
+              <b>Net basis.</b> “Net” = gross commission less ad spend — before brokerage split, taxes and other business costs. A take-home / DSCR view follows from your commission plan.<br><br>
+              <b>Conservatism.</b> 2% close is at the low end for internet real-estate leads; “&lt;1” dashboard values are counted as ~0.5. Break-even sits at a 1.5% close. Modeled potential, not guaranteed results.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  var deck=document.getElementById('deck');
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var dots=document.getElementById('dots');
+  var cur=document.getElementById('cur'), tot=document.getElementById('tot');
+  var prog=document.getElementById('progress');
+  tot.textContent=String(slides.length).padStart(2,'0');
+
+  slides.forEach(function(s,i){
+    var b=document.createElement('button');
+    b.setAttribute('aria-label',(s.dataset.title||('Slide '+(i+1))));
+    b.addEventListener('click',function(){slides[i].scrollIntoView();});
+    dots.appendChild(b);
+  });
+  var dotBtns=[].slice.call(dots.children);
+
+  var active=0;
+  function setActive(i){
+    active=i;
+    dotBtns.forEach(function(b,j){b.setAttribute('aria-current', j===i?'true':'false');});
+    cur.textContent=String(i+1).padStart(2,'0');
+    document.body.classList.toggle('on-cover', i===0);
+    var hint=document.querySelector('.hint'); if(hint) hint.style.opacity = (i===1)?'1':'0';
+  }
+
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        var i=slides.indexOf(e.target);
+        setActive(i);
+        animate(e.target);
+      }
+    });
+  },{threshold:.55});
+  slides.forEach(function(s){io.observe(s);});
+
+  deck.addEventListener('scroll',function(){
+    var max=deck.scrollHeight-deck.clientHeight;
+    prog.style.width=(max>0?(deck.scrollTop/max*100):0)+'%';
+  },{passive:true});
+
+  window.addEventListener('keydown',function(e){
+    if(e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();if(active<slides.length-1)slides[active+1].scrollIntoView();}
+    if(e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();if(active>0)slides[active-1].scrollIntoView();}
+    if(e.key==='Home'){e.preventDefault();slides[0].scrollIntoView();}
+    if(e.key==='End'){e.preventDefault();slides[slides.length-1].scrollIntoView();}
+  });
+
+  function animate(s){
+    if(s.dataset.animated)return; s.dataset.animated='1';
+    s.querySelectorAll('[data-anim] .fill[data-w]').forEach(function(f){
+      requestAnimationFrame(function(){f.style.width=f.getAttribute('data-w')+'%';});
+    });
+  }
+  document.querySelectorAll('.fill[data-w]').forEach(function(f){ if(!f.closest('[data-anim]')) f.style.width=f.getAttribute('data-w')+'%';});
+
+  setActive(0);
+})();
+</script>
