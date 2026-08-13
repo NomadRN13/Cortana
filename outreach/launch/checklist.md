@@ -289,3 +289,32 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
   outside the open conversation.
 - Beta test plan updated: Test 8 now expects the live first-liker pop-up;
   Test 9 grew a read-receipt check. Bug tracker: B-14, B-21 → Fixed.
+
+## Update — 2026-08-13 (one-command go-live + signup order fix)
+
+- **`./scripts/go-live.sh <project-url> <anon-key>` connects everything.**
+  It writes `mobile/.env`, patches the `window.FORTYLOVE` config line in
+  both `landing/index.html` and `admin/index.html`, rebuilds `site/`, and
+  then calls your project's `cities` table to prove the connection works —
+  rather than leaving you to discover a typo from a blank app later. It
+  reports separately on a wrong URL, a rejected key, and a project whose
+  database hasn't been applied yet.
+- **It refuses the `service_role` key.** That key sits directly under the
+  anon key in the dashboard, looks identical, and bypasses every security
+  rule; pasting it into the website would hand every visitor full read/write
+  access to every table. The script decodes the token's role claim and stops.
+- **Founder path to live is now four steps:** create the Supabase project →
+  apply the database (paste `supabase/setup.sql`, or run
+  `scripts/setup-supabase.sh`) → run `go-live.sh` → turn on email sign-in.
+  Then the two that gate real signups: add yourself to `admins`, and add
+  Twilio for the SMS step. `docs/backend-setup.md` step 5 rewritten around
+  this.
+- **Signup order fixed:** the "playing as a pair?" toggle had been pushed
+  below the fold on the first onboarding step by the 11-city chip list, so
+  it read as missing. The city picker is now a dropdown and the team toggle
+  sits above it — the whole step fits one phone screen again. Same order in
+  the app (`OnboardingScreen.js`) and the prototype.
+- **Logo is a shaded pickleball**, not a flat disc: lit from the upper left,
+  holes dark at the top with a little bounce light at the bottom, specular
+  highlight on the surface. Applied to the wordmark on the site, the
+  prototype, the in-app component, and all three store icons.

@@ -62,16 +62,31 @@ Then, on either path:
    Email: enable. Check the "Magic Link" email template contains
    `{{ .Token }}` so the email carries the 6-digit code.
 
-5. **Connect the app** — in `mobile/`:
+5. **Connect everything** — one command wires the phone app, the website,
+   and the moderation desk to your project, rebuilds `site/`, and then calls
+   your database to prove the connection actually works:
 
    ```bash
-   cp .env.example .env   # then paste in your Project URL + anon public key
-   npx expo start
+   ./scripts/go-live.sh https://YOUR-REF.supabase.co  YOUR_ANON_PUBLIC_KEY
    ```
 
-   With the env vars set, `src/lib/supabase.js` reports the backend as
-   configured and the API layer in `src/api/backend.js` is live. Without
-   them the app keeps running in demo mode — nothing breaks.
+   Both values are in Dashboard → Settings → API. Copy the key labelled
+   **anon / public**. The one below it, `service_role`, is a master key that
+   ignores every security rule — the script decodes what you paste and
+   refuses that one rather than publishing it to your website.
+
+   The anon key *is* meant to be public: it appears in the app binary and in
+   the website's source, and row-level security is what actually protects
+   your data.
+
+   Prefer to do it by hand? Then it's three places: `mobile/.env` (copy
+   `mobile/.env.example`), and the `window.FORTYLOVE = { ... }` line near the
+   top of both `landing/index.html` and `admin/index.html` — then
+   `bash scripts/build-site.sh`.
+
+   Either way, `cd mobile && npx expo start` runs the app against the live
+   backend. Without the env vars the app keeps running in demo mode —
+   nothing breaks.
 
 6. **(Development only) seed demo data** — to fill your dev project with the
    12 demo players, run the contents of `supabase/seed.sql` in Dashboard →

@@ -5,25 +5,80 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors, radii, gradientFor, initials } from '../theme';
 import { Bouncy } from './motion';
 
-// The "o" in 40/Love is a pickleball. Drawn from plain Views rather than an
-// icon font or SVG so it needs no extra dependency: a round optic-yellow
-// face with the ring of holes that makes a pickleball read as one.
+// The "o" in 40/Love is a pickleball. Drawn from Views and gradients rather
+// than an icon font or SVG so it needs no extra dependency, and shaded so it
+// reads as a lit sphere instead of a flat disc: light falls from the upper
+// left, the holes darken at the top and catch a little bounce at the bottom,
+// and a specular blob sits where the light hits.
 // Geometry matches the web wordmark (24-unit circle, holes at r=6.2, ø3.5).
 const HOLES = [[12, 12], [18.2, 12], [15.1, 17.37], [8.9, 17.37], [5.8, 12], [8.9, 6.63], [15.1, 6.63]];
 
+// Same stops as the #pb-body / #pb-hole gradients in the web wordmark.
+const BODY = ['#F4FDB4', '#DCF75F', '#C2E23C', '#7E9A26'];
+const BODY_STOPS = [0, 0.34, 0.68, 1];
+const RIM = ['rgba(255,255,255,.34)', 'rgba(255,255,255,0)', 'rgba(45,56,14,.55)'];
+const RIM_STOPS = [0, 0.26, 1];
+const HOLE = ['#05060A', '#161A0B', '#46551A'];
+const HOLE_STOPS = [0, 0.6, 1];
+const LIT = { x: 0.14, y: 0.04 };
+const SHADE = { x: 0.9, y: 1 };
+
 export function Pickleball({ size = 20 }) {
   const hole = size * (3.5 / 24);
+  const glossW = size * 0.38;
+  const glossH = size * 0.27;
   return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.optic }}>
+    <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden' }}>
+      <LinearGradient
+        colors={BODY}
+        locations={BODY_STOPS}
+        start={LIT}
+        end={SHADE}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Specular highlight, angled to match the light direction. */}
+      <View
+        style={{
+          position: 'absolute',
+          left: size * 0.15,
+          top: size * 0.17,
+          width: glossW,
+          height: glossH,
+          borderRadius: glossW / 2,
+          overflow: 'hidden',
+          transform: [{ rotate: '-28deg' }],
+        }}
+      >
+        <LinearGradient
+          colors={['rgba(255,255,255,.92)', 'rgba(255,255,255,.28)', 'rgba(255,255,255,0)']}
+          locations={[0, 0.45, 1]}
+          start={{ x: 0.3, y: 0 }}
+          end={{ x: 0.8, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+      {/* Rim light along the lit edge, contact shade along the far one. */}
+      <LinearGradient
+        colors={RIM}
+        locations={RIM_STOPS}
+        start={LIT}
+        end={SHADE}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Holes last: they are voids punched through the surface, so neither
+          the highlight nor the rim light plays across them. */}
       {HOLES.map(([cx, cy]) => (
-        <View
+        <LinearGradient
           key={`${cx}-${cy}`}
+          colors={HOLE}
+          locations={HOLE_STOPS}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
           style={{
             position: 'absolute',
             width: hole,
             height: hole,
             borderRadius: hole / 2,
-            backgroundColor: colors.night,
             left: (cx / 24) * size - hole / 2,
             top: (cy / 24) * size - hole / 2,
           }}

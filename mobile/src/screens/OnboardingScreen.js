@@ -255,23 +255,6 @@ export default function OnboardingScreen({ navigation, route }) {
                 </Pressable>
               </View>
             </Field>
-            <Field label="Where do you play?">
-              <View style={styles.chips}>
-                {CITIES.map((c) => (
-                  <Chip key={c.slug} label={`${c.name}, ${c.state}`} active={city === c.slug} onPress={() => setCity(c.slug)} />
-                ))}
-              </View>
-              {cityDetected && !city && (
-                <Text style={[type.hint, { marginTop: 8 }]}>
-                  We're not open where you are yet — pick the closest city you'd travel to, or join the waitlist at 40love.app and we'll tell you when yours opens.
-                </Text>
-              )}
-              {cityDetected && !!city && (
-                <Text style={[type.hint, { marginTop: 8 }]}>
-                  You'll meet players in this city. You can change it any time in Settings.
-                </Text>
-              )}
-            </Field>
 
             <Field label="Playing as a pair?">
               <Pressable
@@ -308,6 +291,24 @@ export default function OnboardingScreen({ navigation, route }) {
                 </Text>
               </View>
             )}
+            <Field label="Where do you play?">
+              <View style={styles.chips}>
+                {CITIES.map((c) => (
+                  <Chip key={c.slug} label={`${c.name}, ${c.state}`} active={city === c.slug} onPress={() => setCity(c.slug)} />
+                ))}
+              </View>
+              {cityDetected && !city && (
+                <Text style={[type.hint, { marginTop: 8 }]}>
+                  We're not open where you are yet — pick the closest city you'd travel to, or join the waitlist at 40love.app and we'll tell you when yours opens.
+                </Text>
+              )}
+              {cityDetected && !!city && (
+                <Text style={[type.hint, { marginTop: 8 }]}>
+                  You'll meet players in this city. You can change it any time in Settings.
+                </Text>
+              )}
+            </Field>
+
             <Text style={type.hint}>Your name, age, and photo appear on your player card — your exact birthdate never does. You must be 18 or older.</Text>
           </>
         )}

@@ -7,7 +7,8 @@ set -euo pipefail
 #   site/admin/index.html  ← admin/index.html     (moderation desk; safe to
 #                            deploy — every action is authorized by the
 #                            database's admin list, not by the page)
-#   site/favicon.png       ← mobile/assets/icon.png
+#   site/favicon.png       ← mobile/assets/favicon.png (the store icon
+#                            rendered small; it ships on every page load)
 #
 # Deploy: drag the site/ folder onto https://app.netlify.com/drop
 # (or point any static host at site/). Re-run this script after editing
@@ -22,7 +23,7 @@ cp app/index.html site/demo/index.html
 cp landing/privacy.html site/privacy/index.html
 cp landing/terms.html site/terms/index.html
 cp admin/index.html site/admin/index.html
-cp mobile/assets/icon.png site/favicon.png
+cp mobile/assets/favicon.png site/favicon.png
 
 echo "site/ assembled:"
 find site -type f | sort

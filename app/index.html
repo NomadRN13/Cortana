@@ -216,6 +216,14 @@
   .ob-foot { padding: 14px 18px 24px; display: flex; gap: 10px; }
   .ob-foot .btn-back { flex: 0 0 auto; width: auto; padding: 15px 18px; }
   .hint { font-size: 13px; color: var(--dim); line-height: 1.5; margin: 0; }
+  .ob-body select {
+    width: 100%; padding: 13px 40px 13px 14px; font: inherit; font-size: 16px;
+    color: var(--text); background-color: var(--card);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23F4F6F0' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+    border: 2px solid var(--line); border-radius: 12px; appearance: none; -webkit-appearance: none;
+  }
+  .ob-body select:focus { outline: none; border-color: var(--optic); }
   .linklike { background: none; border: 0; padding: 4px; font-size: 13.5px; font-weight: 800; color: var(--optic); cursor: pointer; }
   .linklike.dim { color: var(--dim); }
   .phone-verified {
@@ -746,6 +754,26 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<radialGradient id="pb-body" cx="34%" cy="28%" r="78%">
+<stop offset="0%" stop-color="#F4FDB4"/><stop offset="38%" stop-color="#DCF75F"/>
+<stop offset="72%" stop-color="#C2E23C"/><stop offset="100%" stop-color="#7E9A26"/>
+</radialGradient>
+<radialGradient id="pb-gloss" cx="50%" cy="50%" r="50%">
+<stop offset="0%" stop-color="#FFFFFF" stop-opacity=".9"/>
+<stop offset="60%" stop-color="#FFFFFF" stop-opacity=".22"/>
+<stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="pb-hole" cx="50%" cy="34%" r="72%">
+<stop offset="0%" stop-color="#05060A"/><stop offset="70%" stop-color="#161A0B"/>
+<stop offset="100%" stop-color="#46551A"/>
+</radialGradient>
+<linearGradient id="pb-rim" x1="20%" y1="10%" x2="80%" y2="95%">
+<stop offset="0%" stop-color="#FFFFFF" stop-opacity=".45"/>
+<stop offset="45%" stop-color="#FFFFFF" stop-opacity="0"/>
+<stop offset="100%" stop-color="#3F4D14" stop-opacity=".75"/>
+</linearGradient>
+</defs></svg>
 <div class="stage">
 
   <div class="phone" id="phone">
@@ -802,11 +830,6 @@
           </div>
         </div>
         <div>
-          <label>Where do you play?</label>
-          <div class="chips" id="ob-city" data-single role="group" aria-label="Your city"></div>
-          <p class="hint" style="margin-top:8px">You'll meet players in this city. You can change it any time in Settings.</p>
-        </div>
-        <div>
           <label>Playing as a pair?</label>
           <div class="mode-rows">
             <button class="mode-row" id="ob-team" aria-pressed="false" type="button">
@@ -827,6 +850,11 @@
             </div>
             <p class="hint" style="margin-top:8px">Both of you must be 18+. Ask before you add someone — their name and age go on a public profile. You stay responsible for the account.</p>
           </div>
+        </div>
+        <div>
+          <label for="ob-city">Where do you play?</label>
+          <select id="ob-city" aria-label="Your city"></select>
+          <p class="hint" style="margin-top:8px">You'll meet players in this city. You can change it any time in Settings.</p>
         </div>
         <div>
           <label for="photo-input">Profile photo <span style="font-weight:400">(optional)</span></label>
@@ -1352,7 +1380,7 @@
   'use strict';
 
   /* ---------- Wordmark ---------- */
-  var BALL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#D6F44F"></circle><circle cx="12" cy="12" r="1.75" fill="#0A0B0D"></circle><circle cx="18.2" cy="12.0" r="1.75" fill="#0A0B0D"></circle><circle cx="15.1" cy="17.37" r="1.75" fill="#0A0B0D"></circle><circle cx="8.9" cy="17.37" r="1.75" fill="#0A0B0D"></circle><circle cx="5.8" cy="12.0" r="1.75" fill="#0A0B0D"></circle><circle cx="8.9" cy="6.63" r="1.75" fill="#0A0B0D"></circle><circle cx="15.1" cy="6.63" r="1.75" fill="#0A0B0D"></circle></svg>';
+  var BALL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="url(#pb-body)"/><ellipse cx="8.1" cy="7.2" rx="4.4" ry="3.3" fill="url(#pb-gloss)" transform="rotate(-28 8.1 7.2)"/><circle cx="12" cy="12" r="10.35" fill="none" stroke="url(#pb-rim)" stroke-width="1.3"/><circle cx="12" cy="12" r="1.75" fill="url(#pb-hole)"/><circle cx="18.2" cy="12.0" r="1.75" fill="url(#pb-hole)"/><circle cx="15.1" cy="17.37" r="1.75" fill="url(#pb-hole)"/><circle cx="8.9" cy="17.37" r="1.75" fill="url(#pb-hole)"/><circle cx="5.8" cy="12.0" r="1.75" fill="url(#pb-hole)"/><circle cx="8.9" cy="6.63" r="1.75" fill="url(#pb-hole)"/><circle cx="15.1" cy="6.63" r="1.75" fill="url(#pb-hole)"/></svg>';
   function renderMark(el) {
     el.innerHTML = '40/L<span class="ball">' + BALL_SVG + '</span>ve';
   }
@@ -1661,11 +1689,10 @@
 
   singleSelect($('#ob-gender'));
   singleSelect($('#ob-partner-gender'));
-  $('#ob-city').innerHTML = CITIES.map(function (c, i) {
-    return '<button class="chip" aria-pressed="' + (c.slug === DEFAULT_CITY ? 'true' : 'false') +
-      '" data-city="' + c.slug + '">' + esc(c.name + ', ' + c.state) + '</button>';
+  $('#ob-city').innerHTML = CITIES.map(function (c) {
+    return '<option value="' + c.slug + '"' + (c.slug === DEFAULT_CITY ? ' selected' : '') + '>' +
+      esc(c.name + ', ' + c.state) + '</option>';
   }).join('');
-  singleSelect($('#ob-city'));
   $('#ob-team').addEventListener('click', function () {
     var on = $('#ob-team').getAttribute('aria-pressed') !== 'true';
     $('#ob-team').setAttribute('aria-pressed', String(on));
@@ -1678,8 +1705,8 @@
     if (!name) { toast('Add your first name to continue'); return; }
     if (!age || age < 18 || age > 99) { toast('Enter an age between 18 and 99'); return; }
     if (!genderSel) { toast('Tell us who you are so matching works'); return; }
-    var citySel = $('#ob-city .chip[aria-pressed="true"]');
-    if (!citySel) { toast('Pick the city you play in'); return; }
+    var cityVal = $('#ob-city').value;
+    if (!cityVal) { toast('Pick the city you play in'); return; }
     var isTeam = $('#ob-team').getAttribute('aria-pressed') === 'true';
     var pName = '', pAge = null, pGender = null;
     if (isTeam) {
@@ -1694,7 +1721,7 @@
     state.draft = { name: name, age: age, gender: genderSel.getAttribute('data-gender'), photo: draftPhoto,
       phone: phoneOk ? phoneE164 : null, phoneVerified: phoneOk,
       isTeam: isTeam, partnerName: pName, partnerAge: pAge, partnerGender: pGender,
-      city: citySel.getAttribute('data-city') };
+      city: cityVal };
     // A shared profile is never a dating profile — take Date off the table.
     var dateRow = $('#ob-modes .mode-row[data-mode="date"]');
     dateRow.hidden = isTeam;
@@ -2795,9 +2822,7 @@
     $('#ob-partner-name').value = '';
     $('#ob-partner-age').value = '';
     $all('#ob-partner-gender .chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
-    $all('#ob-city .chip').forEach(function (c) {
-      c.setAttribute('aria-pressed', String(c.getAttribute('data-city') === DEFAULT_CITY));
-    });
+    $('#ob-city').value = DEFAULT_CITY;
     $('#ob-modes .mode-row[data-mode="date"]').hidden = false;
     $all('#ob-modes .mode-row').forEach(function (r) {
       r.setAttribute('aria-pressed', String(r.getAttribute('data-mode') === 'date'));
