@@ -147,12 +147,26 @@
     border: 0;
     border-radius: 12px;
   }
+  /* Matches the email field beside it — same light treatment, plus a chevron
+     since appearance:none removes the native one. Uses this page's tokens
+     (--chalk / --ink), not the app's. */
   .waitlist select {
-    flex: 1 1 100%; min-width: 0; padding: 15px 16px; font: inherit; font-size: 16px;
-    border: 2px solid var(--line); border-radius: 12px; background: var(--card);
-    color: var(--chalk); appearance: none;
+    flex: 1 1 200px;
+    min-width: 0;
+    padding: 15px 40px 15px 18px;
+    font: inherit;
+    font-size: 16px;
+    color: var(--ink);
+    background-color: var(--chalk);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230A0B0D' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    border: 0;
+    border-radius: 12px;
+    appearance: none;
+    -webkit-appearance: none;
   }
-  .waitlist select:focus { outline: none; border-color: var(--optic); }
+  .waitlist select:focus { outline: 3px solid var(--optic); outline-offset: 2px; }
   .waitlist button {
     flex: 0 0 auto;
     padding: 15px 24px;

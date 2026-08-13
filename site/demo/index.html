@@ -2699,6 +2699,12 @@
     $(id).addEventListener('click', function () {
       var el = $(id);
       var on = el.getAttribute('aria-checked') === 'true';
+      if (!on && mode === 'date' && state.user && state.user.isTeam) {
+        // A shared profile can't date, and the database enforces it — so
+        // don't let Settings put the profile into a state that won't save.
+        toast('Teams can’t use Date mode — each of you needs your own profile');
+        return;
+      }
       if (on && state.user && state.user.modes.length === 1 && state.user.modes[0] === mode) {
         toast('Keep at least one mode on');
         return;
@@ -2776,6 +2782,27 @@
     phoneOk = false;
     $('#ob-phone').value = '';
     syncPhoneUI();
+    // Clear the whole signup form — otherwise the next person to create a
+    // profile on this device inherits the last one's name, city, and partner.
+    $('#ob-name').value = '';
+    $('#ob-age').value = '';
+    $('#ob-rating').value = '';
+    $all('#ob-gender .chip, #ob-sports .chip, #ob-skill .chip, #ob-seeking .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', 'false');
+    });
+    $('#ob-team').setAttribute('aria-pressed', 'false');
+    $('#team-box').hidden = true;
+    $('#ob-partner-name').value = '';
+    $('#ob-partner-age').value = '';
+    $all('#ob-partner-gender .chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+    $all('#ob-city .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(c.getAttribute('data-city') === DEFAULT_CITY));
+    });
+    $('#ob-modes .mode-row[data-mode="date"]').hidden = false;
+    $all('#ob-modes .mode-row').forEach(function (r) {
+      r.setAttribute('aria-pressed', String(r.getAttribute('data-mode') === 'date'));
+    });
+    syncSeekingBox();
     $('#photo-preview').classList.remove('has');
     $('#photo-preview').style.backgroundImage = '';
     $('#photo-btn').textContent = 'Add photo';

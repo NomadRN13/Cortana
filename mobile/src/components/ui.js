@@ -2,7 +2,6 @@
 import React from 'react';
 import { Text, View, Pressable, StyleSheet, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { colors, radii, gradientFor, initials } from '../theme';
 import { Bouncy } from './motion';
 
