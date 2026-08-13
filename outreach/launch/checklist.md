@@ -394,3 +394,28 @@ a device or a card:
 | `eas init`, fill `eas.json` | dev, after accounts exist | Agents never run eas commands |
 | Screenshots, Play feature graphic | founder | Needs the real app on a real device |
 | File both privacy forms | founder | Drafts are ready in `store-listing.md` |
+
+## Update — 2026-08-13 (waitlist membership oracle closed)
+
+- **Anyone could test whether a given email was on the waitlist.** The landing
+  page POSTed straight to the `waitlist` table using the anon key — which is
+  public by design, it ships in the page source. `email` is UNIQUE, so a repeat
+  address came back `409` instead of `201`, and the page said it out loud:
+  *"You're already on the list."* Feed it an address, learn whether that person
+  signed up for a dating app; feed it a list, learn it about all of them.
+- **Fixed by making both outcomes identical.** `join_waitlist()` (migration
+  `20260806000017`) is a security-definer RPC that normalises the address,
+  `on conflict do nothing`s, and returns the same thing either way. The insert
+  policy is dropped, so RLS refuses direct writes and the RPC is the only door.
+  The page shows one message now, not two.
+- **Asserted, not assumed:** the suite now sweeps everything the anon key can
+  reach — fourteen tables must return zero rows, `cities` must be readable
+  (the city picker needs it) and `events` must not be. Verified to fail when a
+  read policy is added to `profiles`.
+- **Privacy policy gap closed alongside it:** the policy is scoped to "the app
+  and the website" but described only app data. It now says what the waitlist
+  form collects, what it is used for, and that membership is not disclosable.
+- **Known and accepted:** `join_waitlist` has no rate limit, so the list can
+  still be padded with junk addresses. That was equally true of the direct
+  insert it replaces. Supabase's gateway does some throttling; if the list gets
+  spammed, a captcha on the form is the usual next step.

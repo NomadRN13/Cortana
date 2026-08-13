@@ -803,24 +803,24 @@
     return !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
   }
 
+  // Goes through join_waitlist rather than POSTing to the table, so an address
+  // that is already on the list is indistinguishable from one that isn't. The
+  // anon key below is public — it ships in this page — so anything that told
+  // these two apart would let anyone test whether a given person had signed up
+  // for a dating app, one address at a time or from a list.
   function joinRemote(email, city) {
     var cfg = window.FORTYLOVE;
-    return fetch(cfg.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/waitlist', {
+    return fetch(cfg.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/rpc/join_waitlist', {
       method: 'POST',
       headers: {
         'apikey': cfg.SUPABASE_ANON_KEY,
         'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ email: email, city: city || '', source: 'landing' })
+      body: JSON.stringify({ p_email: email, p_city: city || '', p_source: 'landing' })
     }).then(function (res) {
-      if (res.status === 201) return 'new';
-      if (res.status === 409) return 'duplicate';
-      return res.text().then(function (body) {
-        if (body && body.indexOf('23505') !== -1) return 'duplicate';
-        throw new Error('HTTP ' + res.status);
-      });
+      if (res.ok) return 'joined';
+      throw new Error('HTTP ' + res.status);
     });
   }
 
@@ -832,10 +832,9 @@
     var error = document.getElementById(errorId);
     var btn = form.querySelector('button');
 
-    function showSuccess(duplicate) {
-      success.textContent = duplicate
-        ? 'You’re already on the list — we’ll see you on the court. 🎾'
-        : 'You’re on the list — see you on the court. 🎾';
+    // One message, always — see joinRemote.
+    function showSuccess() {
+      success.textContent = 'You’re on the list — see you on the court. 🎾';
       form.style.display = 'none';
       success.style.display = 'block';
     }
@@ -854,7 +853,7 @@
         btn.disabled = true;
         btn.textContent = 'Joining…';
         joinRemote(val, citySel ? citySel.value : '')
-          .then(function (result) { showSuccess(result === 'duplicate'); })
+          .then(function () { showSuccess(); })
           .catch(function () {
             error.textContent = 'Couldn’t join right now — check your connection and try again.';
             btn.disabled = false;
@@ -864,12 +863,11 @@
       }
 
       var list = readJson(LIST_KEY, []);
-      var duplicate = list.indexOf(val) !== -1;
-      if (!duplicate) {
+      if (list.indexOf(val) === -1) {
         list.push(val);
         writeJson(LIST_KEY, list);
       }
-      showSuccess(duplicate);
+      showSuccess();
     });
   }
   wireForm('hero-form', 'hero-email', 'hero-success', 'hero-error', 'hero-city');

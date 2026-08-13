@@ -494,9 +494,9 @@ begin
   assert c = 0, 'non-member can read messages';
 end $$;
 
--- ---- 9. Waitlist: anon can insert, cannot read ----
+-- ---- 9. Waitlist: anon joins through the RPC, and can read nothing ----
 set role anon;
-insert into waitlist (email, city) values ('fan@example.com', 'Indianapolis');
+select join_waitlist('fan@example.com', 'indianapolis');
 do $$
 declare c int;
 begin
@@ -620,7 +620,7 @@ begin
 end $$;
 reset role;
 
--- ---- 9c. Photo objects: you own your folder, and only your folder ----
+-- ---- 9e. Photo objects: you own your folder, and only your folder ----
 -- The moderation gate lives at the storage layer, so it is tested there.
 reset role;
 insert into storage.objects (bucket_id, name)
@@ -717,6 +717,70 @@ begin
            where user_id = '00000000-0000-4000-8000-000000000012') = 'rt-secret-value',
          'apple token altered through the API';
 end $$;
+
+-- ---- 9f. What an unauthenticated visitor can reach ----
+-- The anon key is public: it ships in the landing page's source and in the app
+-- binary. Everything anon can do is therefore world-readable, so it is asserted
+-- rather than assumed. Nothing but the city list should come back.
+reset role;
+set role anon;
+do $$
+declare c int; t text;
+begin
+  foreach t in array array[
+    'profiles', 'swipes', 'matches', 'messages', 'notifications',
+    'profile_photos', 'reports', 'blocks', 'push_tokens', 'devices',
+    'admins', 'apple_identities', 'waitlist', 'event_rsvps'
+  ] loop
+    execute format('select count(*) from public.%I', t) into c;
+    assert c = 0, format('anon can read public.%s (%s rows)', t, c);
+  end loop;
+end $$;
+
+-- The one thing anon is *meant* to see: the city list, which the landing page's
+-- "where do you play?" picker is built from before anyone signs in. Events are
+-- authenticated-only and stay that way — the landing page's event copy is
+-- static, not read from the database.
+do $$
+begin
+  assert (select count(*) from cities) > 0, 'anon cannot read the city list';
+  assert (select count(*) from events) = 0, 'anon can read the event calendar';
+end $$;
+
+-- Joining the waitlist must not reveal whether the address was already there.
+-- Same call twice, same result, and no way to tell from the outside.
+do $$
+declare before_n int; after_n int;
+begin
+  perform join_waitlist('Court.Fan@Example.COM ', 'seattle', 'landing');
+  perform join_waitlist('court.fan@example.com', 'miami', 'landing');
+  -- anon still cannot read the table to find out which one landed
+  select count(*) into after_n from waitlist;
+  assert after_n = 0, 'anon can read the waitlist';
+end $$;
+reset role;
+do $$
+declare c int;
+begin
+  select count(*) into c from waitlist where email = 'court.fan@example.com';
+  assert c = 1, format('waitlist should hold one normalised row, has %s', c);
+  -- the second call was swallowed, so the first city stands
+  assert (select city from waitlist where email = 'court.fan@example.com') = 'seattle',
+         'duplicate join overwrote the original row';
+end $$;
+
+-- A direct insert is refused outright now: there is no insert policy, so the
+-- RPC is the only door and it cannot be made to leak.
+set role anon;
+do $$
+begin
+  begin
+    insert into waitlist (email) values ('sneaky@example.com');
+    assert false, 'anon inserted into the waitlist directly, bypassing join_waitlist';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
 
 -- ---- 10. Account deletion removes everything ----
 -- The account-deletion page (landing/delete-account.html) promises each of
