@@ -21,7 +21,7 @@ export function Pickleball({ size = 20 }) {
 export function Wordmark({ size = 24, bounce = false }) {
   const ball = (
     <View style={{ marginHorizontal: 1 }}>
-      <Pickleball size={size * 1.04} />
+      <Pickleball size={size * 0.80} />
     </View>
   );
   const letter = { fontSize: size, fontWeight: '800', color: colors.text, letterSpacing: -0.5 };
