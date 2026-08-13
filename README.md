@@ -1,4 +1,4 @@
-# 40/Love
+# 40/LOVE
 
 **Love at first serve.** A dating and social app for people who play racquet
 sports — tennis, pickleball, padel, racquetball, and squash — where the first
@@ -21,7 +21,7 @@ Three modes, one app:
 | [`docs/business-plan.md`](docs/business-plan.md) | **Business plan** — market, competition, validation plan, go-to-market, revenue model, build options, 12-month milestones, risks. |
 | [`docs/feature-roadmap.md`](docs/feature-roadmap.md) | **Feature roadmap** — MVP scope and the releases after it, with success metrics per release. |
 | [`docs/pitch-deck.md`](docs/pitch-deck.md) | **Pitch deck** — 12 slides with speaker notes, ready to turn into a designed deck. |
-| [`docs/brand-guide.md`](docs/brand-guide.md) | **Brand & design guide** — the 40/Love identity: palette, typography, wordmark, voice. Everything above is built from it. |
+| [`docs/brand-guide.md`](docs/brand-guide.md) | **Brand & design guide** — the 40/LOVE identity: palette, typography, wordmark, voice. Everything above is built from it. |
 | [`docs/networking-team.md`](docs/networking-team.md) | **The agent team** — ten AI agents (defined in [`.claude/agents/`](.claude/agents/)) in two crews: networking (city scouting, club partnerships, social content, waitlist emails, mixers, validation scoring) and product & launch (backend engineering, QA, store releases, safety & support). Agents draft and verify; you decide and send. |
 | [`docs/system-architecture.md`](docs/system-architecture.md) | **System architecture** — the technical blueprint for the real app: data model, matching engine, chat & court proposals, trust & safety, notifications, analytics, and a prototype→production map. Hand this plus the prototype to whoever builds the MVP. |
 | [`docs/app-store-launch.md`](docs/app-store-launch.md) | **Store launch guide** — the path to the Apple App Store and Google Play: accounts and costs, dating-app policy requirements (moderation, 18+, account deletion), EAS build/submit flow, listing prep, and the Indy-first rollout. |

@@ -1,4 +1,4 @@
-# 40/Love — Backend Setup (Supabase)
+# 40/LOVE — Backend Setup (Supabase)
 
 The backend lives in this repo as code: `supabase/migrations/` is the entire
 database (tables, security rules, the matching engine), and `supabase/seed.sql`
@@ -178,7 +178,7 @@ fingerprints there.
 
 ## Opening a city
 
-40/Love is open in 11 metros: Indianapolis, Los Angeles, San Diego, Phoenix,
+40/LOVE is open in 11 metros: Indianapolis, Los Angeles, San Diego, Phoenix,
 Seattle, Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC.
 Members pick their city at signup (pre-selected from their approximate
 location) and only ever match with players in it — a dating app is only as

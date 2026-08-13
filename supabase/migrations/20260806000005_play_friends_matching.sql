@@ -1,4 +1,4 @@
--- 40/Love — Play-mode game matching + Friends-mode preference
+-- 40/LOVE — Play-mode game matching + Friends-mode preference
 -- Play mode: players say which game types they want (singles, doubles,
 -- mixed doubles) and, for singles/doubles, whether they want to play with
 -- women, men, or everyone. The deck shows only compatible players: a shared

@@ -1,4 +1,4 @@
--- 40/Love — initial schema
+-- 40/LOVE — initial schema
 -- Implements docs/system-architecture.md §3–§7 for Supabase (Postgres 15+).
 -- Apply with: supabase db push   (see docs/backend-setup.md)
 

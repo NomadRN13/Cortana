@@ -96,7 +96,7 @@ export default function SettingsScreen({ navigation }) {
   const confirmSignOutDevice = (d) => {
     Alert.alert(
       `Sign out ${d.name || 'this device'}?`,
-      'It stops receiving your notifications immediately, and is signed out the next time it opens 40/Love.',
+      'It stops receiving your notifications immediately, and is signed out the next time it opens 40/LOVE.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -400,7 +400,7 @@ export default function SettingsScreen({ navigation }) {
           <Text style={{ color: colors.dim, fontWeight: '700', fontSize: 13 }}>Delete my account</Text>
         </Pressable>
         <Text style={[type.hint, { textAlign: 'center' }]}>
-          {`40/Love · ${app.cityLabel((u && u.city) || DEFAULT_CITY)} · ${app.live ? 'beta' : 'demo build — not a real account'}`}
+          {`40/LOVE · ${app.cityLabel((u && u.city) || DEFAULT_CITY)} · ${app.live ? 'beta' : 'demo build — not a real account'}`}
         </Text>
       </ScrollView>
     </SafeAreaView>

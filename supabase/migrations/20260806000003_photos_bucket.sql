@@ -1,4 +1,4 @@
--- 40/Love — provision the photos storage bucket + policies
+-- 40/LOVE — provision the photos storage bucket + policies
 -- QA found nothing in the repo creates the bucket uploadProfilePhoto targets
 -- (test-plan gap #1): on a fresh project the upload fails silently. This
 -- migration makes `supabase db push` provision it. Guarded so it no-ops on

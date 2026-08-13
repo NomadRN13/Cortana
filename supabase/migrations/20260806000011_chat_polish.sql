@@ -1,4 +1,4 @@
--- 40/Love — chat polish: read receipts + live match/message signal
+-- 40/LOVE — chat polish: read receipts + live match/message signal
 --
 -- 1) Read receipts (QA B-14). Marking messages read becomes a scoped RPC.
 --    This also FIXES A SECURITY HOLE: the old messages_mark_read policy

@@ -1,10 +1,10 @@
--- 40/Love — complete backend in one paste
+-- 40/LOVE — complete backend in one paste
 -- Generated from supabase/migrations/ (regenerate: cat supabase/migrations/*.sql > supabase/setup.sql + this header)
 -- Use: Supabase Dashboard → SQL Editor → New query → paste ALL of this → Run.
 -- Safe to run once on a fresh project. Do NOT also run 'supabase db push' afterwards — pick one path.
 -- (Development seed data is separate and optional: supabase/seed.sql — never on the launch project.)
 
--- 40/Love — initial schema
+-- 40/LOVE — initial schema
 -- Implements docs/system-architecture.md §3–§7 for Supabase (Postgres 15+).
 -- Apply with: supabase db push   (see docs/backend-setup.md)
 
@@ -509,7 +509,7 @@ grant execute on function public.respond_court_time(bigint, boolean) to authenti
 grant execute on function public.delete_account() to authenticated;
 grant execute on function public.miles_between(numeric, numeric, numeric, numeric) to authenticated;
 
--- 40/Love — push notification tokens
+-- 40/LOVE — push notification tokens
 -- One row per device token. The send-push edge function (supabase/functions/
 -- send-push) reads these with the service role when a notifications row is
 -- inserted; clients can only manage their own tokens.
@@ -529,7 +529,7 @@ create policy push_tokens_own on public.push_tokens
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
--- 40/Love — enable realtime delivery for chat
+-- 40/LOVE — enable realtime delivery for chat
 -- postgres_changes subscriptions only fire for tables in the
 -- supabase_realtime publication; without this, the app's live chat channel
 -- subscribes cleanly but never receives an event (QA finding B-07).
@@ -549,7 +549,7 @@ begin
 end
 $$;
 
--- 40/Love — provision the photos storage bucket + policies
+-- 40/LOVE — provision the photos storage bucket + policies
 -- QA found nothing in the repo creates the bucket uploadProfilePhoto targets
 -- (test-plan gap #1): on a fresh project the upload fails silently. This
 -- migration makes `supabase db push` provision it. Guarded so it no-ops on
@@ -603,7 +603,7 @@ begin
 end
 $outer$;
 
--- 40/Love — gender identity + dating preference matching
+-- 40/LOVE — gender identity + dating preference matching
 -- Adds who-I-am and who-I'm-looking-to-date to profiles, and makes the
 -- Date-mode deck a MUTUAL filter: you see only people who fit what you're
 -- looking for AND who are looking for someone like you. All pairings are
@@ -706,7 +706,7 @@ as $$
   limit p_limit
 $$;
 
--- 40/Love — Play-mode game matching + Friends-mode preference
+-- 40/LOVE — Play-mode game matching + Friends-mode preference
 -- Play mode: players say which game types they want (singles, doubles,
 -- mixed doubles) and, for singles/doubles, whether they want to play with
 -- women, men, or everyone. The deck shows only compatible players: a shared
@@ -833,7 +833,7 @@ as $$
   limit p_limit
 $$;
 
--- 40/Love — privacy hardening (release-review findings)
+-- 40/LOVE — privacy hardening (release-review findings)
 -- 1) delete_account now also purges the user's photo objects from storage,
 --    making the privacy policy's hard-delete promise true end to end.
 -- 2) Photo reads are gated: you can always read your own objects; anyone
@@ -883,7 +883,7 @@ begin
 end
 $outer$;
 
--- 40/Love — phone (SMS) verification
+-- 40/LOVE — phone (SMS) verification
 -- Sign-in stays email-OTP; onboarding additionally verifies a phone number
 -- by text. The number lives in auth.users (attached via Supabase phone-change
 -- OTP, so the SMS round-trip is handled by auth itself); profiles carries
@@ -917,7 +917,7 @@ $$;
 
 grant execute on function public.sync_phone_verification() to authenticated;
 
--- 40/Love — admin & moderation
+-- 40/LOVE — admin & moderation
 -- A tiny, explicit admin layer so moderation happens on a real page
 -- (site /admin) instead of the Supabase dashboard. Admins can:
 --   · see every profile photo (any moderation status) and approve/reject it
@@ -981,7 +981,7 @@ begin
 end
 $outer$;
 
--- 40/Love — multi-photo management + moderation hardening
+-- 40/LOVE — multi-photo management + moderation hardening
 -- Members manage up to 6 photos (positions 0–5; 0 is the main photo).
 --
 -- 1) SECURITY FIX: photos_write let a member write any moderation_status —
@@ -1074,7 +1074,7 @@ $$;
 grant execute on function public.make_photo_primary(int) to authenticated;
 grant execute on function public.delete_photo(int) to authenticated;
 
--- 40/Love — rewind (undo last swipe)
+-- 40/LOVE — rewind (undo last swipe)
 -- Takes back the caller's swipe on one person in one mode so the card can
 -- return to their deck. If the swipe had just created a match, the match
 -- dissolves (the other side's like still stands, so re-liking re-matches
@@ -1117,7 +1117,7 @@ $$;
 
 grant execute on function public.undo_swipe(uuid, public.app_mode) to authenticated;
 
--- 40/Love — chat polish: read receipts + live match/message signal
+-- 40/LOVE — chat polish: read receipts + live match/message signal
 --
 -- 1) Read receipts (QA B-14). Marking messages read becomes a scoped RPC.
 --    This also FIXES A SECURITY HOLE: the old messages_mark_read policy
@@ -1173,7 +1173,7 @@ begin
 end
 $$;
 
--- 40/Love — matching correctness fixes
+-- 40/LOVE — matching correctness fixes
 --
 -- 1) Nonbinary members were undiscoverable to anyone who narrowed their
 --    Play or Friends preference. Date mode already lets you say you're
@@ -1206,7 +1206,7 @@ as $$
       or (pref::text = 'nonbinary' and g::text = 'nonbinary')
 $$;
 
--- 40/Love — doubles team profiles (two people, one profile)
+-- 40/LOVE — doubles team profiles (two people, one profile)
 --
 -- A pair who always play together can share a single profile: both names on
 -- the card, one inbox, one set of preferences. Deliberate limits:
@@ -1380,7 +1380,7 @@ as $$
   limit p_limit
 $$;
 
--- 40/Love — multi-city launch
+-- 40/LOVE — multi-city launch
 --
 -- "Indianapolis" was a hardcoded default in four places. This replaces it
 -- with a real registry so opening a new city is a row, not a code change.
@@ -1570,7 +1570,7 @@ as $$
   limit p_limit
 $$;
 
--- 40/Love — remembered devices
+-- 40/LOVE — remembered devices
 --
 -- Two things members expect and a dating app needs:
 --

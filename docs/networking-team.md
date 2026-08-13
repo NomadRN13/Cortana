@@ -1,4 +1,4 @@
-# 40/Love — The Agent Team
+# 40/LOVE — The Agent Team
 
 Ten AI agents, defined in `.claude/agents/`, split into two crews: the
 **networking crew** that builds the Indianapolis community (Phases 1 and 6
@@ -28,7 +28,7 @@ makes every enforcement decision.
 | `club-partnerships` | Turns target lists into personalized outreach drafts and runs the partner pipeline | "Have club-partnerships draft outreach to the top 5 Austin targets." |
 | `social-content` | Weekly IG/TikTok calendars and post copy in the brand voice; stages Buffer drafts | "Ask social-content for next week's content calendar." |
 | `waitlist-community` | Welcome/nurture emails, mixer invites, interview recruiting | "Have waitlist-community draft the welcome email sequence." |
-| `mixer-coordinator` | Designs 40/Love Social Mixers: formats, run-of-show, checklists, signup copy | "Use mixer-coordinator to plan a 24-person pickleball mixer for two courts." |
+| `mixer-coordinator` | Designs 40/LOVE Social Mixers: formats, run-of-show, checklists, signup copy | "Use mixer-coordinator to plan a 24-person pickleball mixer for two courts." |
 | `validation-analyst` | Scores interview + waitlist data against the business plan's go/no-go criteria | "Have validation-analyst score these 12 interview notes." |
 
 Every agent reads `docs/brand-guide.md` (voice, palette) and works from

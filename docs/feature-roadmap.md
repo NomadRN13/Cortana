@@ -1,4 +1,4 @@
-# 40/Love — Feature Roadmap
+# 40/LOVE — Feature Roadmap
 
 The build order for turning the prototype into a product. Written to be read
 in five minutes and argued with in ten.
@@ -6,7 +6,7 @@ in five minutes and argued with in ten.
 ## Guiding principles
 
 1. **Ship the differentiator early.** The court-date proposal flow *is*
-   40/Love. It ships in v0.1, not "later."
+   40/LOVE. It ships in v0.1, not "later."
 2. **One city.** Every feature is judged by whether it helps one launch city
    feel alive. Nothing ships for hypothetical scale.
 3. **Every feature serves liquidity, safety, or retention.** If it doesn't,
@@ -91,7 +91,7 @@ Monetization and depth, once retention marks are hit.
 
 Tournaments and brackets · coaching marketplace · equipment affiliate shop ·
 seasonal leagues · corporate/social club packages · international (padel!) ·
-"met on 40/Love" success-story flow.
+"met on 40/LOVE" success-story flow.
 
 ## Success metrics per release
 

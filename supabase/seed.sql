@@ -1,4 +1,4 @@
--- 40/Love — development seed (local/dev only; never run against production)
+-- 40/LOVE — development seed (local/dev only; never run against production)
 -- The 12 demo players from the prototype plus a demo account "Aaron",
 -- pre-seeded matches/threads, and the Indianapolis event calendar.
 
@@ -99,7 +99,7 @@ from m where '00000000-0000-4000-8000-000000000003' in (m.user_a, m.user_b);
 insert into public.events (title, venue, starts_at, sport, level_range, capacity) values
   ('Sunset Doubles Social',      'Riverside Park Tennis Complex', now() + interval '2 days',  'tennis',     'All levels',    24),
   ('Beginner Pickleball Mixer',  'Broad Ripple Park',             now() + interval '3 days',  'pickleball', 'Beginner–Int.', 24),
-  ('40/Love Round Robin',        'Tarkington Park',               now() + interval '4 days',  'tennis',     'NTRP 3.0–4.0',  16),
+  ('40/LOVE Round Robin',        'Tarkington Park',               now() + interval '4 days',  'tennis',     'NTRP 3.0–4.0',  16),
   ('Pickleball Under the Lights','Ellenberger Park',              now() + interval '7 days',  'pickleball', 'All levels',    32),
   ('Cardio Tennis + Coffee',     'Tarkington Park',               now() + interval '10 days', 'tennis',     'Int. and up',   16),
   ('Ladder League Kickoff',      'Indy Pickleball Club',          now() + interval '11 days', 'pickleball', 'DUPR 3.0+',     20);

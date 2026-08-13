@@ -1,14 +1,14 @@
-# 40/Love — Brand & Design Guide
+# 40/LOVE — Brand & Design Guide
 
-The single source of truth for how 40/Love looks, sounds, and feels. Every screen,
+The single source of truth for how 40/LOVE looks, sounds, and feels. Every screen,
 page, and document in this repo derives from this guide.
 
 ## 1. Positioning
 
-**Product:** 40/Love — a dating and social app for people who play racquet sports
+**Product:** 40/LOVE — a dating and social app for people who play racquet sports
 (tennis, pickleball, padel, racquetball, squash).
 
-**One-liner:** 40/Love connects active singles through the racquet sports they
+**One-liner:** 40/LOVE connects active singles through the racquet sports they
 already love, making the first date a game instead of dinner.
 
 **Tagline:** *Love at first serve.*

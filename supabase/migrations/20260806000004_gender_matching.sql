@@ -1,4 +1,4 @@
--- 40/Love — gender identity + dating preference matching
+-- 40/LOVE — gender identity + dating preference matching
 -- Adds who-I-am and who-I'm-looking-to-date to profiles, and makes the
 -- Date-mode deck a MUTUAL filter: you see only people who fit what you're
 -- looking for AND who are looking for someone like you. All pairings are

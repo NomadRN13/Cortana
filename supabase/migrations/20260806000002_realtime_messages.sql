@@ -1,4 +1,4 @@
--- 40/Love — enable realtime delivery for chat
+-- 40/LOVE — enable realtime delivery for chat
 -- postgres_changes subscriptions only fire for tables in the
 -- supabase_realtime publication; without this, the app's live chat channel
 -- subscribes cleanly but never receives an event (QA finding B-07).

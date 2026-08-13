@@ -1,4 +1,4 @@
-# Indianapolis, IN — 40/Love Launch-City Target List
+# Indianapolis, IN — 40/LOVE Launch-City Target List
 
 *Compiled by community-scout · August 2026 · every entry sourced; verify
 contact routes before outreach.*
@@ -20,7 +20,7 @@ active USTA Central Indiana section, and social-first formats already running
    mixer co-host; one yes here unlocks a community, not just a venue.
 2. **Chicken N Pickle (Fishers District)** — indoor/outdoor courts plus a
    restaurant, purpose-built for social events and already running community
-   programming. The ideal 40/Love Social Mixer venue.
+   programming. The ideal 40/LOVE Social Mixer venue.
 3. **USTA Central Indiana's "Tennis on Tap"** — social Red Ball tennis at
    breweries. This is our exact audience being gathered by someone else;
    partner, don't compete.
@@ -90,7 +90,7 @@ later-city sport.
 ## Top 10 first calls
 
 1. **Indy Pickleball Club** — mission-aligned nonprofit; pitch a co-hosted beginner-welcome mixer.
-2. **Chicken N Pickle Fishers** — the purpose-built social venue; pitch a recurring "40/Love night."
+2. **Chicken N Pickle Fishers** — the purpose-built social venue; pitch a recurring "40/LOVE night."
 3. **USTA Central Indiana** — Tennis on Tap partnership; their social players are our exact users. (Published contact: citaleagues@midwest.usta.com)
 4. **Indianapolis Pickleball Club (Industry Dr)** — 24/7 club wants off-peak fill; evening singles round robin.
 5. **The Picklr E 82nd St** — leagues infrastructure; also get on their Avon opening radar for 2026.

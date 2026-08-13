@@ -1,4 +1,4 @@
--- 40/Love — remembered devices
+-- 40/LOVE — remembered devices
 --
 -- Two things members expect and a dating app needs:
 --

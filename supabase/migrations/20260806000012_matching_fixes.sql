@@ -1,4 +1,4 @@
--- 40/Love — matching correctness fixes
+-- 40/LOVE — matching correctness fixes
 --
 -- 1) Nonbinary members were undiscoverable to anyone who narrowed their
 --    Play or Friends preference. Date mode already lets you say you're

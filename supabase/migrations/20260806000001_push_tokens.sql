@@ -1,4 +1,4 @@
--- 40/Love — push notification tokens
+-- 40/LOVE — push notification tokens
 -- One row per device token. The send-push edge function (supabase/functions/
 -- send-push) reads these with the service role when a notifications row is
 -- inserted; clients can only manage their own tokens.

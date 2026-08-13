@@ -1,4 +1,4 @@
--- 40/Love — privacy hardening (release-review findings)
+-- 40/LOVE — privacy hardening (release-review findings)
 -- 1) delete_account now also purges the user's photo objects from storage,
 --    making the privacy policy's hard-delete promise true end to end.
 -- 2) Photo reads are gated: you can always read your own objects; anyone

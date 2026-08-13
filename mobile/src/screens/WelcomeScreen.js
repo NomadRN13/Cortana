@@ -21,7 +21,7 @@ export default function WelcomeScreen({ navigation }) {
         <Text style={[type.eyebrow, { color: colors.optic }]}>Serve. Rally. Connect.</Text>
         <Wordmark size={54} bounce />
         <Text style={styles.line}>
-          Meet Indy's racquet-sports people — the first date is a game, not dinner.
+          Meet the racquet-sports people near you — the first date is a game, not dinner.
         </Text>
         <View style={styles.score}>
           <Text style={styles.scoreText}>40 – LOVE</Text>

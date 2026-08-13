@@ -5,87 +5,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors, radii, gradientFor, initials } from '../theme';
 import { Bouncy } from './motion';
 
-// The "o" in 40/Love is a pickleball. Drawn from Views and gradients rather
-// than an icon font or SVG so it needs no extra dependency, and shaded so it
-// reads as a lit sphere instead of a flat disc: light falls from the upper
-// left, the holes darken at the top and catch a little bounce at the bottom,
-// and a specular blob sits where the light hits.
-// Geometry matches the web wordmark (24-unit circle, holes at r=6.2, ø3.5).
-const HOLES = [[12, 12], [18.2, 12], [15.1, 17.37], [8.9, 17.37], [5.8, 12], [8.9, 6.63], [15.1, 6.63]];
-
-// Same stops as the #pb-body / #pb-hole gradients in the web wordmark.
-const BODY = ['#F4FDB4', '#DCF75F', '#C2E23C', '#7E9A26'];
-const BODY_STOPS = [0, 0.34, 0.68, 1];
-const RIM = ['rgba(255,255,255,.34)', 'rgba(255,255,255,0)', 'rgba(45,56,14,.55)'];
-const RIM_STOPS = [0, 0.26, 1];
-const HOLE = ['#05060A', '#161A0B', '#46551A'];
-const HOLE_STOPS = [0, 0.6, 1];
-const LIT = { x: 0.14, y: 0.04 };
-const SHADE = { x: 0.9, y: 1 };
+// The O in 40/LOVE is a pickleball, rendered from the same source as the
+// website's wordmark (scripts/lib/ball.js → scripts/make-icons.js) so the two
+// can't drift apart. It arrives as an image rather than a stack of Views
+// because the modelling that makes it read as a ball — nineteen holes, each
+// foreshortened into an ellipse because it is drilled into a sphere, each with
+// a lit far wall and a bright chamfer on the near lip — is a lot of layers to
+// rebuild at every size, and would look approximately right at best.
+const BALL = require('../../assets/ball.png');
 
 export function Pickleball({ size = 20 }) {
-  const hole = size * (3.5 / 24);
-  const glossW = size * 0.38;
-  const glossH = size * 0.27;
-  return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden' }}>
-      <LinearGradient
-        colors={BODY}
-        locations={BODY_STOPS}
-        start={LIT}
-        end={SHADE}
-        style={StyleSheet.absoluteFill}
-      />
-      {/* Specular highlight, angled to match the light direction. */}
-      <View
-        style={{
-          position: 'absolute',
-          left: size * 0.15,
-          top: size * 0.17,
-          width: glossW,
-          height: glossH,
-          borderRadius: glossW / 2,
-          overflow: 'hidden',
-          transform: [{ rotate: '-28deg' }],
-        }}
-      >
-        <LinearGradient
-          colors={['rgba(255,255,255,.92)', 'rgba(255,255,255,.28)', 'rgba(255,255,255,0)']}
-          locations={[0, 0.45, 1]}
-          start={{ x: 0.3, y: 0 }}
-          end={{ x: 0.8, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-      </View>
-      {/* Rim light along the lit edge, contact shade along the far one. */}
-      <LinearGradient
-        colors={RIM}
-        locations={RIM_STOPS}
-        start={LIT}
-        end={SHADE}
-        style={StyleSheet.absoluteFill}
-      />
-      {/* Holes last: they are voids punched through the surface, so neither
-          the highlight nor the rim light plays across them. */}
-      {HOLES.map(([cx, cy]) => (
-        <LinearGradient
-          key={`${cx}-${cy}`}
-          colors={HOLE}
-          locations={HOLE_STOPS}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={{
-            position: 'absolute',
-            width: hole,
-            height: hole,
-            borderRadius: hole / 2,
-            left: (cx / 24) * size - hole / 2,
-            top: (cy / 24) * size - hole / 2,
-          }}
-        />
-      ))}
-    </View>
-  );
+  return <Image source={BALL} style={{ width: size, height: size }} resizeMode="contain" />;
 }
 
 export function Wordmark({ size = 24, bounce = false }) {
@@ -94,11 +24,12 @@ export function Wordmark({ size = 24, bounce = false }) {
       <Pickleball size={size * 0.82} />
     </View>
   );
+  const letter = { fontSize: size, fontWeight: '800', color: colors.text, letterSpacing: -0.5 };
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <Text style={{ fontSize: size, fontWeight: '800', color: colors.text, letterSpacing: -0.5 }}>40/L</Text>
+      <Text style={letter}>40/L</Text>
       {bounce ? <Bouncy>{ball}</Bouncy> : ball}
-      <Text style={{ fontSize: size, fontWeight: '800', color: colors.text, letterSpacing: -0.5 }}>ve</Text>
+      <Text style={letter}>VE</Text>
     </View>
   );
 }

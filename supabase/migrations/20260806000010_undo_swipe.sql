@@ -1,4 +1,4 @@
--- 40/Love — rewind (undo last swipe)
+-- 40/LOVE — rewind (undo last swipe)
 -- Takes back the caller's swipe on one person in one mode so the card can
 -- return to their deck. If the swipe had just created a match, the match
 -- dissolves (the other side's like still stands, so re-liking re-matches

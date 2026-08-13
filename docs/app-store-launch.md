@@ -1,6 +1,6 @@
-# 40/Love — App Store & Google Play Launch Guide
+# 40/LOVE — App Store & Google Play Launch Guide
 
-How to get 40/Love onto the Apple App Store and Google Play: accounts,
+How to get 40/LOVE onto the Apple App Store and Google Play: accounts,
 costs, the build-and-submit flow, and — most important — the dating-app
 policy requirements that decide whether you get approved. Written for a
 non-engineer founder; the technical steps assume the Expo app in `mobile/`.
@@ -31,7 +31,7 @@ You can and should do step 1 today. Steps 2–4 are the MVP build.
 | Expo (EAS) | Free tier is enough to start | Instant | Cloud-builds the iOS app without owning a Mac. |
 
 Also needed before submission: a **privacy policy URL** and a **support
-contact** (host both on the 40/Love site — the landing page repo works),
+contact** (host both on the 40/LOVE site — the landing page repo works),
 and a **terms of service**. For a dating app these are checked, not
 optional. Budget a legal review pass.
 
@@ -55,9 +55,9 @@ rejection on the first try — it's normal; fix and resubmit.
 ## 3. Dating-app policy requirements — read this twice
 
 Both stores treat dating as a sensitive category. These are the things
-that get dating apps rejected, and how 40/Love already answers them:
+that get dating apps rejected, and how 40/LOVE already answers them:
 
-| Requirement | Where it's enforced | 40/Love's answer |
+| Requirement | Where it's enforced | 40/LOVE's answer |
 |---|---|---|
 | User-generated-content moderation: block, report, and act on abuse | Apple 1.2 · Play UGC policy | Block/report shipped in the design (prototype + mobile app); moderation queue in the architecture (§6). A human must actually review reports — that's you at first. |
 | Age gating: 18+ only | Both | Birthdate at signup; rating questionnaires set to Mature 17+ (Apple) / Mature (Play). |
@@ -74,7 +74,7 @@ is the native Expo app, not wrapping `app/index.html`.
 
 Both stores need:
 
-- **Name:** 40/Love — Racquet Sports Dating (name ≤30 chars)
+- **Name:** 40/LOVE — Racquet Sports Dating (name ≤30 chars)
 - **Subtitle/short description:** "The first date is a game." / "Meet
   tennis, pickleball & padel players. Date, play, make friends."
 - **Icon:** `mobile/assets/icon.png` (already generated from the brand art)
@@ -119,7 +119,7 @@ The real cost remains the MVP build itself (business plan §10).
 - [ ] Run the demo on your phone with Expo Go (`mobile/README.md`)
 - [ ] Request D-U-N-S number if launching as an LLC
 - [ ] Enroll: Apple Developer + Google Play Console + Expo account
-- [ ] Put a privacy policy + support email on the 40/Love site
+- [ ] Put a privacy policy + support email on the 40/LOVE site
 
 **Before submission (with the backend):**
 - [ ] Real auth, matching, chat; in-app account deletion

@@ -1,4 +1,4 @@
--- 40/Love — doubles team profiles (two people, one profile)
+-- 40/LOVE — doubles team profiles (two people, one profile)
 --
 -- A pair who always play together can share a single profile: both names on
 -- the card, one inbox, one set of preferences. Deliberate limits:

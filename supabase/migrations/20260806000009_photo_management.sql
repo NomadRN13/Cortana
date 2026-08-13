@@ -1,4 +1,4 @@
--- 40/Love — multi-photo management + moderation hardening
+-- 40/LOVE — multi-photo management + moderation hardening
 -- Members manage up to 6 photos (positions 0–5; 0 is the main photo).
 --
 -- 1) SECURITY FIX: photos_write let a member write any moderation_status —

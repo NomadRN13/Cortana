@@ -314,7 +314,7 @@ export function AppStateProvider({ children }) {
           : n.kind === 'message' ? `Your serve — ${name} sent you a message.`
           : n.kind === 'court_time' ? `${name} proposed a court time.`
           : n.kind === 'event_reminder' ? 'An event you joined is coming up.'
-          : 'Update from 40/Love.';
+          : 'Update from 40/LOVE.';
         return { ico: NOTIF_ICONS[n.kind] || 'notifications', txt, sub: fmtWhen(n.sent_at) };
       }));
     } catch (e) { /* keep current state */ }
@@ -1124,7 +1124,7 @@ export function AppStateProvider({ children }) {
     if (shared.length > 1) return `Plays ${shared.slice(0, 2).join(' and ')} like you`;
     if (shared.length) return `Also plays ${shared[0]}`;
     if (p.dist != null && p.dist <= 3) return `Just ${p.dist.toFixed(1)} miles away`;
-    if (p.isNew) return 'New to 40/Love this week';
+    if (p.isNew) return 'New to 40/LOVE this week';
     if (p.verified) return 'Verified player nearby';
     return 'Worth a look';
   };

@@ -1,4 +1,4 @@
-# 40/Love — Mobile App (iOS + Android)
+# 40/LOVE — Mobile App (iOS + Android)
 
 The store-bound React Native app, built with [Expo](https://expo.dev). One
 codebase → both the Apple App Store and Google Play. The design implements

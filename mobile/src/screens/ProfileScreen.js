@@ -137,7 +137,7 @@ export default function ProfileScreen({ navigation }) {
             onChangeText={setBio}
             onBlur={() => app.updateBio(bio.trim())}
             multiline
-            placeholder="Tell players what you're about — favorite Indy courts, playing style, best post-match snack…"
+            placeholder="Tell players what you're about — favorite courts, playing style, best post-match snack…"
             placeholderTextColor="rgba(244,246,240,0.35)"
           />
           <Text style={type.hint}>Saved automatically when you tap away.</Text>

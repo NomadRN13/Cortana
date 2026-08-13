@@ -1,4 +1,4 @@
-# 40/Love — Landing Page
+# 40/LOVE — Landing Page
 
 `index.html` is the complete waitlist site: one self-contained file, no
 build step. It runs in two modes:

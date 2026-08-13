@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 40/Love — assemble the deployable website into site/
+# 40/LOVE — assemble the deployable website into site/
 #   site/index.html        ← landing/index.html   (waitlist page)
 #   site/demo/index.html   ← app/index.html       (clickable prototype)
 #   site/admin/index.html  ← admin/index.html     (moderation desk; safe to

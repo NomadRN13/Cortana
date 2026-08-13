@@ -141,7 +141,7 @@ export default function OnboardingScreen({ navigation, route }) {
       const iso = parseBirthdate(birthdateText);
       const a = iso ? ageFromBirthdate(iso) : null;
       if (!iso) return Alert.alert('Almost there', 'Enter your birthdate as MM/DD/YYYY.');
-      if (a < 18) return Alert.alert('40/Love is 18+', 'You must be 18 or older to join.');
+      if (a < 18) return Alert.alert('40/LOVE is 18+', 'You must be 18 or older to join.');
       if (a > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
       if (!gender) return Alert.alert('Almost there', 'Tell us who you are so matching works.');
       if (!city) return Alert.alert('Almost there', 'Pick the city you play in.');
@@ -150,13 +150,13 @@ export default function OnboardingScreen({ navigation, route }) {
         const piso = parseBirthdate(partnerBirthdateText);
         if (!piso) return Alert.alert('Almost there', 'Enter your partner’s birthdate as MM/DD/YYYY.');
         const pa = ageFromBirthdate(piso);
-        if (pa < 18) return Alert.alert('40/Love is 18+', 'Both people on a team must be 18 or older.');
+        if (pa < 18) return Alert.alert('40/LOVE is 18+', 'Both people on a team must be 18 or older.');
         if (pa > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
         if (!partnerGender) return Alert.alert('Almost there', 'Tell us your partner’s gender so matching works.');
       }
     }
     if (step === 1 && !phoneVerified) {
-      return Alert.alert('Almost there', 'Verify your phone number to continue — it keeps 40/Love real people only.');
+      return Alert.alert('Almost there', 'Verify your phone number to continue — it keeps 40/LOVE real people only.');
     }
     if (step === 2 && !sports.length) return Alert.alert('Almost there', 'Pick at least one sport.');
     if (step === 3 && !skill) return Alert.alert('Almost there', 'Pick your skill level.');
@@ -362,7 +362,7 @@ export default function OnboardingScreen({ navigation, route }) {
               </View>
             )}
             <Text style={type.hint}>
-              A one-time text keeps 40/Love real people only. Your number is never shown to other members and never used for marketing.
+              A one-time text keeps 40/LOVE real people only. Your number is never shown to other members and never used for marketing.
             </Text>
             {!app.isBackendConfigured && (
               <Text style={[type.hint, { color: colors.optic }]}>Demo mode: no text is actually sent — enter any 6-digit code.</Text>

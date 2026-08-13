@@ -1,4 +1,4 @@
-# 40/Love — Store Submission Copy Pack
+# 40/LOVE — Store Submission Copy Pack
 
 Everything the consoles ask for, drafted in the brand voice
 (`docs/brand-guide.md` §7 — one pun per field, controls say what they do) and
@@ -12,7 +12,7 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 
 ### Name (30 char limit)
 
-> **40/Love: Racquet Sports Dating**
+> **40/LOVE: Racquet Sports Dating**
 
 30 characters exactly. (The playbook's em-dash version is 31 — one over.)
 
@@ -33,7 +33,7 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 
 > **Meet on the court, not at a bar.**
 >
-> 40/Love is the dating and social app for people who play racquet sports —
+> 40/LOVE is the dating and social app for people who play racquet sports —
 > tennis, pickleball, padel, racquetball, and squash. Skip the "so, what do
 > you do?" dinner. Your first date has a net in the middle.
 >
@@ -66,7 +66,7 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 > • No ads, no tracking, and we never sell your data
 > • Delete your account any time, right in Settings
 >
-> **City by city.** 40/Love is open in Indianapolis, Los Angeles, San Diego,
+> **City by city.** 40/LOVE is open in Indianapolis, Los Angeles, San Diego,
 > Phoenix, Seattle, Spokane, Dallas, Houston, Orlando, Miami, and
 > Washington, DC — and you're matched with players in your own city, because
 > a dating app is only as good as who's actually near you.
@@ -77,7 +77,7 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 
 > `pickleball,tennis,padel,squash,racquetball,hitting,partner,singles,court,doubles,social,meet`
 
-93 characters. Dropped the city name now that 40/Love spans 11 metros —
+93 characters. Dropped the city name now that 40/LOVE spans 11 metros —
 per-city keywords belong in localized listings, not the base one. Deliberately excludes words Apple already indexes from the
 name/subtitle (racquet, sports, dating, date, game).
 
@@ -157,7 +157,7 @@ installed), advertising data.
 
 ### Title (30 char limit)
 
-> **40/Love: Racquet Sports Dating**
+> **40/LOVE: Racquet Sports Dating**
 
 ### Short description (80 char limit)
 
@@ -169,7 +169,7 @@ installed), advertising data.
 
 > MEET ON THE COURT, NOT AT A BAR.
 >
-> 40/Love is the dating and social app for people who play racquet sports —
+> 40/LOVE is the dating and social app for people who play racquet sports —
 > tennis, pickleball, padel, racquetball, and squash. Skip the "so, what do
 > you do?" dinner. Your first date has a net in the middle.
 >
@@ -204,7 +204,7 @@ installed), advertising data.
 >
 > INDIANAPOLIS FIRST
 >
-> We're building 40/Love city by city so there are real players on the other
+> We're building 40/LOVE city by city so there are real players on the other
 > side of every match — and Indy serves first.
 >
 > Questions? hello@40love.app
@@ -275,12 +275,12 @@ Per data type (Collected / Shared / Purpose / Optional):
 Paste into App Review notes (Apple) and the Play Console "App access" +
 review notes fields. Same substance for both.
 
-> **About 40/Love:** a dating and social app for racquet sports players
+> **About 40/LOVE:** a dating and social app for racquet sports players
 > (tennis, pickleball, padel, racquetball, squash). 18+ only, enforced at
 > signup by birthdate.
 >
 > **City-by-city launch:** community quality in a dating app depends on
-> local density, so 40/Love operates city by city. It is currently open in
+> local density, so 40/LOVE operates city by city. It is currently open in
 > 11 US metros: Indianapolis, Los Angeles, San Diego, Phoenix, Seattle,
 > Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC. Members
 > choose their city at signup (pre-selected from an approximate location)
@@ -293,7 +293,7 @@ review notes fields. Same substance for both.
 > **Review account:** [FILL IN — email + fixed one-time code, once the
 > review account is seeded]
 >
-> **Sign-in note:** 40/Love offers three ways in, all passwordless: an
+> **Sign-in note:** 40/LOVE offers three ways in, all passwordless: an
 > emailed one-time code, Sign in with Apple, and Continue with Google.
 > Sign in with Apple is offered wherever Google is, per Guideline 4.8. So that you don't need access to a live inbox, the review
 > account above accepts the fixed code listed with the credentials at the
@@ -333,7 +333,7 @@ review notes fields. Same substance for both.
 
 For both stores' "What's new" field:
 
-> Our first serve. 40/Love v0.1 brings:
+> Our first serve. 40/LOVE v0.1 brings:
 >
 > • Three modes — Date, Play, and Friends
 > • Matching by sport, skill (NTRP / DUPR), and distance

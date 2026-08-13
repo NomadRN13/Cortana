@@ -19,11 +19,11 @@ Subject: Beginner-welcome mixer with Indy Pickleball Club
 
 > Hi Indy Pickleball Club team,
 >
-> I'm launching 40/Love in Indianapolis — a social and dating app for
+> I'm launching 40/LOVE in Indianapolis — a social and dating app for
 > pickleball and tennis players. Your mission of growing pickleball in Central
 > Indiana is exactly why you're my first call.
 >
-> We co-host 40/Love Social Mixers: beginner-welcome round robins engineered
+> We co-host 40/LOVE Social Mixers: beginner-welcome round robins engineered
 > for meeting people, not just winning games. We bring the players — including
 > folks brand new to the sport — handle signups, and run the whole evening. It
 > costs the club nothing, and every newcomer we bring is a future member and
@@ -33,7 +33,7 @@ Subject: Beginner-welcome mixer with Indy Pickleball Club
 > locations this fall? Your courts, our crowd, and a few dozen new people
 > falling for pickleball.
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 **Follow-up (~5 days later)**
@@ -46,7 +46,7 @@ Subject: Following up: beginner-welcome mixer
 > quick yes is too much right now, I'm happy with 15 minutes by phone instead.
 > Thanks for everything you do for pickleball in Central Indiana.
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 ---
@@ -59,16 +59,16 @@ Subject: Following up: beginner-welcome mixer
 
 **Primary message**
 
-Subject: A recurring 40/Love night in Fishers
+Subject: A recurring 40/LOVE night in Fishers
 
 > Hi Chicken N Pickle Fishers events team,
 >
-> I'm launching 40/Love in Indianapolis — a dating and social app for racquet
+> I'm launching 40/LOVE in Indianapolis — a dating and social app for racquet
 > sports players. Since opening in Fishers District in late 2024, you've built
 > the best social-pickleball venue in the metro: courts and a great meal in the
 > same building, which is exactly how our members want to meet.
 >
-> The pitch: a recurring weeknight 40/Love Social Mixer — a round robin
+> The pitch: a recurring weeknight 40/LOVE Social Mixer — a round robin
 > engineered for meeting people. We bring the crowd from our Indy waitlist,
 > promote it, and run the event end to end; you host it during a quieter
 > weeknight block, and everyone stays for food and drinks after. No cost to
@@ -76,19 +76,19 @@ Subject: A recurring 40/Love night in Fishers
 >
 > Could we grab 15 minutes with your events team in the next week or two?
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 **Follow-up (~5 days later)**
 
-Subject: Re: A recurring 40/Love night in Fishers
+Subject: Re: A recurring 40/LOVE night in Fishers
 
 > Hi again — following up in case this landed during a busy events week. Short
 > version: a weeknight round robin built for meeting people, fully staffed and
 > promoted by us, hosted on your courts, with the after-party already built
 > into your building. Still just asking for 15 minutes with the events team.
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 ---
@@ -108,12 +108,12 @@ Subject: Tennis on Tap partnership idea
 
 > Hi CITA team,
 >
-> I'm launching 40/Love in Indianapolis — a dating and social app for racquet
+> I'm launching 40/LOVE in Indianapolis — a dating and social app for racquet
 > sports players. Tennis on Tap is the smartest social-tennis format in the
 > city: Red Ball at a brewery takes all the pressure out of picking up a
 > racquet, and that is exactly the crowd we serve.
 >
-> I'd rather rally with you than compete. We co-host 40/Love Social Mixers —
+> I'd rather rally with you than compete. We co-host 40/LOVE Social Mixers —
 > round robins engineered for meeting people, run entirely by us at no cost to
 > partners — and I'd love to promote Tennis on Tap dates to our Indy members
 > while pointing our tennis players toward your adult and flex leagues.
@@ -121,7 +121,7 @@ Subject: Tennis on Tap partnership idea
 > Could we find 15 minutes for a call in the next week or two to see if a
 > cross-promotion makes sense?
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 **Follow-up (~5 days later)**
@@ -134,7 +134,7 @@ Subject: Re: Tennis on Tap partnership idea
 > together. 15 minutes by phone whenever suits — happy to work around your
 > schedule.
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 ---
@@ -150,12 +150,12 @@ Subject: Filling your off-peak evening courts
 
 > Hi Indianapolis Pickleball Club team,
 >
-> I'm launching 40/Love in Indianapolis — a dating and social app for racquet
+> I'm launching 40/LOVE in Indianapolis — a dating and social app for racquet
 > sports players. With ten indoor courts open 24/7 at Industry Dr, you have
 > hours every week when courts sit quiet — that's the exact gap our events
 > fill.
 >
-> We run 40/Love Social Mixers: evening round robins engineered for meeting
+> We run 40/LOVE Social Mixers: evening round robins engineered for meeting
 > people. It's a singles night in both senses — a young-professional crowd
 > that books through your CourtReserve, pays your normal court rates, and gets
 > a first look at the players' lounge. We bring the people, promote the night,
@@ -164,7 +164,7 @@ Subject: Filling your off-peak evening courts
 >
 > Would you say yes to hosting one evening mixer to see how it fills?
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 **Follow-up (~5 days later)**
@@ -177,7 +177,7 @@ Subject: Re: Filling your off-peak evening courts
 > you've lost nothing. Happy to jump on a 15-minute call if that's easier than
 > a yes by email.
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 ---
@@ -194,12 +194,12 @@ Subject: Social round robins for E 82nd St
 
 > Hi [club manager name],
 >
-> I'm launching 40/Love in Indianapolis — a dating and social app for racquet
+> I'm launching 40/LOVE in Indianapolis — a dating and social app for racquet
 > sports players. Your E 82nd St club already has the infrastructure — ten
 > courts, leagues, tournaments, open play — and we'd like to add the one
 > format you're not running: a round robin engineered for meeting people.
 >
-> A 40/Love Social Mixer is simple on your side: we bring the players from our
+> A 40/LOVE Social Mixer is simple on your side: we bring the players from our
 > Indy waitlist, promote the night, and run the event; you host it in an
 > off-peak block. No cost, and the funnel runs both ways — our members
 > discover The Picklr, your members discover us. And as the Avon club comes
@@ -208,7 +208,7 @@ Subject: Social round robins for E 82nd St
 >
 > Could we grab 15 minutes by phone this week?
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 **Follow-up (~5 days later)**
@@ -220,7 +220,7 @@ Subject: Re: Social round robins for E 82nd St
 > off-peak evening, our players, our staffing, your courts — plus a head start
 > on programming ideas for Avon. Still just asking for 15 minutes by phone.
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 ---
@@ -237,7 +237,7 @@ Subject: A social night for Live Ball players
 
 > Hi IRC team,
 >
-> I'm launching 40/Love in Indianapolis — a dating and social app for racquet
+> I'm launching 40/LOVE in Indianapolis — a dating and social app for racquet
 > sports players. (Yes, the name is a tennis pun; it's the whole brand.) Your
 > Live Ball classes are already the most social tennis in the city — fast,
 > rotating, fun — which makes IRC the natural home for what we run.
@@ -250,7 +250,7 @@ Subject: A social night for Live Ball players
 >
 > Would you co-host one evening this fall to try it?
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 **Follow-up (~5 days later)**
@@ -262,7 +262,7 @@ Subject: Re: A social night for Live Ball players
 > provide an off-peak block, and your team gets to size up the format
 > firsthand. If a call is easier than a yes, 15 minutes anytime works.
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 ---
@@ -278,20 +278,20 @@ Subject: Advice from the west side's connectors
 
 > Hi West Indy Racquet Club team,
 >
-> I'm launching 40/Love in Indianapolis — a dating and social app for racquet
+> I'm launching 40/LOVE in Indianapolis — a dating and social app for racquet
 > sports players — and your club keeps coming up in my research: not just the
 > six indoor and six outdoor courts, but your staff's reputation for actually
 > connecting players to teams and organized play.
 >
 > That's exactly what we do, so I'd love your advice before anything else. We
-> co-host 40/Love Social Mixers — round robins engineered for meeting people;
+> co-host 40/LOVE Social Mixers — round robins engineered for meeting people;
 > we bring the players and run the event at no cost to the venue.
 >
 > Could I get 15 minutes by phone? I want to hear who in Indy tennis I should
 > be talking to — and if a winter mixer on your indoor courts makes sense,
 > all the better.
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 **Follow-up (~5 days later)**
@@ -303,7 +303,7 @@ Subject: Re: Advice from the west side's connectors
 > play, and by every account that's your staff. One call — I'll come with
 > specific questions and leave with homework.
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 ---
@@ -320,7 +320,7 @@ Subject: Permit process for recurring small court events
 
 > Hello,
 >
-> I'm organizing 40/Love Social Mixers — organized social round robins for
+> I'm organizing 40/LOVE Social Mixers — organized social round robins for
 > tennis and pickleball players in Indianapolis, typically 20–40 people for
 > about two hours on existing courts. I'd like to run these properly under
 > Indy Parks' permitting rules and hope you can point me in the right
@@ -336,7 +336,7 @@ Subject: Permit process for recurring small court events
 > time works for your office.
 >
 > Thank you,
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 **Follow-up (~5 days later)**
@@ -348,7 +348,7 @@ Subject: Re: Permit process for recurring small court events
 > Tarkington. If there's a better office or contact for this kind of request,
 > I'd be grateful for a pointer. Thank you!
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 ---
@@ -364,12 +364,12 @@ Subject: A beginner-friendly pickleball social at JCC
 
 > Hi JCC programs team,
 >
-> I'm launching 40/Love in Indianapolis — a social and dating app for racquet
+> I'm launching 40/LOVE in Indianapolis — a social and dating app for racquet
 > sports players — and the JCC's approach to pickleball caught my eye: open
 > play for every level, ages 11 and up, inside a real community. That
 > all-levels welcome is the spirit of our events too.
 >
-> We run 40/Love Social Mixers: low-pressure, beginner-welcome round robins
+> We run 40/LOVE Social Mixers: low-pressure, beginner-welcome round robins
 > engineered for meeting people. For an adult social at the JCC, we'd bring
 > new players from our Indy community, handle signups and hosting, and run the
 > evening alongside your staff — at no cost to the center, with every attendee
@@ -378,7 +378,7 @@ Subject: A beginner-friendly pickleball social at JCC
 > Could we set up a 15-minute call with your programs desk to see whether one
 > adult mixer fits your calendar?
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 **Follow-up (~5 days later)**
@@ -390,7 +390,7 @@ Subject: Re: A beginner-friendly pickleball social at JCC
 > and newcomers meet the center at its best. Still just asking for 15 minutes
 > with the programs desk whenever it suits.
 >
-> [Your name] — Founder, 40/Love
+> [Your name] — Founder, 40/LOVE
 > [your phone/email]
 
 ---
@@ -404,25 +404,25 @@ Subject: Re: A beginner-friendly pickleball social at JCC
 
 **Primary DM — Indy Pickleball Group (Facebook) admins**
 
-> Hi! I'm [Your name], founder of 40/Love — a social and dating app for
+> Hi! I'm [Your name], founder of 40/LOVE — a social and dating app for
 > pickleball and tennis players getting started here in Indy. Before I ever
 > post anything in Indy Pickleball Group, I wanted to ask you directly: is
 > there a way for us to show up that's actually useful to members — like
 > co-hosting a free community mixer — and what are your rules for anything
 > app-related? Whatever you advise, we'll follow it.
 >
-> — [Your name], Founder, 40/Love · [your phone/email]
+> — [Your name], Founder, 40/LOVE · [your phone/email]
 
 **Primary DM — Indianapolis Pickleball Club Meetup organizers**
 
-> Hi! I'm [Your name], founder of 40/Love — a social and dating app for
+> Hi! I'm [Your name], founder of 40/LOVE — a social and dating app for
 > pickleball and tennis players launching in Indy. I've seen how active your
 > community is across Meetup, Instagram, and TeamReach, and before posting
 > anything I wanted to ask the organizers first: how could we contribute
 > usefully — maybe a free co-hosted mixer for the group — and what ground
 > rules should we respect? Your call entirely.
 >
-> — [Your name], Founder, 40/Love · [your phone/email]
+> — [Your name], Founder, 40/LOVE · [your phone/email]
 
 **Follow-up DM (~5 days later, works for both)**
 
@@ -431,4 +431,4 @@ Subject: Re: A beginner-friendly pickleball social at JCC
 > and we won't post anything until we hear how you'd like us to show up.
 > Thanks for keeping the community running!
 >
-> — [Your name], Founder, 40/Love
+> — [Your name], Founder, 40/LOVE

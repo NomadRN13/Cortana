@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 40/Love — connect the apps to your Supabase project.
+# 40/LOVE — connect the apps to your Supabase project.
 #
 # Run this AFTER creating the project and applying the database
 # (scripts/setup-supabase.sh, or pasting supabase/setup.sql in the SQL editor).

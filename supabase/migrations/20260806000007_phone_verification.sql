@@ -1,4 +1,4 @@
--- 40/Love — phone (SMS) verification
+-- 40/LOVE — phone (SMS) verification
 -- Sign-in stays email-OTP; onboarding additionally verifies a phone number
 -- by text. The number lives in auth.users (attached via Supabase phone-change
 -- OTP, so the SMS round-trip is handled by auth itself); profiles carries

@@ -1,4 +1,4 @@
-// The cities 40/Love is open in. Mirrors public.cities in
+// The cities 40/LOVE is open in. Mirrors public.cities in
 // supabase/migrations/20260806000014_cities.sql — keep the two in step; the
 // database is the authority and its foreign key will reject anything here
 // that doesn't exist there.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 40/Love — one-shot Supabase provisioning.
+# 40/LOVE — one-shot Supabase provisioning.
 # Run from the repo root ON YOUR OWN COMPUTER after:
 #   1) creating a project at https://supabase.com (free tier)
 #   2) npm install -g supabase
