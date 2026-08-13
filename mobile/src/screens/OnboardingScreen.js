@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,6 +7,7 @@ import { colors, type } from '../theme';
 import { Btn, Chip, Avatar } from '../components/ui';
 import { useApp, ageFromBirthdate } from '../state';
 import { SPORTS, SKILLS } from '../data/seed';
+import { CITIES, DEFAULT_CITY } from '../data/cities';
 
 // "MM/DD/YYYY" → "YYYY-MM-DD", or null if not a real calendar date
 function parseBirthdate(text) {
@@ -79,6 +80,21 @@ export default function OnboardingScreen({ navigation, route }) {
   const [partnerName, setPartnerName] = useState('');
   const [partnerBirthdateText, setPartnerBirthdateText] = useState('');
   const [partnerGender, setPartnerGender] = useState(null);
+  const [city, setCity] = useState(null);       // null until we've looked
+  const [cityDetected, setCityDetected] = useState(false);
+
+  // Ask location once, up front, purely to preselect their city. If we're
+  // not open where they are, nothing is chosen and they pick from the list.
+  useEffect(() => {
+    let alive = true;
+    app.detectCity().then((slug) => {
+      if (!alive) return;
+      if (slug) setCity(slug);
+      setCityDetected(true);
+    });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pickPhoto = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -128,6 +144,7 @@ export default function OnboardingScreen({ navigation, route }) {
       if (a < 18) return Alert.alert('40/Love is 18+', 'You must be 18 or older to join.');
       if (a > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
       if (!gender) return Alert.alert('Almost there', 'Tell us who you are so matching works.');
+      if (!city) return Alert.alert('Almost there', 'Pick the city you play in.');
       if (isTeam) {
         if (!partnerName.trim()) return Alert.alert('Almost there', 'Add your partner’s first name.');
         const piso = parseBirthdate(partnerBirthdateText);
@@ -167,6 +184,7 @@ export default function OnboardingScreen({ navigation, route }) {
         friendsPref,
         phone: phoneE164,
         phoneVerified,
+        city: city || DEFAULT_CITY,
         isTeam,
         partnerName: isTeam ? partnerName.trim() : '',
         partnerBirthdate: isTeam ? parseBirthdate(partnerBirthdateText) : null,
@@ -237,6 +255,24 @@ export default function OnboardingScreen({ navigation, route }) {
                 </Pressable>
               </View>
             </Field>
+            <Field label="Where do you play?">
+              <View style={styles.chips}>
+                {CITIES.map((c) => (
+                  <Chip key={c.slug} label={`${c.name}, ${c.state}`} active={city === c.slug} onPress={() => setCity(c.slug)} />
+                ))}
+              </View>
+              {cityDetected && !city && (
+                <Text style={[type.hint, { marginTop: 8 }]}>
+                  We're not open where you are yet — pick the closest city you'd travel to, or join the waitlist at 40love.app and we'll tell you when yours opens.
+                </Text>
+              )}
+              {cityDetected && !!city && (
+                <Text style={[type.hint, { marginTop: 8 }]}>
+                  You'll meet players in this city. You can change it any time in Settings.
+                </Text>
+              )}
+            </Field>
+
             <Field label="Playing as a pair?">
               <Pressable
                 onPress={() => {

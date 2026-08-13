@@ -802,6 +802,11 @@
           </div>
         </div>
         <div>
+          <label>Where do you play?</label>
+          <div class="chips" id="ob-city" data-single role="group" aria-label="Your city"></div>
+          <p class="hint" style="margin-top:8px">You'll meet players in this city. You can change it any time in Settings.</p>
+        </div>
+        <div>
           <label>Playing as a pair?</label>
           <div class="mode-rows">
             <button class="mode-row" id="ob-team" aria-pressed="false" type="button">
@@ -1166,6 +1171,15 @@
           </div>
         </div>
         <div class="set-group">
+          <h3>City</h3>
+          <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div>
+              <div class="chips" id="set-city"></div>
+              <p class="hint" style="margin-top:8px">You match with players in your city. Moving, or splitting time between two? Switch any time — your matches and messages come with you.</p>
+            </div>
+          </div>
+        </div>
+        <div class="set-group">
           <h3>Friends</h3>
           <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
             <div>
@@ -1213,7 +1227,7 @@
           </div>
         </div>
         <button class="danger" id="sign-out">Sign out</button>
-        <p class="hint" style="text-align:center; margin-top:12px;">40/Love prototype · Indianapolis · not a real account</p>
+        <p class="hint" style="text-align:center; margin-top:12px;" id="settings-footer">40/Love prototype · not a real account</p>
       </div>
     </section>
 
@@ -1571,6 +1585,27 @@
     reader.readAsDataURL(file);
     $('#photo-input').value = ''; // same file can be picked again
   });
+  /* Cities 40/Love is open in — mirrors public.cities in the migration. */
+  var CITIES = [
+    { slug: 'indianapolis',  name: 'Indianapolis', state: 'IN' },
+    { slug: 'los-angeles',   name: 'Los Angeles',  state: 'CA' },
+    { slug: 'san-diego',     name: 'San Diego',    state: 'CA' },
+    { slug: 'phoenix',       name: 'Phoenix',      state: 'AZ' },
+    { slug: 'seattle',       name: 'Seattle',      state: 'WA' },
+    { slug: 'spokane',       name: 'Spokane',      state: 'WA' },
+    { slug: 'dallas',        name: 'Dallas',       state: 'TX' },
+    { slug: 'houston',       name: 'Houston',      state: 'TX' },
+    { slug: 'orlando',       name: 'Orlando',      state: 'FL' },
+    { slug: 'miami',         name: 'Miami',        state: 'FL' },
+    { slug: 'washington-dc', name: 'Washington',   state: 'DC' }
+  ];
+  var DEFAULT_CITY = 'indianapolis';
+  function cityLabel(slug) {
+    for (var ci = 0; ci < CITIES.length; ci++) {
+      if (CITIES[ci].slug === slug) return CITIES[ci].name + ', ' + CITIES[ci].state;
+    }
+    return '';
+  }
   var PHOTO_SLOTS = 6; // one main photo plus five more
   // A member's photo list: photos[] when present, else the single legacy photo.
   function photoList(u) {
@@ -1599,6 +1634,11 @@
 
   singleSelect($('#ob-gender'));
   singleSelect($('#ob-partner-gender'));
+  $('#ob-city').innerHTML = CITIES.map(function (c, i) {
+    return '<button class="chip" aria-pressed="' + (c.slug === DEFAULT_CITY ? 'true' : 'false') +
+      '" data-city="' + c.slug + '">' + esc(c.name + ', ' + c.state) + '</button>';
+  }).join('');
+  singleSelect($('#ob-city'));
   $('#ob-team').addEventListener('click', function () {
     var on = $('#ob-team').getAttribute('aria-pressed') !== 'true';
     $('#ob-team').setAttribute('aria-pressed', String(on));
@@ -1611,6 +1651,8 @@
     if (!name) { toast('Add your first name to continue'); return; }
     if (!age || age < 18 || age > 99) { toast('Enter an age between 18 and 99'); return; }
     if (!genderSel) { toast('Tell us who you are so matching works'); return; }
+    var citySel = $('#ob-city .chip[aria-pressed="true"]');
+    if (!citySel) { toast('Pick the city you play in'); return; }
     var isTeam = $('#ob-team').getAttribute('aria-pressed') === 'true';
     var pName = '', pAge = null, pGender = null;
     if (isTeam) {
@@ -1624,7 +1666,8 @@
     }
     state.draft = { name: name, age: age, gender: genderSel.getAttribute('data-gender'), photo: draftPhoto,
       phone: phoneOk ? phoneE164 : null, phoneVerified: phoneOk,
-      isTeam: isTeam, partnerName: pName, partnerAge: pAge, partnerGender: pGender };
+      isTeam: isTeam, partnerName: pName, partnerAge: pAge, partnerGender: pGender,
+      city: citySel.getAttribute('data-city') };
     // A shared profile is never a dating profile — take Date off the table.
     var dateRow = $('#ob-modes .mode-row[data-mode="date"]');
     dateRow.hidden = isTeam;
@@ -2559,7 +2602,22 @@
     $all('#set-friendspref .chip').forEach(function (c) {
       c.setAttribute('aria-pressed', String(c.getAttribute('data-pref') === fpref));
     });
+    var curCity = (state.user && state.user.city) || DEFAULT_CITY;
+    $('#set-city').innerHTML = CITIES.map(function (c) {
+      return '<button class="chip" aria-pressed="' + (c.slug === curCity ? 'true' : 'false') +
+        '" data-city="' + c.slug + '">' + esc(c.name + ', ' + c.state) + '</button>';
+    }).join('');
+    $('#settings-footer').textContent = '40/Love prototype · ' + cityLabel(curCity) + ' · not a real account';
   }
+  $('#set-city').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    $all('#set-city .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+    state.user.city = btn.getAttribute('data-city');
+    saveUser();
+    $('#settings-footer').textContent = '40/Love prototype · ' + cityLabel(state.user.city) + ' · not a real account';
+    toast('Now playing in ' + cityLabel(state.user.city));
+  });
 
   $('#set-playgames').addEventListener('click', function (ev) {
     var btn = ev.target.closest('.chip');

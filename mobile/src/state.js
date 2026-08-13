@@ -11,6 +11,7 @@ import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS, EVENTS } from './data
 import { supabase, isBackendConfigured } from './lib/supabase';
 import * as api from './api/backend';
 import * as social from './lib/socialAuth';
+import { CITIES, DEFAULT_CITY, cityBySlug, cityLabel, nearestCity } from './data/cities';
 import { registerForPush } from './lib/push';
 import { getCoarseLocation } from './lib/location';
 
@@ -241,7 +242,7 @@ export function AppStateProvider({ children }) {
 
   const refreshEvents = async () => {
     try {
-      const rows = await api.listEvents();
+      const rows = await api.listEvents((user && user.city) || DEFAULT_CITY);
       const week = (ts) => {
         const days = (new Date(ts) - new Date()) / 86400000;
         return days <= 7 ? 'This week' : days <= 14 ? 'Next week' : 'Coming up';
@@ -451,6 +452,31 @@ export function AppStateProvider({ children }) {
     }
   };
 
+  // Where a member plays. Auto-suggested from coarse location at signup,
+  // changeable in Settings (people move, and plenty of players split time
+  // between two cities).
+  const updateCity = (citySlug) => {
+    if (!cityBySlug(citySlug) || !user) return;
+    saveUser({ ...user, city: citySlug });
+    if (live) {
+      api.updateMyProfile({ city: citySlug }).catch(() => {});
+      if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
+      prefsTimerRef.current = setTimeout(() => { refreshDeck(mode); refreshEvents(); }, 700);
+    }
+  };
+
+  // Best guess at the member's city from their coarse location; null when
+  // we're not open where they are, so the app can say so instead of
+  // dropping them into a city they've never been to.
+  const detectCity = async () => {
+    try {
+      const loc = await getCoarseLocation();
+      return loc ? nearestCity(loc.lat, loc.lng) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
   const updateTeam = (team) => {
     if (!user) return;
     const next = {
@@ -591,6 +617,7 @@ export function AppStateProvider({ children }) {
       playPref: remote.play_pref || 'everyone',
       friendsPref: remote.friends_pref || 'everyone',
       phoneVerified: !!remote.phone_verified_at,
+      city: remote.city || DEFAULT_CITY,
       isTeam: !!remote.is_team,
       partnerName: remote.partner_name || '',
       partnerBirthdate: remote.partner_birthdate || null,
@@ -642,6 +669,7 @@ export function AppStateProvider({ children }) {
         ageMin: prefs.ageMin,
         ageMax: prefs.ageMax,
         sameSportsOnly: prefs.mySportsOnly,
+        city: draft.city || DEFAULT_CITY,
         approxLat: loc ? loc.lat : null,
         approxLng: loc ? loc.lng : null,
         gender: draft.gender,
@@ -1066,6 +1094,7 @@ export function AppStateProvider({ children }) {
     updateBio, updatePhoto, updatePrefs, updateModes, updateDating, updatePlay, updateFriendsPref, updateTeam,
     photos, addPhoto, removePhoto, makePrimary,
     topPicks,
+    cities: CITIES, cityLabel, updateCity, detectCity,
     mode, setMode,
     currentProfile, advance, rewind, deckError, peekNext, resetDeck,
     retryDeck: () => refreshDeck(mode),

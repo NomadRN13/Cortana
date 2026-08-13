@@ -161,6 +161,35 @@ fingerprints there.
   The app captures it and prefills onboarding; there's no way to ask Apple
   again later.
 
+## Opening a city
+
+40/Love is open in 11 metros: Indianapolis, Los Angeles, San Diego, Phoenix,
+Seattle, Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC.
+Members pick their city at signup (pre-selected from their approximate
+location) and only ever match with players in it — a dating app is only as
+good as who's actually nearby.
+
+The city list lives in the `cities` table. To open another one, add a row
+(Dashboard → SQL Editor):
+
+```sql
+insert into cities (slug, name, state, lat, lng, metro_radius_mi, launched, sort_order)
+values ('austin', 'Austin', 'TX', 30.267, -97.743, 40, true, 120);
+```
+
+Then add the same entry to `mobile/src/data/cities.js` and the city lists in
+`app/index.html`, `admin/index.html`, and `landing/index.html`, and ship an
+app update. The database is the authority — its foreign key rejects any city
+the app invents.
+
+**A word of caution about opening eleven at once.** Density, not coverage, is
+what makes a dating app work: 200 players in one city beats 2,000 spread
+across eleven, because everyone in the thin cities opens the app, sees three
+people, and leaves. The code supports every city equally; the community
+doesn't build itself. Consider putting real recruiting effort behind two or
+three at a time — the mixer playbook in `outreach/` is written for exactly
+that — and letting the rest fill in from the waitlist.
+
 ## The moderation desk (/admin) — make yourself an admin (one-time, ~5 minutes)
 
 The site ships with a moderation page at `/admin` (also in the repo at

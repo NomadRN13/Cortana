@@ -24,11 +24,10 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 
 ### Promotional text (170 char limit — editable without review)
 
-> We're live in Indianapolis. Meet tennis, pickleball, and padel players
-> who'd rather rally than sit through another coffee date. Love at first
-> serve.
+> Now live in 11 cities. Meet tennis, pickleball, and padel players who'd
+> rather rally than sit through another coffee date. Love at first serve.
 
-148 characters.
+142 characters.
 
 ### Full description
 
@@ -67,16 +66,19 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 > • No ads, no tracking, and we never sell your data
 > • Delete your account any time, right in Settings
 >
-> **Indianapolis first.** We're building 40/Love city by city so there are
-> real players on the other side of every match — and Indy serves first.
+> **City by city.** 40/Love is open in Indianapolis, Los Angeles, San Diego,
+> Phoenix, Seattle, Spokane, Dallas, Houston, Orlando, Miami, and
+> Washington, DC — and you're matched with players in your own city, because
+> a dating app is only as good as who's actually near you.
 >
 > Questions? hello@40love.app
 
 ### Keywords (100 char limit, comma-separated, no spaces)
 
-> `pickleball,tennis,padel,squash,racquetball,hitting,partner,singles,court,indianapolis,social,meet`
+> `pickleball,tennis,padel,squash,racquetball,hitting,partner,singles,court,doubles,social,meet`
 
-97 characters. Deliberately excludes words Apple already indexes from the
+93 characters. Dropped the city name now that 40/Love spans 11 metros —
+per-city keywords belong in localized listings, not the base one. Deliberately excludes words Apple already indexes from the
 name/subtitle (racquet, sports, dating, date, game).
 
 ### Categories
@@ -277,12 +279,15 @@ review notes fields. Same substance for both.
 > signup by birthdate.
 >
 > **City-by-city launch:** community quality in a dating app depends on
-> local density, so 40/Love launches one city at a time, starting with
-> Indianapolis, USA. The store listing is US-only; inside the app, the
-> community, events, and seeded profiles are Indianapolis-based. The review
+> local density, so 40/Love operates city by city. It is currently open in
+> 11 US metros: Indianapolis, Los Angeles, San Diego, Phoenix, Seattle,
+> Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC. Members
+> choose their city at signup (pre-selected from an approximate location)
+> and are matched only within it. The store listing is US-only. The review
 > account below is set to Indianapolis and has multiple profiles in range,
 > so every feature (discovery, matching, chat, court-time proposals, events)
-> is fully exercisable from anywhere.
+> is fully exercisable from anywhere — switch cities in Settings to see the
+> scoping work.
 >
 > **Review account:** [FILL IN — email + fixed one-time code, once the
 > review account is seeded]
@@ -335,7 +340,7 @@ For both stores' "What's new" field:
 > • Local events and RSVPs
 > • Block, report, and full account deletion in Settings
 >
-> Indianapolis first. See you on the court.
+> Open in 11 cities. See you on the court.
 
 ---
 

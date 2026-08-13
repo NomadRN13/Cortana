@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
 import { Chip } from '../components/ui';
 import { useApp } from '../state';
+import { CITIES, DEFAULT_CITY } from '../data/cities';
 import { isBackendConfigured } from '../lib/supabase';
 import * as api from '../api/backend';
 
@@ -208,6 +209,24 @@ export default function SettingsScreen({ navigation }) {
           </View>
         </Group>
 
+        <Group title="City">
+          <View style={styles.datingBox}>
+            <View style={styles.chipRow}>
+              {CITIES.map((c) => (
+                <Chip
+                  key={c.slug}
+                  label={`${c.name}, ${c.state}`}
+                  active={((u && u.city) || DEFAULT_CITY) === c.slug}
+                  onPress={() => app.updateCity(c.slug)}
+                />
+              ))}
+            </View>
+            <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
+              You match with players in your city. Moving, or splitting time between two? Switch any time — your matches and messages come with you.
+            </Text>
+          </View>
+        </Group>
+
         <Group title="Doubles team">
           <View style={styles.datingBox}>
             <Row label="We're a doubles team" sub="Two of you, one profile">
@@ -286,7 +305,7 @@ export default function SettingsScreen({ navigation }) {
           <Text style={{ color: colors.dim, fontWeight: '700', fontSize: 13 }}>Delete my account</Text>
         </Pressable>
         <Text style={[type.hint, { textAlign: 'center' }]}>
-          {app.live ? '40/Love · Indianapolis · beta' : '40/Love · Indianapolis · demo build — not a real account'}
+          {`40/Love · ${app.cityLabel((u && u.city) || DEFAULT_CITY)} · ${app.live ? 'beta' : 'demo build — not a real account'}`}
         </Text>
       </ScrollView>
     </SafeAreaView>

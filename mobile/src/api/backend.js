@@ -82,7 +82,7 @@ export async function updateMyProfile(fields) {
   if (error) throw error;
 }
 
-export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, approxLng, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly, gender, seeking, playGames, playPref, friendsPref, isTeam, partnerName, partnerBirthdate, partnerGender }) {
+export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, approxLng, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly, city, gender, seeking, playGames, playPref, friendsPref, isTeam, partnerName, partnerBirthdate, partnerGender }) {
   const { data: { user } } = await supabase.auth.getUser();
   const { error } = await supabase.from('profiles').upsert({
     id: user.id,
@@ -98,6 +98,7 @@ export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, ap
     age_min: ageMin,
     age_max: ageMax,
     same_sports_only: sameSportsOnly,
+    city,
     gender: gender || null,
     seeking: seeking || [],
     play_games: playGames && playGames.length ? playGames : ['singles', 'doubles', 'mixed_doubles'],
@@ -318,7 +319,7 @@ export function subscribeToMessages(matchId, onEvent) {
 
 // ---------- Events ----------
 
-export async function listEvents(city = 'Indianapolis') {
+export async function listEvents(city) {
   const { data, error } = await supabase
     .from('events')
     .select('*, event_rsvps(user_id, status)')
@@ -389,7 +390,7 @@ export async function registerPushToken(token, platform) {
 
 // ---------- Waitlist (also used by the landing page) ----------
 
-export async function joinWaitlist(email, city = 'Indianapolis', source = 'app') {
+export async function joinWaitlist(email, city, source = 'app') {
   const { error } = await supabase.from('waitlist').insert({ email, city, source });
   if (error && error.code !== '23505') throw error; // duplicate email is fine
 }

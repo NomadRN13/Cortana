@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>40/Love — The dating app for racquet sports people</title>
-<meta name="description" content="40/Love connects active singles through tennis, pickleball and more — the first date is a game instead of dinner. Launching first in Indianapolis. Join the waitlist.">
+<meta name="description" content="40/Love connects active singles through tennis, pickleball and more — the first date is a game instead of dinner. Now opening in 11 US cities. Join the waitlist.">
 <link rel="icon" type="image/png" href="/favicon.png">
 <style>
   :root {
@@ -147,6 +147,12 @@
     border: 0;
     border-radius: 12px;
   }
+  .waitlist select {
+    flex: 1 1 100%; min-width: 0; padding: 15px 16px; font: inherit; font-size: 16px;
+    border: 2px solid var(--line); border-radius: 12px; background: var(--card);
+    color: var(--chalk); appearance: none;
+  }
+  .waitlist select:focus { outline: none; border-color: var(--optic); }
   .waitlist button {
     flex: 0 0 auto;
     padding: 15px 24px;
@@ -458,11 +464,26 @@
       <p class="hero-sub">40/Love connects active singles through the racquet sports they already love — tennis, pickleball, padel, racquetball, and squash. Match on sport, skill, and vibe, then meet on the court instead of across a table.</p>
       <form class="waitlist" id="hero-form" novalidate>
         <input type="email" id="hero-email" placeholder="you@example.com" aria-label="Email address" autocomplete="email">
+        <select id="hero-city" aria-label="Your city">
+          <option value="">Where do you play?</option>
+          <option value="indianapolis">Indianapolis, IN</option>
+          <option value="los-angeles">Los Angeles, CA</option>
+          <option value="san-diego">San Diego, CA</option>
+          <option value="phoenix">Phoenix, AZ</option>
+          <option value="seattle">Seattle, WA</option>
+          <option value="spokane">Spokane, WA</option>
+          <option value="dallas">Dallas, TX</option>
+          <option value="houston">Houston, TX</option>
+          <option value="orlando">Orlando, FL</option>
+          <option value="miami">Miami, FL</option>
+          <option value="washington-dc">Washington, DC</option>
+          <option value="somewhere-else">Somewhere else</option>
+        </select>
         <button type="submit">Join the waitlist</button>
       </form>
       <p class="form-success" id="hero-success">You're on the list — see you on the court. 🎾</p>
       <p class="form-error" id="hero-error" role="alert" aria-live="polite"></p>
-      <p class="form-note">Launching first in Indianapolis. Free for founding members.</p>
+      <p class="form-note">Now opening in 11 cities. Free for founding members.</p>
       <p class="demo-cta"><a href="/demo/">Can't wait? Play with the clickable demo →</a></p>
     </div>
     <div class="mini-phone" aria-hidden="true">
@@ -597,16 +618,29 @@
   <div class="wrap">
     <div class="section-head reveal">
       <p class="eyebrow">City by city</p>
-      <h2>Indianapolis first. Then the city you vote for.</h2>
-      <p>A dating app only works when the people on it live near you — so we're building one full local community at a time, starting with Indy and its 65+ public pickleball courts. Vote for where we go next:</p>
+      <h2>Open in 11 cities. Yours next?</h2>
+      <p>A dating app only works when the people on it live near you, so 40/Love builds one local community at a time — you're matched with players in your own city, not three states away. Here's where we're open:</p>
     </div>
     <div class="cities reveal" id="city-list">
-      <span class="city city-launch">🎾 Indianapolis <span class="badge">Launch city</span></span>
+      <span class="city city-launch">🎾 Indianapolis <span class="badge">First city</span></span>
+      <span class="city city-launch">Los Angeles</span>
+      <span class="city city-launch">San Diego</span>
+      <span class="city city-launch">Phoenix</span>
+      <span class="city city-launch">Seattle</span>
+      <span class="city city-launch">Spokane</span>
+      <span class="city city-launch">Dallas</span>
+      <span class="city city-launch">Houston</span>
+      <span class="city city-launch">Orlando</span>
+      <span class="city city-launch">Miami</span>
+      <span class="city city-launch">Washington, DC</span>
+    </div>
+    <p class="cities-note" style="margin-bottom:14px">Not on the list? Tell us where you play and we'll come to you:</p>
+    <div class="cities reveal" id="vote-list">
       <button class="city" data-city="Chicago">Chicago <span class="count">0</span></button>
-      <button class="city" data-city="Columbus">Columbus <span class="count">0</span></button>
-      <button class="city" data-city="Cincinnati">Cincinnati <span class="count">0</span></button>
-      <button class="city" data-city="Louisville">Louisville <span class="count">0</span></button>
-      <button class="city" data-city="Nashville">Nashville <span class="count">0</span></button>
+      <button class="city" data-city="New York">New York <span class="count">0</span></button>
+      <button class="city" data-city="Atlanta">Atlanta <span class="count">0</span></button>
+      <button class="city" data-city="Denver">Denver <span class="count">0</span></button>
+      <button class="city" data-city="Austin">Austin <span class="count">0</span></button>
       <button class="city" data-city="Your city?">Your city? <span class="count">0</span></button>
     </div>
     <p class="cities-note">Votes are stored on this device in this demo — the live site will count them for real.</p>
@@ -634,7 +668,7 @@
       </details>
       <details>
         <summary>When does it launch?</summary>
-        <p class="faq-a">Indianapolis is first — we're building the local community now, and waitlist members hear the launch date before anyone else. After Indy, the city with the most votes has a head start.</p>
+        <p class="faq-a">40/Love is open in Indianapolis, Los Angeles, San Diego, Phoenix, Seattle, Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC. You're matched with players in your own city — a dating app is only as good as who's actually near you. Not on the list? Vote above and we'll go where the players are; waitlist members hear first.</p>
       </details>
       <details>
         <summary>How much will it cost?</summary>
@@ -650,6 +684,21 @@
     <h2 class="reveal">Meet someone on the court,<br><span class="serve">not at a bar.</span></h2>
     <form class="waitlist" id="join-form" novalidate>
       <input type="email" id="join-email" placeholder="you@example.com" aria-label="Email address" autocomplete="email">
+      <select id="join-city" aria-label="Your city">
+        <option value="">Where do you play?</option>
+        <option value="indianapolis">Indianapolis, IN</option>
+        <option value="los-angeles">Los Angeles, CA</option>
+        <option value="san-diego">San Diego, CA</option>
+        <option value="phoenix">Phoenix, AZ</option>
+        <option value="seattle">Seattle, WA</option>
+        <option value="spokane">Spokane, WA</option>
+        <option value="dallas">Dallas, TX</option>
+        <option value="houston">Houston, TX</option>
+        <option value="orlando">Orlando, FL</option>
+        <option value="miami">Miami, FL</option>
+        <option value="washington-dc">Washington, DC</option>
+        <option value="somewhere-else">Somewhere else</option>
+      </select>
       <button type="submit">Join the waitlist</button>
     </form>
     <p class="form-success" id="join-success">You're on the list — see you on the court. 🎾</p>
@@ -703,7 +752,7 @@
     return !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
   }
 
-  function joinRemote(email) {
+  function joinRemote(email, city) {
     var cfg = window.FORTYLOVE;
     return fetch(cfg.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/waitlist', {
       method: 'POST',
@@ -713,7 +762,7 @@
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ email: email, city: 'Indianapolis', source: 'landing' })
+      body: JSON.stringify({ email: email, city: city || '', source: 'landing' })
     }).then(function (res) {
       if (res.status === 201) return 'new';
       if (res.status === 409) return 'duplicate';
@@ -724,9 +773,10 @@
     });
   }
 
-  function wireForm(formId, emailId, successId, errorId) {
+  function wireForm(formId, emailId, successId, errorId, cityId) {
     var form = document.getElementById(formId);
     var email = document.getElementById(emailId);
+    var citySel = cityId ? document.getElementById(cityId) : null;
     var success = document.getElementById(successId);
     var error = document.getElementById(errorId);
     var btn = form.querySelector('button');
@@ -752,7 +802,7 @@
         var prevLabel = btn.textContent;
         btn.disabled = true;
         btn.textContent = 'Joining…';
-        joinRemote(val)
+        joinRemote(val, citySel ? citySel.value : '')
           .then(function (result) { showSuccess(result === 'duplicate'); })
           .catch(function () {
             error.textContent = 'Couldn’t join right now — check your connection and try again.';
@@ -771,12 +821,12 @@
       showSuccess(duplicate);
     });
   }
-  wireForm('hero-form', 'hero-email', 'hero-success', 'hero-error');
-  wireForm('join-form', 'join-email', 'join-success', 'join-error');
+  wireForm('hero-form', 'hero-email', 'hero-success', 'hero-error', 'hero-city');
+  wireForm('join-form', 'join-email', 'join-success', 'join-error', 'join-city');
 
   /* City votes */
   var votes = readJson(VOTE_KEY, {});
-  var cityButtons = document.querySelectorAll('button.city[data-city]');
+  var cityButtons = document.querySelectorAll('#vote-list button.city[data-city]');
   Array.prototype.forEach.call(cityButtons, function (btn) {
     var name = btn.getAttribute('data-city');
     var count = btn.querySelector('.count');

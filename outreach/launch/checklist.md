@@ -149,6 +149,36 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
 - **Fake "Rallies: 128" profile stat removed** (both apps) — replaced with
   the member's real Saved-players count. No made-up numbers shown to users.
 
+## Update — 2026-08-09 (multi-city: 11 metros)
+
+- **40/Love is no longer Indianapolis-only.** Open in Indianapolis, Los
+  Angeles, San Diego, Phoenix, Seattle, Spokane, Dallas, Houston, Orlando,
+  Miami, and Washington, DC (migration 14). "Indianapolis" was a hardcoded
+  default in four places; it's now a `cities` table with a foreign key, so a
+  typo can't create a ghost city nobody can be matched in.
+- **Members pick a city at signup**, pre-selected from their approximate
+  location, changeable in Settings. If they're outside every metro we say so
+  and point them at the waitlist rather than guessing.
+- **Matching is city-scoped**, which also closed a real leak: a member who
+  denied location has no distance, and the deck deliberately keeps those
+  people visible — so without a city scope, a Miami member with location off
+  would have been shown to someone in Seattle. Harness-tested.
+- **Founder note — assumption to confirm:** "Washington" in the request was
+  read as **Washington, DC**, since Seattle and Spokane were already listed
+  separately. If you meant Washington *state*, say so and I'll drop DC — it's
+  one row.
+- **Founder note — density beats coverage.** The code treats all 11 equally,
+  but a dating app lives on local density: 200 players in one city beats
+  2,000 spread across eleven, because everyone in the thin cities opens the
+  app, sees three people, and never comes back. Recommend real recruiting
+  behind two or three at a time and letting the rest fill from the waitlist.
+  The Indy outreach pack and mixer playbook are the template; equivalents
+  don't exist for the other ten yet.
+- Updated: landing page (11-city list, city on the waitlist form, "vote for
+  yours" now lists un-launched cities), admin event form (city selector),
+  store listing (description, promo text, keywords, reviewer notes),
+  `docs/backend-setup.md` (how to open city #12).
+
 ## Update — 2026-08-09 (doubles teams + top picks)
 
 - **Doubles team profiles (migration 13):** two people can share one

@@ -185,6 +185,22 @@
           </select>
         </div>
         <div><label for="ev-capacity">Capacity</label><input id="ev-capacity" type="number" min="2" max="500" value="24"></div>
+        <div>
+          <label for="ev-city">City</label>
+          <select id="ev-city">
+            <option value="indianapolis">Indianapolis, IN</option>
+            <option value="los-angeles">Los Angeles, CA</option>
+            <option value="san-diego">San Diego, CA</option>
+            <option value="phoenix">Phoenix, AZ</option>
+            <option value="seattle">Seattle, WA</option>
+            <option value="spokane">Spokane, WA</option>
+            <option value="dallas">Dallas, TX</option>
+            <option value="houston">Houston, TX</option>
+            <option value="orlando">Orlando, FL</option>
+            <option value="miami">Miami, FL</option>
+            <option value="washington-dc">Washington, DC</option>
+          </select>
+        </div>
         <div style="grid-column:1/-1"><label for="ev-level">Level range</label><input id="ev-level" maxlength="40" value="All levels"></div>
       </div>
       <div class="row-btns"><button class="btn btn-primary" id="ev-create" type="button">Create event</button></div>
@@ -195,7 +211,7 @@
   </div>
 
   <footer>
-    40/Love moderation desk · Indianapolis ·
+    40/Love moderation desk ·
     This page is safe to deploy publicly: every action is checked against the admin list by the
     database itself, not by this page.
   </footer>
@@ -277,7 +293,7 @@
       { id: 'r2', reporter: 'Elena', target: 'Jordan', reason: 'Kept pushing to move the chat off the app after I said no.', context: 'chat', created_at: new Date(Date.now() - 20 * 3600000).toISOString() }
     ],
     events: [
-      { id: 'e1', title: '40/Love Social Mixer', venue: 'Broad Ripple Courts', starts_at: new Date(Date.now() + 6 * 86400000).toISOString(), sport: 'pickleball', level_range: 'All levels', capacity: 24 }
+      { id: 'e1', title: '40/Love Social Mixer', venue: 'Broad Ripple Courts', starts_at: new Date(Date.now() + 6 * 86400000).toISOString(), sport: 'pickleball', level_range: 'All levels', capacity: 24, city: 'indianapolis' }
     ]
   };
 
@@ -409,7 +425,8 @@
       return '<div class="item" data-id="' + esc(e.id) + '">' +
         '<div class="body">' +
           '<div class="name">' + esc(e.title) + '<span class="pill">' + esc(e.sport) + '</span></div>' +
-          '<div class="meta">' + esc(e.venue) + ' · ' + esc(when) + ' · ' + esc(e.level_range) + ' · cap ' + esc(e.capacity) + '</div>' +
+          '<div class="meta">' + esc(e.venue) + ' · ' + esc(when) + ' · ' + esc(e.level_range) + ' · cap ' + esc(e.capacity) +
+            (e.city ? ' · ' + esc(e.city) : '') + '</div>' +
           '<div class="row-btns"><button class="btn btn-danger btn-sm" data-act="delete">Delete</button></div>' +
         '</div></div>';
     }).join('') : '<div class="empty">No upcoming events yet — create the first one above.</div>';
@@ -437,10 +454,10 @@
     var body = {
       title: title, venue: venue, starts_at: starts.toISOString(),
       sport: $('#ev-sport').value, level_range: $('#ev-level').value.trim() || 'All levels',
-      capacity: capacity, city: 'Indianapolis'
+      capacity: capacity, city: $('#ev-city').value
     };
     if (!LIVE) {
-      demo.events.push({ id: 'e' + Date.now(), title: body.title, venue: body.venue, starts_at: body.starts_at, sport: body.sport, level_range: body.level_range, capacity: body.capacity });
+      demo.events.push({ id: 'e' + Date.now(), title: body.title, venue: body.venue, starts_at: body.starts_at, sport: body.sport, level_range: body.level_range, capacity: body.capacity, city: body.city });
       demo.events.sort(function (a, b) { return a.starts_at < b.starts_at ? -1 : 1; });
       renderEvents(demo.events);
       msg.textContent = 'Event created (demo).'; msg.className = 'msg ok';
