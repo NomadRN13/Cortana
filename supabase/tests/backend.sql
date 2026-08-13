@@ -39,12 +39,19 @@ $fn$;
 create function auth.uid() returns uuid language sql stable as
 $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 
+-- Supabase grants broad table privileges and relies on RLS; mirror that. These
+-- go in BEFORE the migrations, via default privileges, because that is the real
+-- order: the grants exist on a fresh project and migrations run on top. Doing
+-- it the other way round — a blanket grant afterwards — would silently undo any
+-- column-level revoke a migration makes, and the suite would pass on a
+-- permission the real database doesn't have.
+grant usage on schema public, auth, storage to anon, authenticated;
+alter default privileges in schema public grant all on tables to anon, authenticated;
+alter default privileges in schema public grant all on sequences to anon, authenticated;
+alter default privileges in schema storage grant all on tables to anon, authenticated;
+
 \i :migrations
 
--- Supabase grants broad table privileges and relies on RLS; mirror that.
-grant usage on schema public, auth to anon, authenticated;
-grant all on all tables in schema public to anon, authenticated;
-grant usage on schema storage to anon, authenticated;
 grant all on all tables in schema storage to anon, authenticated;
 grant usage, select on all sequences in schema public to anon, authenticated;
 
@@ -699,8 +706,13 @@ begin
   ] loop
     perform set_config('request.jwt.claim.sub', who, false);
     execute 'set role authenticated';
-    select count(*) into c from apple_identities;
-    assert c = 0, format('apple refresh token readable via the API by %s', who);
+    -- Belt and braces: the grant is withdrawn AND there is no policy, so this
+    -- either raises or returns nothing. Both are fine; a row is not.
+    begin
+      select count(*) into c from apple_identities;
+      assert c = 0, format('apple refresh token readable via the API by %s', who);
+    exception when insufficient_privilege then null;
+    end;
     begin
       insert into apple_identities (user_id, refresh_token)
       values (who::uuid, 'forged');
@@ -732,8 +744,13 @@ begin
     'profile_photos', 'reports', 'blocks', 'push_tokens', 'devices',
     'admins', 'apple_identities', 'waitlist', 'event_rsvps'
   ] loop
-    execute format('select count(*) from public.%I', t) into c;
-    assert c = 0, format('anon can read public.%s (%s rows)', t, c);
+    -- Two acceptable outcomes: the grant is withdrawn outright (stronger), or
+    -- row-level security filters everything away. Anything returned is a leak.
+    begin
+      execute format('select count(*) from public.%I', t) into c;
+      assert c = 0, format('anon can read public.%s (%s rows)', t, c);
+    exception when insufficient_privilege then null;
+    end;
   end loop;
 end $$;
 
@@ -779,6 +796,96 @@ begin
     assert false, 'anon inserted into the waitlist directly, bypassing join_waitlist';
   exception when insufficient_privilege then null;
   end;
+end $$;
+reset role;
+
+-- ---- 9g. A member cannot read anyone else's birthdate or coordinates ----
+-- Row-level security says which ROWS, never which columns. profiles_select
+-- hands out every other member's row, so before the column privileges were
+-- withdrawn this returned an exact date of birth and a ~1km home location for
+-- the whole app, to anyone who signed up. The deck goes to the trouble of
+-- returning a distance instead of a position; the table was undoing that.
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000002'; -- Diego
+do $$
+declare v text;
+begin
+  foreach v in array array['birthdate', 'partner_birthdate', 'approx_lat', 'approx_lng'] loop
+    begin
+      execute format('select %I::text from profiles where id = $1', v)
+        using '00000000-0000-4000-8000-000000000003'::uuid;
+      assert false, format('a member can read another member''s %s', v);
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+  -- own row is no different: the column is withdrawn from the role outright
+  begin
+    execute 'select birthdate from profiles where id = auth.uid()';
+    assert false, 'birthdate still selectable from the table';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+-- Every column of profiles must be deliberately classified: readable by
+-- members, or withheld. A new column that is in neither list fails here rather
+-- than silently becoming readable (a leak) or silently not (a broken screen).
+do $$
+declare unclassified text;
+begin
+  select string_agg(c.column_name, ', ') into unclassified
+  from information_schema.columns c
+  where c.table_schema = 'public' and c.table_name = 'profiles'
+    and c.column_name not in (
+      'birthdate', 'partner_birthdate', 'approx_lat', 'approx_lng')
+    and not has_column_privilege('authenticated', 'public.profiles', c.column_name, 'select');
+  assert unclassified is null,
+    format('profiles column(s) neither readable nor deliberately withheld: %s '
+           '— classify them in migration 20260806000018', unclassified);
+end $$;
+
+-- What the app uses instead. Your own profile still comes back whole...
+do $$
+declare me jsonb;
+begin
+  me := get_my_profile();
+  assert me is not null, 'get_my_profile returned nothing for a real member';
+  assert me ->> 'birthdate' is not null, 'get_my_profile withheld my own birthdate';
+  assert me ->> 'first_name' = 'Diego', format('wrong profile came back: %s', me ->> 'first_name');
+  assert jsonb_array_length(me -> 'user_sports') > 0, 'get_my_profile lost my sports';
+end $$;
+
+-- ...and other people come back as cards: an age, never a birthdate, and no
+-- coordinates at any point.
+do $$
+declare cards jsonb; card jsonb;
+begin
+  cards := get_profile_cards(array['00000000-0000-4000-8000-000000000003']::uuid[]);
+  assert jsonb_array_length(cards) = 1, format('expected one card, got %s', jsonb_array_length(cards));
+  card := cards -> 0;
+  assert (card ->> 'age')::int between 18 and 99, format('card age looks wrong: %s', card ->> 'age');
+  foreach card in array array[cards -> 0] loop
+    assert not (card ? 'birthdate'), 'profile card leaks birthdate';
+    assert not (card ? 'partner_birthdate'), 'profile card leaks partner birthdate';
+    assert not (card ? 'approx_lat'), 'profile card leaks latitude';
+    assert not (card ? 'approx_lng'), 'profile card leaks longitude';
+  end loop;
+end $$;
+
+-- Blocking still applies, even though a definer function skips RLS entirely --
+-- so the filter profiles_select would have done has to be repeated by hand.
+-- Checked both ways round, or the assertion proves nothing.
+do $$
+begin
+  assert jsonb_array_length(
+    get_profile_cards(array['00000000-0000-4000-8000-000000000004']::uuid[])) = 1,
+    'test setup: Sam should be visible before the block';
+  insert into blocks (blocker_id, blocked_id)
+  values (auth.uid(), '00000000-0000-4000-8000-000000000004');
+  assert jsonb_array_length(
+    get_profile_cards(array['00000000-0000-4000-8000-000000000004']::uuid[])) = 0,
+    'a blocked member still comes back as a card';
+  delete from blocks
+   where blocker_id = auth.uid() and blocked_id = '00000000-0000-4000-8000-000000000004';
 end $$;
 reset role;
 

@@ -419,3 +419,38 @@ a device or a card:
   still be padded with junk addresses. That was equally true of the direct
   insert it replaces. Supabase's gateway does some throttling; if the list gets
   spammed, a captcha on the form is the usual next step.
+
+## Update — 2026-08-13 (every member could read every other member's DOB and home location)
+
+- **The leak.** `profiles_select` lets any signed-in member read any profile row
+  that hasn't blocked them. Row-level security is *row*-level — it decides which
+  rows, never which columns — so
+  `/rest/v1/profiles?select=first_name,birthdate,approx_lat,approx_lng`
+  returned an exact date of birth and a ~1km home location for every member of
+  the app, to anyone who signed up. Reproduced against the harness before fixing.
+- **Why it matters more than it looks.** Both values are protected everywhere
+  else on purpose: the privacy policy promises "your birthdate is never shown to
+  other members — only your age", and `get_discovery_deck` deliberately returns
+  a *distance* rather than coordinates. The table was undoing both. A home
+  location for every member, free to anyone who registers, is a stalking vector
+  in a dating app, not a privacy nitpick.
+- **The fix** (`20260806000018`): the table-level SELECT grant is withdrawn and
+  the readable columns granted back by name. Worth knowing — a column-level
+  `revoke` is a **no-op** while the role still holds table-level SELECT;
+  Postgres checks the table grant first and stops. The first attempt did exactly
+  that and the test caught it.
+  - `get_my_profile()` — your own row, whole, for the app's own settings screens.
+  - `get_profile_cards(ids)` — everyone else, carrying an **age** rather than a
+    birthdate and no coordinates at all. Security definer skips RLS, so it
+    repeats the block filter by hand; asserted both ways round.
+- **Guard against drift:** the suite fails on any `profiles` column that is
+  neither granted nor deliberately withheld, so adding one forces a decision
+  instead of silently leaking it or silently breaking a screen.
+- **The harness was lying about grants.** It applied a blanket
+  `grant all on all tables` *after* the migrations, so any column-level revoke a
+  migration made was quietly undone before the assertions ran. It now uses
+  `alter default privileges` beforehand, matching the real order on a Supabase
+  project. That change alone revealed the `apple_identities` revoke had never
+  been in force during tests either.
+- Privacy policy updated to state what is now actually enforced: members are
+  never given a position, only a distance, and never a birthdate, only an age.

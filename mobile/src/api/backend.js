@@ -79,26 +79,27 @@ async function purgeMyPhotoFiles() {
 
 // ---------- Profile ----------
 
+// Both of these go through RPCs rather than selecting from profiles, because
+// birthdate and the approximate coordinates are no longer readable through the
+// table by anyone — see migration 20260806000018. Row-level security decides
+// which ROWS you may read, never which columns, so `select=birthdate` on any
+// row you were allowed to see returned it.
 export async function getMyProfile() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*, user_sports(*)')
-    .eq('id', user.id)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('get_my_profile');
   if (error) throw error;
-  return data;
+  return data || null;
 }
 
+// Match cards for other members: an age instead of a birthdate, and no
+// coordinates at all — distance comes from the deck, which works it out
+// without handing over anyone's position.
 export async function getProfilesByIds(ids) {
   if (!ids.length) return [];
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*, user_sports(*)')
-    .in('id', ids);
+  const { data, error } = await supabase.rpc('get_profile_cards', { p_ids: ids });
   if (error) throw error;
-  return data;
+  return data || [];
 }
 
 // Partial profile update (prefs, bio, activity ping) — only the given fields.

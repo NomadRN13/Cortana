@@ -65,12 +65,16 @@ function mapDeckRow(row) {
   };
 }
 
+// Cards from get_profile_cards arrive with an age already worked out, because
+// other members' birthdates are not readable — the server does the arithmetic
+// and hands back only the result. Falls back to computing it for a row that
+// still carries a birthdate, which is only ever your own.
 function mapProfileRow(p) {
   const sports = p.user_sports || [];
   return {
     id: p.id,
     name: p.first_name,
-    age: ageFromBirthdate(p.birthdate),
+    age: p.age != null ? p.age : ageFromBirthdate(p.birthdate),
     dist: null,
     sports: sports.map((s) => cap(s.sport)),
     skill: sports[0] ? cap(sports[0].level) : 'Intermediate',
@@ -81,7 +85,7 @@ function mapProfileRow(p) {
     bio: p.bio || '',
     isTeam: !!p.is_team,
     partnerName: p.partner_name || '',
-    partnerAge: p.is_team ? ageFromBirthdate(p.partner_birthdate) : null,
+    partnerAge: p.is_team ? (p.partner_age != null ? p.partner_age : ageFromBirthdate(p.partner_birthdate)) : null,
   };
 }
 
