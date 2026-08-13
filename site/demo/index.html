@@ -216,6 +216,14 @@
   .ob-foot { padding: 14px 18px 24px; display: flex; gap: 10px; }
   .ob-foot .btn-back { flex: 0 0 auto; width: auto; padding: 15px 18px; }
   .hint { font-size: 13px; color: var(--dim); line-height: 1.5; margin: 0; }
+  .linklike { background: none; border: 0; padding: 4px; font-size: 13.5px; font-weight: 800; color: var(--optic); cursor: pointer; }
+  .linklike.dim { color: var(--dim); }
+  .phone-verified {
+    display: flex; align-items: center; gap: 10px; padding: 14px;
+    background: var(--card); border: 2px solid var(--ok); border-radius: 14px;
+    font-size: 15px; font-weight: 800; color: var(--text);
+  }
+  .phone-verified span:first-child { color: var(--ok); }
 
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
@@ -741,7 +749,7 @@
     <!-- ONBOARDING 1 -->
     <section class="screen" id="screen-ob1" aria-label="Your name and age">
       <div class="ob-head">
-        <div class="dots"><span class="on"></span><span></span><span></span><span></span></div>
+        <div class="dots"><span class="on"></span><span></span><span></span><span></span><span></span></div>
         <h1>First things first</h1>
       </div>
       <div class="scroll ob-body">
@@ -776,10 +784,44 @@
       </div>
     </section>
 
+    <!-- ONBOARDING — PHONE VERIFICATION -->
+    <section class="screen" id="screen-obphone" aria-label="Verify your phone number">
+      <div class="ob-head">
+        <div class="dots"><span class="on"></span><span class="on"></span><span></span><span></span><span></span></div>
+        <h1>Prove you&rsquo;re real</h1>
+      </div>
+      <div class="scroll ob-body">
+        <div id="phone-entry">
+          <label for="ob-phone">Mobile number</label>
+          <input type="tel" id="ob-phone" autocomplete="tel" inputmode="tel" placeholder="(317) 555-0142">
+          <button class="btn btn-primary" id="phone-send" style="margin-top:12px;width:100%">Text me a code</button>
+        </div>
+        <div id="phone-code-box" hidden>
+          <label for="ob-phone-code" id="phone-code-label">Enter the 6-digit code we texted you</label>
+          <input type="text" id="ob-phone-code" inputmode="numeric" maxlength="6" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;">
+          <button class="btn btn-primary" id="phone-verify" style="margin-top:12px;width:100%">Verify</button>
+          <div style="display:flex;gap:22px;justify-content:center;margin-top:14px">
+            <button class="linklike" id="phone-resend" type="button">Resend code</button>
+            <button class="linklike dim" id="phone-change" type="button">Change number</button>
+          </div>
+        </div>
+        <div class="phone-verified" id="phone-verified-row" hidden>
+          <span aria-hidden="true">✓</span>
+          <span>Phone verified &mdash; <span id="phone-verified-num"></span></span>
+        </div>
+        <p class="hint">A one-time text keeps 40/Love real people only. Your number is never shown to other members and never used for marketing.</p>
+        <p class="hint" style="color:var(--optic)">Demo: no text is actually sent &mdash; enter any 6-digit code.</p>
+      </div>
+      <div class="ob-foot">
+        <button class="btn btn-ghost btn-back" data-back="screen-ob1">Back</button>
+        <button class="btn btn-primary" id="obphone-next">Next</button>
+      </div>
+    </section>
+
     <!-- ONBOARDING 2 -->
     <section class="screen" id="screen-ob2" aria-label="Pick your sports">
       <div class="ob-head">
-        <div class="dots"><span class="on"></span><span class="on"></span><span></span><span></span></div>
+        <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></div>
         <h1>What do you play?</h1>
       </div>
       <div class="scroll ob-body">
@@ -793,7 +835,7 @@
         <p class="hint">Pick everything you play — you'll match with people who share at least one sport.</p>
       </div>
       <div class="ob-foot">
-        <button class="btn btn-ghost btn-back" data-back="screen-ob1">Back</button>
+        <button class="btn btn-ghost btn-back" data-back="screen-obphone">Back</button>
         <button class="btn btn-primary" id="ob2-next">Next</button>
       </div>
     </section>
@@ -801,7 +843,7 @@
     <!-- ONBOARDING 3 -->
     <section class="screen" id="screen-ob3" aria-label="Your skill level">
       <div class="ob-head">
-        <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+        <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
         <h1>How's your game?</h1>
       </div>
       <div class="scroll ob-body">
@@ -826,7 +868,7 @@
     <!-- ONBOARDING 4 -->
     <section class="screen" id="screen-ob4" aria-label="Choose your modes">
       <div class="ob-head">
-        <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
+        <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
         <h1>What are you here for?</h1>
       </div>
       <div class="scroll ob-body">
@@ -1479,7 +1521,53 @@
     if (!name) { toast('Add your first name to continue'); return; }
     if (!age || age < 18 || age > 99) { toast('Enter an age between 18 and 99'); return; }
     if (!genderSel) { toast('Tell us who you are so matching works'); return; }
-    state.draft = { name: name, age: age, gender: genderSel.getAttribute('data-gender'), photo: draftPhoto };
+    state.draft = { name: name, age: age, gender: genderSel.getAttribute('data-gender'), photo: draftPhoto,
+      phone: phoneOk ? phoneE164 : null, phoneVerified: phoneOk };
+    show('screen-obphone');
+  });
+
+  /* Phone verification — the prototype simulates the SMS; the real app sends
+     a code through Supabase auth and the flag only syncs server-side. */
+  function toE164(raw) {
+    var digits = String(raw).replace(/\D/g, '');
+    if (digits.length === 10) return '+1' + digits;
+    if (digits.length === 11 && digits.charAt(0) === '1') return '+' + digits;
+    return null;
+  }
+  var phoneE164 = null, phoneOk = false;
+  function syncPhoneUI() {
+    $('#phone-entry').hidden = !!phoneE164 || phoneOk;
+    $('#phone-code-box').hidden = !phoneE164 || phoneOk;
+    $('#phone-verified-row').hidden = !phoneOk;
+    if (phoneOk) $('#phone-verified-num').textContent = phoneE164;
+  }
+  $('#phone-send').addEventListener('click', function () {
+    var e164 = toE164($('#ob-phone').value);
+    if (!e164) { toast('Enter a 10-digit US phone number'); return; }
+    phoneE164 = e164;
+    $('#ob-phone-code').value = '';
+    $('#phone-code-label').textContent = 'Enter the 6-digit code we texted ' + e164;
+    syncPhoneUI();
+    toast('Code sent to ' + e164);
+  });
+  $('#phone-resend').addEventListener('click', function () {
+    $('#ob-phone-code').value = '';
+    toast('New code sent to ' + phoneE164);
+  });
+  $('#phone-change').addEventListener('click', function () {
+    phoneE164 = null;
+    syncPhoneUI();
+  });
+  $('#phone-verify').addEventListener('click', function () {
+    var code = $('#ob-phone-code').value.trim();
+    if (!/^\d{6}$/.test(code)) { toast('Enter the 6-digit code'); return; }
+    phoneOk = true;
+    if (state.draft) { state.draft.phone = phoneE164; state.draft.phoneVerified = true; }
+    syncPhoneUI();
+    toast('Phone verified ✓');
+  });
+  $('#obphone-next').addEventListener('click', function () {
+    if (!phoneOk) { toast('Verify your phone number to continue'); return; }
     show('screen-ob2');
   });
 
@@ -2181,6 +2269,7 @@
         '<span class="ava' + (u.photo ? ' has-photo' : '') + '" style="background:' + gradFor(u.name) + (u.photo ? '; background-image:url(' + u.photo + '); background-size:cover; background-position:center' : '') + '">' + esc(initials(u.name)) + '</span>' +
         '<div class="card-name" style="justify-content:center">' + esc(u.name) + '<span class="age">' + u.age + '</span></div>' +
         '<div class="tagrow">' + tags + '</div>' +
+        (u.phoneVerified ? '<div style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--ok)"><span aria-hidden="true">✓</span>Phone verified</div>' : '') +
         '<button class="photo-btn" id="profile-photo-btn" type="button">' + (u.photo ? 'Change photo' : 'Add photo') + '</button>' +
       '</div>' +
       '<div class="stats">' +
@@ -2343,6 +2432,10 @@
     state.seen = {};
     state.prefs = { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false };
     draftPhoto = null;
+    phoneE164 = null;
+    phoneOk = false;
+    $('#ob-phone').value = '';
+    syncPhoneUI();
     $('#photo-preview').classList.remove('has');
     $('#photo-preview').style.backgroundImage = '';
     $('#photo-btn').textContent = 'Add photo';

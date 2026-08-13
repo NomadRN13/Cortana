@@ -77,6 +77,38 @@ Then, on either path:
    12 demo players, run the contents of `supabase/seed.sql` in Dashboard →
    SQL Editor. Never run the seed against the real launch project.
 
+## The moderation desk (/admin) — make yourself an admin (one-time, ~5 minutes)
+
+The site ships with a moderation page at `/admin` (also in the repo at
+`admin/index.html`). It's where the daily trust-and-safety work happens:
+**approve or reject new profile photos** (members' photos stay invisible
+until approved — without this, everyone looks blank), **triage reports**
+(dismiss or mark actioned), and **create events** that appear in the app.
+
+It's safe that the page is public: every action is authorized by the
+database against an `admins` list — the page itself has no special powers,
+and the admin list can't be edited through the app or the page at all.
+
+To set yourself up:
+
+1. Open `/admin` on the deployed site, sign in with your email (same
+   6-digit-code sign-in as the app). Your account now exists.
+2. Supabase Dashboard → SQL Editor → run (with your real email):
+
+   ```sql
+   insert into admins (user_id)
+   select id from auth.users where email = 'you@example.com';
+   ```
+
+3. Reload `/admin` — the moderation desk appears.
+
+Also paste your project URL + anon public key into the config block at the
+top of `admin/index.html` (the same two values as the landing page) before
+deploying — until then the page runs in demo mode with sample data.
+
+Warnings, suspensions, and bans still happen in the dashboard at alpha
+volume; the desk records the decision (report → "mark actioned").
+
 ## Text-message (SMS) phone verification (one-time, ~15 minutes)
 
 Onboarding asks every new member to verify a phone number by text — that's

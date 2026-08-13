@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>40/Love — Admin</title>
+<style>
+  :root {
+    --night: #0A0B0D;
+    --panel: #101215;
+    --card: #17191D;
+    --card2: #1F2227;
+    --optic: #D6F44F;
+    --text: #F4F6F0;
+    --dim: rgba(244, 246, 240, 0.62);
+    --line: rgba(244, 246, 240, 0.13);
+    --ok: #3DC96B;
+    --danger: #E15A72;
+    --ink: #0A0B0D;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--night);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 20px 18px 60px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0 18px; }
+  .mark { font-weight: 900; font-size: 20px; letter-spacing: 0.2px; }
+  .mark .o { color: var(--optic); }
+  .mark .sub { display: block; font-size: 11px; font-weight: 700; color: var(--dim); letter-spacing: 2.2px; text-transform: uppercase; margin-top: 2px; }
+  .who { font-size: 12.5px; color: var(--dim); text-align: right; }
+  .who button { background: none; border: 0; color: var(--optic); font-weight: 800; font-size: 12.5px; cursor: pointer; padding: 4px 0 0; }
+
+  .banner {
+    border: 2px solid var(--optic); background: rgba(214, 244, 79, 0.07);
+    color: var(--text); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;
+  }
+  .banner b { color: var(--optic); }
+
+  .card { background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 18px; }
+  .card + .card { margin-top: 12px; }
+  h1 { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+  .hint { font-size: 13px; color: var(--dim); line-height: 1.55; }
+  label { display: block; font-size: 13px; font-weight: 700; color: var(--dim); margin: 14px 0 6px; }
+  input, select {
+    width: 100%; border: 2px solid var(--line); background: var(--card2); color: var(--text);
+    border-radius: 12px; padding: 12px 14px; font-size: 15px; font-family: inherit;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--optic); }
+  .btn {
+    display: inline-block; border: 0; border-radius: 999px; padding: 13px 22px;
+    font-weight: 900; font-size: 14.5px; cursor: pointer; font-family: inherit;
+  }
+  .btn-primary { background: var(--optic); color: var(--ink); }
+  .btn-primary:disabled { opacity: 0.5; cursor: default; }
+  .btn-ghost { background: transparent; color: var(--text); border: 2px solid var(--line); }
+  .btn-ok { background: transparent; color: var(--ok); border: 2px solid var(--ok); }
+  .btn-danger { background: transparent; color: var(--danger); border: 2px solid var(--danger); }
+  .btn-sm { padding: 9px 16px; font-size: 13px; }
+  .row-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .msg { font-size: 13.5px; margin-top: 10px; min-height: 18px; }
+  .msg.err { color: var(--danger); }
+  .msg.ok { color: var(--ok); }
+
+  .tabs { display: flex; gap: 8px; margin: 4px 0 14px; flex-wrap: wrap; }
+  .tabs button {
+    background: var(--card); border: 2px solid var(--line); color: var(--dim);
+    border-radius: 999px; padding: 10px 18px; font-weight: 800; font-size: 13.5px; cursor: pointer; font-family: inherit;
+  }
+  .tabs button.on { border-color: var(--optic); color: var(--optic); background: rgba(214, 244, 79, 0.07); }
+  .tabs button .n { display: inline-block; min-width: 18px; margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--optic); color: var(--ink); font-size: 11.5px; }
+  .tabs button .n:empty { display: none; }
+
+  .item { display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--line); }
+  .item:first-child { border-top: 0; padding-top: 4px; }
+  .item .photo {
+    width: 84px; height: 84px; border-radius: 12px; background: var(--card2); flex: 0 0 auto;
+    background-size: cover; background-position: center; border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; color: var(--dim); font-size: 11px; overflow: hidden;
+  }
+  .item .body { flex: 1; min-width: 0; }
+  .item .name { font-weight: 800; font-size: 15px; }
+  .item .meta { font-size: 12.5px; color: var(--dim); margin-top: 2px; line-height: 1.5; overflow-wrap: anywhere; }
+  .item .reason { font-size: 14px; margin-top: 6px; line-height: 1.5; overflow-wrap: anywhere; }
+  .empty { padding: 26px 0 14px; text-align: center; color: var(--dim); font-size: 14px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--dim); margin-left: 8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+  footer { margin-top: 26px; text-align: center; font-size: 12px; color: var(--dim); line-height: 1.6; }
+  code { background: var(--card2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 12px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="mark">40<span class="o">/</span>Love<span class="sub">Admin · Moderation Desk</span></div>
+    <div class="who" id="who" hidden>
+      <span id="who-email"></span>
+      <button id="sign-out" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <div class="banner" id="demo-banner" hidden>
+    <b>Demo mode.</b> This backend isn't connected yet, so you're looking at sample data —
+    approve and dismiss away, nothing is saved. To go live, paste your Supabase URL and anon
+    public key into the config at the top of this file (same two values as the landing page).
+  </div>
+
+  <!-- SIGN IN -->
+  <div class="card" id="view-signin">
+    <h1>Sign in</h1>
+    <p class="hint">Admins only. You'll get a 6-digit code by email — same passwordless sign-in as the app.</p>
+    <div id="si-step1">
+      <label for="si-email">Email</label>
+      <input type="email" id="si-email" autocomplete="email" placeholder="you@example.com">
+      <div class="row-btns"><button class="btn btn-primary" id="si-send" type="button">Email me a code</button></div>
+    </div>
+    <div id="si-step2" hidden>
+      <label for="si-code">6-digit code</label>
+      <input type="text" id="si-code" inputmode="numeric" maxlength="6" placeholder="123456">
+      <div class="row-btns">
+        <button class="btn btn-primary" id="si-verify" type="button">Verify</button>
+        <button class="btn btn-ghost" id="si-back" type="button">Change email</button>
+      </div>
+    </div>
+    <p class="msg" id="si-msg"></p>
+  </div>
+
+  <!-- NOT AN ADMIN -->
+  <div class="card" id="view-noadmin" hidden>
+    <h1>This account isn't an admin</h1>
+    <p class="hint" style="margin-top:8px">
+      You're signed in, but this account isn't on the admin list. Membership can only be granted
+      in the Supabase dashboard (that's a security feature): open <b>SQL Editor</b> and run —
+    </p>
+    <p style="margin:12px 0"><code>insert into admins (user_id) select id from auth.users where email = 'your@email.com';</code></p>
+    <p class="hint">Then reload this page. Full walkthrough: <code>docs/backend-setup.md</code>.</p>
+  </div>
+
+  <!-- DESK -->
+  <div id="view-desk" hidden>
+    <div class="tabs">
+      <button id="tab-photos" class="on" type="button">Photos <span class="n" id="n-photos"></span></button>
+      <button id="tab-reports" type="button">Reports <span class="n" id="n-reports"></span></button>
+      <button id="tab-events" type="button">Events</button>
+    </div>
+
+    <div class="card" id="pane-photos">
+      <h1>Photo approvals</h1>
+      <p class="hint">New photos are hidden from members until you approve them. Reject anything that isn't clearly the person (or breaks the guidelines) — rejected photos never become visible.</p>
+      <div id="photo-list"></div>
+    </div>
+
+    <div class="card" id="pane-reports" hidden>
+      <h1>Open reports</h1>
+      <p class="hint">Target: reviewed within 24 hours. <b>Dismiss</b> closes a report that needs no action. <b>Mark actioned</b> records that you did something — warnings, suspensions, and bans still happen in the Supabase dashboard at alpha volume.</p>
+      <div id="report-list"></div>
+    </div>
+
+    <div class="card" id="pane-events" hidden>
+      <h1>Create an event</h1>
+      <div class="grid2">
+        <div><label for="ev-title">Title</label><input id="ev-title" maxlength="80" placeholder="40/Love Social Mixer"></div>
+        <div><label for="ev-venue">Venue</label><input id="ev-venue" maxlength="80" placeholder="Broad Ripple Courts"></div>
+        <div><label for="ev-date">Date</label><input id="ev-date" type="date"></div>
+        <div><label for="ev-time">Start time</label><input id="ev-time" type="time" value="18:00"></div>
+        <div>
+          <label for="ev-sport">Sport</label>
+          <select id="ev-sport">
+            <option value="pickleball">Pickleball</option>
+            <option value="tennis">Tennis</option>
+            <option value="padel">Padel</option>
+            <option value="racquetball">Racquetball</option>
+            <option value="squash">Squash</option>
+          </select>
+        </div>
+        <div><label for="ev-capacity">Capacity</label><input id="ev-capacity" type="number" min="2" max="500" value="24"></div>
+        <div style="grid-column:1/-1"><label for="ev-level">Level range</label><input id="ev-level" maxlength="40" value="All levels"></div>
+      </div>
+      <div class="row-btns"><button class="btn btn-primary" id="ev-create" type="button">Create event</button></div>
+      <p class="msg" id="ev-msg"></p>
+      <h1 style="margin-top:22px; font-size:17px">Upcoming</h1>
+      <div id="event-list"></div>
+    </div>
+  </div>
+
+  <footer>
+    40/Love moderation desk · Indianapolis ·
+    This page is safe to deploy publicly: every action is checked against the admin list by the
+    database itself, not by this page.
+  </footer>
+</div>
+
+<script>
+  /* To go live, paste the SAME two values as the landing page (Supabase
+     Dashboard → Settings → API). The anon key is designed to be public;
+     admin powers come from your signed-in account being on the admins list,
+     never from this page. NEVER put the service_role key here. */
+  window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
+</script>
+<script>
+(function () {
+  'use strict';
+
+  var cfg = window.FORTYLOVE || {};
+  var LIVE = !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
+  var BASE = LIVE ? cfg.SUPABASE_URL.replace(/\/+$/, '') : '';
+  var TOKEN_KEY = '40love.admin.session';
+
+  function $(s) { return document.querySelector(s); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function ago(iso) {
+    var mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    if (mins < 60) return mins + 'm ago';
+    if (mins < 1440) return Math.round(mins / 60) + 'h ago';
+    return Math.round(mins / 1440) + 'd ago';
+  }
+
+  /* ---------- session ---------- */
+  var session = null;
+  try { session = JSON.parse(sessionStorage.getItem(TOKEN_KEY)); } catch (e) { session = null; }
+  if (session && session.expires_at && session.expires_at * 1000 < Date.now()) session = null;
+
+  function saveSession(s) {
+    session = s;
+    try {
+      if (s) sessionStorage.setItem(TOKEN_KEY, JSON.stringify(s));
+      else sessionStorage.removeItem(TOKEN_KEY);
+    } catch (e) { /* private mode: session lives in memory */ }
+  }
+
+  function authHeaders() {
+    return {
+      'apikey': cfg.SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + (session ? session.access_token : cfg.SUPABASE_ANON_KEY),
+      'Content-Type': 'application/json'
+    };
+  }
+
+  function rest(method, path, body, extraHeaders) {
+    var h = authHeaders();
+    if (extraHeaders) for (var k in extraHeaders) h[k] = extraHeaders[k];
+    return fetch(BASE + path, {
+      method: method,
+      headers: h,
+      body: body === undefined ? undefined : JSON.stringify(body)
+    }).then(function (res) {
+      if (res.status === 401) { saveSession(null); show('signin'); throw new Error('Session expired — sign in again.'); }
+      if (!res.ok) return res.text().then(function (t) { throw new Error('HTTP ' + res.status + (t ? ': ' + t.slice(0, 200) : '')); });
+      return res.status === 204 ? null : res.text().then(function (t) { return t ? JSON.parse(t) : null; });
+    });
+  }
+
+  /* ---------- demo data ---------- */
+  var demo = {
+    photos: [
+      { id: 'd1', user: 'Maya', created_at: new Date(Date.now() - 42 * 60000).toISOString(), grad: 'linear-gradient(135deg,#2E5A45,#D6F44F)' },
+      { id: 'd2', user: 'Diego', created_at: new Date(Date.now() - 3 * 3600000).toISOString(), grad: 'linear-gradient(135deg,#24424f,#7fd0e8)' },
+      { id: 'd3', user: 'Priya', created_at: new Date(Date.now() - 26 * 3600000).toISOString(), grad: 'linear-gradient(135deg,#4f2438,#e87fb0)' }
+    ],
+    reports: [
+      { id: 'r1', reporter: 'Sam', target: 'Alex', reason: 'Profile photo is a stock image, not a real person.', context: 'deck', created_at: new Date(Date.now() - 2 * 3600000).toISOString() },
+      { id: 'r2', reporter: 'Elena', target: 'Jordan', reason: 'Kept pushing to move the chat off the app after I said no.', context: 'chat', created_at: new Date(Date.now() - 20 * 3600000).toISOString() }
+    ],
+    events: [
+      { id: 'e1', title: '40/Love Social Mixer', venue: 'Broad Ripple Courts', starts_at: new Date(Date.now() + 6 * 86400000).toISOString(), sport: 'pickleball', level_range: 'All levels', capacity: 24 }
+    ]
+  };
+
+  /* ---------- views ---------- */
+  function show(view) {
+    $('#view-signin').hidden = view !== 'signin';
+    $('#view-noadmin').hidden = view !== 'noadmin';
+    $('#view-desk').hidden = view !== 'desk';
+    $('#who').hidden = !(session || !LIVE) || view === 'signin';
+    $('#who-email').textContent = LIVE ? (session ? session.email : '') : 'demo admin';
+  }
+
+  var PANES = ['photos', 'reports', 'events'];
+  PANES.forEach(function (p) {
+    $('#tab-' + p).addEventListener('click', function () {
+      PANES.forEach(function (q) {
+        $('#tab-' + q).classList.toggle('on', q === p);
+        $('#pane-' + q).hidden = q !== p;
+      });
+    });
+  });
+
+  /* ---------- photos ---------- */
+  function renderPhotos(items) {
+    $('#n-photos').textContent = items.length || '';
+    $('#photo-list').innerHTML = items.length ? items.map(function (ph) {
+      return '<div class="item" data-id="' + esc(ph.id) + '">' +
+        '<div class="photo" data-path="' + esc(ph.path || '') + '"' + (ph.grad ? ' style="background:' + ph.grad + '"' : '') + '>' + (ph.grad ? '' : 'loading…') + '</div>' +
+        '<div class="body">' +
+          '<div class="name">' + esc(ph.user) + '<span class="pill">pending</span></div>' +
+          '<div class="meta">uploaded ' + ago(ph.created_at) + '</div>' +
+          '<div class="row-btns">' +
+            '<button class="btn btn-ok btn-sm" data-act="approve">Approve</button>' +
+            '<button class="btn btn-danger btn-sm" data-act="reject">Reject</button>' +
+          '</div>' +
+        '</div></div>';
+    }).join('') : '<div class="empty">No photos waiting — the queue is clear. 🎾</div>';
+    if (LIVE) {
+      Array.prototype.forEach.call(document.querySelectorAll('#photo-list .photo[data-path]'), function (el) {
+        var path = el.getAttribute('data-path');
+        if (!path) return;
+        fetch(BASE + '/storage/v1/object/authenticated/photos/' + path, { headers: authHeaders() })
+          .then(function (r) { return r.ok ? r.blob() : null; })
+          .then(function (b) { if (b) { el.style.backgroundImage = 'url(' + URL.createObjectURL(b) + ')'; el.textContent = ''; } else { el.textContent = 'no file'; } })
+          .catch(function () { el.textContent = 'no file'; });
+      });
+    }
+  }
+
+  function loadPhotos() {
+    if (!LIVE) { renderPhotos(demo.photos); return; }
+    rest('GET', '/rest/v1/profile_photos?select=id,user_id,storage_path,position,created_at,profiles(first_name)&moderation_status=eq.pending&order=created_at.asc')
+      .then(function (rows) {
+        renderPhotos(rows.map(function (r) {
+          return { id: r.id, user: (r.profiles && r.profiles.first_name) || 'Member', path: r.storage_path, created_at: r.created_at };
+        }));
+      })
+      .catch(function (e) { $('#photo-list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  }
+
+  $('#photo-list').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[data-act]');
+    if (!btn) return;
+    var row = btn.closest('.item');
+    var id = row.getAttribute('data-id');
+    var status = btn.getAttribute('data-act') === 'approve' ? 'approved' : 'rejected';
+    if (!LIVE) {
+      demo.photos = demo.photos.filter(function (p) { return p.id !== id; });
+      renderPhotos(demo.photos);
+      return;
+    }
+    rest('PATCH', '/rest/v1/profile_photos?id=eq.' + encodeURIComponent(id), { moderation_status: status }, { 'Prefer': 'return=minimal' })
+      .then(loadPhotos)
+      .catch(function (e) { alert('Could not update: ' + e.message); });
+  });
+
+  /* ---------- reports ---------- */
+  function renderReports(items) {
+    $('#n-reports').textContent = items.length || '';
+    $('#report-list').innerHTML = items.length ? items.map(function (r) {
+      return '<div class="item" data-id="' + esc(r.id) + '">' +
+        '<div class="body">' +
+          '<div class="name">' + esc(r.reporter) + ' reported ' + esc(r.target) +
+            '<span class="pill">' + esc(r.context) + '</span></div>' +
+          '<div class="meta">' + ago(r.created_at) + '</div>' +
+          '<div class="reason">&ldquo;' + esc(r.reason) + '&rdquo;</div>' +
+          '<div class="row-btns">' +
+            '<button class="btn btn-ghost btn-sm" data-act="reviewed">Dismiss</button>' +
+            '<button class="btn btn-danger btn-sm" data-act="actioned">Mark actioned</button>' +
+          '</div>' +
+        '</div></div>';
+    }).join('') : '<div class="empty">No open reports. A quiet court is a good court.</div>';
+  }
+
+  function loadReports() {
+    if (!LIVE) { renderReports(demo.reports); return; }
+    rest('GET', '/rest/v1/reports?select=id,reason,context,created_at,reporter:profiles!reports_reporter_id_fkey(first_name),target:profiles!reports_target_id_fkey(first_name)&status=eq.open&order=created_at.asc')
+      .then(function (rows) {
+        renderReports(rows.map(function (r) {
+          return { id: r.id, reason: r.reason, context: r.context, created_at: r.created_at,
+                   reporter: (r.reporter && r.reporter.first_name) || 'Member',
+                   target: (r.target && r.target.first_name) || 'Member' };
+        }));
+      })
+      .catch(function (e) { $('#report-list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  }
+
+  $('#report-list').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[data-act]');
+    if (!btn) return;
+    var id = btn.closest('.item').getAttribute('data-id');
+    var status = btn.getAttribute('data-act');
+    if (!LIVE) {
+      demo.reports = demo.reports.filter(function (r) { return r.id !== id; });
+      renderReports(demo.reports);
+      return;
+    }
+    rest('PATCH', '/rest/v1/reports?id=eq.' + encodeURIComponent(id), { status: status }, { 'Prefer': 'return=minimal' })
+      .then(loadReports)
+      .catch(function (e) { alert('Could not update: ' + e.message); });
+  });
+
+  /* ---------- events ---------- */
+  function renderEvents(items) {
+    $('#event-list').innerHTML = items.length ? items.map(function (e) {
+      var d = new Date(e.starts_at);
+      var when = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) +
+        ' · ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      return '<div class="item" data-id="' + esc(e.id) + '">' +
+        '<div class="body">' +
+          '<div class="name">' + esc(e.title) + '<span class="pill">' + esc(e.sport) + '</span></div>' +
+          '<div class="meta">' + esc(e.venue) + ' · ' + esc(when) + ' · ' + esc(e.level_range) + ' · cap ' + esc(e.capacity) + '</div>' +
+          '<div class="row-btns"><button class="btn btn-danger btn-sm" data-act="delete">Delete</button></div>' +
+        '</div></div>';
+    }).join('') : '<div class="empty">No upcoming events yet — create the first one above.</div>';
+  }
+
+  function loadEvents() {
+    if (!LIVE) { renderEvents(demo.events); return; }
+    rest('GET', '/rest/v1/events?select=*&starts_at=gte.' + encodeURIComponent(new Date().toISOString()) + '&order=starts_at.asc')
+      .then(renderEvents)
+      .catch(function (e) { $('#event-list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  }
+
+  $('#ev-create').addEventListener('click', function () {
+    var msg = $('#ev-msg');
+    msg.className = 'msg';
+    var title = $('#ev-title').value.trim();
+    var venue = $('#ev-venue').value.trim();
+    var date = $('#ev-date').value;
+    var time = $('#ev-time').value || '18:00';
+    var capacity = parseInt($('#ev-capacity').value, 10);
+    if (!title || !venue || !date) { msg.textContent = 'Title, venue, and date are required.'; msg.className = 'msg err'; return; }
+    if (!capacity || capacity < 2 || capacity > 500) { msg.textContent = 'Capacity must be between 2 and 500.'; msg.className = 'msg err'; return; }
+    var starts = new Date(date + 'T' + time);
+    if (!(starts.getTime() > Date.now())) { msg.textContent = 'Pick a future date and time.'; msg.className = 'msg err'; return; }
+    var body = {
+      title: title, venue: venue, starts_at: starts.toISOString(),
+      sport: $('#ev-sport').value, level_range: $('#ev-level').value.trim() || 'All levels',
+      capacity: capacity, city: 'Indianapolis'
+    };
+    if (!LIVE) {
+      demo.events.push({ id: 'e' + Date.now(), title: body.title, venue: body.venue, starts_at: body.starts_at, sport: body.sport, level_range: body.level_range, capacity: body.capacity });
+      demo.events.sort(function (a, b) { return a.starts_at < b.starts_at ? -1 : 1; });
+      renderEvents(demo.events);
+      msg.textContent = 'Event created (demo).'; msg.className = 'msg ok';
+      $('#ev-title').value = ''; $('#ev-date').value = '';
+      return;
+    }
+    rest('POST', '/rest/v1/events', body, { 'Prefer': 'return=minimal' })
+      .then(function () {
+        msg.textContent = 'Event created — it’s live in the app.'; msg.className = 'msg ok';
+        $('#ev-title').value = ''; $('#ev-date').value = '';
+        loadEvents();
+      })
+      .catch(function (e) { msg.textContent = 'Could not create: ' + e.message; msg.className = 'msg err'; });
+  });
+
+  $('#event-list').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[data-act="delete"]');
+    if (!btn) return;
+    var id = btn.closest('.item').getAttribute('data-id');
+    if (!confirm('Delete this event? Members who RSVPed will simply no longer see it.')) return;
+    if (!LIVE) {
+      demo.events = demo.events.filter(function (e) { return e.id !== id; });
+      renderEvents(demo.events);
+      return;
+    }
+    rest('DELETE', '/rest/v1/events?id=eq.' + encodeURIComponent(id), undefined, { 'Prefer': 'return=minimal' })
+      .then(loadEvents)
+      .catch(function (e) { alert('Could not delete: ' + e.message); });
+  });
+
+  /* ---------- auth ---------- */
+  $('#si-send').addEventListener('click', function () {
+    var email = $('#si-email').value.trim().toLowerCase();
+    var msg = $('#si-msg');
+    msg.className = 'msg';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.textContent = 'Enter a valid email.'; msg.className = 'msg err'; return; }
+    fetch(BASE + '/auth/v1/otp', {
+      method: 'POST',
+      headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    }).then(function (res) {
+      if (!res.ok) return res.text().then(function (t) { throw new Error(t.slice(0, 200)); });
+      $('#si-step1').hidden = true;
+      $('#si-step2').hidden = false;
+      $('#si-step2').setAttribute('data-email', email);
+      msg.textContent = 'Code sent to ' + email + ' — check your inbox.';
+      msg.className = 'msg ok';
+    }).catch(function (e) { msg.textContent = 'Could not send the code: ' + e.message; msg.className = 'msg err'; });
+  });
+
+  $('#si-back').addEventListener('click', function () {
+    $('#si-step1').hidden = false;
+    $('#si-step2').hidden = true;
+    $('#si-msg').textContent = '';
+  });
+
+  $('#si-verify').addEventListener('click', function () {
+    var email = $('#si-step2').getAttribute('data-email');
+    var code = $('#si-code').value.trim();
+    var msg = $('#si-msg');
+    msg.className = 'msg';
+    if (!/^\d{6}$/.test(code)) { msg.textContent = 'Enter the 6-digit code.'; msg.className = 'msg err'; return; }
+    fetch(BASE + '/auth/v1/verify', {
+      method: 'POST',
+      headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'email', email: email, token: code })
+    }).then(function (res) { return res.json().then(function (j) { return res.ok ? j : Promise.reject(new Error((j.msg || j.error_description || 'verification failed').slice(0, 200))); }); })
+      .then(function (j) {
+        saveSession({ access_token: j.access_token, expires_at: j.expires_at, email: email });
+        return enter();
+      })
+      .catch(function (e) { msg.textContent = 'Could not verify: ' + e.message; msg.className = 'msg err'; });
+  });
+
+  $('#sign-out').addEventListener('click', function () {
+    saveSession(null);
+    if (LIVE) { show('signin'); $('#si-back').click(); }
+  });
+
+  /* ---------- entry ---------- */
+  function enter() {
+    return rest('POST', '/rest/v1/rpc/is_admin', {})
+      .then(function (isAdmin) {
+        if (isAdmin === true) {
+          show('desk');
+          loadPhotos(); loadReports(); loadEvents();
+        } else {
+          show('noadmin');
+        }
+      })
+      .catch(function () { show('noadmin'); });
+  }
+
+  if (!LIVE) {
+    $('#demo-banner').hidden = false;
+    show('desk');
+    renderPhotos(demo.photos);
+    renderReports(demo.reports);
+    renderEvents(demo.events);
+  } else if (session) {
+    enter();
+  } else {
+    show('signin');
+  }
+})();
+</script>
+</body>
+</html>

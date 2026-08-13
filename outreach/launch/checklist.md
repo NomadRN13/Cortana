@@ -25,7 +25,7 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
 | 2.1 | Real auth, matching, chat | done (code) | dev | `mobile/src/api/backend.js` + `supabase/migrations/` implement email-OTP auth, discovery deck, swipes→matches trigger, realtime chat, court-time proposals. QA round closed all blockers (`outreach/launch/bugs.md` B-01…B-19 fixed). Two items still say "verify on a real project": realtime publication (B-07) and photo upload on device (B-09). |
 | 2.2 | In-app account deletion | done (code) — one gap | dev | Settings → Delete account (`mobile/src/screens/SettingsScreen.js:68-79,240`) calls the `delete_account()` RPC (initial migration). **Gap:** the RPC deletes `auth.users` (rows cascade) but does not delete photo objects from the `photos` storage bucket — orphaned binaries contradict the privacy policy's hard-delete promise and both stores' deletion declarations. Fix before filing the data forms as final. |
 | 2.3 | Block + report shipped in-app | done (code) | dev | Deck: `HomeScreen.js:55-62`; chat: `ConversationScreen.js:60-67`; backend `blockUser`/`reportUser`; `blocks`/`reports` tables with RLS. Blocking is instant + mutual-filtered in the deck RPC. |
-| 2.4 | Human moderation flow for reports (24h SLA) | blocked-on admin queue | dev + founder | `reports` table exists and reports land in it — but **no admin dashboard/queue exists in the repo** to review them, and nothing approves photos: `profile_photos` default to `pending` and only `approved` photos are shown to others, so on a fresh backend **no profile photo ever becomes visible**. This is both an Apple 1.2 requirement and a review-time functionality risk. Founder owns the human process (24h SLA, actions per architecture §6); dev owns the queue tooling. |
+| 2.4 | Human moderation flow for reports (24h SLA) | done (code) — see update below | dev + founder | Moderation desk shipped at `/admin` (`admin/index.html` + migration `20260806000008`): photo approve/reject, report triage, event creation — all authorized by DB-side admin policies, harness-tested. Founder one-time step: add yourself to the `admins` list (`docs/backend-setup.md`). Founder owns the human process (24h SLA); suspend/ban actions stay in the dashboard at alpha volume. |
 | 2.5 | `eas init` (real project ID) + fill `eas.json` placeholders | not started | dev | `mobile/app.json` still has `projectId: REPLACE_AFTER_RUNNING_eas_init`; `mobile/eas.json` still has `REPLACE_WITH_YOUR_APPLE_ID_EMAIL` / `REPLACE_WITH_APP_STORE_CONNECT_APP_ID` and expects `./play-service-account.json`. Blocked on 1.3 (accounts). Agent never runs eas commands. |
 | 2.6 | Store descriptions, keywords, categories | done (draft) | agent | Full copy pack in `outreach/launch/store-listing.md` — founder review for tone + facts. |
 | 2.7 | App Privacy (Apple) + Data Safety (Play) form answers | done (draft) | agent | Drafted strictly from `backend.js` + migrations in `store-listing.md`. Must be re-filed if the app ever collects anything new (analytics SDK, phone numbers, precise location…). File only after 2.2's storage-purge gap is fixed, or the deletion answers overstate reality. |
@@ -101,3 +101,22 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
   table (`store-listing.md`) — it moved OFF both "not collected" lists.
   Reviewer notes now flag that the review account must have a pre-verified
   phone or a Supabase test-phone fixed OTP.
+
+## Update — 2026-08-09 (moderation desk shipped — item 2.4 unblocked)
+
+- **Item 2.4 (human moderation flow) is now `done (code)`:** the site ships
+  a moderation desk at `/admin` (`admin/index.html`) — photo approvals
+  (fixes the "no photo ever becomes visible" trap), report triage with a
+  24h-SLA framing, and event creation. Backed by migration
+  `20260806000008_admin.sql`: an `admins` table invisible to the API,
+  an `is_admin()` check, and admin RLS policies (photos any-status +
+  update, reports read/update, profiles read, events write, storage read).
+  Verified by the SQL harness: non-admins can't see pending photos, read
+  others' reports, or create events; admins can, and the admins table
+  stays unreadable even to admins.
+- **Founder one-time step:** sign in at `/admin` once, then run the
+  one-line SQL in `docs/backend-setup.md` to put yourself on the admin
+  list. Until the Supabase keys are pasted into the page, `/admin` runs in
+  demo mode with sample data — you can try the workflow today.
+- Warnings/suspensions/bans remain dashboard actions at alpha volume; the
+  desk records the decision. A fuller admin app stays on the roadmap.
