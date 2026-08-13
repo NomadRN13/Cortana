@@ -49,10 +49,12 @@ const PARTNER_PREFS = [
   { key: 'everyone', label: 'Everyone' },
 ];
 
-export default function OnboardingScreen({ navigation }) {
+export default function OnboardingScreen({ navigation, route }) {
   const app = useApp();
   const [step, setStep] = useState(0);
-  const [name, setName] = useState('');
+  // Apple hands over a first name only on the very first sign-in — if we got
+  // one, start with it filled in rather than asking again.
+  const [name, setName] = useState((route && route.params && route.params.firstName) || '');
   const [birthdateText, setBirthdateText] = useState('');
   const [photo, setPhoto] = useState(null);
   const [sports, setSports] = useState([]);

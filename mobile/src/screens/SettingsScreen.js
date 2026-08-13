@@ -52,7 +52,9 @@ export default function SettingsScreen({ navigation }) {
   };
 
   const signOut = () => {
-    Alert.alert('Sign out?', app.live ? 'You can sign back in anytime with your email.' : 'Your local demo profile will be cleared.', [
+    // Don't promise an email code: an Apple "Hide My Email" member can't
+    // receive one at an address they've never seen.
+    Alert.alert('Sign out?', app.live ? 'Sign back in anytime the same way you signed up.' : 'Your local demo profile will be cleared.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign out',

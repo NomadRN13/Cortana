@@ -149,6 +149,46 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
 - **Fake "Rallies: 128" profile stat removed** (both apps) — replaced with
   the member's real Saved-players count. No made-up numbers shown to users.
 
+## Update — 2026-08-09 (Sign in with Apple + Google)
+
+- **Shipped (code):** three passwordless ways in — emailed code, Sign in with
+  Apple (native, with the nonce Apple requires), Continue with Google
+  (native). Both social buttons self-disable when their SDK or config is
+  absent, so Expo Go and demo mode are unaffected.
+- **NEW HARD DEPENDENCY — a development build.** Both providers are native
+  modules. Expo Go can no longer exercise sign-in. Item 1.1 ("run the demo
+  in Expo Go") still works for everything else, but sign-in testing now needs
+  `eas build --profile development`, which needs `eas init` (item 2.5).
+- **NEW RELEASE BLOCKER (Apple 4.8):** shipping Google sign-in on iOS without
+  Sign in with Apple is a rejection. Both are wired; the blocker is
+  *configuration* — the Apple capability + Services ID + key, and the three
+  Google OAuth clients. Walkthrough in `docs/backend-setup.md`. Cheap
+  alternative if you want to defer Apple's setup: ship Google on **Android
+  only** and leave iOS with email codes, which never triggers 4.8.
+- **NEW RELEASE BLOCKER (Apple 5.1.1(v)):** an app that supports Sign in with
+  Apple must **revoke the Apple token** when the member deletes their
+  account. Our `delete_account()` deletes the row but does not call Apple's
+  revoke endpoint. Needs a small edge function holding the Apple key before
+  the first iOS submission that includes Sign in with Apple.
+- **Play Data Safety gap surfaced (pre-existing, now unavoidable):** Play
+  requires a **web-accessible account-deletion URL** in addition to the
+  in-app button. No such page exists on the site yet.
+- **Both privacy forms must be re-filed** before the release that adds OAuth
+  — not because new data types appear, but because the SDK inventory and the
+  collection route change. `store-listing.md` updated: tracking justification
+  rewritten (it claimed Supabase was the only network destination), email/user
+  ID rows annotated, a Play "User IDs" row added, reviewer notes list all
+  three sign-in paths.
+- **Privacy policy updated** (`landing/privacy.html`): names Apple and Google
+  as identity providers, explains the Apple private-relay address, and
+  discloses plainly that the provider necessarily learns the member signed in
+  to a dating app — with the emailed-code route offered as the private
+  alternative.
+- **Account-merge caveat to expect in support:** a member who joined by email
+  code and later taps Sign in with Apple with "Hide My Email" gets a *second*
+  account with an empty profile. Supabase can only link identities when the
+  verified emails match. Documented in `docs/backend-setup.md`.
+
 ## Update — 2026-08-09 (chat polish: B-14 + B-21 closed)
 
 - **Read receipts (B-14):** your last message shows "Read ✓" once your

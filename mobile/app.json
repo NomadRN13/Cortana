@@ -17,6 +17,7 @@
       "bundleIdentifier": "com.fortylove.app",
       "buildNumber": "1",
       "supportsTablet": false,
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "40/Love uses your photo library so you can add profile photos.",
         "NSCameraUsageDescription": "40/Love uses your camera so you can take a profile photo.",
@@ -50,7 +51,8 @@
         {
           "locationWhenInUsePermission": "40/Love uses your approximate location to show players and events near you. Your exact location is never stored."
         }
-      ]
+      ],
+      "expo-apple-authentication"
     ],
     "extra": {
       "eas": {

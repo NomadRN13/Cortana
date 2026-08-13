@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
 import { Wordmark, Btn } from '../components/ui';
 import { useApp } from '../state';
+import { appleSignInAvailable, googleSignInAvailable, isCancelledSignIn } from '../lib/socialAuth';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const RESEND_SECONDS = 30;
@@ -17,13 +18,41 @@ export default function SignInScreen({ navigation }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [cooldown, setCooldown] = useState(0);
+  const [appleReady, setAppleReady] = useState(false);
   const codeRef = useRef(null);
+  // Google's module is absent in Expo Go and unconfigured without client IDs;
+  // in both cases the button must not render at all.
+  const googleReady = googleSignInAvailable();
+
+  useEffect(() => {
+    let alive = true;
+    appleSignInAvailable().then((ok) => { if (alive) setAppleReady(ok); });
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
     if (cooldown <= 0) return undefined;
     const t = setTimeout(() => setCooldown(cooldown - 1), 1000);
     return () => clearTimeout(t);
   }, [cooldown]);
+
+  const social = async (provider) => {
+    if (busy) return;
+    setError('');
+    setBusy(true);
+    try {
+      const res = await app.signInWithProvider(provider);
+      if (!res) return; // dismissed the sheet
+      navigation.reset({
+        index: 0,
+        routes: [res.hasProfile ? { name: 'Main' } : { name: 'Onboarding', params: { firstName: res.firstName } }],
+      });
+    } catch (e) {
+      if (!isCancelledSignIn(e)) setError(friendly(e));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const sendCode = async () => {
     const addr = email.trim().toLowerCase();
@@ -113,6 +142,44 @@ export default function SignInScreen({ navigation }) {
               <Text style={type.hint}>
                 We'll email you a 6-digit code — no password to forget court-side.
               </Text>
+
+              {(appleReady || googleReady) && (
+                <>
+                  <View style={styles.orRow}>
+                    <View style={styles.rule} />
+                    <Text style={styles.orText}>or</Text>
+                    <View style={styles.rule} />
+                  </View>
+                  {appleReady && (
+                    <Pressable
+                      style={[styles.social, styles.socialApple, busy && { opacity: 0.5 }]}
+                      onPress={() => social('apple')}
+                      disabled={busy}
+                      accessibilityRole="button"
+                      accessibilityLabel="Sign in with Apple"
+                    >
+                      <Ionicons name="logo-apple" size={19} color="#0A0B0D" />
+                      <Text style={styles.socialAppleLabel}>Sign in with Apple</Text>
+                    </Pressable>
+                  )}
+                  {googleReady && (
+                    <Pressable
+                      style={[styles.social, styles.socialGoogle, busy && { opacity: 0.5 }]}
+                      onPress={() => social('google')}
+                      disabled={busy}
+                      accessibilityRole="button"
+                      accessibilityLabel="Continue with Google"
+                    >
+                      <Ionicons name="logo-google" size={18} color={colors.text} />
+                      <Text style={styles.socialGoogleLabel}>Continue with Google</Text>
+                    </Pressable>
+                  )}
+                  <Text style={[type.hint, { fontSize: 12 }]}>
+                    We only ever ask Apple or Google for your name and email — never your contacts, and never anything for advertising.
+                  </Text>
+                </>
+              )}
+
               {!app.isBackendConfigured && (
                 <View style={styles.demoNote}>
                   <Ionicons name="flask-outline" size={15} color={colors.optic} />
@@ -168,7 +235,15 @@ export default function SignInScreen({ navigation }) {
 
 function friendly(e) {
   const msg = (e && e.message) || '';
+  const code = (e && e.code) || '';
   if (/rate/i.test(msg)) return 'Too many attempts — wait a minute and try again.';
+  if (/nonce/i.test(msg)) return 'Sign-in couldn’t be verified. Try again.';
+  if (code === 'PLAY_SERVICES_NOT_AVAILABLE' || /play services/i.test(msg)) {
+    return 'Google sign-in needs Google Play Services on this device — use an email code instead.';
+  }
+  if (/provider is not enabled|not enabled/i.test(msg)) {
+    return 'That sign-in method isn’t switched on yet. Use an email code for now.';
+  }
   if (/expired|invalid/i.test(msg)) return 'That code didn’t match. Check the newest email or resend.';
   if (/network|fetch/i.test(msg)) return 'No connection — check your internet and try again.';
   return msg || 'Something went wrong. Try again.';
@@ -184,6 +259,17 @@ const styles = StyleSheet.create({
     fontSize: 17, color: colors.text,
   },
   codeInput: { fontSize: 28, fontWeight: '800', letterSpacing: 12, textAlign: 'center' },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 2 },
+  rule: { flex: 1, height: 1, backgroundColor: colors.line },
+  orText: { color: colors.dim, fontSize: 12, fontWeight: '700', letterSpacing: 1 },
+  social: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9,
+    height: 52, borderRadius: 12,
+  },
+  socialApple: { backgroundColor: '#F4F6F0' },
+  socialAppleLabel: { color: '#0A0B0D', fontWeight: '800', fontSize: 15.5 },
+  socialGoogle: { backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line },
+  socialGoogleLabel: { color: colors.text, fontWeight: '800', fontSize: 15.5 },
   resend: { color: colors.optic, fontWeight: '800', fontSize: 13.5, paddingVertical: 4 },
   error: { color: colors.danger, fontSize: 13.5, fontWeight: '600', lineHeight: 19 },
   demoNote: {

@@ -138,6 +138,12 @@
       in the Supabase dashboard (that's a security feature): open <b>SQL Editor</b> and run —
     </p>
     <p style="margin:12px 0"><code>insert into admins (user_id) select id from auth.users where email = 'your@email.com';</code></p>
+    <p class="hint">
+      Signed in with Apple and hiding your email? Then there's no address to match on — use your
+      user ID instead. It's shown below; copy it into:
+      <code>insert into admins (user_id) values ('&lt;that id&gt;');</code>
+    </p>
+    <p class="hint" style="margin-top:8px">Your user ID: <code id="my-uid">—</code></p>
     <p class="hint">Then reload this page. Full walkthrough: <code>docs/backend-setup.md</code>.</p>
   </div>
 
@@ -515,6 +521,14 @@
   });
 
   /* ---------- entry ---------- */
+  function showMyUid() {
+    // So an admin whose email is hidden (Apple relay) can still bootstrap.
+    fetch(BASE + '/auth/v1/user', { headers: authHeaders() })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j && j.id) $('#my-uid').textContent = j.id; })
+      .catch(function () { /* leave the dash */ });
+  }
+
   function enter() {
     return rest('POST', '/rest/v1/rpc/is_admin', {})
       .then(function (isAdmin) {
@@ -523,9 +537,10 @@
           loadPhotos(); loadReports(); loadEvents();
         } else {
           show('noadmin');
+          showMyUid();
         }
       })
-      .catch(function () { show('noadmin'); });
+      .catch(function () { show('noadmin'); showMyUid(); });
   }
 
   if (!LIVE) {

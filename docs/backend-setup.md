@@ -77,6 +77,90 @@ Then, on either path:
    12 demo players, run the contents of `supabase/seed.sql` in Dashboard →
    SQL Editor. Never run the seed against the real launch project.
 
+## Sign in with Apple & Google (optional, but Apple is required if you ship Google)
+
+The app offers three ways in: an email code (works today), **Sign in with
+Apple**, and **Continue with Google**. The social buttons only appear once
+they're configured — until then the app quietly shows just the email option,
+so nothing is broken while you work through this.
+
+**Important rule:** App Store Guideline 4.8 says that if you offer Google
+sign-in, you must also offer an equivalent option that limits data collection
+to name and email and lets people hide their email. Sign in with Apple is the
+standard way to satisfy it. So on iPhone: **ship both, or neither.**
+
+**Also important:** both are native features. They cannot be tested in the
+Expo Go preview app — you need a development build (`eas build --profile
+development`). Apple's works in Expo Go only with extra fiddling and produces
+a *different* test account, so don't judge it there.
+
+### Apple (~20 minutes, needs the paid Apple Developer account)
+
+1. Apple Developer → Certificates, Identifiers & Profiles → Identifiers →
+   `com.fortylove.app` → tick **Sign In with Apple** → Save.
+2. Create a **Services ID** (Identifiers → + → Services IDs), e.g.
+   `com.fortylove.web`, and a **Key** with Sign in with Apple enabled —
+   download the `.p8` file, and note the Key ID and your Team ID.
+3. Supabase Dashboard → Authentication → Sign In / Up → **Apple**: enable it.
+   In **Client IDs** put `com.fortylove.app` (the app) — add the Services ID
+   too if you ever add web sign-in, and put the Services ID *first* if so.
+   Fill the secret fields from the `.p8` key.
+4. If you email your members, register your sending domain under Apple
+   Developer → Services → **Sign in with Apple for Email Communication**.
+   Apple users can choose "Hide My Email", which gives you a
+   `…@privaterelay.appleid.com` address — real and deliverable, but mail is
+   dropped if your domain isn't registered.
+
+### Google (~20 minutes, free)
+
+1. [Google Cloud Console](https://console.cloud.google.com) → create a
+   project → APIs & Services → **OAuth consent screen**: External, fill in the
+   app name, support email, and your privacy-policy URL. **Publish it** —
+   while it's in "Testing", only accounts you list can sign in.
+2. Credentials → Create credentials → OAuth client ID, **three times**:
+   - **Web** — this one's ID is the token audience on Android. Add
+     `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback` as an authorized
+     redirect URI.
+   - **Android** — package name `com.fortylove.app` plus the SHA-1
+     fingerprint from `eas credentials` → Android → Keystore.
+   - **iOS** — bundle ID `com.fortylove.app`.
+3. Supabase Dashboard → Authentication → Sign In / Up → **Google**: enable,
+   paste the **Web** client ID and secret, and add the **iOS** client ID to
+   the additional Client IDs field. Turn **Skip nonce check** ON (the native
+   Google SDK doesn't send one).
+4. In `mobile/.env`, set `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` and
+   `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`. The button appears once they're set.
+5. For Google on **iPhone** only, add this to `mobile/app.json`'s `plugins`
+   array, using your **iOS** client ID with its two halves swapped
+   (`123-abc.apps.googleusercontent.com` → `com.googleusercontent.apps.123-abc`):
+
+   ```json
+   ["@react-native-google-signin/google-signin",
+    { "iosUrlScheme": "com.googleusercontent.apps.YOUR-IOS-CLIENT-ID" }]
+   ```
+
+   Get this wrong and the iPhone build fails at build time (or, if you paste
+   the *Web* ID by mistake, fails only at runtime on iPhone).
+
+### The one that bites everyone, later
+
+After you ship through Google Play, Play re-signs your app with a different
+key, so Google sign-in works in testing and then fails in production with
+"DEVELOPER_ERROR". Fix it *before* launch: Play Console → your app → Test and
+release → App integrity → **App signing key certificate** → copy that SHA-1
+and add it to the same Google Cloud **Android** OAuth client. Keep both
+fingerprints there.
+
+### Two things to know about accounts
+
+- Someone who joined with an email code and later taps "Sign in with Apple"
+  with Hide My Email will land in a **separate account** with an empty
+  profile — Supabase can only merge accounts when the email addresses match.
+  If members report "my account disappeared", this is why.
+- Apple gives you the person's name **once**, on their very first sign-in.
+  The app captures it and prefills onboarding; there's no way to ask Apple
+  again later.
+
 ## The moderation desk (/admin) — make yourself an admin (one-time, ~5 minutes)
 
 The site ships with a moderation page at `/admin` (also in the repo at

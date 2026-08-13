@@ -113,9 +113,16 @@ Target audience is 18+ regardless; the app enforces it at signup.
 Tracking (Apple's definition — data linked with third-party data for
 advertising, or shared with data brokers): **No.** Justification from the
 code: `mobile/package.json` contains no ad, analytics, or attribution SDK of
-any kind; the only network destination is our own Supabase backend (a service
-provider under our instructions); nothing is shared with third parties for
-their own purposes.
+any kind. The app talks to our own Supabase backend (a service provider under
+our instructions) and — only when the member taps a sign-in button — to
+`appleid.apple.com` / Google's sign-in services. Those are *authentication*
+SDKs, not advertising or attribution SDKs: no IDFA is requested, no ATT prompt
+is needed, no data is combined with third-party data for ad targeting, and
+nothing goes to a data broker. This stays true only while sign-in is
+implemented with `expo-apple-authentication` + `@react-native-google-signin`
+feeding Supabase directly — routing it through Firebase Auth would pull in
+analytics SDKs and invalidate both this answer and the "no analytics" claims
+in the listing and privacy policy.
 
 Data types collected — all **linked to the user's identity** (everything lives
 in rows keyed by account id; there is no anonymous mode), all for **App
@@ -124,7 +131,7 @@ purposes:
 
 | Apple data type | What it actually is (code reference) | Linked | Purpose |
 |---|---|---|---|
-| Contact Info → Email Address | Sign-in via one-time email code; no passwords (`signInWithEmail`). Also the waitlist form. | Yes | App Functionality (account) |
+| Contact Info → Email Address | Sign-in via one-time email code; no passwords (`signInWithEmail`). May instead arrive from Sign in with Apple (possibly an `@privaterelay.appleid.com` relay address) or Google. Also the waitlist form. | Yes | App Functionality (account) |
 | Contact Info → Phone Number | Verified once by SMS at signup (`startPhoneVerification`); stored in auth, never shown to members, never used for marketing — anti-fake-account / ban enforcement only | Yes | App Functionality (account security) |
 | Contact Info → Name | **First name only** — `profiles.first_name`; last names don't exist in the schema | Yes | App Functionality |
 | Sensitive Info | Gender identity + who the user wants to date (`profiles.gender`, `seeking`) — sexual orientation can be inferred, so declare it | Yes | App Functionality (Date-mode matching) |
@@ -132,7 +139,7 @@ purposes:
 | Location → Precise Location | **Not collected** | — | — |
 | User Content → Photos or Videos | Profile photos (up to 6), private bucket, moderated before visible | Yes | App Functionality |
 | User Content → Other User Content | Bio, availability note, chat messages, court-time proposals, reports filed | Yes | App Functionality (chat content may be reviewed by a human when reported — say so in the policy, already done) |
-| Identifiers → User ID | Account UUID (Supabase auth id) | Yes | App Functionality |
+| Identifiers → User ID | Account UUID (Supabase auth id), plus the provider subject id from Apple/Google sign-in | Yes | App Functionality |
 | Identifiers → Device ID | Push-notification token, only if the user allows notifications (`push_tokens`) | Yes | App Functionality (notifications) |
 | Usage Data → Product Interaction | Likes/passes/aces, matches, event RSVPs — this is the matching engine, stored server-side (`swipes`, `matches`, `event_rsvps`) | Yes | App Functionality |
 | Other Data | Birthdate (`profiles.birthdate`) — 18+ enforcement and age display; never shown raw to other users, only computed age | Yes | App Functionality |
@@ -245,6 +252,7 @@ Per data type (Collected / Shared / Purpose / Optional):
 |---|---|---|---|---|
 | Personal info → Email address | Yes | No | Account management (one-time-code sign-in) | No — required to sign in |
 | Personal info → Phone number | Yes (verified once by SMS at signup; never shown to members) | No | Account management / fraud prevention (keeps the community real people; ban enforcement) | No — required at signup |
+| Personal info → User IDs | Yes (Supabase account UUID; plus the Apple `sub` / Google account id when social sign-in is used) | No | Account management | No |
 | Personal info → Name | Yes (first name only) | No | App functionality (shown on your profile) | No |
 | Personal info → Date of birth ("Other info") | Yes | No | App functionality (18+ enforcement; only your age is shown) | No |
 | Personal info → Sexual orientation | Yes (inferable from gender + dating preferences) | No | App functionality (Date-mode matching) | **Yes** — only needed for Date mode; Play/Friends modes work without it |
@@ -279,8 +287,9 @@ review notes fields. Same substance for both.
 > **Review account:** [FILL IN — email + fixed one-time code, once the
 > review account is seeded]
 >
-> **Sign-in note:** 40/Love uses passwordless email one-time codes (no
-> passwords). So that you don't need access to a live inbox, the review
+> **Sign-in note:** 40/Love offers three ways in, all passwordless: an
+> emailed one-time code, Sign in with Apple, and Continue with Google.
+> Sign in with Apple is offered wherever Google is, per Guideline 4.8. So that you don't need access to a live inbox, the review
 > account above accepts the fixed code listed with the credentials at the
 > verification step. [FILL IN — confirm the fixed-OTP bypass is configured
 > for the review account before submission.]

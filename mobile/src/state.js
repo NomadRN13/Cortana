@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS, EVENTS } from './data/seed';
 import { supabase, isBackendConfigured } from './lib/supabase';
 import * as api from './api/backend';
+import * as social from './lib/socialAuth';
 import { registerForPush } from './lib/push';
 import { getCoarseLocation } from './lib/location';
 
@@ -476,6 +477,9 @@ export function AppStateProvider({ children }) {
 
   const signOut = () => {
     if (isBackendConfigured) api.signOut().catch(() => {});
+    // Also clear the native Google session, so the next sign-in offers the
+    // account picker instead of silently reusing the last account.
+    social.signOutProviders().catch(() => {});
     AsyncStorage.removeItem(STORE_KEY).catch(() => {});
     AsyncStorage.removeItem(SAVED_KEY).catch(() => {});
     setUser(null);
@@ -530,37 +534,58 @@ export function AppStateProvider({ children }) {
     return true;
   };
 
+  // Shared by every sign-in route (email code, Apple, Google): once a session
+  // exists, pull the profile and decide Onboarding vs Main.
+  const bootstrapAfterSignIn = async () => {
+    const remote = await api.getMyProfile();
+    if (!remote) return { hasProfile: false };
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    // Only carry a cached photo forward for the SAME account — otherwise
+    // signing in as someone else inherits the previous person's photo.
+    const sameAccount = user && authUser && user.authId === authUser.id;
+    const localUser = {
+      authId: authUser ? authUser.id : null,
+      name: remote.first_name,
+      age: ageFromBirthdate(remote.birthdate),
+      birthdate: remote.birthdate,
+      gender: remote.gender || null,
+      seeking: remote.seeking || [],
+      playGames: remote.play_games || ALL_GAMES,
+      playPref: remote.play_pref || 'everyone',
+      friendsPref: remote.friends_pref || 'everyone',
+      phoneVerified: !!remote.phone_verified_at,
+      photo: sameAccount && user.photo ? user.photo : null,
+      sports: (remote.user_sports || []).map((s) => cap(s.sport)),
+      skill: remote.user_sports && remote.user_sports[0] ? cap(remote.user_sports[0].level) : 'Intermediate',
+      rating: remote.user_sports && remote.user_sports[0] ? remote.user_sports[0].rating_label : '',
+      modes: remote.modes,
+      bio: remote.bio,
+    };
+    saveUser(localUser);
+    if (remote.modes && remote.modes.length) setMode(remote.modes[0]);
+    setPrefs({ radius: remote.radius_mi, ageMin: remote.age_min, ageMax: remote.age_max, mySportsOnly: remote.same_sports_only });
+    return { hasProfile: true };
+  };
+
   const verifyCode = async (email, code) => {
     if (isBackendConfigured) {
       await api.verifyOtp(email, code);
-      const remote = await api.getMyProfile();
-      if (remote) {
-        const localUser = {
-          name: remote.first_name,
-          age: ageFromBirthdate(remote.birthdate),
-          birthdate: remote.birthdate,
-          gender: remote.gender || null,
-          seeking: remote.seeking || [],
-          playGames: remote.play_games || ALL_GAMES,
-          playPref: remote.play_pref || 'everyone',
-          friendsPref: remote.friends_pref || 'everyone',
-          phoneVerified: !!remote.phone_verified_at,
-          photo: user && user.photo ? user.photo : null,
-          sports: (remote.user_sports || []).map((s) => cap(s.sport)),
-          skill: remote.user_sports && remote.user_sports[0] ? cap(remote.user_sports[0].level) : 'Intermediate',
-          rating: remote.user_sports && remote.user_sports[0] ? remote.user_sports[0].rating_label : '',
-          modes: remote.modes,
-          bio: remote.bio,
-        };
-        saveUser(localUser);
-        if (remote.modes && remote.modes.length) setMode(remote.modes[0]);
-        setPrefs({ radius: remote.radius_mi, ageMin: remote.age_min, ageMax: remote.age_max, mySportsOnly: remote.same_sports_only });
-        return { hasProfile: true };
-      }
-      return { hasProfile: false };
+      return bootstrapAfterSignIn();
     }
     if (!/^\d{6}$/.test(code)) throw new Error('Enter the 6-digit code.');
     return { hasProfile: !!user };
+  };
+
+  // Apple / Google. The native credential exchange lives in lib/socialAuth;
+  // from here on the flow is identical to the email-code route.
+  const signInWithProvider = async (provider) => {
+    if (!isBackendConfigured) throw new Error('Connect the backend to use social sign-in.');
+    const result = provider === 'apple' ? await social.signInWithApple() : await social.signInWithGoogle();
+    if (!result) return null; // the person dismissed the sheet
+    const boot = await bootstrapAfterSignIn();
+    // Apple hands over a first name exactly once, on the very first sign-in.
+    // Keep it to prefill onboarding rather than making them type it again.
+    return { ...boot, firstName: result.firstName || '' };
   };
 
   const finishOnboarding = async (draft) => {
@@ -590,6 +615,9 @@ export function AppStateProvider({ children }) {
       // The phone was verified before this profile row existed — stamp it now.
       if (draft.phoneVerified) await api.syncPhoneVerification().catch(() => {});
       if (draft.photo) api.uploadProfilePhoto(draft.photo, 0).catch(() => {});
+      // Push tokens reference the profile row, so the attempt made at sign-in
+      // (before onboarding) could not have succeeded — retry now that it exists.
+      registerForPush(api.registerPushToken).catch(() => {});
     }
     saveUser(draft);
     setMode(draft.modes[0]);
@@ -952,7 +980,7 @@ export function AppStateProvider({ children }) {
   const value = {
     user, hydrated, saveUser, signOut,
     session, live, isBackendConfigured,
-    requestCode, verifyCode, finishOnboarding,
+    requestCode, verifyCode, signInWithProvider, finishOnboarding,
     requestPhoneCode, verifyPhoneCode,
     updateBio, updatePhoto, updatePrefs, updateModes, updateDating, updatePlay, updateFriendsPref,
     photos, addPhoto, removePhoto, makePrimary,
