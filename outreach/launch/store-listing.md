@@ -367,3 +367,9 @@ For both stores' "What's new" field:
 5. If the app ever adds analytics, crash reporting, precise location, or
    any new data type: **both privacy forms must be re-filed before the
    next release.**
+6. ~~Apple token revocation on account deletion (Guideline 5.1.1(v))~~ —
+   built (`supabase/functions/apple-auth` + migration
+   `20260806000016_apple_identities.sql`). **Founder step before the first
+   iOS submission that includes Sign in with Apple:** deploy the function and
+   set the four `APPLE_*` secrets — see `docs/backend-setup.md`. Unset, it
+   no-ops, so the feature is not wired up until you do this.

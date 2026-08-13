@@ -3,6 +3,7 @@
 // src/state.js swaps its demo actions for these once the backend is live —
 // the function signatures mirror the state actions on purpose.
 import { supabase } from '../lib/supabase';
+import { revokeAppleAccount } from '../lib/socialAuth';
 
 // ---------- Auth ----------
 
@@ -54,6 +55,10 @@ export async function deleteAccount() {
   // they don't. Belt and braces: this deletes the files, the RPC guarantees
   // nothing is left pointing at them even if this half fails.
   await purgeMyPhotoFiles();
+  // And if they got in with Apple, tell Apple to drop the account too — App
+  // Store guideline 5.1.1(v). Must happen before the row goes, since the token
+  // it needs is stored against the account. Never throws.
+  await revokeAppleAccount();
   const { error } = await supabase.rpc('delete_account');
   if (error) throw error;
   await supabase.auth.signOut();

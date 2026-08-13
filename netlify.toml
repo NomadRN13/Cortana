@@ -1,4 +1,4 @@
-# 40/Love — Netlify configuration
+# 40/LOVE — Netlify configuration
 # With the repo linked to Netlify, every push rebuilds and deploys the site:
 #   landing page at /   ·   clickable prototype at /demo   ·   favicon
 # The build reassembles site/ from the source pages, so deploys can never

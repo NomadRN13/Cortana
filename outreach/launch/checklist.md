@@ -356,3 +356,41 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
   and `target_id` both cascade). Retaining a hash of banned numbers would
   close it, but it is new retained data — it would need to go into the
   privacy policy and both store forms before shipping.
+
+## Update — 2026-08-13 (Apple token revocation — last dev-side blocker)
+
+- **Guideline 5.1.1(v) is implemented.** Apple requires that deleting an
+  account also revokes the tokens Apple issued for it; reviewers check, and an
+  iOS build shipping Sign in with Apple without it can be rejected. The catch
+  is that the only revocable credential comes from the authorization code
+  Apple hands over at sign-in, which expires in about five minutes — so it is
+  exchanged immediately for a refresh token and parked until deletion.
+  - `supabase/functions/apple-auth` — one function, two actions (`link` at
+    sign-in, `revoke` before deletion). Authenticates the caller from their own
+    JWT, never from the request body, so one member cannot revoke another's.
+    Signs Apple's ES256 client secret with the `.p8` key at call time.
+  - `20260806000016_apple_identities.sql` — the token store. RLS on, **no
+    policies at all**: nothing reachable through the API can read it, not even
+    an admin. Asserted three ways in the suite (member, owner, admin), and
+    the assertion is verified to fail if a policy is ever added.
+  - Both halves are best-effort by design. Linking failing leaves the member
+    signed in; revoking failing still deletes the account. Someone who asked
+    to be deleted is never held hostage by Apple's endpoint being down.
+- **Founder step, before the first iOS submission with Sign in with Apple:**
+  `supabase functions deploy apple-auth` plus four `APPLE_*` secrets
+  (`docs/backend-setup.md`). Unset, the function reports "not configured" and
+  no-ops — so the Android build can ship without any of this.
+
+### Where launch stands
+
+Nothing dev-side is blocking any more. Everything remaining needs an account,
+a device or a card:
+
+| Blocker | Who | Why it can't be done here |
+|---|---|---|
+| Create the Supabase project, run `go-live.sh` | founder | Needs their account and a DB password |
+| Apple Developer ($99), Play Console ($25), Expo | founder | Paid enrollments, 1–14 days lead time |
+| Twilio for the SMS step | founder | Live signups stall at phone verification without it |
+| `eas init`, fill `eas.json` | dev, after accounts exist | Agents never run eas commands |
+| Screenshots, Play feature graphic | founder | Needs the real app on a real device |
+| File both privacy forms | founder | Drafts are ready in `store-listing.md` |

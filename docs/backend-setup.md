@@ -125,6 +125,32 @@ a *different* test account, so don't judge it there.
    Apple users can choose "Hide My Email", which gives you a
    `…@privaterelay.appleid.com` address — real and deliverable, but mail is
    dropped if your domain isn't registered.
+5. **Deploy the revocation function.** Apple requires (Guideline 5.1.1(v))
+   that deleting an account also revokes the Apple tokens issued for it —
+   otherwise 40/LOVE keeps showing up under the member's *Apps Using Apple ID*
+   for an account that no longer exists. **Reviewers check this**, so an iOS
+   build with Sign in with Apple and without it can be rejected.
+
+   ```bash
+   supabase functions deploy apple-auth
+   supabase secrets set \
+     APPLE_TEAM_ID=YOUR_TEAM_ID \
+     APPLE_KEY_ID=YOUR_KEY_ID \
+     APPLE_CLIENT_ID=com.fortylove.app \
+     APPLE_PRIVATE_KEY="$(cat AuthKey_YOUR_KEY_ID.p8)"
+   ```
+
+   That's the same `.p8` key, Key ID and Team ID from step 2. Until the
+   secrets are set the function answers "not configured" and does nothing —
+   sign-in and account deletion both keep working, so you can ship the
+   Android build and come back to this.
+
+   How it works: Apple's authorization code is only valid for about five
+   minutes, so the app trades it for a long-lived refresh token the moment
+   someone signs in, and parks that token in `apple_identities` — a table with
+   row-level security on and deliberately *no* policies, so nothing reachable
+   through the API can read it, not even an admin. Deleting an account hands
+   the token back to Apple first, then wipes the row.
 
 ### Google (~20 minutes, free)
 

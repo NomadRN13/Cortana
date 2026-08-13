@@ -1,4 +1,4 @@
-// 40/Love — push sender
+// 40/LOVE — push sender
 // Triggered by a Supabase Database Webhook on INSERT into public.notifications.
 // Looks up the recipient's device tokens and relays through Expo's push API.
 //
@@ -16,7 +16,7 @@ const TITLES: Record<string, string> = {
   message: "Your serve",
   court_time: "Court time proposed",
   event_reminder: "You've got court time coming up",
-  system: "40/Love",
+  system: "40/LOVE",
 };
 
 const BODIES: Record<string, string> = {

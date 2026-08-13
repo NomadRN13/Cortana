@@ -556,8 +556,8 @@ begin
   assert (select status from reports where id = v_report) = 'reviewed', 'admin report triage did not stick';
   -- creates an event
   insert into events (title, venue, starts_at, sport, capacity)
-  values ('40/Love Social Mixer', 'Broad Ripple Courts', now() + interval '7 days', 'pickleball', 24);
-  select count(*) into c from events where title = '40/Love Social Mixer';
+  values ('40/LOVE Social Mixer', 'Broad Ripple Courts', now() + interval '7 days', 'pickleball', 24);
+  select count(*) into c from events where title = '40/LOVE Social Mixer';
   assert c = 1, 'admin could not create event';
 end $$;
 -- admins table itself stays invisible even to admins via the API
@@ -682,6 +682,42 @@ begin
 end $$;
 reset role;
 
+-- ---- 9d. Apple refresh tokens are unreachable through the API ----
+-- The row is a credential: whoever holds it can act on that Apple account.
+-- RLS is on with no policies, so every API role should see and write nothing —
+-- including admins, who have read access to almost everything else.
+reset role;
+insert into apple_identities (user_id, refresh_token)
+values ('00000000-0000-4000-8000-000000000012', 'rt-secret-value');
+do $$
+declare c int; who text;
+begin
+  foreach who in array array[
+    '00000000-0000-4000-8000-000000000002',  -- an ordinary member
+    '00000000-0000-4000-8000-000000000012',  -- the token's own owner
+    '00000000-0000-4000-8000-00000000000a'   -- an admin
+  ] loop
+    perform set_config('request.jwt.claim.sub', who, false);
+    execute 'set role authenticated';
+    select count(*) into c from apple_identities;
+    assert c = 0, format('apple refresh token readable via the API by %s', who);
+    begin
+      insert into apple_identities (user_id, refresh_token)
+      values (who::uuid, 'forged');
+      assert false, format('%s wrote to apple_identities through the API', who);
+    exception when insufficient_privilege then null;
+    end;
+    execute 'reset role';
+  end loop;
+end $$;
+reset role;
+do $$
+begin
+  assert (select refresh_token from apple_identities
+           where user_id = '00000000-0000-4000-8000-000000000012') = 'rt-secret-value',
+         'apple token altered through the API';
+end $$;
+
 -- ---- 10. Account deletion removes everything ----
 -- The account-deletion page (landing/delete-account.html) promises each of
 -- these by name, and the store data-safety forms declare them. Give the user
@@ -747,7 +783,8 @@ begin
     'select count(*) from push_tokens where user_id = $1',
     'select count(*) from devices where user_id = $1',
     'select count(*) from reports where reporter_id = $1 or target_id = $1',
-    'select count(*) from blocks where blocker_id = $1 or blocked_id = $1'
+    'select count(*) from blocks where blocker_id = $1 or blocked_id = $1',
+    'select count(*) from apple_identities where user_id = $1'
   ] loop
     execute t into c using '00000000-0000-4000-8000-000000000012'::uuid;
     assert c = 0, format('account deletion left %s row(s) behind: %s', c, t);

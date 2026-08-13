@@ -132,7 +132,30 @@ export async function signInWithApple() {
   if (firstName) {
     supabase.auth.updateUser({ data: { given_name: firstName } }).catch(() => {});
   }
+
+  // Same deal with the authorization code, but on a five-minute fuse: it is
+  // the only thing exchangeable for a token that can later revoke this Apple
+  // sign-in, which the App Store requires when the account is deleted. Hand it
+  // straight to the edge function. Deliberately not awaited — if it fails the
+  // member is still signed in, and sign-in should not hang on it.
+  if (credential.authorizationCode) {
+    supabase.functions
+      .invoke('apple-auth', { body: { action: 'link', code: credential.authorizationCode } })
+      .catch(() => {});
+  }
   return { firstName };
+}
+
+// Tell Apple to let go of this account. Called just before deletion; see
+// supabase/functions/apple-auth. Best effort by design — a member who asked
+// to be deleted must not be held hostage by Apple's endpoint being down.
+export async function revokeAppleAccount() {
+  if (!supabase) return;
+  try {
+    await supabase.functions.invoke('apple-auth', { body: { action: 'revoke' } });
+  } catch {
+    // swallowed on purpose: deletion proceeds regardless
+  }
 }
 
 // ---------- Google ----------
