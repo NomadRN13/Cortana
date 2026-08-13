@@ -313,10 +313,37 @@ export default function HomeScreen({ navigation }) {
 function DeckCard({ p, app, onLike, onMore }) {
   const tints = gradientFor(p.id);
   const isSaved = !!app.saved[p.id];
+  // Tap the right/left half of the photo to page through their photos —
+  // the standard gesture, and it keeps the swipe handler free.
+  const gallery = (p.photos && p.photos.length ? p.photos : (p.photo ? [p.photo] : []));
+  const [shot, setShot] = useState(0);
+  useEffect(() => { setShot(0); }, [p.id]);
+  const idx = Math.min(shot, Math.max(0, gallery.length - 1));
   return (
     <View style={styles.card}>
-      {p.photo ? (
-        <Image source={{ uri: p.photo }} style={styles.cardPhoto} resizeMode="cover" />
+      {gallery.length ? (
+        <View>
+          <Image source={{ uri: gallery[idx] }} style={styles.cardPhoto} resizeMode="cover" />
+          {gallery.length > 1 && (
+            <>
+              <View style={styles.shotDots} pointerEvents="none">
+                {gallery.map((u, i) => (
+                  <View key={u} style={[styles.shotDot, i === idx && styles.shotDotOn]} />
+                ))}
+              </View>
+              <Pressable
+                style={[styles.shotTap, { left: 0 }]}
+                onPress={() => setShot(Math.max(0, idx - 1))}
+                accessibilityLabel={`Previous photo of ${p.name}`}
+              />
+              <Pressable
+                style={[styles.shotTap, { right: 0 }]}
+                onPress={() => setShot(Math.min(gallery.length - 1, idx + 1))}
+                accessibilityLabel={`Next photo of ${p.name}`}
+              />
+            </>
+          )}
+        </View>
       ) : (
         <LinearGradient colors={tints} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cardPhoto}>
           <Text style={styles.cardInitials}>{initials(p.name)}</Text>
@@ -414,6 +441,13 @@ const styles = StyleSheet.create({
   },
   sheetPhoto: { height: 190, alignItems: 'center', justifyContent: 'center', width: '100%' },
   sheetThumb: { width: 108, height: 108, borderRadius: 12, backgroundColor: colors.card },
+  shotDots: {
+    position: 'absolute', top: 10, left: 12, right: 12,
+    flexDirection: 'row', gap: 4,
+  },
+  shotDot: { flex: 1, height: 3, borderRadius: 2, backgroundColor: 'rgba(244,246,240,0.35)' },
+  shotDotOn: { backgroundColor: colors.optic },
+  shotTap: { position: 'absolute', top: 0, bottom: 0, width: '32%' },
   sheetActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, paddingTop: 8 },
   cardPhoto: { height: 330, alignItems: 'center', justifyContent: 'center' },
   cardInitials: { fontSize: 84, fontWeight: '900', color: 'rgba(10,11,13,0.55)' },

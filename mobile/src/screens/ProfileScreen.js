@@ -8,6 +8,9 @@ import { Avatar, Tag } from '../components/ui';
 import { CountUpText } from '../components/motion';
 import { useApp } from '../state';
 
+// One main photo plus five more. Matches profile_photos.position 0..5.
+const PHOTO_SLOTS = 6;
+
 export default function ProfileScreen({ navigation }) {
   const app = useApp();
   const u = app.user;
@@ -25,6 +28,9 @@ export default function ProfileScreen({ navigation }) {
       aspect: [1, 1],
       quality: 0.7,
     });
+    if (app.photos.length >= PHOTO_SLOTS) {
+      return Alert.alert('All slots full', `You can have up to ${PHOTO_SLOTS} photos — remove one to add another.`);
+    }
     if (res.canceled || !res.assets || !res.assets[0]) return;
     try {
       await app.addPhoto(res.assets[0].uri);
@@ -76,28 +82,44 @@ export default function ProfileScreen({ navigation }) {
         </View>
 
         <View style={{ gap: 6 }}>
-          <Text style={{ fontSize: 13, fontWeight: '700', color: colors.dim }}>Photos</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.dim }}>Photos</Text>
+            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.dim }}>{app.photos.length} of {PHOTO_SLOTS}</Text>
+          </View>
+          {/* Every slot is drawn, filled or not, so the room to add more is
+              visible rather than something you have to discover. */}
           <View style={styles.photoGrid}>
-            {app.photos.map((ph) => (
-              <Pressable
-                key={`${ph.position}-${ph.url}`}
-                style={styles.photoCell}
-                onPress={() => photoMenu(ph)}
-                accessibilityLabel={ph.position === 0 ? 'Main photo — tap for options' : `Photo ${ph.position + 1} — tap for options`}
-              >
-                <Image source={{ uri: ph.url }} style={{ width: '100%', height: '100%' }} />
-                {ph.position === 0 && <Text style={[styles.photoTag, styles.photoTagMain]}>Main</Text>}
-                {ph.status === 'pending' && <Text style={[styles.photoTag, styles.photoTagPending]}>In review</Text>}
-              </Pressable>
-            ))}
-            {app.photos.length < 6 && (
-              <Pressable style={[styles.photoCell, styles.photoCellEmpty]} onPress={addPhoto} accessibilityLabel="Add a photo">
-                <Ionicons name="add" size={28} color={colors.dim} />
-              </Pressable>
-            )}
+            {Array.from({ length: PHOTO_SLOTS }, (_, i) => {
+              const ph = app.photos.find((x) => x.position === i);
+              if (!ph) {
+                const isNext = i === app.photos.length;
+                return (
+                  <Pressable
+                    key={`empty-${i}`}
+                    style={[styles.photoCell, styles.photoCellEmpty]}
+                    onPress={addPhoto}
+                    accessibilityLabel={`Add photo ${i + 1} of ${PHOTO_SLOTS}`}
+                  >
+                    <Ionicons name="add" size={26} color={isNext ? colors.optic : colors.dim} />
+                  </Pressable>
+                );
+              }
+              return (
+                <Pressable
+                  key={`${ph.position}-${ph.url}`}
+                  style={styles.photoCell}
+                  onPress={() => photoMenu(ph)}
+                  accessibilityLabel={ph.position === 0 ? 'Main photo — tap for options' : `Photo ${ph.position + 1} — tap for options`}
+                >
+                  <Image source={{ uri: ph.url }} style={{ width: '100%', height: '100%' }} />
+                  {ph.position === 0 && <Text style={[styles.photoTag, styles.photoTagMain]}>Main</Text>}
+                  {ph.status === 'pending' && <Text style={[styles.photoTag, styles.photoTagPending]}>In review</Text>}
+                </Pressable>
+              );
+            })}
           </View>
           <Text style={type.hint}>
-            Up to 6 — profiles with more photos get more matches. Your main photo is your card. New photos are reviewed before other players see them.
+            Your main photo is your card — add up to {PHOTO_SLOTS - 1} more and players can swipe through them. Profiles with several photos get noticeably more matches. New photos are reviewed before anyone else sees them.
           </Text>
         </View>
 

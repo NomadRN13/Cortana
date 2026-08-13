@@ -632,7 +632,8 @@
     position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; padding: 0;
     border: 2px solid var(--line); background: var(--card); background-size: cover; background-position: center; cursor: pointer;
   }
-  .ptile-add { display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--dim); border-style: dashed; }
+  .ptile-add { display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--dim); border-style: dashed; opacity: 0.55; }
+  .ptile-add.next { color: var(--optic); border-color: var(--optic); opacity: 1; }
   .ptag { position: absolute; bottom: 5px; left: 5px; background: var(--optic); color: var(--ink); font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
   .pdel {
     position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; padding: 0;
@@ -1501,7 +1502,7 @@
         if (state.user) {
           // Signed in: the picker adds to the photo grid (up to 6).
           var list = photoList(state.user);
-          if (list.length >= 6) { toast('You can have up to 6 photos — remove one first'); return; }
+          if (list.length >= PHOTO_SLOTS) { toast('All ' + PHOTO_SLOTS + ' slots are full — remove one first'); return; }
           list.push(draftPhoto);
           state.user.photos = list;
           state.user.photo = list[0];
@@ -1520,6 +1521,7 @@
     reader.readAsDataURL(file);
     $('#photo-input').value = ''; // same file can be picked again
   });
+  var PHOTO_SLOTS = 6; // one main photo plus five more
   // A member's photo list: photos[] when present, else the single legacy photo.
   function photoList(u) {
     return u.photos ? u.photos.slice() : (u.photo ? [u.photo] : []);
@@ -2310,17 +2312,24 @@
       '<span class="tag">' + esc(u.skill) + (u.rating ? ' · ' + esc(u.rating) : '') + '</span>';
     var joinedCount = Object.keys(state.joined).filter(function (k) { return state.joined[k]; }).length;
     var plist = photoList(u);
-    var grid = '<div class="pgrid" id="pgrid">' +
-      plist.map(function (ph, i) {
-        return '<div class="ptile" data-i="' + i + '" role="button" tabindex="0" ' +
-          'aria-label="' + (i === 0 ? 'Main photo' : 'Photo ' + (i + 1) + ' — tap to make it your main photo') + '" ' +
-          'style="background-image:url(' + ph + ')">' +
-          (i === 0 ? '<span class="ptag">Main</span>' : '') +
-          '<button class="pdel" data-del="' + i + '" aria-label="Remove photo ' + (i + 1) + '">×</button>' +
-        '</div>';
-      }).join('') +
-      (plist.length < 6 ? '<button class="ptile ptile-add" id="ptile-add" type="button" aria-label="Add a photo">+</button>' : '') +
-    '</div>';
+    // Draw every slot, filled or not, so the room to add more is visible
+    // instead of something you have to discover.
+    var cells = [];
+    for (var pi = 0; pi < PHOTO_SLOTS; pi++) {
+      if (pi < plist.length) {
+        cells.push('<div class="ptile" data-i="' + pi + '" role="button" tabindex="0" ' +
+          'aria-label="' + (pi === 0 ? 'Main photo' : 'Photo ' + (pi + 1) + ' — tap to make it your main photo') + '" ' +
+          'style="background-image:url(' + plist[pi] + ')">' +
+          (pi === 0 ? '<span class="ptag">Main</span>' : '') +
+          '<button class="pdel" data-del="' + pi + '" aria-label="Remove photo ' + (pi + 1) + '">×</button>' +
+        '</div>');
+      } else {
+        cells.push('<button class="ptile ptile-add' + (pi === plist.length ? ' next' : '') + '" ' +
+          (pi === plist.length ? 'id="ptile-add" ' : '') +
+          'type="button" aria-label="Add photo ' + (pi + 1) + ' of ' + PHOTO_SLOTS + '">+</button>');
+      }
+    }
+    var grid = '<div class="pgrid" id="pgrid">' + cells.join('') + '</div>';
     body.innerHTML =
       '<div class="profile-card">' +
         '<span class="ava' + (u.photo ? ' has-photo' : '') + '" style="background:' + gradFor(u.name) + (u.photo ? '; background-image:url(' + u.photo + '); background-size:cover; background-position:center' : '') + '">' + esc(initials(u.name)) + '</span>' +
@@ -2329,9 +2338,9 @@
         (u.phoneVerified ? '<div style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--ok)"><span aria-hidden="true">✓</span>Phone verified</div>' : '') +
       '</div>' +
       '<div class="bio-edit">' +
-        '<label>Photos</label>' +
+        '<label>Photos <span style="font-weight:400">(' + plist.length + ' of ' + PHOTO_SLOTS + ')</span></label>' +
         grid +
-        '<p class="hint">Up to 6 — tap a photo to make it your main one. In the real app, new photos are reviewed before other players see them.</p>' +
+        '<p class="hint">Your main photo is your card — add up to ' + (PHOTO_SLOTS - 1) + ' more and players can tap through them. Tap any photo to make it your main one. In the real app, new photos are reviewed before other players see them.</p>' +
       '</div>' +
       '<div class="stats">' +
         '<div class="stat"><div class="num">' + state.matches.length + '</div><div class="lbl">Matches</div></div>' +
@@ -2360,7 +2369,7 @@
         toast('Photo removed');
         return;
       }
-      if (ev.target.closest('#ptile-add')) { $('#photo-input').click(); return; }
+      if (ev.target.closest('.ptile-add')) { $('#photo-input').click(); return; }
       var tile = ev.target.closest('.ptile[data-i]');
       if (tile) {
         var ti = parseInt(tile.getAttribute('data-i'), 10);
