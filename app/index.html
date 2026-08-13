@@ -914,6 +914,7 @@
             <div class="chips" id="ob-playpref" data-single role="group" aria-label="Play singles and doubles with">
               <button class="chip" aria-pressed="false" data-pref="women">Women</button>
               <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+              <button class="chip" aria-pressed="false" data-pref="nonbinary">Nonbinary people</button>
               <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
             </div>
             <p class="hint" style="margin-top:8px">Mixed doubles is open to everyone by nature.</p>
@@ -928,6 +929,7 @@
             <div class="chips" id="ob-friendspref" data-single role="group" aria-label="Meet">
               <button class="chip" aria-pressed="false" data-pref="women">Women</button>
               <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+              <button class="chip" aria-pressed="false" data-pref="nonbinary">Nonbinary people</button>
               <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
             </div>
           </div>
@@ -1106,6 +1108,7 @@
               <div class="chips" id="set-playpref" style="margin-top:8px">
                 <button class="chip" aria-pressed="false" data-pref="women">Women</button>
                 <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+                <button class="chip" aria-pressed="false" data-pref="nonbinary">Nonbinary people</button>
                 <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
               </div>
             </div>
@@ -1120,6 +1123,7 @@
               <div class="chips" id="set-friendspref" style="margin-top:8px">
                 <button class="chip" aria-pressed="false" data-pref="women">Women</button>
                 <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+                <button class="chip" aria-pressed="false" data-pref="nonbinary">Nonbinary people</button>
                 <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
               </div>
             </div>
@@ -1366,7 +1370,10 @@
 
   var ALL_GAMES = ['singles', 'doubles', 'mixed_doubles'];
   function prefOk(pref, g) {
-    return !pref || pref === 'everyone' || (pref === 'men' && g === 'man') || (pref === 'women' && g === 'woman');
+    return !pref || pref === 'everyone'
+      || (pref === 'men' && g === 'man')
+      || (pref === 'women' && g === 'woman')
+      || (pref === 'nonbinary' && g === 'nonbinary');
   }
   var REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var GAME_LABELS = { singles: 'Singles', doubles: 'Doubles', mixed_doubles: 'Mixed doubles' };
@@ -1667,7 +1674,11 @@
 
   function syncModeUI() {
     $all('.mode-pill').forEach(function (p) {
-      p.classList.toggle('on', p.getAttribute('data-mode') === state.mode);
+      var m = p.getAttribute('data-mode');
+      // Only offer the modes they turned on — otherwise they can browse a
+      // mode whose preference question they were never asked.
+      p.hidden = !!(state.user && state.user.modes && state.user.modes.indexOf(m) === -1);
+      p.classList.toggle('on', m === state.mode);
     });
   }
   $all('.mode-pill').forEach(function (p) {
@@ -1744,7 +1755,10 @@
     if (p.age < state.prefs.ageMin || p.age > state.prefs.ageMax) return false;
     // Date mode: mutual fit — they're who I'm looking for AND I'm who
     // they're looking for. Play/Friends are for everyone.
-    if (state.mode === 'date' && state.user && state.user.gender && state.user.seeking && state.user.seeking.length) {
+    if (state.mode === 'date' && state.user && state.user.gender) {
+      // Empty 'looking to date' matches nobody rather than disabling the
+      // filter — otherwise we'd show people they explicitly ruled out.
+      if (!state.user.seeking || !state.user.seeking.length) return false;
       if (!p.gender || !p.seeking) return false;
       if (state.user.seeking.indexOf(p.gender) === -1) return false;
       if (p.seeking.indexOf(state.user.gender) === -1) return false;
@@ -2439,7 +2453,12 @@
   $('#set-seeking').addEventListener('click', function (ev) {
     var btn = ev.target.closest('.chip');
     if (!btn || !state.user) return;
-    btn.setAttribute('aria-pressed', String(btn.getAttribute('aria-pressed') !== 'true'));
+    var wasOn = btn.getAttribute('aria-pressed') === 'true';
+    if (wasOn && $all('#set-seeking .chip[aria-pressed="true"]').length === 1) {
+      toast('Keep at least one — Date mode needs to know who to show you');
+      return;
+    }
+    btn.setAttribute('aria-pressed', String(!wasOn));
     state.user.seeking = $all('#set-seeking .chip[aria-pressed="true"]').map(function (c) { return c.getAttribute('data-seek'); });
     saveUser();
   });
@@ -2456,6 +2475,11 @@
         if (on) { state.user.modes = state.user.modes.filter(function (m) { return m !== mode; }); }
         else if (state.user.modes.indexOf(mode) === -1) { state.user.modes.push(mode); }
         saveUser();
+        // Don't strand them on a deck they just switched off.
+        if (state.user.modes.indexOf(state.mode) === -1 && state.user.modes.length) {
+          state.mode = state.user.modes[0];
+        }
+        syncModeUI();
       }
     });
   }

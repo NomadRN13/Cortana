@@ -87,7 +87,11 @@ const ALL_MODES = ['date', 'play', 'friends'];
 const ALL_GAMES = ['singles', 'doubles', 'mixed_doubles'];
 
 const prefOk = (pref, g) =>
-  !pref || pref === 'everyone' || (pref === 'men' && g === 'man') || (pref === 'women' && g === 'woman');
+  !pref
+  || pref === 'everyone'
+  || (pref === 'men' && g === 'man')
+  || (pref === 'women' && g === 'woman')
+  || (pref === 'nonbinary' && g === 'nonbinary');
 
 export function AppStateProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -631,9 +635,14 @@ export function AppStateProvider({ children }) {
     if (p.age < prefs.ageMin || p.age > prefs.ageMax) return false;
     // Date mode: the fit must be mutual — they're what I'm looking for AND
     // I'm what they're looking for. Play/Friends are for everyone.
-    if (mode === 'date' && user && user.gender && user.seeking && user.seeking.length) {
+    // An empty "looking to date" fails closed (matches nobody) rather than
+    // skipping the filter, which would show people the member ruled out —
+    // and it's what the server already does.
+    if (mode === 'date' && user && user.gender) {
+      const seeking = user.seeking || [];
+      if (!seeking.length) return false;
       if (!p.gender || !p.seeking) return false;
-      if (!user.seeking.includes(p.gender)) return false;
+      if (!seeking.includes(p.gender)) return false;
       if (!p.seeking.includes(user.gender)) return false;
     }
     // Play mode: shared game type; singles/doubles honor both players'

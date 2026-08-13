@@ -46,6 +46,7 @@ const GAMES = [
 const PARTNER_PREFS = [
   { key: 'women', label: 'Women' },
   { key: 'men', label: 'Men' },
+  { key: 'nonbinary', label: 'Nonbinary people' },
   { key: 'everyone', label: 'Everyone' },
 ];
 

@@ -26,6 +26,7 @@ const GAMES = [
 const PARTNER_PREFS = [
   { key: 'women', label: 'Women' },
   { key: 'men', label: 'Men' },
+  { key: 'nonbinary', label: 'Nonbinary people' },
   { key: 'everyone', label: 'Everyone' },
 ];
 
@@ -136,7 +137,13 @@ export default function SettingsScreen({ navigation }) {
                     key={s.key}
                     label={s.label}
                     active={on}
-                    onPress={() => app.updateDating((u && u.gender) || null, on ? cur.filter((x) => x !== s.key) : [...cur, s.key])}
+                    onPress={() => {
+                      const next = on ? cur.filter((x) => x !== s.key) : [...cur, s.key];
+                      if (!next.length) {
+                        return Alert.alert('Keep at least one', 'Date mode needs to know who you’d like to meet — otherwise there’s nobody to show you.');
+                      }
+                      app.updateDating((u && u.gender) || null, next);
+                    }}
                   />
                 );
               })}

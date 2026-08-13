@@ -98,7 +98,7 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.pills}>
-        {Object.keys(MODE_META).map((m) => {
+        {Object.keys(MODE_META).filter((m) => !app.user || !app.user.modes || app.user.modes.includes(m)).map((m) => {
           const on = app.mode === m;
           return (
             <Pressable key={m} onPress={() => app.setMode(m)} style={[styles.pill, on && styles.pillOn]}>
