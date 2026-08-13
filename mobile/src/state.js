@@ -74,7 +74,7 @@ function mapProfileRow(p) {
 
 function mapMsgRow(row, myId) {
   const cp = row.court_payload || {};
-  const base = { id: row.id, who: row.sender_id === myId ? 'me' : 'them', when: fmtWhen(row.sent_at) };
+  const base = { id: row.id, who: row.sender_id === myId ? 'me' : 'them', when: fmtWhen(row.sent_at), read: !!row.read_at };
   if (row.kind === 'court_time') {
     return { ...base, kind: 'court', court: cp.venue, day: cp.day, time: cp.time, sport: cap(cp.sport), status: cp.status || 'proposed' };
   }
@@ -115,12 +115,14 @@ export function AppStateProvider({ children }) {
   const [prefs, setPrefs] = useState({ radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false });
   const [liveEvents, setLiveEvents] = useState(null);
   const [myPhotos, setMyPhotos] = useState(null); // live: [{position, url, status}]
+  const [pendingMatch, setPendingMatch] = useState(null); // B-21: match made by THEIR like, waiting to celebrate
 
   const cacheRef = useRef({});        // userId → mapped profile (live)
   const matchIdsRef = useRef({});     // otherUserId → matchId (live; B-01)
   const threadsRef = useRef(threads); // avoid stale closures in async sends (B-01)
   const deckReqRef = useRef(0);       // refresh staleness guard (B-16)
   const prefsTimerRef = useRef(null); // debounce pref-driven deck refresh (B-12)
+  const celebratedRef = useRef({});   // matchId → true (Match Point modal already shown; B-21 dedupe)
 
   useEffect(() => { threadsRef.current = threads; }, [threads]);
 
@@ -215,7 +217,13 @@ export function AppStateProvider({ children }) {
       setThreads(deduped.map((m, i) => {
         const msgs = msgLists[i].map((r) => mapMsgRow(r, myId));
         const last = msgs[msgs.length - 1];
-        return { id: m.otherId, matchId: m.id, unread: false, yourServe: !!last && last.who === 'them', msgs };
+        return {
+          id: m.otherId,
+          matchId: m.id,
+          unread: !!last && last.who === 'them' && !last.read, // B-14: real unread state
+          yourServe: !!last && last.who === 'them',
+          msgs,
+        };
       }));
     } catch (e) { /* offline: keep current (empty in live — see live boot) */ }
   };
@@ -297,6 +305,47 @@ export function AppStateProvider({ children }) {
     if (live) refreshDeck(mode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
+
+  // B-21: the first liker learns about a match the moment the second like
+  // lands — the match trigger writes a notification row for both players,
+  // and this subscription turns it into the Match Point celebration. Also
+  // keeps the chat list fresh when messages arrive outside an open thread.
+  useEffect(() => {
+    if (!live || !myId) return undefined;
+    const unsubscribe = api.subscribeToNotifications(myId, async (n) => {
+      refreshNotifs();
+      const payload = n.payload || {};
+      if (n.kind === 'match') {
+        refreshMatchesAndThreads();
+        const withId = payload.with;
+        const matchId = payload.match_id;
+        if (!withId || (matchId && celebratedRef.current[matchId])) return; // own swipe already celebrated
+        if (matchId) {
+          celebratedRef.current[matchId] = true;
+          matchIdsRef.current[withId] = matchId;
+        }
+        try {
+          if (!cacheRef.current[withId]) {
+            const profs = await api.getProfilesByIds([withId]);
+            if (profs[0]) {
+              const mappedP = mapProfileRow(profs[0]);
+              try {
+                const pm = await api.getApprovedPhotoMap([withId]);
+                if (pm[withId] && pm[withId].length) { mappedP.photo = pm[withId][0]; mappedP.photos = pm[withId]; }
+              } catch (e) { /* initials fallback */ }
+              cacheRef.current[withId] = mappedP;
+            }
+          }
+        } catch (e) { /* celebrate with what we have */ }
+        addMatch(withId);
+        if (cacheRef.current[withId]) setPendingMatch(cacheRef.current[withId]);
+      } else if (n.kind === 'message' || n.kind === 'court_time') {
+        refreshMatchesAndThreads();
+      }
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live, myId]);
 
   // ---------- persistence ----------
 
@@ -688,6 +737,7 @@ export function AppStateProvider({ children }) {
         if (match) {
           cacheRef.current[p.id] = p;
           matchIdsRef.current[p.id] = match.id; // B-01: matchId known immediately
+          celebratedRef.current[match.id] = true; // B-21: don't celebrate twice via the notification
           addMatch(p.id);
           refreshMatchesAndThreads();
           return true;
@@ -713,6 +763,7 @@ export function AppStateProvider({ children }) {
         const match = await api.swipe(id, mode, 'like');
         if (match) {
           matchIdsRef.current[id] = match.id;
+          celebratedRef.current[match.id] = true; // B-21 dedupe
           addMatch(id);
           refreshMatchesAndThreads();
           return true;
@@ -787,7 +838,8 @@ export function AppStateProvider({ children }) {
               ...t,
               yourServe: true,
               msgs: [
-                ...t.msgs.filter((m) => !m.typing),
+                // they replied — so they read everything you'd sent (B-14 demo)
+                ...t.msgs.filter((m) => !m.typing).map((m) => (m.who === 'me' ? { ...m, read: true } : m)),
                 { who: 'them', text: CANNED_REPLIES[id] || 'Sounds great — see you on the court! 🎾', when: 'Just now' },
               ],
             }
@@ -802,7 +854,11 @@ export function AppStateProvider({ children }) {
     if (!live || !matchId) return () => {};
     return api.subscribeToMessages(matchId, (eventType, row) => {
       if (eventType === 'INSERT' && row.sender_id === myId) return; // own optimistic append shown already
-      upsertMsgById(id, row); // B-08: UPDATEs (court accept/decline) land too
+      upsertMsgById(id, row); // B-08: UPDATEs (court accept/decline + read receipts) land too
+      // The conversation is open on screen — their new message is read on arrival.
+      if (eventType === 'INSERT' && row.sender_id !== myId) {
+        api.markMessagesRead(matchId).catch(() => {});
+      }
     });
   };
 
@@ -819,6 +875,11 @@ export function AppStateProvider({ children }) {
 
   const markRead = (id) => {
     setThreads((ts) => ts.map((t) => (t.id === id ? { ...t, unread: false } : t)));
+    if (live) {
+      resolveMatchId(id).then((matchId) => {
+        if (matchId) api.markMessagesRead(matchId).catch(() => {});
+      });
+    }
   };
 
   // ---------- safety ----------
@@ -902,6 +963,7 @@ export function AppStateProvider({ children }) {
     saved, setSaved: persistSaved, seen, setSeen, blocked, block, report,
     matches, threads, profileById, ensureThread,
     sendMessage, subscribeThread, respondCourt, markRead,
+    pendingMatch, clearPendingMatch: () => setPendingMatch(null),
     events, toggleJoin, joined, eventAttendees,
     notifs, clearNotifs, prefs,
   };

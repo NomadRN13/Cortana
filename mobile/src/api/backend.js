@@ -282,6 +282,24 @@ export async function respondCourtTime(messageId, accept) {
   return data;
 }
 
+export async function markMessagesRead(matchId) {
+  // Sets read_at on the OTHER side's unread messages (scoped RPC — direct
+  // message updates are not possible, by design).
+  const { error } = await supabase.rpc('mark_messages_read', { p_match: matchId });
+  if (error) throw error;
+}
+
+export function subscribeToNotifications(userId, onInsert) {
+  // Live signal for matches created by the other person's like (B-21) and
+  // messages arriving outside an open conversation. RLS means only this
+  // user's rows ever arrive.
+  const channel = supabase
+    .channel(`notifs:${userId}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, (payload) => onInsert(payload.new))
+    .subscribe();
+  return () => supabase.removeChannel(channel);
+}
+
 export function subscribeToMessages(matchId, onEvent) {
   // Realtime: new messages arrive as INSERTs; court-time accept/decline
   // arrives as an UPDATE to the proposal row (QA B-08).

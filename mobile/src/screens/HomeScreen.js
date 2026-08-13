@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Modal, Alert, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +24,15 @@ export default function HomeScreen({ navigation }) {
   const reducedMotion = useReduceMotion();
   const p = app.currentProfile();
   const nextP = app.peekNext();
+
+  // B-21: someone you liked earlier just liked you back — celebrate live.
+  useEffect(() => {
+    if (app.pendingMatch) {
+      setMatchWith(app.pendingMatch);
+      app.clearPendingMatch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [app.pendingMatch]);
 
   const greeting = () => {
     const h = new Date().getHours();

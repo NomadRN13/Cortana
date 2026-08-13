@@ -148,3 +148,22 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
   deleted — the server refuses and the app explains. Harness-tested.
 - **Fake "Rallies: 128" profile stat removed** (both apps) — replaced with
   the member's real Saved-players count. No made-up numbers shown to users.
+
+## Update — 2026-08-09 (chat polish: B-14 + B-21 closed)
+
+- **Read receipts (B-14):** your last message shows "Read ✓" once your
+  match has opened the chat; unread dots in the chat list are now computed
+  from real read state. Marking read goes through a scoped RPC
+  (migration `20260806000011`) — which also **fixes a security hole**: the
+  old policy would have let a match member rewrite the other person's
+  message text via a direct update. Direct message updates are now
+  impossible; harness-tested.
+- **Live Match Point for the first liker (B-21):** the `notifications`
+  table joined the realtime publication; the app subscribes to its own
+  notification stream, so when someone you liked earlier likes you back,
+  the full-screen celebration appears on YOUR phone within seconds — not
+  just theirs. Deduped so the second liker doesn't see it twice. Message
+  notifications also refresh the chat list live when a message lands
+  outside the open conversation.
+- Beta test plan updated: Test 8 now expects the live first-liker pop-up;
+  Test 9 grew a read-receipt check. Bug tracker: B-14, B-21 → Fixed.

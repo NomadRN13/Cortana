@@ -2120,10 +2120,11 @@
     return null;
   }
 
-  function msgHtml(m) {
+  function msgHtml(m, isLastReadMine) {
     if (m.typing) {
       return '<div class="msg them is-typing" aria-label="Typing"><div class="typing-bubble"><i></i><i></i><i></i></div></div>';
     }
+    var when = esc(m.when) + (isLastReadMine ? ' &nbsp;·&nbsp; Read ✓' : '');
     if (m.type === 'court') {
       return '<div class="msg ' + (m.who === 'me' ? 'me' : 'them') + '">' +
         '<div class="courtcard">' +
@@ -2133,12 +2134,12 @@
             '<span>' + esc(m.day) + ' · ' + esc(m.time) + ' · ' + esc(m.sport) + '</span>' +
           '</div>' +
         '</div>' +
-        '<span class="when">' + esc(m.when) + '</span>' +
+        '<span class="when">' + when + '</span>' +
       '</div>';
     }
     return '<div class="msg ' + (m.who === 'me' ? 'me' : 'them') + '">' +
       '<div class="bubble">' + esc(m.text) + '</div>' +
-      '<span class="when">' + esc(m.when) + '</span>' +
+      '<span class="when">' + when + '</span>' +
     '</div>';
   }
 
@@ -2146,8 +2147,12 @@
     var t = threadById(chatId);
     var log = $('#chat-log');
     if (!t) { log.innerHTML = ''; return; }
+    var lastReadMine = -1;
+    for (var i = 0; i < t.msgs.length; i++) {
+      if (t.msgs[i].who === 'me' && t.msgs[i].read) lastReadMine = i;
+    }
     log.innerHTML = t.msgs.length
-      ? t.msgs.map(msgHtml).join('')
+      ? t.msgs.map(function (m, i) { return msgHtml(m, i === lastReadMine); }).join('')
       : '<p class="hint" style="text-align:center">It’s a Match Point! Serve first — say hi. 🎾</p>';
     log.scrollTop = log.scrollHeight;
   }
@@ -2185,6 +2190,10 @@
       if (!t) return;
       for (var i = t.msgs.length - 1; i >= 0; i--) {
         if (t.msgs[i].typing) { t.msgs.splice(i, 1); break; }
+      }
+      // they replied — so they read everything you'd sent
+      for (var j = 0; j < t.msgs.length; j++) {
+        if (t.msgs[j].who === 'me') t.msgs[j].read = true;
       }
       t.msgs.push({ who: 'them', text: REPLIES[id] || 'Sounds great — see you on the court! 🎾', when: 'Just now' });
       t.yourServe = true;

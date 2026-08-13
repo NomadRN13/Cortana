@@ -295,11 +295,12 @@ The heart of the app. Phones side by side now.
 3. **You should see on Tester B's phone (the second liker):** the full-screen
    **"It's a Match Point!"** pop-up with both your pictures/initials —
    instantly.
-4. **On Tester A's phone:** no pop-up appears live — that's currently
-   expected. A should get a **push notification** ("It's a Match Point!") if
-   notifications are allowed; either way, after closing and reopening the
-   app, Tester A **must** see Tester B in the **Matches** tab.
-5. Both check the **Matches** tab: each of you sees the other, once.
+4. **On Tester A's phone (the FIRST liker), with the app open:** the same
+   **"It's a Match Point!"** pop-up should appear **live, within a couple of
+   seconds** — no reopening, no refresh. (If A's app was closed, A gets a
+   push notification instead, and sees B in Matches on next open.)
+5. Both check the **Matches** tab: each of you sees the other, once —
+   **not** two pop-ups or two match rows on either phone.
 
 **Go straight to Edge case E3 now** (send the very first message immediately
 — it's a 30-second test that must happen right after a fresh match), then
@@ -320,10 +321,17 @@ come back here.
    couple of seconds.
 6. Trade a few more messages. Every single one must arrive, in order, both
    directions, while the chat stays open.
+7. **Read receipts:** while both chats are open, look under the **last
+   message you sent** — it should say **"Read ✓"** within a couple of
+   seconds of your partner's chat being open. Now **Tester B:** leave the
+   chat (go to Home). **Tester A:** send one more message. A's new message
+   should show **no** "Read ✓" until B opens the chat again — then it
+   appears on its own, without A doing anything.
 
 **FAIL if:** a message only shows up after leaving and reopening the chat or
 restarting the app. That was bug B-07 — if it's back, tell the founder
-immediately.
+immediately. Also FAIL if "Read ✓" appears while your partner has
+never opened the chat.
 
 - [ ] PASS  - [ ] FAIL
 

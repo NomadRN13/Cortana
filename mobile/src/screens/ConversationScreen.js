@@ -35,6 +35,11 @@ export default function ConversationScreen({ route, navigation }) {
 
   if (!p) return null;
 
+  // Read receipt goes under the LAST of my messages they've read (B-14).
+  const msgs = thread ? thread.msgs : [];
+  let lastReadMine = -1;
+  msgs.forEach((m, i) => { if (m.who === 'me' && m.read) lastReadMine = i; });
+
   const send = () => {
     const t = text.trim();
     if (!t) return;
@@ -94,7 +99,7 @@ export default function ConversationScreen({ route, navigation }) {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
         <FlatList
           ref={listRef}
-          data={thread ? thread.msgs : []}
+          data={msgs}
           keyExtractor={(_, i) => String(i)}
           contentContainerStyle={{ padding: 14, gap: 10 }}
           ListEmptyComponent={
@@ -138,7 +143,7 @@ export default function ConversationScreen({ route, navigation }) {
                       )}
                     </View>
                   </View>
-                  <Text style={styles.when}>{m.when}</Text>
+                  <Text style={styles.when}>{m.when}{mine && index === lastReadMine ? '  ·  Read \u2713' : ''}</Text>
                 </View>
               );
             }
@@ -149,7 +154,7 @@ export default function ConversationScreen({ route, navigation }) {
                     {m.text}
                   </Text>
                 </View>
-                <Text style={styles.when}>{m.when}</Text>
+                <Text style={styles.when}>{m.when}{mine && index === lastReadMine ? '  ·  Read \u2713' : ''}</Text>
               </View>
             );
           }}
