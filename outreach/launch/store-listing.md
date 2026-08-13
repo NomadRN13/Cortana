@@ -242,7 +242,14 @@ Expected result: **Mature 17+**.
 Global answers:
 - **Data encrypted in transit:** Yes (HTTPS to Supabase).
 - **Users can request data deletion:** Yes — in-app, Settings → Delete
-  account (plus email hello@40love.app).
+  account.
+- **Account deletion URL** (Play requires a web page, not just the in-app
+  button): `https://40love.app/delete-account/`
+  (source: `landing/delete-account.html`, deployed by `scripts/build-site.sh`).
+  It documents both routes — the in-app button and an email request for people
+  who have already uninstalled — and lists, table by table, exactly what is
+  deleted. Every row in that table is asserted by `supabase/tests/backend.sql`
+  §10, so the page cannot quietly drift away from what the code does.
 - **Data shared with third parties:** **None.** Supabase is a service
   provider processing data on our instructions, which Play does not count as
   "sharing". No SDK sends data anywhere else (no ads, no analytics).
@@ -253,7 +260,7 @@ Per data type (Collected / Shared / Purpose / Optional):
 | Play data type | Collected | Shared | Purpose | Optional? |
 |---|---|---|---|---|
 | Personal info → Email address | Yes | No | Account management (one-time-code sign-in) | No — required to sign in |
-| Personal info → Phone number | Yes (verified once by SMS at signup; never shown to members) | No | Account management / fraud prevention (keeps the community real people; ban enforcement) | No — required at signup |
+| Personal info → Phone number | Yes (verified once by SMS at signup; never shown to members) | No | Account management / fraud prevention (one-time check that a new member is a real person) | No — required at signup |
 | Personal info → User IDs | Yes (Supabase account UUID; plus the Apple `sub` / Google account id when social sign-in is used) | No | Account management | No |
 | Device or other IDs | Yes (push token; plus a random per-install tag and the device's own name, for the sign-out-a-device list) | No | Account management / fraud prevention | **Yes** — only if notifications are enabled; the device list itself is core to account security |
 | Personal info → Name | Yes (first name only) | No | App functionality (shown on your profile) | No |
@@ -347,7 +354,8 @@ For both stores' "What's new" field:
 
 ## Open items before any form is filed as final
 
-1. Deploy `/privacy` and `/terms` (both consoles require the live URL).
+1. Deploy `/privacy`, `/terms` and `/delete-account` (the consoles require
+   the live URLs; all three are built into `site/`).
 2. ~~Fix `delete_account()` to also purge the user's photo objects from
    storage~~ — done (migration `20260806000006_privacy_hardening.sql`).
 3. Seed the review account + configure its fixed OTP (email AND phone —

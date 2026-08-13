@@ -4,6 +4,7 @@ set -euo pipefail
 # 40/LOVE — assemble the deployable website into site/
 #   site/index.html        ← landing/index.html   (waitlist page)
 #   site/demo/index.html   ← app/index.html       (clickable prototype)
+#   site/delete-account/   ← landing/delete-account.html (Play requirement)
 #   site/admin/index.html  ← admin/index.html     (moderation desk; safe to
 #                            deploy — every action is authorized by the
 #                            database's admin list, not by the page)
@@ -17,11 +18,14 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 rm -rf site
-mkdir -p site/demo site/privacy site/terms site/admin
+mkdir -p site/demo site/privacy site/terms site/delete-account site/admin
 cp landing/index.html site/index.html
 cp app/index.html site/demo/index.html
 cp landing/privacy.html site/privacy/index.html
 cp landing/terms.html site/terms/index.html
+# Google Play requires a publicly reachable account-deletion page, not just
+# the in-app button. It is linked from the Play listing and the Data Safety form.
+cp landing/delete-account.html site/delete-account/index.html
 cp admin/index.html site/admin/index.html
 cp mobile/assets/favicon.png site/favicon.png
 

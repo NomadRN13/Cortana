@@ -318,3 +318,41 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
   holes dark at the top with a little bounce light at the bottom, specular
   highlight on the surface. Applied to the wordmark on the site, the
   prototype, the in-app component, and all three store icons.
+
+## Update — 2026-08-13 (deletion page, deletion purge, committed test suite)
+
+- **Play's account-deletion URL requirement is closed.** Google Play requires
+  a publicly reachable page where someone can request deletion *without*
+  installing the app; the in-app button alone does not satisfy it.
+  `landing/delete-account.html` ships at `/delete-account/`, is linked from
+  the footer and the privacy policy, and is now in `scripts/build-site.sh`.
+  The URL is recorded in `store-listing.md` for the Data Safety form.
+- **Photos are now actually deleted, not just unlinked.** `delete_account()`
+  removed the rows from `storage.objects`, which makes a photo unreachable —
+  but the image file itself survived in the bucket, which the privacy policy
+  says does not happen. `deleteAccount()` now removes the files through the
+  Storage API first (the only call that deletes bytes), then calls the RPC,
+  which still guarantees nothing points at them if that half fails.
+- **The backend suite is in the repo.** It had been living in a temp
+  directory, which made "verified by an automated test suite" true only until
+  the machine was wiped. `supabase/tests/backend.sql` + `./scripts/test-backend.sh`
+  spin up a throwaway Postgres, apply all 16 migrations and the seed, and
+  assert. New coverage: the photo storage policies (you can write and delete
+  only inside your own folder; another member's photo is readable only once
+  approved), and account deletion checked table by table against every row of
+  the deletion page's promises — verified to fail when the purge is removed.
+
+### Two copy claims corrected (both would have been false at launch)
+
+- The privacy policy said the phone number was kept "to keep banned accounts
+  from returning". There is no ban list, no retained numbers, and
+  `delete_account()` removes the number with everything else — so the claim
+  described a feature that does not exist, and it had been carried into the
+  Play Data Safety draft as "ban enforcement". Both now describe what the
+  code does: a one-time check that a new member is a real person.
+- **Founder decision, not yet made:** whether to *build* that. Today a member
+  who is reported can delete their account and sign up again with the same
+  number, and the reports against them are deleted too (`reports.reporter_id`
+  and `target_id` both cascade). Retaining a hash of banned numbers would
+  close it, but it is new retained data — it would need to go into the
+  privacy policy and both store forms before shipping.

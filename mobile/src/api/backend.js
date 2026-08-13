@@ -46,9 +46,30 @@ export async function syncPhoneVerification() {
 
 export async function deleteAccount() {
   // In-app account deletion — required by both app stores.
+  //
+  // Photos are deleted here, through the Storage API, because that is the only
+  // call that removes the actual image file. delete_account() drops the
+  // matching rows from storage.objects, which makes a photo unreachable, but
+  // the bytes would survive in the bucket — and the privacy policy promises
+  // they don't. Belt and braces: this deletes the files, the RPC guarantees
+  // nothing is left pointing at them even if this half fails.
+  await purgeMyPhotoFiles();
   const { error } = await supabase.rpc('delete_account');
   if (error) throw error;
   await supabase.auth.signOut();
+}
+
+// Every object under the caller's own folder in the photos bucket. Listed
+// rather than read from profile_photos so an upload that half-failed — file
+// written, row never inserted — is caught too.
+async function purgeMyPhotoFiles() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { data, error } = await supabase.storage.from('photos').list(user.id, { limit: 100 });
+  // A listing failure must not trap someone in an account they asked to
+  // delete; the RPC still makes the photos unreachable.
+  if (error || !data || !data.length) return;
+  await supabase.storage.from('photos').remove(data.map((f) => `${user.id}/${f.name}`));
 }
 
 // ---------- Profile ----------
