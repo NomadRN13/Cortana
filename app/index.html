@@ -238,7 +238,10 @@
     border-left: 2px solid var(--optic);
     background: var(--card); border-radius: 12px;
   }
-  .seeking-box[hidden] { display: none; }
+  /* The hidden attribute must beat any class that sets display, or an
+     element we mark hidden in JS stays on screen. This bit us twice:
+     .topmatch and .mode-pill both set display and ignored [hidden]. */
+  [hidden] { display: none !important; }
   .mode-row {
     display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
     padding: 14px; background: var(--card); border: 2px solid var(--line); border-radius: 14px;
@@ -307,6 +310,23 @@
   .topmatch-btn {
     display: inline-block; background: var(--optic); color: var(--ink);
     font-size: 13.5px; font-weight: 800; padding: 10px 16px; border-radius: 10px;
+  }
+  .picks { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 16px; margin-bottom: 14px; }
+  .picks-head { display: flex; align-items: baseline; justify-content: space-between; }
+  .picks-head h2 { font-size: 19px; font-weight: 800; }
+  .picks-strip { display: flex; gap: 10px; overflow-x: auto; margin-top: 10px; padding-bottom: 4px; scrollbar-width: none; }
+  .picks-strip::-webkit-scrollbar { display: none; }
+  .pick {
+    position: relative; flex: 0 0 auto; width: 108px; padding: 10px; border-radius: 14px;
+    background: var(--card2); display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+  }
+  .pick .ava { width: 54px; height: 54px; font-size: 19px; }
+  .pick .pn { font-size: 13.5px; font-weight: 800; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pick .pr { font-size: 11px; color: var(--dim); line-height: 1.35; }
+  .pick-rank {
+    position: absolute; top: 6px; left: 6px; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--optic); color: var(--ink); font-size: 11px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
   }
   .topmatch-art { flex: 0 0 auto; width: 84px; height: 84px; }
   .topmatch-art svg { width: 100%; height: 100%; }
@@ -782,6 +802,28 @@
           </div>
         </div>
         <div>
+          <label>Playing as a pair?</label>
+          <div class="mode-rows">
+            <button class="mode-row" id="ob-team" aria-pressed="false" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg>
+              <span><span class="mode-name">We're a doubles team</span><span class="mode-desc">Two of you, one profile — for Play and Friends</span></span>
+              <span class="mode-check" aria-hidden="true">✓</span>
+            </button>
+          </div>
+          <div class="seeking-box" id="team-box" hidden>
+            <label for="ob-partner-name">Your partner</label>
+            <input type="text" id="ob-partner-name" placeholder="Their first name" maxlength="40">
+            <input type="text" id="ob-partner-age" inputmode="numeric" placeholder="Their age" style="margin-top:8px">
+            <label style="margin-top:12px">They are</label>
+            <div class="chips" id="ob-partner-gender" data-single role="group" aria-label="Partner gender">
+              <button class="chip" aria-pressed="false" data-gender="woman">Woman</button>
+              <button class="chip" aria-pressed="false" data-gender="man">Man</button>
+              <button class="chip" aria-pressed="false" data-gender="nonbinary">Nonbinary</button>
+            </div>
+            <p class="hint" style="margin-top:8px">Both of you must be 18+. Ask before you add someone — their name and age go on a public profile. You stay responsible for the account.</p>
+          </div>
+        </div>
+        <div>
           <label for="photo-input">Profile photo <span style="font-weight:400">(optional)</span></label>
           <div class="photo-pick">
             <span class="photo-preview" id="photo-preview" aria-hidden="true">📷</span>
@@ -974,7 +1016,14 @@
         </button>
       </div>
       <div class="home-scroll" id="home-scroll">
-        <div class="topmatch">
+        <div class="picks" id="picks-panel" hidden>
+          <div class="picks-head">
+            <h2>Your top <span id="picks-count">5</span></h2>
+            <span class="hint">Best fits right now</span>
+          </div>
+          <div class="picks-strip" id="picks-strip"></div>
+        </div>
+        <div class="topmatch" id="topmatch-panel">
           <div class="topmatch-mid">
             <h2>Top Match</h2>
             <p>A great match is just a game away.</p>
@@ -1315,6 +1364,7 @@
     { id: 'marcus', name: 'Marcus', age: 34, gender: 'man', seeking: ['man'], playGames: ['singles'], playPref: 'men', friendsPref: 'everyone', dist: 4.5, sports: ['Squash'], skill: 'Advanced', rating: '', isNew: false, verified: false, avail: 'Tue + Thu after 6', bio: 'Architect who thinks best inside four glass walls. If you can hold a T, you already have my attention.' },
     { id: 'jordan', name: 'Jordan', age: 30, gender: 'woman', seeking: ['man','woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 3.0, sports: ['Tennis', 'Pickleball'], skill: 'Advanced', rating: '4.0', isNew: true, verified: true, avail: 'Flexible — I make time', bio: 'Coach says my forehand is a weapon; my dog says I need to get out more. They can both be right.' },
     { id: 'grace',  name: 'Grace',  age: 41, gender: 'woman', seeking: ['man'], playGames: ['doubles','mixed_doubles'], playPref: 'women', friendsPref: 'everyone', dist: 5.2, sports: ['Tennis', 'Padel'], skill: 'Advanced', rating: '4.5', isNew: false, verified: true, avail: 'Sat + Sun mornings', bio: 'ER nurse with a wicked slice. Weekends are sacred court time — see if you can break serve.' },
+    { id: 'gracerosa', name: 'Grace', age: 41, gender: 'woman', isTeam: true, partnerName: 'Rosa', partnerAge: 38, partnerGender: 'woman', seeking: [], modes: ['play','friends'], playGames: ['doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 3.4, sports: ['Tennis'], skill: 'Advanced', rating: '4.5', isNew: true, verified: true, avail: 'Sunday mornings', bio: 'Doubles partners of nine years. We bring the balls, the coffee, and an unreasonable number of lobs. Looking for another pair to play sets with.' },
     { id: 'theo',   name: 'Theo',   age: 58, gender: 'man', seeking: ['woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 2.2, sports: ['Racquetball'], skill: 'Intermediate', rating: '', isNew: false, verified: false, avail: 'Mon/Wed/Fri lunch', bio: 'Thirty years of racquetball and still learning new angles. Grandkids say I’m cool; verify in person.' },
     { id: 'nadia',  name: 'Nadia',  age: 33, gender: 'woman', seeking: ['man','woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 6.7, sports: ['Pickleball'], skill: 'Beginner', rating: '', isNew: false, verified: true, avail: 'Weekend afternoons', bio: 'Food scientist who joined a pickleball league on a dare and stayed for the people. Post-game taco recs are my specialty.' },
     { id: 'chris',  name: 'Chris',  age: 48, gender: 'man', seeking: ['woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 3.8, sports: ['Pickleball', 'Tennis'], skill: 'Advanced', rating: '4.0', isNew: false, verified: true, avail: 'Evenings after 7', bio: 'Two kids, one dog, zero interest in small talk at bars. Ten minutes of doubles tells you more than any bio could.' },
@@ -1548,6 +1598,12 @@
   });
 
   singleSelect($('#ob-gender'));
+  singleSelect($('#ob-partner-gender'));
+  $('#ob-team').addEventListener('click', function () {
+    var on = $('#ob-team').getAttribute('aria-pressed') !== 'true';
+    $('#ob-team').setAttribute('aria-pressed', String(on));
+    $('#team-box').hidden = !on;
+  });
   $('#ob1-next').addEventListener('click', function () {
     var name = $('#ob-name').value.trim();
     var age = parseInt($('#ob-age').value, 10);
@@ -1555,8 +1611,29 @@
     if (!name) { toast('Add your first name to continue'); return; }
     if (!age || age < 18 || age > 99) { toast('Enter an age between 18 and 99'); return; }
     if (!genderSel) { toast('Tell us who you are so matching works'); return; }
+    var isTeam = $('#ob-team').getAttribute('aria-pressed') === 'true';
+    var pName = '', pAge = null, pGender = null;
+    if (isTeam) {
+      pName = $('#ob-partner-name').value.trim();
+      pAge = parseInt($('#ob-partner-age').value, 10);
+      var pgSel = $('#ob-partner-gender .chip[aria-pressed="true"]');
+      if (!pName) { toast('Add your partner’s first name'); return; }
+      if (!pAge || pAge < 18 || pAge > 99) { toast('Both people on a team must be 18 or older'); return; }
+      if (!pgSel) { toast('Tell us your partner’s gender so matching works'); return; }
+      pGender = pgSel.getAttribute('data-gender');
+    }
     state.draft = { name: name, age: age, gender: genderSel.getAttribute('data-gender'), photo: draftPhoto,
-      phone: phoneOk ? phoneE164 : null, phoneVerified: phoneOk };
+      phone: phoneOk ? phoneE164 : null, phoneVerified: phoneOk,
+      isTeam: isTeam, partnerName: pName, partnerAge: pAge, partnerGender: pGender };
+    // A shared profile is never a dating profile — take Date off the table.
+    var dateRow = $('#ob-modes .mode-row[data-mode="date"]');
+    dateRow.hidden = isTeam;
+    if (isTeam) {
+      dateRow.setAttribute('aria-pressed', 'false');
+      var playRow = $('#ob-modes .mode-row[data-mode="play"]');
+      if (playRow.getAttribute('aria-pressed') !== 'true') playRow.setAttribute('aria-pressed', 'true');
+      syncSeekingBox();
+    }
     show('screen-obphone');
   });
 
@@ -1647,6 +1724,10 @@
     var playPrefSel = $('#ob-playpref .chip[aria-pressed="true"]');
     var friendsPrefSel = $('#ob-friendspref .chip[aria-pressed="true"]');
     if (!modes.length) { toast('Pick at least one mode'); return; }
+    if (state.draft.isTeam && modes.indexOf('date') !== -1) {
+      toast('Teams can’t use Date mode — each of you needs your own profile');
+      return;
+    }
     if (modes.indexOf('date') !== -1 && !seeking.length) { toast('Tell us who you’d like to date — pick at least one'); return; }
     if (modes.indexOf('play') !== -1 && !playGames.length) { toast('Pick at least one game type for Play mode'); return; }
     state.draft.modes = modes;
@@ -1673,6 +1754,52 @@
     var name = state.user ? ', ' + state.user.name : '';
     $('#greet-line').textContent = 'Good ' + part + name + ' 👋';
   }
+
+  /* ---------- Top picks ----------
+     The deck is already ranked by fit, so the best candidates are simply the
+     top of it. Showing why each was picked makes the ranking visible —
+     otherwise the order looks arbitrary. */
+  var TOP_PICKS = 5;
+  function pickReason(p) {
+    var mine = (state.user && state.user.sports) || [];
+    var shared = (p.sports || []).filter(function (sp) { return mine.indexOf(sp) !== -1; });
+    if (state.mode === 'play' && shared.length && state.user && p.skill === state.user.skill) {
+      return shared[0] + ' at your level — an even match';
+    }
+    if (shared.length > 1) return 'Plays ' + shared[0] + ' and ' + shared[1] + ' like you';
+    if (shared.length) return 'Also plays ' + shared[0];
+    if (p.dist != null && p.dist <= 3) return 'Just ' + p.dist.toFixed(1) + ' miles away';
+    if (p.isNew) return 'New to 40/Love this week';
+    if (p.verified) return 'Verified player nearby';
+    return 'Worth a look';
+  }
+  function renderPicks() {
+    var picks = [];
+    for (var i = nextEligibleIndex(state.deckPos); i < PROFILES.length && picks.length < TOP_PICKS; i++) {
+      if (eligible(PROFILES[i])) picks.push(PROFILES[i]);
+    }
+    $('#picks-panel').hidden = picks.length === 0;
+    $('#topmatch-panel').hidden = picks.length > 0;
+    if (!picks.length) return;
+    $('#picks-count').textContent = String(picks.length);
+    $('#picks-strip').innerHTML = picks.map(function (p, idx) {
+      var nm = p.isTeam && p.partnerName ? p.name + ' & ' + p.partnerName : p.name;
+      return '<button class="pick" data-pick="' + esc(p.id) + '" aria-label="Top pick ' + (idx + 1) + ': ' + esc(nm) + '">' +
+        '<span class="pick-rank" aria-hidden="true">' + (idx + 1) + '</span>' +
+        '<span class="ava' + (p.photo ? ' has-photo' : '') + '" style="background:' + gradFor(p.id) +
+          (p.photo ? '; background-image:url(' + p.photo + '); background-size:cover; background-position:center' : '') + '">' +
+          esc(initials(p.name)) + '</span>' +
+        '<span class="pn">' + esc(nm) + '</span>' +
+        '<span class="pr">' + esc(pickReason(p)) + '</span>' +
+      '</button>';
+    }).join('');
+  }
+  $('#picks-strip').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.pick');
+    if (!btn) return;
+    var prof = profileById(btn.getAttribute('data-pick'));
+    if (prof) openPSheet(prof);
+  });
 
   function syncModeUI() {
     $all('.mode-pill').forEach(function (p) {
@@ -1803,6 +1930,7 @@
   }
 
   function renderDeck() {
+    renderPicks();
     var deck = $('#deck');
     var p = currentProfile();
     var cfg = MODE_CFG[state.mode];
@@ -1851,7 +1979,9 @@
           '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>' +
         '</button>' +
         '<div class="card-info">' +
-          '<div class="card-name">' + esc(p.name) + '<span class="age">' + p.age + '</span>' +
+          '<div class="card-name">' + esc(p.isTeam && p.partnerName ? p.name + ' & ' + p.partnerName : p.name) +
+            '<span class="age">' + (p.isTeam && p.partnerAge ? p.age + ' & ' + p.partnerAge : p.age) + '</span>' +
+            (p.isTeam ? '<span class="tag tag-sport" style="margin-left:8px">Doubles team</span>' : '') +
             (p.verified ? '<span class="verified" aria-label="Verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>' : '') +
           '</div>' +
           '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>' + esc(p.sports.join(' & ')) + '</div>' +
@@ -1934,7 +2064,9 @@
     var photo = $('#psheet-photo');
     photo.style.background = gradFor(p.id);
     photo.textContent = initials(p.name);
-    $('#psheet-name').innerHTML = esc(p.name) + '<span class="age">' + p.age + '</span>' +
+    $('#psheet-name').innerHTML = esc(p.isTeam && p.partnerName ? p.name + ' & ' + p.partnerName : p.name) +
+      '<span class="age">' + (p.isTeam && p.partnerAge ? p.age + ' & ' + p.partnerAge : p.age) + '</span>' +
+      (p.isTeam ? '<span class="tag tag-sport" style="margin-left:8px">Doubles team</span>' : '') +
       (p.verified ? '<span class="verified" aria-label="Verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>' : '');
     var games = (p.playGames && p.playGames.length ? p.playGames : ALL_GAMES).map(function (g) { return GAME_LABELS[g]; }).join(' · ');
     $('#psheet-rows').innerHTML =

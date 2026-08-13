@@ -149,6 +149,30 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
 - **Fake "Rallies: 128" profile stat removed** (both apps) — replaced with
   the member's real Saved-players count. No made-up numbers shown to users.
 
+## Update — 2026-08-09 (doubles teams + top picks)
+
+- **Doubles team profiles (migration 13):** two people can share one
+  profile — both names and ages on the card, one inbox. Deliberate limits,
+  all enforced in the database rather than only in the UI:
+  - exactly two people (`partner_*` columns, not a join table);
+  - **teams cannot use Date mode** — a shared profile can't date, and you
+    can't verify who you're talking to. Check constraint, not just hidden UI;
+  - both people must be 18+;
+  - the partner is *described*, not enrolled — no second login. The account
+    holder stays accountable, which keeps reports/blocks/bans meaningful.
+- **Team matching is stricter, on purpose:** a preference applies to every
+  person on a team. "Doubles with women" plus a man-and-woman team is not a
+  fit, because you'd be playing with a man too. Enforced both directions by
+  `team_pref_ok()`; harness-tested.
+- **Top picks:** Home now shows up to five ranked picks with the reason each
+  was chosen ("Also plays Padel", "Tennis at your level — an even match").
+  It reads the existing matching score rather than inventing a second
+  algorithm, so the ranking that already drove the deck is finally visible.
+- **Safety/legal note for the founder:** a team profile publishes a second
+  person's first name, age, and gender. The onboarding copy tells the
+  account holder to ask permission first, but if you later add photos of
+  the partner, revisit the privacy policy — that's someone else's likeness.
+
 ## Update — 2026-08-09 (Sign in with Apple + Google)
 
 - **Shipped (code):** three passwordless ways in — emailed code, Sign in with

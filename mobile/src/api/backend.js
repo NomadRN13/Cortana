@@ -82,7 +82,7 @@ export async function updateMyProfile(fields) {
   if (error) throw error;
 }
 
-export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, approxLng, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly, gender, seeking, playGames, playPref, friendsPref }) {
+export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, approxLng, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly, gender, seeking, playGames, playPref, friendsPref, isTeam, partnerName, partnerBirthdate, partnerGender }) {
   const { data: { user } } = await supabase.auth.getUser();
   const { error } = await supabase.from('profiles').upsert({
     id: user.id,
@@ -103,6 +103,11 @@ export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, ap
     play_games: playGames && playGames.length ? playGames : ['singles', 'doubles', 'mixed_doubles'],
     play_pref: playPref || 'everyone',
     friends_pref: friendsPref || 'everyone',
+    is_team: !!isTeam,
+    // Cleared rather than left stale when a team goes back to playing solo.
+    partner_name: isTeam ? (partnerName || '') : '',
+    partner_birthdate: isTeam ? (partnerBirthdate || null) : null,
+    partner_gender: isTeam ? (partnerGender || null) : null,
     last_active_at: new Date().toISOString(),
   });
   if (error) throw error;

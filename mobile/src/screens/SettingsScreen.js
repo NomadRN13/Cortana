@@ -38,6 +38,10 @@ export default function SettingsScreen({ navigation }) {
   const modeOn = (m) => u && u.modes.includes(m);
   const toggleMode = (m) => {
     if (!u) return;
+    if (m === 'date' && u.isTeam && !modeOn('date')) {
+      Alert.alert('Teams can’t use Date mode', 'A shared profile is for Play and Friends. If you want to date, each of you needs your own profile.');
+      return;
+    }
     if (modeOn(m) && u.modes.length === 1) {
       Alert.alert('Keep at least one mode on');
       return;
@@ -201,6 +205,38 @@ export default function SettingsScreen({ navigation }) {
                 />
               ))}
             </View>
+          </View>
+        </Group>
+
+        <Group title="Doubles team">
+          <View style={styles.datingBox}>
+            <Row label="We're a doubles team" sub="Two of you, one profile">
+              <Switch
+                value={!!(u && u.isTeam)}
+                onValueChange={(on) => {
+                  if (!on) return app.updateTeam({ isTeam: false });
+                  if (!u || !u.partnerName) {
+                    return Alert.alert(
+                      'Add your partner first',
+                      'A team profile needs your partner’s first name, birthdate, and gender. Tell us those and we’ll switch it on.',
+                      [{ text: 'OK' }]
+                    );
+                  }
+                  app.updateTeam({ isTeam: true, partnerName: u.partnerName, partnerBirthdate: u.partnerBirthdate, partnerGender: u.partnerGender });
+                }}
+                trackColor={{ true: colors.opticDim }}
+                thumbColor={u && u.isTeam ? colors.optic : colors.dim}
+              />
+            </Row>
+            {u && u.isTeam ? (
+              <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
+                Playing as {u.name} & {u.partnerName}. Team profiles are for Play and Friends — Date mode is off, because a shared profile can't date. To change your partner's details, contact support.
+              </Text>
+            ) : (
+              <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
+                Set this up when you create your profile. Both people must be 18+, and you stay responsible for the account.
+              </Text>
+            )}
           </View>
         </Group>
 

@@ -110,16 +110,41 @@ export default function HomeScreen({ navigation }) {
       </ScrollView>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 18, gap: 14 }}>
-        <View style={styles.topmatch}>
-          <View style={{ flex: 1 }}>
-            <Text style={[type.display, { fontSize: 19 }]}>Top Match</Text>
-            <Text style={[type.hint, { marginVertical: 8, maxWidth: 170 }]}>A great match is just a game away.</Text>
-            <Pressable style={styles.topmatchBtn} onPress={() => navigation.navigate('Matches')}>
-              <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 13.5 }}>View Matches</Text>
-            </Pressable>
+        {app.topPicks.length > 0 ? (
+          <View style={styles.picks}>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+              <Text style={[type.display, { fontSize: 19 }]}>Your top {app.topPicks.length}</Text>
+              <Text style={[type.hint, { fontSize: 12 }]}>Best fits right now</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }}>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {app.topPicks.map((pick, i) => (
+                  <Pressable key={pick.id} style={styles.pick} onPress={() => setSheetP(pick)} accessibilityLabel={`Top pick ${i + 1}: ${pick.name}`}>
+                    <View style={styles.pickRank}>
+                      <Text style={{ color: colors.ink, fontWeight: '900', fontSize: 11 }}>{i + 1}</Text>
+                    </View>
+                    <Avatar id={pick.id} name={pick.name} photo={pick.photo} size={54} />
+                    <Text style={{ color: colors.text, fontWeight: '800', fontSize: 13.5 }} numberOfLines={1}>
+                      {pick.isTeam && pick.partnerName ? `${pick.name} & ${pick.partnerName}` : pick.name}
+                    </Text>
+                    <Text style={[type.hint, { fontSize: 11, textAlign: 'center' }]} numberOfLines={2}>{pick.reason}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </ScrollView>
           </View>
-          <Ionicons name="tennisball" size={64} color={colors.optic} />
-        </View>
+        ) : (
+          <View style={styles.topmatch}>
+            <View style={{ flex: 1 }}>
+              <Text style={[type.display, { fontSize: 19 }]}>Top Match</Text>
+              <Text style={[type.hint, { marginVertical: 8, maxWidth: 170 }]}>A great match is just a game away.</Text>
+              <Pressable style={styles.topmatchBtn} onPress={() => navigation.navigate('Matches')}>
+                <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 13.5 }}>View Matches</Text>
+              </Pressable>
+            </View>
+            <Ionicons name="tennisball" size={64} color={colors.optic} />
+          </View>
+        )}
 
         {p ? (
           <View>
@@ -233,9 +258,14 @@ export default function HomeScreen({ navigation }) {
                   </LinearGradient>
                 )}
                 <View style={{ padding: 16, gap: 8 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={[type.display, { fontSize: 23 }]}>{sheetP.name}</Text>
-                    <Text style={{ fontSize: 23, fontWeight: '600', color: colors.dim }}>{sheetP.age}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <Text style={[type.display, { fontSize: 23 }]}>
+                      {sheetP.isTeam && sheetP.partnerName ? `${sheetP.name} & ${sheetP.partnerName}` : sheetP.name}
+                    </Text>
+                    <Text style={{ fontSize: 23, fontWeight: '600', color: colors.dim }}>
+                      {sheetP.isTeam && sheetP.partnerAge != null ? `${sheetP.age} & ${sheetP.partnerAge}` : sheetP.age}
+                    </Text>
+                    {sheetP.isTeam && <Tag label="Doubles team" accent />}
                     {sheetP.verified && (
                       <View style={styles.verified}>
                         <Ionicons name="checkmark" size={11} color={colors.ink} />
@@ -372,14 +402,19 @@ function DeckCard({ p, app, onLike, onMore }) {
         <Ionicons name="heart" size={26} color={colors.ink} />
       </Pressable>
       <View style={{ padding: 16, gap: 7 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={[type.display, { fontSize: 23 }]}>{p.name}</Text>
-          <Text style={{ fontSize: 23, fontWeight: '600', color: colors.dim }}>{p.age}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <Text style={[type.display, { fontSize: 23 }]}>
+            {p.isTeam && p.partnerName ? `${p.name} & ${p.partnerName}` : p.name}
+          </Text>
+          <Text style={{ fontSize: 23, fontWeight: '600', color: colors.dim }}>
+            {p.isTeam && p.partnerAge != null ? `${p.age} & ${p.partnerAge}` : p.age}
+          </Text>
           {p.verified && (
             <View style={styles.verified}>
               <Ionicons name="checkmark" size={11} color={colors.ink} />
             </View>
           )}
+          {p.isTeam && <Tag label="Doubles team" accent />}
         </View>
         <InfoRow icon="tennisball-outline" text={p.sports.join(' & ')} />
         {p.dist != null && <InfoRow icon="location-outline" text={`${p.dist.toFixed(1)} miles away`} />}
@@ -448,6 +483,19 @@ const styles = StyleSheet.create({
   shotDot: { flex: 1, height: 3, borderRadius: 2, backgroundColor: 'rgba(244,246,240,0.35)' },
   shotDotOn: { backgroundColor: colors.optic },
   shotTap: { position: 'absolute', top: 0, bottom: 0, width: '32%' },
+  picks: {
+    backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line,
+    borderRadius: 18, padding: 16,
+  },
+  pick: {
+    width: 108, alignItems: 'center', gap: 6, padding: 10,
+    backgroundColor: colors.card2, borderRadius: 14,
+  },
+  pickRank: {
+    position: 'absolute', top: 6, left: 6, zIndex: 2,
+    width: 18, height: 18, borderRadius: 9, backgroundColor: colors.optic,
+    alignItems: 'center', justifyContent: 'center',
+  },
   sheetActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, paddingTop: 8 },
   cardPhoto: { height: 330, alignItems: 'center', justifyContent: 'center' },
   cardInitials: { fontSize: 84, fontWeight: '900', color: 'rgba(10,11,13,0.55)' },

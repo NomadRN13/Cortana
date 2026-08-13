@@ -53,6 +53,9 @@ function mapDeckRow(row) {
     verified: !!row.verified,
     avail: row.availability_note || '',
     bio: row.bio || '',
+    isTeam: !!row.is_team,
+    partnerName: row.partner_name || '',
+    partnerAge: row.partner_age != null ? row.partner_age : null,
   };
 }
 
@@ -70,6 +73,9 @@ function mapProfileRow(p) {
     verified: !!p.verified_at,
     avail: p.availability_note || '',
     bio: p.bio || '',
+    isTeam: !!p.is_team,
+    partnerName: p.partner_name || '',
+    partnerAge: p.is_team ? ageFromBirthdate(p.partner_birthdate) : null,
   };
 }
 
@@ -445,6 +451,33 @@ export function AppStateProvider({ children }) {
     }
   };
 
+  const updateTeam = (team) => {
+    if (!user) return;
+    const next = {
+      ...user,
+      isTeam: !!team.isTeam,
+      partnerName: team.isTeam ? team.partnerName : '',
+      partnerBirthdate: team.isTeam ? team.partnerBirthdate : null,
+      partnerGender: team.isTeam ? team.partnerGender : null,
+      // A shared profile is never a dating profile.
+      modes: team.isTeam ? (user.modes || []).filter((m) => m !== 'date') : user.modes,
+    };
+    if (team.isTeam && !next.modes.length) next.modes = ['play'];
+    saveUser(next);
+    if (next.modes.indexOf(mode) === -1 && next.modes.length) setMode(next.modes[0]);
+    if (live) {
+      api.updateMyProfile({
+        is_team: next.isTeam,
+        partner_name: next.partnerName,
+        partner_birthdate: next.partnerBirthdate,
+        partner_gender: next.partnerGender,
+        modes: next.modes,
+      }).catch(() => {});
+      if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
+      prefsTimerRef.current = setTimeout(() => refreshDeck(next.modes[0] || mode), 700);
+    }
+  };
+
   const updateFriendsPref = (friendsPref) => {
     if (user) saveUser({ ...user, friendsPref: friendsPref || 'everyone' });
     if (live) {
@@ -558,6 +591,10 @@ export function AppStateProvider({ children }) {
       playPref: remote.play_pref || 'everyone',
       friendsPref: remote.friends_pref || 'everyone',
       phoneVerified: !!remote.phone_verified_at,
+      isTeam: !!remote.is_team,
+      partnerName: remote.partner_name || '',
+      partnerBirthdate: remote.partner_birthdate || null,
+      partnerGender: remote.partner_gender || null,
       photo: sameAccount && user.photo ? user.photo : null,
       sports: (remote.user_sports || []).map((s) => cap(s.sport)),
       skill: remote.user_sports && remote.user_sports[0] ? cap(remote.user_sports[0].level) : 'Intermediate',
@@ -612,6 +649,10 @@ export function AppStateProvider({ children }) {
         playGames: draft.playGames,
         playPref: draft.playPref,
         friendsPref: draft.friendsPref,
+        isTeam: draft.isTeam,
+        partnerName: draft.partnerName,
+        partnerBirthdate: draft.partnerBirthdate,
+        partnerGender: draft.partnerGender,
       });
       await api.setMySports(
         draft.sports.map((s) => ({ sport: s.toLowerCase(), level: draft.skill.toLowerCase(), ratingLabel: draft.rating || '' }))
@@ -980,6 +1021,37 @@ export function AppStateProvider({ children }) {
     if (live) api.markNotificationsRead().catch(() => {});
   };
 
+  // ---------- top picks ----------
+  // The deck is already ranked by the matching score (ace received, shared
+  // sport, skill closeness, recent activity, proximity, verified), so the
+  // best candidates are simply the top of it. This surfaces the first five
+  // as explicit picks, each with the reason it was chosen — otherwise the
+  // ranking is invisible and reads as a random order.
+  const pickReason = (p) => {
+    const mine = (user && user.sports) || [];
+    const shared = (p.sports || []).filter((s) => mine.includes(s));
+    if (mode === 'play' && shared.length && user && p.skill === user.skill) {
+      return `${shared[0]} at your level — an even match`;
+    }
+    if (shared.length > 1) return `Plays ${shared.slice(0, 2).join(' and ')} like you`;
+    if (shared.length) return `Also plays ${shared[0]}`;
+    if (p.dist != null && p.dist <= 3) return `Just ${p.dist.toFixed(1)} miles away`;
+    if (p.isNew) return 'New to 40/Love this week';
+    if (p.verified) return 'Verified player nearby';
+    return 'Worth a look';
+  };
+
+  const TOP_PICK_COUNT = 5;
+  const topPicks = (() => {
+    const source = live
+      ? liveDeck.slice(liveSkipFrom(liveIndex))
+      : PROFILES.slice(nextEligibleIndex(deckPos)).filter(eligible);
+    return source
+      .filter((p) => !blocked[p.id] && !seen[p.id])
+      .slice(0, TOP_PICK_COUNT)
+      .map((p) => ({ ...p, reason: pickReason(p) }));
+  })();
+
   // Unified photo list for the Profile grid: live = server rows (with
   // moderation status); demo = the local list, always "approved".
   const photos = live
@@ -991,8 +1063,9 @@ export function AppStateProvider({ children }) {
     session, live, isBackendConfigured,
     requestCode, verifyCode, signInWithProvider, finishOnboarding,
     requestPhoneCode, verifyPhoneCode,
-    updateBio, updatePhoto, updatePrefs, updateModes, updateDating, updatePlay, updateFriendsPref,
+    updateBio, updatePhoto, updatePrefs, updateModes, updateDating, updatePlay, updateFriendsPref, updateTeam,
     photos, addPhoto, removePhoto, makePrimary,
+    topPicks,
     mode, setMode,
     currentProfile, advance, rewind, deckError, peekNext, resetDeck,
     retryDeck: () => refreshDeck(mode),

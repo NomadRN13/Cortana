@@ -62,6 +62,8 @@ export default function OnboardingScreen({ navigation, route }) {
   const [skill, setSkill] = useState(null);
   const [rating, setRating] = useState('');
   const [modes, setModes] = useState(['date']);
+  // A team profile is never a dating profile — drop Date the moment it's on.
+  const teamModes = (list) => list.filter((m) => m !== 'date');
   const [gender, setGender] = useState(null);
   const [seeking, setSeeking] = useState([]);
   const [playGames, setPlayGames] = useState(['singles', 'doubles', 'mixed_doubles']);
@@ -73,6 +75,10 @@ export default function OnboardingScreen({ navigation, route }) {
   const [phoneCode, setPhoneCode] = useState('');
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [phoneBusy, setPhoneBusy] = useState(false);
+  const [isTeam, setIsTeam] = useState(false);
+  const [partnerName, setPartnerName] = useState('');
+  const [partnerBirthdateText, setPartnerBirthdateText] = useState('');
+  const [partnerGender, setPartnerGender] = useState(null);
 
   const pickPhoto = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -122,6 +128,15 @@ export default function OnboardingScreen({ navigation, route }) {
       if (a < 18) return Alert.alert('40/Love is 18+', 'You must be 18 or older to join.');
       if (a > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
       if (!gender) return Alert.alert('Almost there', 'Tell us who you are so matching works.');
+      if (isTeam) {
+        if (!partnerName.trim()) return Alert.alert('Almost there', 'Add your partner’s first name.');
+        const piso = parseBirthdate(partnerBirthdateText);
+        if (!piso) return Alert.alert('Almost there', 'Enter your partner’s birthdate as MM/DD/YYYY.');
+        const pa = ageFromBirthdate(piso);
+        if (pa < 18) return Alert.alert('40/Love is 18+', 'Both people on a team must be 18 or older.');
+        if (pa > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
+        if (!partnerGender) return Alert.alert('Almost there', 'Tell us your partner’s gender so matching works.');
+      }
     }
     if (step === 1 && !phoneVerified) {
       return Alert.alert('Almost there', 'Verify your phone number to continue — it keeps 40/Love real people only.');
@@ -130,6 +145,9 @@ export default function OnboardingScreen({ navigation, route }) {
     if (step === 3 && !skill) return Alert.alert('Almost there', 'Pick your skill level.');
     if (step === 4) {
       if (!modes.length) return Alert.alert('Almost there', 'Pick at least one mode.');
+      if (isTeam && modes.includes('date')) {
+        return Alert.alert('Teams can’t use Date mode', 'A shared profile is for Play and Friends. If you want to date, each of you needs your own profile.');
+      }
       if (modes.includes('date') && !seeking.length) {
         return Alert.alert('Almost there', 'Tell us who you’d like to date — pick at least one.');
       }
@@ -149,6 +167,10 @@ export default function OnboardingScreen({ navigation, route }) {
         friendsPref,
         phone: phoneE164,
         phoneVerified,
+        isTeam,
+        partnerName: isTeam ? partnerName.trim() : '',
+        partnerBirthdate: isTeam ? parseBirthdate(partnerBirthdateText) : null,
+        partnerGender: isTeam ? partnerGender : null,
         photo, sports, skill,
         rating: rating.trim(),
         modes,
@@ -215,6 +237,41 @@ export default function OnboardingScreen({ navigation, route }) {
                 </Pressable>
               </View>
             </Field>
+            <Field label="Playing as a pair?">
+              <Pressable
+                onPress={() => {
+                  const next = !isTeam;
+                  setIsTeam(next);
+                  if (next) setModes((cur) => (teamModes(cur).length ? teamModes(cur) : ['play']));
+                }}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: isTeam }}
+                style={[styles.modeRow, isTeam && { borderColor: colors.optic, backgroundColor: colors.opticDim }]}
+              >
+                <Ionicons name="people-outline" size={22} color={colors.text} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>We're a doubles team</Text>
+                  <Text style={type.hint}>Two of you, one profile — for Play and Friends</Text>
+                </View>
+                {isTeam && <Ionicons name="checkmark" size={20} color={colors.optic} />}
+              </Pressable>
+            </Field>
+            {isTeam && (
+              <View style={styles.seekingBox}>
+                <Text style={styles.boxLabel}>Your partner</Text>
+                <TextInput style={styles.input} value={partnerName} onChangeText={setPartnerName} placeholder="Their first name" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={40} />
+                <TextInput style={[styles.input, { marginTop: 8 }]} value={partnerBirthdateText} onChangeText={setPartnerBirthdateText} keyboardType="number-pad" placeholder="Their birthdate — MM/DD/YYYY" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={10} />
+                <Text style={[styles.boxLabel, { marginTop: 12 }]}>They are</Text>
+                <View style={styles.chips}>
+                  {GENDERS.map((g) => (
+                    <Chip key={g.key} label={g.label} active={partnerGender === g.key} onPress={() => setPartnerGender(g.key)} />
+                  ))}
+                </View>
+                <Text style={[type.hint, { marginTop: 8 }]}>
+                  Both of you must be 18+. Ask before you add someone — their name and age go on a public profile. You stay responsible for the account.
+                </Text>
+              </View>
+            )}
             <Text style={type.hint}>Your name, age, and photo appear on your player card — your exact birthdate never does. You must be 18 or older.</Text>
           </>
         )}
@@ -303,7 +360,7 @@ export default function OnboardingScreen({ navigation, route }) {
 
         {step === 4 && (
           <>
-            {MODES.map((m) => {
+            {MODES.filter((m) => !(isTeam && m.key === 'date')).map((m) => {
               const on = modes.includes(m.key);
               return (
                 <View key={m.key}>

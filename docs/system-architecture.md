@@ -138,6 +138,31 @@ function so tuning never needs an app release.
 - "Your serve" badge = other party sent the latest message; drives the
   message-response-rate KPI.
 
+## 5b. Doubles team profiles
+
+Two people may share one profile (`profiles.is_team` + `partner_*`). The
+constraints are the design:
+
+- **Two, never three.** Columns rather than a join table — a table would
+  invite a third member and a whole membership model with it.
+- **Teams are barred from Date mode** by a check constraint. A shared
+  profile cannot date: you can't verify which person you're talking to,
+  consent is ambiguous, and it breaks the 1:1 assumption every safety
+  feature rests on. This is enforced in the database, not just the UI.
+- **Both people must be 18+**, same check as the account holder.
+- **The partner is described, not enrolled.** No second login, no second
+  session. The account holder remains accountable, so reports, blocks, and
+  bans still land on someone real.
+- **Preferences apply to everyone on a team.** `team_pref_ok()` requires the
+  preference to hold for both members in both directions — "doubles with
+  women" plus a mixed team is not a fit.
+
+Open question for later: photos of the partner. Today only a name, age, and
+gender are published, and onboarding tells the account holder to ask first.
+Partner photos would publish someone else's likeness without their consent
+flowing through the app — treat that as a privacy-policy change, not a
+feature toggle.
+
 ## 6. Trust & safety (non-negotiable for a dating app)
 
 - **Verification:** selfie-pose photo review — manual at MVP via the admin
