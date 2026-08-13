@@ -613,8 +613,24 @@ export function AppStateProvider({ children }) {
     setDeckPos(nextEligibleIndex(deckPos) + 1);
   };
 
-  const rewind = () => {
-    if (live) return false; // server has already recorded the swipe
+  const rewind = async () => {
+    if (live) {
+      if (liveIndex === 0) return false; // nothing swiped since the last refresh
+      const prev = liveDeck[liveIndex - 1];
+      if (!prev) return false;
+      try {
+        const ok = await api.undoSwipe(prev.id, mode);
+        if (!ok) return false; // a conversation exists — the server refused
+      } catch (e) {
+        return false;
+      }
+      setLiveIndex(liveIndex - 1);
+      // If that like had just matched, the match is dissolved server-side.
+      setMatches((m) => m.filter((id) => id !== prev.id));
+      setThreads((ts) => ts.filter((t) => t.id !== prev.id));
+      refreshMatchesAndThreads();
+      return true;
+    }
     if (!history.length) return false;
     setDeckPos(history[history.length - 1]);
     setHistory((h) => h.slice(0, -1));

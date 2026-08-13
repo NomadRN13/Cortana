@@ -229,6 +229,14 @@ export async function swipe(targetId, mode, action) {
   return data; // null = no match yet; row = It's a Match Point!
 }
 
+export async function undoSwipe(targetId, mode) {
+  // Takes back the last swipe on this person in this mode; false when a
+  // conversation already exists (the server never deletes those).
+  const { data, error } = await supabase.rpc('undo_swipe', { p_target: targetId, p_mode: mode });
+  if (error) throw error;
+  return data === true;
+}
+
 // ---------- Matches & chat ----------
 
 export async function listMatches() {

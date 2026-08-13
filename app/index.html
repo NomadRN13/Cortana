@@ -1388,7 +1388,6 @@
     expandedEvents: {},
     replied: {},
     threads: THREADS,
-    ralliesBase: 128,
     prefs: { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false },
     notifs: [
       { ico: '❤️', txt: 'It’s a Match Point! You and Maya matched.', sub: 'Yesterday 9:05 PM' },
@@ -2313,7 +2312,7 @@
       '<div class="stats">' +
         '<div class="stat"><div class="num">' + state.matches.length + '</div><div class="lbl">Matches</div></div>' +
         '<div class="stat"><div class="num">' + joinedCount + '</div><div class="lbl">Events</div></div>' +
-        '<div class="stat"><div class="num">' + state.ralliesBase + '</div><div class="lbl">Rallies</div></div>' +
+        '<div class="stat"><div class="num">' + Object.keys(state.saved).filter(function (k) { return state.saved[k]; }).length + '</div><div class="lbl">Saved</div></div>' +
       '</div>' +
       '<div class="bio-edit">' +
         '<label for="bio-text">Bio</label>' +

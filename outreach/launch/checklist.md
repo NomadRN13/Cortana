@@ -138,3 +138,13 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
   'approved' on insert is neutralized; explicit self-approval raises).
 - Test 5 in the beta plan updated for the grid + the founder approval loop
   through `/admin`.
+
+## Update — 2026-08-09 (polish: real rewind, honest stats)
+
+- **Rewind works in live mode** (migration `20260806000010`): takes back
+  the last swipe so the card returns; an unmessaged brand-new match
+  dissolves (their like still stands — re-liking re-matches instantly) and
+  its notifications are cleaned up. Matches with a conversation are never
+  deleted — the server refuses and the app explains. Harness-tested.
+- **Fake "Rallies: 128" profile stat removed** (both apps) — replaced with
+  the member's real Saved-players count. No made-up numbers shown to users.

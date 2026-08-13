@@ -42,9 +42,12 @@ export default function HomeScreen({ navigation }) {
     if (prof) fn(prof);
   };
 
-  const onRewind = () => {
-    if (!app.rewind()) {
-      Alert.alert('Rewind', app.live ? 'Live swipes can’t be taken back — rewind is coming with premium.' : 'Nothing to rewind yet.');
+  const onRewind = async () => {
+    const ok = await app.rewind();
+    if (!ok) {
+      Alert.alert('Rewind', app.live
+        ? 'Nothing to rewind — and a match with a conversation can’t be taken back.'
+        : 'Nothing to rewind yet.');
     }
   };
 

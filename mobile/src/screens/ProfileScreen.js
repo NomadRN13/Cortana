@@ -104,7 +104,7 @@ export default function ProfileScreen({ navigation }) {
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Stat num={app.matches.length} label="Matches" />
           <Stat num={joinedCount} label="Events" />
-          <Stat num={128} label="Rallies" />
+          <Stat num={Object.values(app.saved).filter(Boolean).length} label="Saved" />
         </View>
 
         <View style={{ gap: 6 }}>
