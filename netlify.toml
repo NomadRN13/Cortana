@@ -1,8 +1,24 @@
 # 40/LOVE — Netlify configuration
 # With the repo linked to Netlify, every push rebuilds and deploys the site:
-#   landing page at /   ·   clickable prototype at /demo   ·   favicon
+#   /                 landing page + waitlist
+#   /demo             clickable prototype
+#   /privacy /terms   the policies both app stores require a live URL for
+#   /delete-account   the account-deletion page Google Play requires
+#   /admin            moderation desk (safe to deploy — every action is
+#                     authorised by the database's admin list, not the page)
 # The build reassembles site/ from the source pages, so deploys can never
 # serve a stale copy.
+#
+# WHICH BRANCH: the whole app lives on
+#
+#     claude/40-love-dating-app-1io0yq
+#
+# NOT on this repo's default branch, which holds an unrelated presentations
+# project and contains no site at all. Netlify builds whichever branch is set
+# as production, and that is a dashboard setting — it cannot be set from this
+# file. Site configuration → Build & deploy → Branches and deploy contexts →
+# Production branch. Point it at the branch above or a deploy will succeed
+# and publish nothing.
 
 [build]
   command = "bash scripts/build-site.sh"
