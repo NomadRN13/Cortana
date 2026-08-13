@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, StyleSheet, Pressable } from 'react-native';
+import { View, Text, ScrollView, TextInput, StyleSheet, Pressable, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -16,7 +16,7 @@ export default function ProfileScreen({ navigation }) {
 
   const joinedCount = app.events.filter((e) => e.going).length;
 
-  const changePhoto = async () => {
+  const addPhoto = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) return;
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -25,9 +25,27 @@ export default function ProfileScreen({ navigation }) {
       aspect: [1, 1],
       quality: 0.7,
     });
-    if (!res.canceled && res.assets && res.assets[0]) {
-      app.updatePhoto(res.assets[0].uri);
+    if (res.canceled || !res.assets || !res.assets[0]) return;
+    try {
+      await app.addPhoto(res.assets[0].uri);
+    } catch (e) {
+      Alert.alert('Couldn’t add photo', (e && e.message) || 'Check your connection and try again.');
     }
+  };
+
+  const photoMenu = (ph) => {
+    const fail = (e) => Alert.alert('Couldn’t update photo', (e && e.message) || 'Try again.');
+    const buttons = [];
+    if (ph.position > 0) {
+      buttons.push({ text: 'Make main photo', onPress: () => { app.makePrimary(ph.position).catch(fail); } });
+    }
+    buttons.push({ text: 'Remove', style: 'destructive', onPress: () => { app.removePhoto(ph.position).catch(fail); } });
+    buttons.push({ text: 'Cancel', style: 'cancel' });
+    Alert.alert(
+      ph.position === 0 ? 'Main photo' : 'Photo',
+      ph.status === 'pending' ? 'Waiting for review — only you can see it right now.' : undefined,
+      buttons
+    );
   };
 
   return (
@@ -55,11 +73,32 @@ export default function ProfileScreen({ navigation }) {
               <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.ok }}>Phone verified</Text>
             </View>
           )}
-          <Pressable onPress={changePhoto} style={styles.photoBtn}>
-            <Text style={{ color: colors.optic, fontWeight: '800', fontSize: 13.5 }}>
-              {u.photo ? 'Change photo' : 'Add photo'}
-            </Text>
-          </Pressable>
+        </View>
+
+        <View style={{ gap: 6 }}>
+          <Text style={{ fontSize: 13, fontWeight: '700', color: colors.dim }}>Photos</Text>
+          <View style={styles.photoGrid}>
+            {app.photos.map((ph) => (
+              <Pressable
+                key={`${ph.position}-${ph.url}`}
+                style={styles.photoCell}
+                onPress={() => photoMenu(ph)}
+                accessibilityLabel={ph.position === 0 ? 'Main photo — tap for options' : `Photo ${ph.position + 1} — tap for options`}
+              >
+                <Image source={{ uri: ph.url }} style={{ width: '100%', height: '100%' }} />
+                {ph.position === 0 && <Text style={[styles.photoTag, styles.photoTagMain]}>Main</Text>}
+                {ph.status === 'pending' && <Text style={[styles.photoTag, styles.photoTagPending]}>In review</Text>}
+              </Pressable>
+            ))}
+            {app.photos.length < 6 && (
+              <Pressable style={[styles.photoCell, styles.photoCellEmpty]} onPress={addPhoto} accessibilityLabel="Add a photo">
+                <Ionicons name="add" size={28} color={colors.dim} />
+              </Pressable>
+            )}
+          </View>
+          <Text style={type.hint}>
+            Up to 6 — profiles with more photos get more matches. Your main photo is your card. New photos are reviewed before other players see them.
+          </Text>
         </View>
 
         <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -103,7 +142,18 @@ const styles = StyleSheet.create({
     alignItems: 'center', gap: 10, padding: 22,
     backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line, borderRadius: 18,
   },
-  photoBtn: { borderWidth: 2, borderColor: colors.optic, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 14 },
+  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  photoCell: {
+    width: '31%', aspectRatio: 1, borderRadius: 12, overflow: 'hidden',
+    backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line,
+  },
+  photoCellEmpty: { alignItems: 'center', justifyContent: 'center', borderStyle: 'dashed' },
+  photoTag: {
+    position: 'absolute', left: 5, fontSize: 10, fontWeight: '800',
+    paddingVertical: 2, paddingHorizontal: 7, borderRadius: 999, overflow: 'hidden',
+  },
+  photoTagMain: { bottom: 5, backgroundColor: colors.optic, color: colors.ink },
+  photoTagPending: { top: 5, backgroundColor: 'rgba(10,11,13,0.75)', color: colors.text },
   stat: {
     flex: 1, alignItems: 'center', paddingVertical: 12,
     backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line, borderRadius: 14,

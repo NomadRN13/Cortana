@@ -627,6 +627,17 @@
   .photo-btn { font-size: 13.5px; font-weight: 800; padding: 10px 14px; border: 2px solid var(--optic); color: var(--optic); border-radius: 999px; }
   .photo-btn:hover { background: var(--optic); color: var(--ink); }
   .ava.has-photo { background-size: cover; background-position: center; color: transparent; }
+  .pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ptile {
+    position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; padding: 0;
+    border: 2px solid var(--line); background: var(--card); background-size: cover; background-position: center; cursor: pointer;
+  }
+  .ptile-add { display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--dim); border-style: dashed; }
+  .ptag { position: absolute; bottom: 5px; left: 5px; background: var(--optic); color: var(--ink); font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
+  .pdel {
+    position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; padding: 0;
+    background: rgba(10, 11, 13, 0.78); color: var(--text); font-size: 15px; display: flex; align-items: center; justify-content: center;
+  }
 
   /* ---------- Interactivity & motion ---------- */
   @keyframes screenIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -1477,10 +1488,15 @@
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         draftPhoto = canvas.toDataURL('image/jpeg', 0.82);
         if (state.user) {
-          state.user.photo = draftPhoto;
+          // Signed in: the picker adds to the photo grid (up to 6).
+          var list = photoList(state.user);
+          if (list.length >= 6) { toast('You can have up to 6 photos — remove one first'); return; }
+          list.push(draftPhoto);
+          state.user.photos = list;
+          state.user.photo = list[0];
           saveUser();
           if ($('#screen-profile').classList.contains('active')) renderProfile();
-          toast('Photo updated');
+          toast('Photo added');
         } else {
           var prev = $('#photo-preview');
           prev.style.backgroundImage = 'url(' + draftPhoto + ')';
@@ -1491,7 +1507,12 @@
       img.src = reader.result;
     };
     reader.readAsDataURL(file);
+    $('#photo-input').value = ''; // same file can be picked again
   });
+  // A member's photo list: photos[] when present, else the single legacy photo.
+  function photoList(u) {
+    return u.photos ? u.photos.slice() : (u.photo ? [u.photo] : []);
+  }
   function applyPhoto(el, photo, fallbackBg) {
     if (photo) {
       el.classList.add('has-photo');
@@ -1625,6 +1646,7 @@
     state.draft.playPref = playPrefSel ? playPrefSel.getAttribute('data-pref') : 'everyone';
     state.draft.friendsPref = friendsPrefSel ? friendsPrefSel.getAttribute('data-pref') : 'everyone';
     state.draft.bio = '';
+    state.draft.photos = state.draft.photo ? [state.draft.photo] : [];
     state.user = state.draft;
     delete state.draft;
     saveUser();
@@ -2264,13 +2286,29 @@
     var tags = u.sports.map(function (s) { return '<span class="tag tag-sport">' + esc(s) + '</span>'; }).join('') +
       '<span class="tag">' + esc(u.skill) + (u.rating ? ' · ' + esc(u.rating) : '') + '</span>';
     var joinedCount = Object.keys(state.joined).filter(function (k) { return state.joined[k]; }).length;
+    var plist = photoList(u);
+    var grid = '<div class="pgrid" id="pgrid">' +
+      plist.map(function (ph, i) {
+        return '<div class="ptile" data-i="' + i + '" role="button" tabindex="0" ' +
+          'aria-label="' + (i === 0 ? 'Main photo' : 'Photo ' + (i + 1) + ' — tap to make it your main photo') + '" ' +
+          'style="background-image:url(' + ph + ')">' +
+          (i === 0 ? '<span class="ptag">Main</span>' : '') +
+          '<button class="pdel" data-del="' + i + '" aria-label="Remove photo ' + (i + 1) + '">×</button>' +
+        '</div>';
+      }).join('') +
+      (plist.length < 6 ? '<button class="ptile ptile-add" id="ptile-add" type="button" aria-label="Add a photo">+</button>' : '') +
+    '</div>';
     body.innerHTML =
       '<div class="profile-card">' +
         '<span class="ava' + (u.photo ? ' has-photo' : '') + '" style="background:' + gradFor(u.name) + (u.photo ? '; background-image:url(' + u.photo + '); background-size:cover; background-position:center' : '') + '">' + esc(initials(u.name)) + '</span>' +
         '<div class="card-name" style="justify-content:center">' + esc(u.name) + '<span class="age">' + u.age + '</span></div>' +
         '<div class="tagrow">' + tags + '</div>' +
         (u.phoneVerified ? '<div style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--ok)"><span aria-hidden="true">✓</span>Phone verified</div>' : '') +
-        '<button class="photo-btn" id="profile-photo-btn" type="button">' + (u.photo ? 'Change photo' : 'Add photo') + '</button>' +
+      '</div>' +
+      '<div class="bio-edit">' +
+        '<label>Photos</label>' +
+        grid +
+        '<p class="hint">Up to 6 — tap a photo to make it your main one. In the real app, new photos are reviewed before other players see them.</p>' +
       '</div>' +
       '<div class="stats">' +
         '<div class="stat"><div class="num">' + state.matches.length + '</div><div class="lbl">Matches</div></div>' +
@@ -2287,7 +2325,32 @@
       saveUser();
       toast('Bio saved');
     });
-    $('#profile-photo-btn').addEventListener('click', function () { $('#photo-input').click(); });
+    $('#pgrid').addEventListener('click', function (ev) {
+      var del = ev.target.closest('.pdel');
+      if (del) {
+        var di = parseInt(del.getAttribute('data-del'), 10);
+        var dl = photoList(state.user);
+        dl.splice(di, 1);
+        state.user.photos = dl;
+        state.user.photo = dl[0] || null;
+        saveUser(); renderProfile();
+        toast('Photo removed');
+        return;
+      }
+      if (ev.target.closest('#ptile-add')) { $('#photo-input').click(); return; }
+      var tile = ev.target.closest('.ptile[data-i]');
+      if (tile) {
+        var ti = parseInt(tile.getAttribute('data-i'), 10);
+        if (ti > 0) {
+          var tl = photoList(state.user);
+          var tmp = tl[0]; tl[0] = tl[ti]; tl[ti] = tmp;
+          state.user.photos = tl;
+          state.user.photo = tl[0];
+          saveUser(); renderProfile();
+          toast('Main photo updated');
+        }
+      }
+    });
     // stat numbers count up
     if (!REDUCED_MOTION) {
       $all('#profile-body .stat .num').forEach(function (el) {

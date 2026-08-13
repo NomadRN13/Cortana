@@ -34,7 +34,7 @@ export default function ChatListScreen({ navigation }) {
           if (!p) return null;
           return (
             <Pressable style={styles.thread} onPress={() => navigation.navigate('Conversation', { id: t.id })}>
-              <Avatar id={p.id} name={p.name} size={52} />
+              <Avatar id={p.id} name={p.name} photo={p.photo} size={52} />
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{p.name}</Text>
                 <Text style={[type.hint, { marginTop: 2 }]} numberOfLines={1}>{preview(t)}</Text>

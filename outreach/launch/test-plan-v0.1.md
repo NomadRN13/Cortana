@@ -203,22 +203,29 @@ A photo can *look* saved on your phone while never actually reaching the
 server — which would mean other players see your initials forever. So this
 test has a tester half and a founder half.
 
-1. Open the **Profile** tab and tap **Add photo**.
+1. Open the **Profile** tab, find the **Photos** grid, and tap the **+**
+   tile.
 2. Allow photo access if asked, pick a photo, crop, confirm.
-3. **You should see:** your photo appears in the circle at the top of your
-   profile right away.
-4. Force-quit the app (swipe it away from the app switcher) and reopen it.
-   Your photo should still be on your Profile tab.
-5. **Tell the founder your name and that your photo is up.**
+3. **You should see:** the photo appears in the grid with a **Main** label
+   and an **"In review"** label, and in the circle at the top of your
+   profile.
+4. Add a **second** photo the same way, then tap it and choose **Make main
+   photo** — the two should swap, and the circle at the top should change.
+5. Tap a photo and choose **Remove** — it should disappear, leaving no gap.
+6. Force-quit the app (swipe it away from the app switcher) and reopen it.
+   Your remaining photo(s) should still be on your Profile tab.
+7. **Tell the founder your name and that your photos are up.**
 
 **Founder check (required to pass):** in the Supabase dashboard → Storage →
-`photos` → a folder named with this tester's user ID containing `0.jpg`, and
-a row in `profile_photos` with `moderation_status = 'pending'`. The photo on
-the phone means nothing until it's in the bucket.
+`photos` → a folder named with this tester's user ID containing one `.jpg`
+per photo they kept, and matching rows in `profile_photos` with
+`moderation_status = 'pending'`. Then approve them at `/admin` → Photos —
+the tester's partner should see the photo on their card in the deck within
+a minute (pull to refresh / reopen the deck).
 
-*Note: your partner will still see your initials, not your photo — photos
-wait for approval before anyone else sees them. That's correct behavior,
-don't report it.*
+*Note: until the founder approves, your partner sees your initials, not
+your photo — photos wait for approval before anyone else sees them. That's
+correct behavior, don't report it.*
 
 - [ ] PASS  - [ ] FAIL
 

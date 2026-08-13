@@ -114,6 +114,7 @@ export function AppStateProvider({ children }) {
   const [notifs, setNotifs] = useState(NOTIFICATIONS.map((n) => ({ ...n })));
   const [prefs, setPrefs] = useState({ radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false });
   const [liveEvents, setLiveEvents] = useState(null);
+  const [myPhotos, setMyPhotos] = useState(null); // live: [{position, url, status}]
 
   const cacheRef = useRef({});        // userId → mapped profile (live)
   const matchIdsRef = useRef({});     // otherUserId → matchId (live; B-01)
@@ -167,6 +168,15 @@ export function AppStateProvider({ children }) {
       const rows = await api.fetchDeck(m, 20);
       if (req !== deckReqRef.current) return;
       const mapped = rows.map(mapDeckRow);
+      try {
+        // Photos are progressive enhancement: a failure here still shows the deck.
+        const photoMap = await api.getApprovedPhotoMap(mapped.map((p) => p.id));
+        if (req !== deckReqRef.current) return;
+        mapped.forEach((p) => {
+          const ph = photoMap[p.id];
+          if (ph && ph.length) { p.photo = ph[0]; p.photos = ph; }
+        });
+      } catch (e) { /* cards fall back to initials */ }
       mapped.forEach((p) => { cacheRef.current[p.id] = p; });
       setLiveDeck(mapped);
       setLiveIndex(0);
@@ -190,10 +200,15 @@ export function AppStateProvider({ children }) {
       });
       const profs = await api.getProfilesByIds(deduped.map((m) => m.otherId));
       const msgLists = await Promise.all(deduped.map((m) => api.listMessages(m.id).catch(() => [])));
+      let photoMap = {};
+      try { photoMap = await api.getApprovedPhotoMap(profs.map((p) => p.id)); } catch (e) { /* initials fallback */ }
       // B-01 path 2: all awaits done — commit state atomically at the end
       profs.forEach((p) => {
         const prevDist = cacheRef.current[p.id] ? cacheRef.current[p.id].dist : null;
-        cacheRef.current[p.id] = { ...mapProfileRow(p), dist: prevDist };
+        const mappedP = { ...mapProfileRow(p), dist: prevDist };
+        const ph = photoMap[p.id];
+        if (ph && ph.length) { mappedP.photo = ph[0]; mappedP.photos = ph; }
+        cacheRef.current[p.id] = mappedP;
       });
       deduped.forEach((m) => { matchIdsRef.current[m.otherId] = m.id; });
       setMatches(deduped.map((m) => m.otherId));
@@ -274,6 +289,7 @@ export function AppStateProvider({ children }) {
     refreshMatchesAndThreads().then(refreshNotifs);
     refreshEvents();
     refreshDeck(mode);
+    refreshMyPhotos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live]);
 
@@ -295,8 +311,65 @@ export function AppStateProvider({ children }) {
   };
 
   const updatePhoto = (uri) => {
-    if (user) saveUser({ ...user, photo: uri });
-    if (live) api.uploadProfilePhoto(uri, 0).catch(() => {});
+    if (user) saveUser({ ...user, photo: uri, photos: [uri, ...((user.photos || []).slice(1))] });
+    if (live) api.uploadProfilePhoto(uri, 0).then(refreshMyPhotos).catch(() => {});
+  };
+
+  // ---------- photo management (up to 6; slot 0 is the main photo) ----------
+
+  const demoPhotoList = (u) => (u && (u.photos || (u.photo ? [u.photo] : []))) || [];
+
+  const refreshMyPhotos = async () => {
+    try {
+      const list = await api.listMyPhotos();
+      setMyPhotos(list);
+      // Keep the local primary in sync so avatars stay fresh (signed URLs
+      // are re-issued on every live boot).
+      setUser((u) => {
+        if (!u) return u;
+        const next = { ...u, photo: list[0] ? list[0].url : null };
+        AsyncStorage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
+        return next;
+      });
+    } catch (e) { /* keep current */ }
+  };
+
+  const addPhoto = async (uri) => {
+    if (live) {
+      const count = (myPhotos || []).length;
+      if (count >= 6) throw new Error('You can have up to 6 photos — remove one first.');
+      await api.uploadProfilePhoto(uri, count);
+      await refreshMyPhotos();
+      return;
+    }
+    const list = demoPhotoList(user);
+    if (list.length >= 6) throw new Error('You can have up to 6 photos — remove one first.');
+    const photos = [...list, uri];
+    saveUser({ ...user, photos, photo: photos[0] });
+  };
+
+  const removePhoto = async (position) => {
+    if (live) {
+      await api.deleteProfilePhoto(position);
+      await refreshMyPhotos();
+      return;
+    }
+    const photos = demoPhotoList(user).filter((_, i) => i !== position);
+    saveUser({ ...user, photos, photo: photos[0] || null });
+  };
+
+  const makePrimary = async (position) => {
+    if (live) {
+      await api.makePhotoPrimary(position);
+      await refreshMyPhotos();
+      return;
+    }
+    const photos = [...demoPhotoList(user)];
+    if (position < 1 || position >= photos.length) return;
+    const tmp = photos[0];
+    photos[0] = photos[position];
+    photos[position] = tmp;
+    saveUser({ ...user, photos, photo: photos[0] });
   };
 
   const updateDating = (gender, seeking) => {
@@ -793,12 +866,19 @@ export function AppStateProvider({ children }) {
     if (live) api.markNotificationsRead().catch(() => {});
   };
 
+  // Unified photo list for the Profile grid: live = server rows (with
+  // moderation status); demo = the local list, always "approved".
+  const photos = live
+    ? (myPhotos || [])
+    : demoPhotoList(user).map((u, i) => ({ position: i, url: u, status: 'approved' }));
+
   const value = {
     user, hydrated, saveUser, signOut,
     session, live, isBackendConfigured,
     requestCode, verifyCode, finishOnboarding,
     requestPhoneCode, verifyPhoneCode,
     updateBio, updatePhoto, updatePrefs, updateModes, updateDating, updatePlay, updateFriendsPref,
+    photos, addPhoto, removePhoto, makePrimary,
     mode, setMode,
     currentProfile, advance, rewind, deckError, peekNext, resetDeck,
     retryDeck: () => refreshDeck(mode),

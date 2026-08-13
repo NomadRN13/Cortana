@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Modal, Alert, FlatList } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Modal, Alert, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -113,9 +113,13 @@ export default function HomeScreen({ navigation }) {
           <View>
             {nextP && (
               <View style={styles.cardBehind} pointerEvents="none">
-                <LinearGradient colors={gradientFor(nextP.id)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cardPhoto}>
-                  <Text style={styles.cardInitials}>{initials(nextP.name)}</Text>
-                </LinearGradient>
+                {nextP.photo ? (
+                  <Image source={{ uri: nextP.photo }} style={styles.cardPhoto} resizeMode="cover" />
+                ) : (
+                  <LinearGradient colors={gradientFor(nextP.id)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cardPhoto}>
+                    <Text style={styles.cardInitials}>{initials(nextP.name)}</Text>
+                  </LinearGradient>
+                )}
                 <View style={{ padding: 16 }}>
                   <Text style={[type.display, { fontSize: 23 }]}>{nextP.name} <Text style={{ color: colors.dim, fontWeight: '600' }}>{nextP.age}</Text></Text>
                 </View>
@@ -183,7 +187,7 @@ export default function HomeScreen({ navigation }) {
             <View style={{ flexDirection: 'row' }}>
               <Avatar id="me" name={app.user ? app.user.name : 'You'} photo={app.user && app.user.photo} size={68} borderColor={colors.optic} />
               <View style={{ marginLeft: -14 }}>
-                {matchWith && <Avatar id={matchWith.id} name={matchWith.name} size={68} borderColor={colors.optic} />}
+                {matchWith && <Avatar id={matchWith.id} name={matchWith.name} photo={matchWith.photo} size={68} borderColor={colors.optic} />}
               </View>
             </View>
             <Text style={[type.hint, { textAlign: 'center' }]}>
@@ -209,9 +213,13 @@ export default function HomeScreen({ navigation }) {
           <Pressable style={styles.sheetCard} onPress={() => {}}>
             {sheetP && (
               <ScrollView>
-                <LinearGradient colors={gradientFor(sheetP.id)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sheetPhoto}>
-                  <Text style={[styles.cardInitials, { fontSize: 64 }]}>{initials(sheetP.name)}</Text>
-                </LinearGradient>
+                {sheetP.photo ? (
+                  <Image source={{ uri: sheetP.photo }} style={styles.sheetPhoto} resizeMode="cover" />
+                ) : (
+                  <LinearGradient colors={gradientFor(sheetP.id)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sheetPhoto}>
+                    <Text style={[styles.cardInitials, { fontSize: 64 }]}>{initials(sheetP.name)}</Text>
+                  </LinearGradient>
+                )}
                 <View style={{ padding: 16, gap: 8 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Text style={[type.display, { fontSize: 23 }]}>{sheetP.name}</Text>
@@ -230,6 +238,15 @@ export default function HomeScreen({ navigation }) {
                     text={((sheetP.playGames && sheetP.playGames.length ? sheetP.playGames : ['singles', 'doubles', 'mixed_doubles']).map((g) => GAME_LABELS[g]).join(' · '))}
                   />
                   <Text style={[type.hint, { marginTop: 4 }]}>{sheetP.bio}</Text>
+                  {sheetP.photos && sheetP.photos.length > 1 && (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 4 }}>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        {sheetP.photos.slice(1).map((u) => (
+                          <Image key={u} source={{ uri: u }} style={styles.sheetThumb} resizeMode="cover" />
+                        ))}
+                      </View>
+                    </ScrollView>
+                  )}
                   <View style={styles.sheetActions}>
                     <ActionBtn icon="close" label={`Pass on ${sheetP.name}`} onPress={() => sheetAction((prof) => app.swipePass(prof))} />
                     <ActionBtn icon="heart" label={`Like ${sheetP.name}`} big onPress={() => sheetAction((prof) => likeProfile(prof, false))} />
@@ -286,9 +303,13 @@ function DeckCard({ p, app, onLike, onMore }) {
   const isSaved = !!app.saved[p.id];
   return (
     <View style={styles.card}>
-      <LinearGradient colors={tints} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cardPhoto}>
-        <Text style={styles.cardInitials}>{initials(p.name)}</Text>
-      </LinearGradient>
+      {p.photo ? (
+        <Image source={{ uri: p.photo }} style={styles.cardPhoto} resizeMode="cover" />
+      ) : (
+        <LinearGradient colors={tints} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cardPhoto}>
+          <Text style={styles.cardInitials}>{initials(p.name)}</Text>
+        </LinearGradient>
+      )}
       {p.isNew && (
         <View style={styles.badgeNew}>
           <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 11, letterSpacing: 1 }}>NEW</Text>
@@ -379,7 +400,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.panel, borderTopLeftRadius: 22, borderTopRightRadius: 22,
     borderWidth: 2, borderColor: colors.line, maxHeight: '86%', overflow: 'hidden',
   },
-  sheetPhoto: { height: 190, alignItems: 'center', justifyContent: 'center' },
+  sheetPhoto: { height: 190, alignItems: 'center', justifyContent: 'center', width: '100%' },
+  sheetThumb: { width: 108, height: 108, borderRadius: 12, backgroundColor: colors.card },
   sheetActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, paddingTop: 8 },
   cardPhoto: { height: 330, alignItems: 'center', justifyContent: 'center' },
   cardInitials: { fontSize: 84, fontWeight: '900', color: 'rgba(10,11,13,0.55)' },

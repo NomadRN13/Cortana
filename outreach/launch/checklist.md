@@ -120,3 +120,21 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
   demo mode with sample data — you can try the workflow today.
 - Warnings/suspensions/bans remain dashboard actions at alpha volume; the
   desk records the decision. A fuller admin app stays on the roadmap.
+
+## Update — 2026-08-09 (multi-photo profiles shipped)
+
+- **Members now manage up to 6 photos** (Profile → Photos grid: add,
+  remove, make-main) and **approved photos actually display in live mode**
+  — deck cards, the profile detail sheet (with a thumbnail strip), match
+  lists, and chat headers all show real photos, falling back to initials.
+  Backed by migration `20260806000009`: reorder/delete RPCs (deferrable
+  position constraint, storage cleanup, no gaps) and unique per-upload
+  filenames.
+- **Security fix shipped in the same migration:** the original photos
+  policy let a member write their own `moderation_status` — i.e.
+  self-approve a photo past the moderation queue. A DB trigger now forces
+  every member-written photo to `pending`; only admins can approve/reject,
+  and replacing an image file re-enters the queue. Harness-tested (smuggled
+  'approved' on insert is neutralized; explicit self-approval raises).
+- Test 5 in the beta plan updated for the grid + the founder approval loop
+  through `/admin`.

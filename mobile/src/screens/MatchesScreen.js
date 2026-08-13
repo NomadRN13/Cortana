@@ -35,7 +35,7 @@ export default function MatchesScreen({ navigation }) {
                 if (!p) return null;
                 return (
                   <View key={id} style={styles.savedCell}>
-                    <Avatar id={p.id} name={p.name} size={44} />
+                    <Avatar id={p.id} name={p.name} photo={p.photo} size={44} />
                     <Text style={{ color: colors.text, fontWeight: '700', fontSize: 12 }} numberOfLines={1}>
                       {p.name}
                     </Text>

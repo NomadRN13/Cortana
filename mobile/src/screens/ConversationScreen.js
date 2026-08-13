@@ -81,7 +81,7 @@ export default function ConversationScreen({ route, navigation }) {
         <Pressable onPress={() => navigation.goBack()} hitSlop={8} accessibilityLabel="Back">
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
-        <Avatar id={p.id} name={p.name} size={40} />
+        <Avatar id={p.id} name={p.name} photo={p.photo} size={40} />
         <View style={{ flex: 1 }}>
           <Text style={{ color: colors.text, fontWeight: '800' }}>{p.name}</Text>
           <Text style={[type.hint, { fontSize: 12 }]}>{p.sports.join(' & ')}{p.dist != null ? ` · ${p.dist.toFixed(1)} mi` : ''}</Text>

@@ -121,7 +121,10 @@ export async function setMySports(sports) {
 
 export async function uploadProfilePhoto(localUri, position = 0) {
   const { data: { user } } = await supabase.auth.getUser();
-  const path = `${user.id}/${position}.jpg`;
+  // Unique filename per upload: positions can be reordered, so the path
+  // must never be derived from the slot (or a replace could clobber a
+  // different slot's file).
+  const path = `${user.id}/${Date.now()}.jpg`;
   // Read via expo-file-system: RN's fetch is unreliable for file:// bodies (QA B-09).
   const FileSystem = require('expo-file-system');
   const b64 = await FileSystem.readAsStringAsync(localUri, { encoding: FileSystem.EncodingType.Base64 });
@@ -131,12 +134,75 @@ export async function uploadProfilePhoto(localUri, position = 0) {
     upsert: true,
   });
   if (upErr) throw upErr;
+  const { data: existing } = await supabase
+    .from('profile_photos')
+    .select('storage_path')
+    .eq('user_id', user.id)
+    .eq('position', position)
+    .maybeSingle();
   const { error } = await supabase.from('profile_photos').upsert(
+    // Status is enforced server-side (always re-enters moderation) — sent
+    // here only for clarity.
     { user_id: user.id, storage_path: path, position, moderation_status: 'pending' },
     { onConflict: 'user_id,position' }
   );
   if (error) throw error;
+  if (existing && existing.storage_path && existing.storage_path !== path) {
+    // replaced slot: clean up the old binary (best-effort)
+    supabase.storage.from('photos').remove([existing.storage_path]).then(() => {}, () => {});
+  }
   return path;
+}
+
+// Short-lived display URLs for photo paths (the bucket is private).
+export async function signPhotoUrls(paths) {
+  if (!paths.length) return [];
+  const { data, error } = await supabase.storage.from('photos').createSignedUrls(paths, 3600);
+  if (error || !data) return paths.map(() => null);
+  return data.map((d) => d.signedUrl || null);
+}
+
+export async function listMyPhotos() {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from('profile_photos')
+    .select('storage_path, position, moderation_status')
+    .eq('user_id', user.id)
+    .order('position');
+  if (error) throw error;
+  const urls = await signPhotoUrls(data.map((r) => r.storage_path));
+  return data.map((r, i) => ({ position: r.position, status: r.moderation_status, url: urls[i] }));
+}
+
+// Approved photos for a set of users → { userId: [url, …] } in position order.
+// RLS already filters to approved-or-own, but we filter explicitly anyway.
+export async function getApprovedPhotoMap(userIds) {
+  if (!userIds.length) return {};
+  const { data, error } = await supabase
+    .from('profile_photos')
+    .select('user_id, storage_path, position')
+    .in('user_id', userIds)
+    .eq('moderation_status', 'approved')
+    .order('position');
+  if (error || !data || !data.length) return {};
+  const urls = await signPhotoUrls(data.map((r) => r.storage_path));
+  const map = {};
+  data.forEach((r, i) => {
+    if (!urls[i]) return;
+    if (!map[r.user_id]) map[r.user_id] = [];
+    map[r.user_id].push(urls[i]);
+  });
+  return map;
+}
+
+export async function deleteProfilePhoto(position) {
+  const { error } = await supabase.rpc('delete_photo', { p_position: position });
+  if (error) throw error;
+}
+
+export async function makePhotoPrimary(position) {
+  const { error } = await supabase.rpc('make_photo_primary', { p_position: position });
+  if (error) throw error;
 }
 
 // ---------- Discovery ----------
