@@ -911,7 +911,7 @@
               <button class="chip" aria-pressed="true" data-game="mixed_doubles">Mixed doubles</button>
             </div>
             <label style="margin-top:12px">Play singles/doubles with</label>
-            <div class="chips" id="ob-playpref" role="group" aria-label="Play singles and doubles with">
+            <div class="chips" id="ob-playpref" data-single role="group" aria-label="Play singles and doubles with">
               <button class="chip" aria-pressed="false" data-pref="women">Women</button>
               <button class="chip" aria-pressed="false" data-pref="men">Men</button>
               <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
@@ -925,7 +925,7 @@
           </button>
           <div class="seeking-box" id="friends-box" hidden>
             <label>Meet</label>
-            <div class="chips" id="ob-friendspref" role="group" aria-label="Meet">
+            <div class="chips" id="ob-friendspref" data-single role="group" aria-label="Meet">
               <button class="chip" aria-pressed="false" data-pref="women">Women</button>
               <button class="chip" aria-pressed="false" data-pref="men">Men</button>
               <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
@@ -1464,6 +1464,11 @@
     groupEl.addEventListener('click', function (ev) {
       var btn = ev.target.closest('.chip, .mode-row');
       if (!btn) return;
+      // Pick-one groups (Play "with", Friends "Meet") are nested inside this
+      // container. Clicks bubble outward, so their own handler has already
+      // run by now — toggling here would flip the chosen chip straight back
+      // off, leaving nothing selected. Leave them alone.
+      if (btn.closest('[data-single]')) return;
       btn.setAttribute('aria-pressed', String(btn.getAttribute('aria-pressed') !== 'true'));
     });
   }
@@ -1621,14 +1626,10 @@
     if (ev.target.closest('.mode-row')) syncSeekingBox();
   });
   syncSeekingBox();
-  // Single-select behavior for the preference chip groups (they sit inside
-  // #ob-modes, whose generic handler multi-toggles — this corrects after it).
+  // Pick-one behavior for the preference chip groups. They're marked
+  // data-single so the surrounding #ob-modes multi-toggle skips them.
   ['ob-playpref', 'ob-friendspref'].forEach(function (id) {
-    document.getElementById(id).addEventListener('click', function (ev) {
-      var btn = ev.target.closest('.chip');
-      if (!btn) return;
-      $all('#' + id + ' .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
-    });
+    singleSelect(document.getElementById(id));
   });
   $('#ob4-done').addEventListener('click', function () {
     var modes = $all('#ob-modes .mode-row[aria-pressed="true"]').map(function (r) { return r.getAttribute('data-mode'); });
