@@ -53,7 +53,8 @@ function ballAsset(box = 256) {
 // ---- splash-icon.png: the wordmark, 1200x400 ------------------------------
 // Positions are measured from the rendered text rather than guessed, so the
 // ball sits tight in place of the O instead of floating in a gap.
-const BALL_R = 39;
+// Matches the wordmark's 1.04em ball against the 128px type below.
+const BALL_R = 49;
 const CY = 172;
 
 function splashSvg(leftX, ballCx, veX) {
