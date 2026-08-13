@@ -86,7 +86,7 @@
     color: var(--dim);
   }
 
-  /* Wordmark with tennis-ball "o" */
+  /* Wordmark with pickleball "o" */
   .wordmark {
     font-weight: 800;
     letter-spacing: -0.02em;
@@ -1352,7 +1352,7 @@
   'use strict';
 
   /* ---------- Wordmark ---------- */
-  var BALL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#D6F44F"></circle><path d="M4.5 5.5c3.6 3.6 3.6 9.4 0 13" stroke="#0A0B0D" stroke-width="1.8" fill="none"></path><path d="M19.5 5.5c-3.6 3.6-3.6 9.4 0 13" stroke="#0A0B0D" stroke-width="1.8" fill="none"></path></svg>';
+  var BALL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#D6F44F"></circle><circle cx="12" cy="12" r="1.75" fill="#0A0B0D"></circle><circle cx="18.2" cy="12.0" r="1.75" fill="#0A0B0D"></circle><circle cx="15.1" cy="17.37" r="1.75" fill="#0A0B0D"></circle><circle cx="8.9" cy="17.37" r="1.75" fill="#0A0B0D"></circle><circle cx="5.8" cy="12.0" r="1.75" fill="#0A0B0D"></circle><circle cx="8.9" cy="6.63" r="1.75" fill="#0A0B0D"></circle><circle cx="15.1" cy="6.63" r="1.75" fill="#0A0B0D"></circle></svg>';
   function renderMark(el) {
     el.innerHTML = '40/L<span class="ball">' + BALL_SVG + '</span>ve';
   }
@@ -1479,6 +1479,33 @@
   }
   function saveUser() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(state.user)); } catch (e) { /* private mode: demo continues in memory */ }
+  }
+
+  /* Discovery preferences persist too. They used to live only in memory, so
+     a member set their age range and distance, reopened the app, and found
+     them back at the defaults. */
+  var PREFS_KEY = '40love.prefs';
+  function savePrefs() {
+    try { localStorage.setItem(PREFS_KEY, JSON.stringify(state.prefs)); } catch (e) { /* memory-only fallback */ }
+  }
+  function loadPrefs() {
+    try {
+      var raw = localStorage.getItem(PREFS_KEY);
+      if (!raw) return null;
+      var p = JSON.parse(raw);
+      if (!p || typeof p !== 'object') return null;
+      return {
+        radius: clampNum(p.radius, 1, 50, 15),
+        ageMin: clampNum(p.ageMin, 18, 99, 25),
+        ageMax: clampNum(p.ageMax, 18, 99, 55),
+        mySportsOnly: !!p.mySportsOnly
+      };
+    } catch (e) { return null; }
+  }
+  function clampNum(v, lo, hi, fallback) {
+    var n = parseInt(v, 10);
+    if (isNaN(n)) return fallback;
+    return Math.min(hi, Math.max(lo, n));
   }
 
   /* ---------- Helpers ---------- */
@@ -2608,6 +2635,13 @@
         '" data-city="' + c.slug + '">' + esc(c.name + ', ' + c.state) + '</button>';
     }).join('');
     $('#settings-footer').textContent = '40/Love prototype · ' + cityLabel(curCity) + ' · not a real account';
+    // Draw the discovery prefs from state, so the controls always show what
+    // is actually saved rather than whatever the DOM happens to be holding.
+    $('#radius').value = state.prefs.radius;
+    $('#radius-val').textContent = state.prefs.radius;
+    $('#age-min').value = state.prefs.ageMin;
+    $('#age-max').value = state.prefs.ageMax;
+    $('#sw-mysports').setAttribute('aria-checked', String(!!state.prefs.mySportsOnly));
   }
   $('#set-city').addEventListener('click', function (ev) {
     var btn = ev.target.closest('.chip');
@@ -2693,22 +2727,32 @@
   });
 
   $('#radius').addEventListener('input', function () {
-    $('#radius-val').textContent = $('#radius').value;
-    state.prefs.radius = parseInt($('#radius').value, 10) || 15;
+    state.prefs.radius = clampNum($('#radius').value, 1, 50, state.prefs.radius);
+    $('#radius-val').textContent = state.prefs.radius;
+    savePrefs();
   });
-  $('#age-min').addEventListener('change', function () {
-    var v = parseInt($('#age-min').value, 10);
-    if (v >= 18 && v <= 99) state.prefs.ageMin = v;
-  });
-  $('#age-max').addEventListener('change', function () {
-    var v = parseInt($('#age-max').value, 10);
-    if (v >= 18 && v <= 99) state.prefs.ageMax = v;
-  });
+  // Commit on 'change' (blur / stepper), not on every keystroke — otherwise
+  // typing "30" would clamp the intermediate "3" up to 18 mid-entry.
+  function commitAge() {
+    var lo = clampNum($('#age-min').value, 18, 99, state.prefs.ageMin);
+    var hi = clampNum($('#age-max').value, 18, 99, state.prefs.ageMax);
+    if (lo > hi) { var t = lo; lo = hi; hi = t; }
+    state.prefs.ageMin = lo;
+    state.prefs.ageMax = hi;
+    // Reflect what was actually stored, so the field can never disagree
+    // with the filter that's running.
+    $('#age-min').value = lo;
+    $('#age-max').value = hi;
+    savePrefs();
+  }
+  $('#age-min').addEventListener('change', commitAge);
+  $('#age-max').addEventListener('change', commitAge);
   $('#sw-mysports').addEventListener('click', function () {
     var el = $('#sw-mysports');
     var on = el.getAttribute('aria-checked') === 'true';
     el.setAttribute('aria-checked', String(!on));
     state.prefs.mySportsOnly = !on;
+    savePrefs();
   });
 
   $('#open-settings').addEventListener('click', function () { syncSettings(); show('screen-settings'); });
@@ -2726,6 +2770,7 @@
     state.blocked = {};
     state.seen = {};
     state.prefs = { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false };
+    try { localStorage.removeItem(PREFS_KEY); } catch (e) { /* nothing to clear */ }
     draftPhoto = null;
     phoneE164 = null;
     phoneOk = false;
@@ -2746,6 +2791,8 @@
 
   /* ---------- Boot ---------- */
   state.user = loadUser();
+  var storedPrefs = loadPrefs();
+  if (storedPrefs) state.prefs = storedPrefs;
   if (state.user) {
     $('#btn-continue').textContent = 'Continue as ' + state.user.name;
     if (state.user.modes && state.user.modes.length) { state.mode = state.user.modes[0]; }

@@ -100,7 +100,8 @@ dark look set by the founder's reference design: near-black ground
 (`#0A0B0D`), dark cards (`#17191D`), a single bright Optic accent
 (`#D6F44F`) for actions and active states, white text. Mode identity comes
 from icons (heart / racquet / people), not per-mode colors. The wordmark on
-dark is white with the "o" in "Love" drawn as an Optic tennis ball;
+dark is white with the "o" in "Love" drawn as an Optic pickleball —
+holes, not seams (founder-directed, 2026-08-13);
 secondary tagline: **"Serve. Rally. Connect."** Verified badges use green
 `#3DC96B`; the pass/danger red `#E15A72` appears only for destructive or
 negative actions.

@@ -17,6 +17,10 @@ import { getCoarseLocation } from './lib/location';
 
 const STORE_KEY = '40love.profile';
 const SAVED_KEY = '40love.saved';
+// Discovery prefs used to live only in memory, so a member set their age
+// range and distance, reopened the app, and found the defaults again.
+const PREFS_KEY = '40love.prefs';
+const DEFAULT_PREFS = { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false };
 const AppState = createContext(null);
 
 // B-10: compare calendar parts directly — no UTC/local drift.
@@ -124,7 +128,7 @@ export function AppStateProvider({ children }) {
   const [joined, setJoined] = useState({});
   const [replied, setReplied] = useState({});
   const [notifs, setNotifs] = useState(NOTIFICATIONS.map((n) => ({ ...n })));
-  const [prefs, setPrefs] = useState({ radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false });
+  const [prefs, setPrefs] = useState(DEFAULT_PREFS);
   const [liveEvents, setLiveEvents] = useState(null);
   const [myPhotos, setMyPhotos] = useState(null); // live: [{position, url, status}]
   const [pendingMatch, setPendingMatch] = useState(null); // B-21: match made by THEIR like, waiting to celebrate
@@ -144,8 +148,12 @@ export function AppStateProvider({ children }) {
   // ---------- hydration ----------
 
   useEffect(() => {
-    Promise.all([AsyncStorage.getItem(STORE_KEY), AsyncStorage.getItem(SAVED_KEY)])
-      .then(([rawUser, rawSaved]) => {
+    Promise.all([AsyncStorage.getItem(STORE_KEY), AsyncStorage.getItem(SAVED_KEY), AsyncStorage.getItem(PREFS_KEY)])
+      .then(([rawUser, rawSaved, rawPrefs]) => {
+        if (rawPrefs) {
+          const p = JSON.parse(rawPrefs);
+          if (p && typeof p === 'object') setPrefs({ ...DEFAULT_PREFS, ...p });
+        }
         if (rawUser) {
           const u = JSON.parse(rawUser);
           if (u && typeof u.name === 'string') {
@@ -525,6 +533,7 @@ export function AppStateProvider({ children }) {
     const ageMax = Math.max(next.ageMin, next.ageMax);
     const clean = { ...next, ageMin, ageMax };
     setPrefs(clean);
+    AsyncStorage.setItem(PREFS_KEY, JSON.stringify(clean)).catch(() => {});
     if (live) {
       api.updateMyProfile({
         radius_mi: clean.radius,
@@ -559,7 +568,8 @@ export function AppStateProvider({ children }) {
     setMatches(['maya', 'sam', 'priya']);
     setThreads(THREADS);
     setNotifs(NOTIFICATIONS.map((n) => ({ ...n })));
-    setPrefs({ radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false });
+    setPrefs(DEFAULT_PREFS);
+    AsyncStorage.removeItem(PREFS_KEY).catch(() => {});
     setLiveEvents(null);
     cacheRef.current = {};
     matchIdsRef.current = {};

@@ -34,7 +34,32 @@ const PARTNER_PREFS = [
 export default function SettingsScreen({ navigation }) {
   const app = useApp();
   const u = app.user;
+  // Local text so a half-typed number isn't clamped mid-entry; the value is
+  // committed (and clamped, and echoed back) when the field is done.
   const [radiusText, setRadiusText] = useState(String(app.prefs.radius));
+  const [minText, setMinText] = useState(String(app.prefs.ageMin));
+  const [maxText, setMaxText] = useState(String(app.prefs.ageMax));
+
+  const clamp = (raw, lo, hi, fallback) => {
+    const n = parseInt(raw, 10);
+    if (Number.isNaN(n)) return fallback;
+    return Math.min(hi, Math.max(lo, n));
+  };
+
+  const commitRadius = () => {
+    const v = clamp(radiusText, 1, 50, app.prefs.radius);
+    setRadiusText(String(v));
+    app.updatePrefs({ ...app.prefs, radius: v });
+  };
+
+  const commitAges = () => {
+    let lo = clamp(minText, 18, 99, app.prefs.ageMin);
+    let hi = clamp(maxText, 18, 99, app.prefs.ageMax);
+    if (lo > hi) { const t = lo; lo = hi; hi = t; }
+    setMinText(String(lo));
+    setMaxText(String(hi));
+    app.updatePrefs({ ...app.prefs, ageMin: lo, ageMax: hi });
+  };
 
   const modeOn = (m) => u && u.modes.includes(m);
   const toggleMode = (m) => {
@@ -49,12 +74,6 @@ export default function SettingsScreen({ navigation }) {
     }
     const modes = modeOn(m) ? u.modes.filter((x) => x !== m) : [...u.modes, m];
     app.updateModes(modes);
-  };
-
-  const setRadius = (t) => {
-    setRadiusText(t.replace(/[^0-9]/g, ''));
-    const v = parseInt(t, 10);
-    if (v >= 1 && v <= 50) app.updatePrefs({ ...app.prefs, radius: v });
   };
 
   const signOut = () => {
@@ -261,30 +280,36 @@ export default function SettingsScreen({ navigation }) {
 
         <Group title="Discovery">
           <Row label="Distance (miles)" sub="How far away players can be">
-            <TextInput style={styles.numInput} value={radiusText} onChangeText={setRadius} keyboardType="number-pad" maxLength={2} />
+            <TextInput
+              style={styles.numInput}
+              value={radiusText}
+              onChangeText={(t) => setRadiusText(t.replace(/[^0-9]/g, ''))}
+              onEndEditing={commitRadius}
+              onBlur={commitRadius}
+              keyboardType="number-pad"
+              maxLength={2}
+            />
           </Row>
           <Row label="Age range">
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <TextInput
                 style={styles.numInput}
-                defaultValue={String(app.prefs.ageMin)}
+                value={minText}
+                onChangeText={(t) => setMinText(t.replace(/[^0-9]/g, ''))}
+                onEndEditing={commitAges}
+                onBlur={commitAges}
                 keyboardType="number-pad"
                 maxLength={2}
-                onEndEditing={(e) => {
-                  const v = parseInt(e.nativeEvent.text, 10);
-                  if (v >= 18 && v <= 99) app.updatePrefs({ ...app.prefs, ageMin: v });
-                }}
               />
               <Text style={{ color: colors.dim }}>–</Text>
               <TextInput
                 style={styles.numInput}
-                defaultValue={String(app.prefs.ageMax)}
+                value={maxText}
+                onChangeText={(t) => setMaxText(t.replace(/[^0-9]/g, ''))}
+                onEndEditing={commitAges}
+                onBlur={commitAges}
                 keyboardType="number-pad"
                 maxLength={2}
-                onEndEditing={(e) => {
-                  const v = parseInt(e.nativeEvent.text, 10);
-                  if (v >= 18 && v <= 99) app.updatePrefs({ ...app.prefs, ageMax: v });
-                }}
               />
             </View>
           </Row>

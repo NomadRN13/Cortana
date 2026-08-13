@@ -6,8 +6,40 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, radii, gradientFor, initials } from '../theme';
 import { Bouncy } from './motion';
 
+// The "o" in 40/Love is a pickleball. Drawn from plain Views rather than an
+// icon font or SVG so it needs no extra dependency: a round optic-yellow
+// face with the ring of holes that makes a pickleball read as one.
+// Geometry matches the web wordmark (24-unit circle, holes at r=6.2, ø3.5).
+const HOLES = [[12, 12], [18.2, 12], [15.1, 17.37], [8.9, 17.37], [5.8, 12], [8.9, 6.63], [15.1, 6.63]];
+
+export function Pickleball({ size = 20 }) {
+  const hole = size * (3.5 / 24);
+  return (
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.optic }}>
+      {HOLES.map(([cx, cy]) => (
+        <View
+          key={`${cx}-${cy}`}
+          style={{
+            position: 'absolute',
+            width: hole,
+            height: hole,
+            borderRadius: hole / 2,
+            backgroundColor: colors.night,
+            left: (cx / 24) * size - hole / 2,
+            top: (cy / 24) * size - hole / 2,
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
 export function Wordmark({ size = 24, bounce = false }) {
-  const ball = <Ionicons name="tennisball" size={size * 0.82} color={colors.optic} style={{ marginHorizontal: 1 }} />;
+  const ball = (
+    <View style={{ marginHorizontal: 1 }}>
+      <Pickleball size={size * 0.82} />
+    </View>
+  );
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       <Text style={{ fontSize: size, fontWeight: '800', color: colors.text, letterSpacing: -0.5 }}>40/L</Text>
