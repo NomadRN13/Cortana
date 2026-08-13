@@ -85,10 +85,13 @@ const navTheme = {
 };
 
 function Root() {
-  const { user, hydrated } = useApp();
-  if (!hydrated) return <View style={{ flex: 1, backgroundColor: colors.night }} />;
+  const { bootRoute } = useApp();
+  // Hold the splash until we know whether this device is still signed in —
+  // deciding from local storage alone made a signed-in phone with no cached
+  // profile look like a brand new visitor.
+  if (!bootRoute) return <View style={{ flex: 1, backgroundColor: colors.night }} />;
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={user ? 'Main' : 'Welcome'}>
+    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={bootRoute}>
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="SignIn" component={SignInScreen} />
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />

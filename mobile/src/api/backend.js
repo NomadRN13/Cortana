@@ -377,12 +377,40 @@ export async function markNotificationsRead() {
   if (error) throw error;
 }
 
+// ---------- Devices ----------
+// The account remembers the phones it's used on, and can sign one out.
+
+export async function touchDevice(key, name, platform) {
+  // Returns false when this device has been signed out from elsewhere.
+  const { data, error } = await supabase.rpc('touch_device', {
+    p_key: key, p_name: name || '', p_platform: platform || 'unknown',
+  });
+  if (error) throw error;
+  return data === true;
+}
+
+export async function listDevices() {
+  const { data, error } = await supabase
+    .from('devices')
+    .select('id, device_key, name, platform, first_seen_at, last_seen_at')
+    .is('revoked_at', null)
+    .order('last_seen_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function revokeDevice(id) {
+  const { data, error } = await supabase.rpc('revoke_device', { p_id: id });
+  if (error) throw error;
+  return data === true;
+}
+
 // ---------- Push ----------
 
-export async function registerPushToken(token, platform) {
+export async function registerPushToken(token, platform, deviceKey) {
   const { data: { user } } = await supabase.auth.getUser();
   const { error } = await supabase.from('push_tokens').upsert(
-    { user_id: user.id, token, platform, updated_at: new Date().toISOString() },
+    { user_id: user.id, token, platform, device_key: deviceKey || null, updated_at: new Date().toISOString() },
     { onConflict: 'user_id,token' }
   );
   if (error) throw error;

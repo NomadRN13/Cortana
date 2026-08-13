@@ -12,6 +12,7 @@ import { supabase, isBackendConfigured } from './lib/supabase';
 import * as api from './api/backend';
 import * as social from './lib/socialAuth';
 import { CITIES, DEFAULT_CITY, cityBySlug, cityLabel, nearestCity } from './data/cities';
+import { getDeviceKey, getDeviceName, getPlatform } from './lib/device';
 import { registerForPush } from './lib/push';
 import { getCoarseLocation } from './lib/location';
 
@@ -132,6 +133,14 @@ export function AppStateProvider({ children }) {
   const [liveEvents, setLiveEvents] = useState(null);
   const [myPhotos, setMyPhotos] = useState(null); // live: [{position, url, status}]
   const [pendingMatch, setPendingMatch] = useState(null); // B-21: match made by THEIR like, waiting to celebrate
+  const [devices, setDevices] = useState([]);
+  const [deviceKey, setDeviceKey] = useState(null);
+  // Set when the server says this device was signed out from another one.
+  const [revokedHere, setRevokedHere] = useState(false);
+  // Boot gating: we can only decide Welcome vs Main once we know whether a
+  // session exists, not just whether local storage had a profile.
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   const cacheRef = useRef({});        // userId → mapped profile (live)
   const matchIdsRef = useRef({});     // otherUserId → matchId (live; B-01)
@@ -176,11 +185,28 @@ export function AppStateProvider({ children }) {
   };
 
   useEffect(() => {
-    if (!isBackendConfigured) return undefined;
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    if (!isBackendConfigured) { setSessionChecked(true); return undefined; }
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setSessionChecked(true);
+    });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  // A phone that's still signed in but has lost its local copy of the
+  // profile (reinstall, storage cleared, signed in on a second device) used
+  // to land back on the welcome screen as if it were a stranger. Rebuild
+  // the profile from the server instead.
+  useEffect(() => {
+    if (!live || user || !hydrated) return;
+    let alive = true;
+    bootstrapAfterSignIn()
+      .then((r) => { if (alive && !r.hasProfile) setNeedsOnboarding(true); })
+      .catch(() => {});
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live, hydrated, user]);
 
   // ---------- live loaders ----------
 
@@ -304,7 +330,7 @@ export function AppStateProvider({ children }) {
     setNotifs([]);
     setLiveEvents(null);
     api.updateMyProfile({ last_active_at: new Date().toISOString() }).catch(() => {});
-    registerForPush(api.registerPushToken).catch(() => {});
+    getDeviceKey().then((key) => registerForPush((t, p) => api.registerPushToken(t, p, key))).catch(() => {});
     // Refresh coarse (~1 km) location so distances and the radius filter work;
     // refetch the deck once it lands.
     getCoarseLocation().then((loc) => {
@@ -318,6 +344,20 @@ export function AppStateProvider({ children }) {
     refreshEvents();
     refreshDeck(mode);
     refreshMyPhotos();
+    // Remember this device on the account — and honour a sign-out issued
+    // from one of their other devices.
+    getDeviceKey().then(async (key) => {
+      setDeviceKey(key);
+      try {
+        const stillAllowed = await api.touchDevice(key, getDeviceName(), getPlatform());
+        if (!stillAllowed) {
+          setRevokedHere(true);
+          signOut();
+          return;
+        }
+        refreshDevices();
+      } catch (e) { /* offline: try again next launch */ }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live]);
 
@@ -463,6 +503,16 @@ export function AppStateProvider({ children }) {
   // Where a member plays. Auto-suggested from coarse location at signup,
   // changeable in Settings (people move, and plenty of players split time
   // between two cities).
+  const refreshDevices = async () => {
+    try { setDevices(await api.listDevices()); } catch (e) { /* keep what we have */ }
+  };
+
+  const signOutDevice = async (id) => {
+    const ok = await api.revokeDevice(id);
+    if (ok) await refreshDevices();
+    return ok;
+  };
+
   const updateCity = (citySlug) => {
     if (!cityBySlug(citySlug) || !user) return;
     saveUser({ ...user, city: citySlug });
@@ -700,7 +750,7 @@ export function AppStateProvider({ children }) {
       if (draft.photo) api.uploadProfilePhoto(draft.photo, 0).catch(() => {});
       // Push tokens reference the profile row, so the attempt made at sign-in
       // (before onboarding) could not have succeeded — retry now that it exists.
-      registerForPush(api.registerPushToken).catch(() => {});
+      getDeviceKey().then((key) => registerForPush((t, p) => api.registerPushToken(t, p, key))).catch(() => {});
     }
     saveUser(draft);
     setMode(draft.modes[0]);
@@ -1096,8 +1146,16 @@ export function AppStateProvider({ children }) {
     ? (myPhotos || [])
     : demoPhotoList(user).map((u, i) => ({ position: i, url: u, status: 'approved' }));
 
+  // Where the app should open. Waits for both the local cache and the
+  // session check, so a signed-in phone never flashes the welcome screen.
+  const bootRoute = (() => {
+    if (!hydrated || !sessionChecked) return null;   // still deciding
+    if (isBackendConfigured && session) return user ? 'Main' : (needsOnboarding ? 'Onboarding' : null);
+    return user && !isBackendConfigured ? 'Main' : 'Welcome';
+  })();
+
   const value = {
-    user, hydrated, saveUser, signOut,
+    user, hydrated, bootRoute, saveUser, signOut,
     session, live, isBackendConfigured,
     requestCode, verifyCode, signInWithProvider, finishOnboarding,
     requestPhoneCode, verifyPhoneCode,
@@ -1105,6 +1163,7 @@ export function AppStateProvider({ children }) {
     photos, addPhoto, removePhoto, makePrimary,
     topPicks,
     cities: CITIES, cityLabel, updateCity, detectCity,
+    devices, deviceKey, refreshDevices, signOutDevice, revokedHere,
     mode, setMode,
     currentProfile, advance, rewind, deckError, peekNext, resetDeck,
     retryDeck: () => refreshDeck(mode),

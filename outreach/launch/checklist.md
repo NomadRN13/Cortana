@@ -149,6 +149,34 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
 - **Fake "Rallies: 128" profile stat removed** (both apps) — replaced with
   the member's real Saved-players count. No made-up numbers shown to users.
 
+## Update — 2026-08-09 (stay signed in + remembered devices)
+
+- **Signing in now sticks properly.** The app decided Welcome-vs-Main from
+  local storage alone, so a phone that still held a valid session but had
+  lost its cached profile (reinstall, cleared storage, or simply a second
+  device) was treated as a stranger and sent back to the welcome screen.
+  It now waits for the session check and rebuilds the profile from the
+  server. The mirror-image bug is fixed too: with the backend live and the
+  session gone, "Continue as <name>" used to walk into an app where every
+  request failed — it now routes to sign-in.
+- **The account remembers its devices** (migration 15). Settings → Devices
+  lists every phone signed in, which one you're holding, and when each was
+  last used — and any of them can be signed out. For a dating app that's a
+  safety feature, not a convenience: phones get lost, and relationships end
+  with someone else knowing the passcode.
+- **Revocation is real, not cosmetic.** The revoked device's push tokens are
+  deleted immediately (push_tokens gained a `device_key` so they can be
+  traced to a device at all), `touch_device()` returns false for it, and the
+  app signs itself out when it sees that. A revoked device that never
+  reconnects stays usable until its token expires — that's an honest limit
+  of JWT sessions, and the in-app copy says so rather than overpromising.
+  Harness-tested, including that a revoked device cannot quietly
+  re-register and that one member cannot revoke another's device.
+- **The device identifier is deliberately not a hardware one** — Apple and
+  Google restrict those and we don't need one. It's a random tag the app
+  mints for itself and erases on uninstall. Privacy policy and both store
+  data forms updated accordingly.
+
 ## Update — 2026-08-09 (multi-city: 11 metros)
 
 - **40/Love is no longer Indianapolis-only.** Open in Indianapolis, Los

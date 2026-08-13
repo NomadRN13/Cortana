@@ -142,7 +142,7 @@ purposes:
 | User Content → Photos or Videos | Profile photos (up to 6), private bucket, moderated before visible | Yes | App Functionality |
 | User Content → Other User Content | Bio, availability note, chat messages, court-time proposals, reports filed | Yes | App Functionality (chat content may be reviewed by a human when reported — say so in the policy, already done) |
 | Identifiers → User ID | Account UUID (Supabase auth id), plus the provider subject id from Apple/Google sign-in | Yes | App Functionality |
-| Identifiers → Device ID | Push-notification token, only if the user allows notifications (`push_tokens`) | Yes | App Functionality (notifications) |
+| Identifiers → Device ID | Push-notification token, only if the user allows notifications (`push_tokens`), plus a random per-install tag and device name in `devices` so the member can see and sign out their own phones. No hardware identifier or IDFA is read. | Yes | App Functionality (notifications, account security) |
 | Usage Data → Product Interaction | Likes/passes/aces, matches, event RSVPs — this is the matching engine, stored server-side (`swipes`, `matches`, `event_rsvps`) | Yes | App Functionality |
 | Other Data | Birthdate (`profiles.birthdate`) — 18+ enforcement and age display; never shown raw to other users, only computed age | Yes | App Functionality |
 
@@ -255,6 +255,7 @@ Per data type (Collected / Shared / Purpose / Optional):
 | Personal info → Email address | Yes | No | Account management (one-time-code sign-in) | No — required to sign in |
 | Personal info → Phone number | Yes (verified once by SMS at signup; never shown to members) | No | Account management / fraud prevention (keeps the community real people; ban enforcement) | No — required at signup |
 | Personal info → User IDs | Yes (Supabase account UUID; plus the Apple `sub` / Google account id when social sign-in is used) | No | Account management | No |
+| Device or other IDs | Yes (push token; plus a random per-install tag and the device's own name, for the sign-out-a-device list) | No | Account management / fraud prevention | **Yes** — only if notifications are enabled; the device list itself is core to account security |
 | Personal info → Name | Yes (first name only) | No | App functionality (shown on your profile) | No |
 | Personal info → Date of birth ("Other info") | Yes | No | App functionality (18+ enforcement; only your age is shown) | No |
 | Personal info → Sexual orientation | Yes (inferable from gender + dating preferences) | No | App functionality (Date-mode matching) | **Yes** — only needed for Date mode; Play/Friends modes work without it |

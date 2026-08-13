@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TextInput, StyleSheet, Pressable, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +24,18 @@ const GAMES = [
   { key: 'doubles', label: 'Doubles' },
   { key: 'mixed_doubles', label: 'Mixed doubles' },
 ];
+// "3 minutes ago" / "yesterday" — precise enough to recognise a device,
+// vague enough not to read like surveillance.
+function sinceLabel(ts) {
+  const mins = Math.max(0, Math.round((Date.now() - new Date(ts).getTime()) / 60000));
+  if (mins < 2) return 'just now';
+  if (mins < 60) return `${mins} minutes ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return hrs === 1 ? 'an hour ago' : `${hrs} hours ago`;
+  const days = Math.round(hrs / 24);
+  return days === 1 ? 'yesterday' : `${days} days ago`;
+}
+
 const PARTNER_PREFS = [
   { key: 'women', label: 'Women' },
   { key: 'men', label: 'Men' },
@@ -74,6 +86,33 @@ export default function SettingsScreen({ navigation }) {
     }
     const modes = modeOn(m) ? u.modes.filter((x) => x !== m) : [...u.modes, m];
     app.updateModes(modes);
+  };
+
+  useEffect(() => {
+    if (app.live) app.refreshDevices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [app.live]);
+
+  const confirmSignOutDevice = (d) => {
+    Alert.alert(
+      `Sign out ${d.name || 'this device'}?`,
+      'It stops receiving your notifications immediately, and is signed out the next time it opens 40/Love.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign it out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const ok = await app.signOutDevice(d.id);
+              if (!ok) Alert.alert('Already signed out', 'That device had already been signed out.');
+            } catch (e) {
+              Alert.alert('Couldn’t sign it out', (e && e.message) || 'Check your connection and try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const signOut = () => {
@@ -228,6 +267,37 @@ export default function SettingsScreen({ navigation }) {
           </View>
         </Group>
 
+        {app.live && (
+          <Group title="Devices">
+            <View style={styles.datingBox}>
+              {app.devices.length === 0 ? (
+                <Text style={[type.hint, { fontSize: 12 }]}>Just this one so far.</Text>
+              ) : app.devices.map((d) => {
+                const isThis = d.device_key === app.deviceKey;
+                return (
+                  <View key={d.id} style={styles.deviceRow}>
+                    <Ionicons name={d.platform === 'android' ? 'phone-portrait-outline' : 'phone-portrait'} size={20} color={colors.dim} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: colors.text, fontWeight: '700', fontSize: 14 }}>
+                        {d.name || 'Unnamed device'}{isThis ? '  ·  This device' : ''}
+                      </Text>
+                      <Text style={type.hint}>Last used {sinceLabel(d.last_seen_at)}</Text>
+                    </View>
+                    {!isThis && (
+                      <Pressable onPress={() => confirmSignOutDevice(d)} hitSlop={6} accessibilityLabel={`Sign out ${d.name || 'this device'}`}>
+                        <Text style={{ color: colors.danger, fontWeight: '800', fontSize: 13 }}>Sign out</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                );
+              })}
+              <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
+                Every phone you sign in on shows up here. Lost one, or shared your passcode with someone you'd rather not have? Sign it out — it stops getting your notifications straight away, and it's signed out the next time it opens the app.
+              </Text>
+            </View>
+          </Group>
+        )}
+
         <Group title="City">
           <View style={styles.datingBox}>
             <View style={styles.chipRow}>
@@ -375,6 +445,7 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: colors.danger, borderRadius: 14,
   },
   deleteLink: { alignItems: 'center', paddingVertical: 6 },
+  deviceRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
   datingBox: {
     padding: 13, backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line,
     borderRadius: 14, marginBottom: 8,

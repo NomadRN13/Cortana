@@ -13,7 +13,8 @@ const MODES = [
 ];
 
 export default function WelcomeScreen({ navigation }) {
-  const { user } = useApp();
+  const { user, live, isBackendConfigured } = useApp();
+  const canContinue = !!user && (live || !isBackendConfigured);
   return (
     <SafeAreaView style={styles.wrap}>
       <View style={{ gap: 14 }}>
@@ -42,9 +43,13 @@ export default function WelcomeScreen({ navigation }) {
       <View style={{ gap: 10 }}>
         <Btn label="Get started" onPress={() => navigation.navigate('SignIn')} />
         <Btn
-          label={user ? `Continue as ${user.name}` : 'I already have an account'}
+          // Only offer "continue" when we can actually continue. With the
+          // backend live but the session gone (expired, or signed out from
+          // another device) a cached name is stale — send them to sign in
+          // rather than into an app that will fail every request.
+          label={canContinue ? `Continue as ${user.name}` : 'I already have an account'}
           kind="ghost"
-          onPress={() => navigation.navigate(user ? 'Main' : 'SignIn')}
+          onPress={() => navigation.navigate(canContinue ? 'Main' : 'SignIn')}
         />
       </View>
     </SafeAreaView>
