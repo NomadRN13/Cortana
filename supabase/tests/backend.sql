@@ -889,6 +889,81 @@ begin
 end $$;
 reset role;
 
+-- ---- 9h. What one member can reach about another ----
+-- Same idea as the anon sweep, one level up: everything an ordinary signed-in
+-- member can read is readable by anyone who registers, so each table gets an
+-- explicit expectation rather than being assumed safe. Diego looks at Priya,
+-- who he has no relationship with — no match, no messages, nothing.
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000002'; -- Diego
+do $$
+declare c int;
+begin
+  -- Who liked whom is the product's whole secret. Seeing someone else's swipes
+  -- would reveal that they liked you before a match exists.
+  select count(*) into c from swipes where actor_id <> auth.uid();
+  assert c = 0, format('a member can read %s of other people''s swipes', c);
+
+  -- Matches and messages: participants only.
+  select count(*) into c from matches where auth.uid() not in (user_a, user_b);
+  assert c = 0, format('a member can read %s matches they are not in', c);
+  select count(*) into c from messages where sender_id <> auth.uid();
+  assert c = 0, 'a member can read messages from a conversation they are not in';
+
+  -- Who blocked or reported whom is a safety matter in both directions.
+  select count(*) into c from blocks where blocker_id <> auth.uid();
+  assert c = 0, 'a member can see who else has blocked people';
+  select count(*) into c from reports where reporter_id <> auth.uid();
+  assert c = 0, 'a member can read other people''s reports';
+
+  -- Notifications, devices and push tokens are all strictly personal.
+  select count(*) into c from notifications where user_id <> auth.uid();
+  assert c = 0, 'a member can read other people''s notifications';
+  select count(*) into c from devices where user_id <> auth.uid();
+  assert c = 0, 'a member can see other people''s devices';
+  select count(*) into c from push_tokens where user_id <> auth.uid();
+  assert c = 0, 'a member can read other people''s push tokens';
+
+  -- Unapproved photos must not be reachable before a human has seen them.
+  select count(*) into c from profile_photos
+   where user_id <> auth.uid() and moderation_status <> 'approved';
+  assert c = 0, 'a member can see another member''s unmoderated photo';
+end $$;
+
+-- Blocking has to hold on the event guest list too, or a blocked member can
+-- find out where someone will physically be, and when.
+do $$
+declare ev uuid; seen int;
+begin
+  select id into ev from events limit 1;
+  reset role;
+  insert into event_rsvps (event_id, user_id)
+  values (ev, '00000000-0000-4000-8000-000000000003')
+  on conflict do nothing;
+  set role authenticated;
+
+  select count(*) into seen from event_rsvps
+   where event_id = ev and user_id = '00000000-0000-4000-8000-000000000003';
+  assert seen = 1, 'test setup: Priya should be on the guest list to start with';
+
+  insert into blocks (blocker_id, blocked_id)
+  values (auth.uid(), '00000000-0000-4000-8000-000000000003');
+
+  select count(*) into seen from event_rsvps
+   where event_id = ev and user_id = '00000000-0000-4000-8000-000000000003';
+  assert seen = 0, 'a blocked member is still visible on the event guest list';
+
+  -- ...and the same block hides the sports rows, so the account cannot even be
+  -- confirmed to still exist.
+  select count(*) into seen from user_sports
+   where user_id = '00000000-0000-4000-8000-000000000003';
+  assert seen = 0, 'a blocked member''s sports are still readable';
+
+  delete from blocks
+   where blocker_id = auth.uid() and blocked_id = '00000000-0000-4000-8000-000000000003';
+end $$;
+reset role;
+
 -- ---- 10. Account deletion removes everything ----
 -- The account-deletion page (landing/delete-account.html) promises each of
 -- these by name, and the store data-safety forms declare them. Give the user

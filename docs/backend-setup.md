@@ -26,9 +26,13 @@ policies — pass an automated test suite against Postgres 16.
   recipient can accept or decline. An accepted proposal is the "a real date
   happened" event.
 - **Safety** — blocking makes two people invisible to each other everywhere,
-  enforced at the database layer; reports queue for review; photos are
-  hidden until approved; in-app account deletion (a store requirement) is
-  one call.
+  enforced at the database layer: the deck, each other's profiles and sports,
+  and the event guest list, so a blocked member cannot find out where someone
+  will be or when. Reports queue for review; photos are hidden until approved;
+  in-app account deletion (a store requirement) is one call. What members can
+  read about each other is asserted table by table in
+  `supabase/tests/backend.sql` §9f–9h rather than left to the policies looking
+  right.
 - **Events & waitlist** — the Indy event calendar with RSVPs, and the
   waitlist table the landing page feeds.
 

@@ -454,3 +454,30 @@ a device or a card:
   been in force during tests either.
 - Privacy policy updated to state what is now actually enforced: members are
   never given a position, only a distance, and never a birthdate, only an age.
+
+## Update — 2026-08-13 (member-to-member sweep; mark on every page)
+
+- **Blocking wasn't holding on the event guest list.** `event_rsvps` had
+  `using (true)`, so `/rest/v1/event_rsvps?select=user_id&event_id=eq.<id>`
+  returned the attendee list to anyone — including someone the attendee had
+  blocked. Of everything a block is meant to protect, *where a member will
+  physically be, and when* is the part that matters most. `user_sports` had the
+  same open policy, which let a blocked member confirm the account still exists.
+  Both are block-filtered now (`20260806000019`).
+  - Trade-off taken deliberately: the "spots left" count is now computed per
+    viewer, so someone with blocks may see one fewer attendee than there are.
+    A cosmetic count being off by one beats a guest list leaking.
+  - `docs/backend-setup.md` claimed blocking made people "invisible to each
+    other everywhere". That is now true; before, it wasn't.
+- **Everything else checked out.** Swipes are actor-only (so nobody can see who
+  liked them before a match), matches and messages are participants-only,
+  blocks and reports are filer-only, notifications/devices/push tokens are
+  personal, unapproved photos are invisible. All of it is now asserted in
+  §9h rather than inferred from the policies looking right — and each assertion
+  was verified to fail when the policy is loosened.
+- **The mark is on every surface now.** It was on the landing page, the demo and
+  the app; the privacy, terms and account-deletion pages showed the name as
+  plain text, and the moderation desk still rendered **"40/Love"** in the old
+  casing — the rename had missed it because the name is split across `<span>`s.
+  All six pages are driven by `scripts/sync-mark.js` from the single definition
+  in `scripts/lib/ball.js`.

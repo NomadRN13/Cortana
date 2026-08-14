@@ -4,7 +4,11 @@
 //
 // The ball is defined once, in scripts/lib/ball.js. It used to be pasted into
 // four files by hand, which is how the shading drifted apart last time. Each
-// target carries marker comments; this replaces what's between them.
+// target carries marker comments; this replaces what's between them:
+//
+//   <!--mark:defs--> … <!--/mark:defs-->   the gradients + the <symbol>, once
+//   <!--mark:ball--> … <!--/mark:ball-->   one instance, as a <use>
+//   /*mark:ball*/ … /*\/mark:ball*/        same, for a JS string literal
 //
 // After running, re-run scripts/build-site.sh to refresh site/.
 
@@ -24,46 +28,49 @@ const DEFS_BLOCK =
 
 const USE = '<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg>';
 
-// Between "<!--mark:defs-->" and "<!--/mark:defs-->", replace everything.
-function replaceBlock(src, name, body, file) {
-  const open = `<!--mark:${name}-->`;
-  const close = `<!--/mark:${name}-->`;
+function replaceBetween(src, open, close, body, file, required) {
   const i = src.indexOf(open);
   const j = src.indexOf(close);
-  if (i < 0 || j < 0) throw new Error(`${file}: missing ${open} / ${close} markers`);
+  if (i < 0 || j < 0) {
+    if (required) throw new Error(`${file}: missing ${open} / ${close} markers`);
+    return src;
+  }
   return src.slice(0, i + open.length) + body + src.slice(j);
 }
 
-// The prototype keeps its ball in a JS string, so its markers are comments
-// wrapping the whole assignment rather than HTML comments.
-function replaceJsBlock(src, name, body, file) {
-  const open = `/*mark:${name}*/`;
-  const close = `/*\/mark:${name}*/`;
-  const i = src.indexOf(open);
-  const j = src.indexOf(close);
-  if (i < 0 || j < 0) throw new Error(`${file}: missing ${open} / ${close} markers`);
-  return src.slice(0, i + open.length) + body + src.slice(j);
+// A page can carry any number of ball instances; they're all identical.
+function fillAllBalls(src) {
+  return src.replace(
+    /<!--mark:ball-->[\s\S]*?<!--\/mark:ball-->/g,
+    '<!--mark:ball-->' + USE + '<!--/mark:ball-->'
+  );
 }
 
-const jobs = [
-  ['landing/index.html', (s, f) => replaceBlock(s, 'defs', '\n' + DEFS_BLOCK + '\n', f)],
-  ['app/index.html', (s, f) => {
-    s = replaceBlock(s, 'defs', '\n' + DEFS_BLOCK + '\n', f);
-    if (USE.includes("'")) throw new Error('mark markup needs escaping for the JS literal');
-    return replaceJsBlock(s, 'ball', `\n  var BALL_SVG = '${USE}';\n  `, f);
-  }],
-  // admin/index.html shows the name as text only — no ball to sync.
+const files = [
+  'landing/index.html',
+  'app/index.html',
+  'admin/index.html',
+  'landing/privacy.html',
+  'landing/terms.html',
+  'landing/delete-account.html',
 ];
 
-for (const [rel, fn] of jobs) {
+let changed = 0;
+for (const rel of files) {
   const file = path.join(root, rel);
   if (!fs.existsSync(file)) { console.log('-- skipped (absent):', rel); continue; }
   const before = fs.readFileSync(file, 'utf8');
-  const after = fn(before, rel);
+  let after = replaceBetween(before, '<!--mark:defs-->', '<!--/mark:defs-->',
+                             '\n' + DEFS_BLOCK + '\n', rel, true);
+  after = fillAllBalls(after);
+  // The prototype keeps its ball in a JS string rather than in the markup.
+  if (after.includes('/*mark:ball*/')) {
+    if (USE.includes("'")) throw new Error('mark markup needs escaping for the JS literal');
+    after = replaceBetween(after, '/*mark:ball*/', '/*\/mark:ball*/',
+                           `\n  var BALL_SVG = '${USE}';\n  `, rel, true);
+  }
   fs.writeFileSync(file, after);
+  if (before !== after) changed++;
   console.log(before === after ? '   unchanged' : '== updated  ', rel);
 }
-
-// Every <use> instance in the landing page markup, for reference when adding
-// a new wordmark by hand.
-console.log('\ninstance markup:\n  ' + USE);
+console.log(`\n${changed} file(s) updated. Run scripts/build-site.sh to refresh site/.`);
