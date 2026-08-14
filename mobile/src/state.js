@@ -6,6 +6,7 @@
 // This revision addresses the QA findings in outreach/launch/bugs.md
 // (B-01…B-17); fixes are tagged inline.
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS, EVENTS } from './data/seed';
 import { supabase, isBackendConfigured } from './lib/supabase';
@@ -1097,10 +1098,25 @@ export function AppStateProvider({ children }) {
       const ev = liveEvents.find((e) => e.id === id);
       if (!ev) return;
       const going = !ev.going;
-      setLiveEvents((list) => list.map((e) => (e.id === id
-        ? { ...e, going, spotsLeft: Math.max(0, e.spotsLeft + (going ? -1 : 1)) }
+      const apply = (g) => setLiveEvents((list) => list.map((e) => (e.id === id
+        ? { ...e, going: g, spotsLeft: Math.max(0, e.spotsLeft + (g ? -1 : 1)) }
         : e)));
-      api.rsvp(id, going).catch(() => {});
+      apply(going);
+      // The button flips immediately so it feels instant, but the server has
+      // the last word — an event can fill up between loading the list and
+      // tapping. Swallowing the failure used to leave the card saying "Going"
+      // for an RSVP that was refused, which is how someone shows up to an
+      // event they were never on the list for.
+      api.rsvp(id, going).catch((err) => {
+        apply(!going);
+        const full = /full/i.test((err && err.message) || '');
+        Alert.alert(
+          full ? 'That event just filled up' : 'Couldn’t update your RSVP',
+          full
+            ? 'Someone took the last spot first. Nothing was booked — try another event, or check back in case a spot opens.'
+            : 'Check your connection and try again.'
+        );
+      });
       return;
     }
     setJoined((j) => ({ ...j, [id]: !j[id] }));

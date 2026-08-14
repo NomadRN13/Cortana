@@ -481,3 +481,24 @@ a device or a card:
   casing — the rename had missed it because the name is split across `<span>`s.
   All six pages are driven by `scripts/sync-mark.js` from the single definition
   in `scripts/lib/ball.js`.
+
+## Update — 2026-08-13 (events could be oversubscribed; shareable preview link)
+
+- **`capacity` was decoration.** It was a check on the *number* (2–500) and
+  nothing counted RSVPs against it, so the API took more joins than there were
+  spots — and two people could take the last one simultaneously. For a mixer
+  with courts actually booked, that means someone drives across town to be
+  turned away. `20260806000020` adds a guard that locks the event row before
+  counting, so the race is closed too. Verified to fail without the migration.
+- **The app was hiding the failure.** `toggleJoin` flipped the button
+  optimistically and then `.catch(() => {})` — so a refused RSVP still read as
+  "Going" on the card. It now reverts and says what happened, with separate copy
+  for "that event just filled up" and a plain connection failure.
+- **Shareable preview link for testers** — the clickable prototype is published
+  at the link in the session notes. It runs entirely in the visitor's browser,
+  so it needs no backend and saves nothing; good for showing the flow, useless
+  for collecting signups.
+- **Do NOT share the landing page until it's deployed with real keys.** With no
+  Supabase config it falls back to storing waitlist emails in the *visitor's own
+  browser* — everyone would see "You're on the list" and nobody would be. That
+  fallback is right for a local preview and wrong for anything you send out.

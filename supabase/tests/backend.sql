@@ -964,6 +964,53 @@ begin
 end $$;
 reset role;
 
+-- ---- 9i. An event cannot be oversubscribed ----
+-- capacity used to be a check on the number and nothing more, so the API would
+-- happily take more RSVPs than there were spots.
+reset role;
+do $$
+declare ev uuid; i int; uid uuid;
+begin
+  insert into events (title, venue, starts_at, sport, capacity, city)
+  values ('Tiny Round Robin', 'Test Courts', now() + interval '3 days', 'pickleball', 2, 'indianapolis')
+  returning id into ev;
+
+  -- fill it exactly
+  for i in 1..2 loop
+    uid := ('00000000-0000-4000-8000-00000000010' || i)::uuid;
+    insert into auth.users (id, email) values (uid, format('cap%s@example.com', i));
+    insert into profiles (id, first_name, birthdate, city)
+    values (uid, 'Cap' || i, '1995-01-01', 'indianapolis');
+    insert into event_rsvps (event_id, user_id) values (ev, uid);
+  end loop;
+
+  assert (select count(*) from event_rsvps where event_id = ev) = 2, 'setup: expected a full event';
+
+  -- one more must be refused, not silently accepted
+  begin
+    insert into event_rsvps (event_id, user_id)
+    values (ev, '00000000-0000-4000-8000-000000000002');
+    assert false, 'a member joined an event that was already full';
+  exception when raise_exception then null;
+  end;
+
+  -- someone already going can still be updated without tripping the guard
+  update event_rsvps set status = 'checked_in'
+   where event_id = ev and user_id = '00000000-0000-4000-8000-000000000101';
+  assert (select status from event_rsvps
+           where event_id = ev and user_id = '00000000-0000-4000-8000-000000000101') = 'checked_in',
+         'checking in an existing attendee was blocked by the capacity guard';
+
+  -- and a spot freed up is genuinely reusable
+  delete from event_rsvps where event_id = ev and user_id = '00000000-0000-4000-8000-000000000102';
+  insert into event_rsvps (event_id, user_id)
+  values (ev, '00000000-0000-4000-8000-000000000002');
+  assert (select count(*) from event_rsvps where event_id = ev) = 2, 'freed spot was not reusable';
+
+  delete from event_rsvps where event_id = ev;
+  delete from events where id = ev;
+end $$;
+
 -- ---- 10. Account deletion removes everything ----
 -- The account-deletion page (landing/delete-account.html) promises each of
 -- these by name, and the store data-safety forms declare them. Give the user
