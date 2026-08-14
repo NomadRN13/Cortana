@@ -803,6 +803,13 @@
     return !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
   }
 
+  // Opening the file straight off disk, or from a dev server, means someone is
+  // previewing the page rather than visiting it.
+  function localPreview() {
+    return location.protocol === 'file:'
+      || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  }
+
   // Goes through join_waitlist rather than POSTing to the table, so an address
   // that is already on the list is indistinguishable from one that isn't. The
   // anon key below is public — it ships in this page — so anything that told
@@ -859,6 +866,18 @@
             btn.disabled = false;
             btn.textContent = prevLabel;
           });
+        return;
+      }
+
+      // Deployed with no backend configured. The local-preview path below
+      // stores the address in this browser, which is fine when you are looking
+      // at your own page and a lie when a stranger is: they would be told they
+      // are on a list that does not exist anywhere, and the signup would be
+      // lost. Say so, and give them a way to reach us that actually works.
+      if (!localPreview()) {
+        error.innerHTML = 'The waitlist isn’t open yet — email '
+          + '<a href="mailto:hello@40love.app?subject=Waitlist">hello@40love.app</a>'
+          + ' and we’ll add you by hand.';
         return;
       }
 
