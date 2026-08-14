@@ -26,7 +26,7 @@ Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
 | 2.2 | In-app account deletion | done (code) — one gap | dev | Settings → Delete account (`mobile/src/screens/SettingsScreen.js:68-79,240`) calls the `delete_account()` RPC (initial migration). **Gap:** the RPC deletes `auth.users` (rows cascade) but does not delete photo objects from the `photos` storage bucket — orphaned binaries contradict the privacy policy's hard-delete promise and both stores' deletion declarations. Fix before filing the data forms as final. |
 | 2.3 | Block + report shipped in-app | done (code) | dev | Deck: `HomeScreen.js:55-62`; chat: `ConversationScreen.js:60-67`; backend `blockUser`/`reportUser`; `blocks`/`reports` tables with RLS. Blocking is instant + mutual-filtered in the deck RPC. |
 | 2.4 | Human moderation flow for reports (24h SLA) | done (code) — see update below | dev + founder | Moderation desk shipped at `/admin` (`admin/index.html` + migration `20260806000008`): photo approve/reject, report triage, event creation — all authorized by DB-side admin policies, harness-tested. Founder one-time step: add yourself to the `admins` list (`docs/backend-setup.md`). Founder owns the human process (24h SLA); suspend/ban actions stay in the dashboard at alpha volume. |
-| 2.5 | `eas init` (real project ID) + fill `eas.json` placeholders | not started | dev | `mobile/app.json` still has `projectId: REPLACE_AFTER_RUNNING_eas_init`; `mobile/eas.json` still has `REPLACE_WITH_YOUR_APPLE_ID_EMAIL` / `REPLACE_WITH_APP_STORE_CONNECT_APP_ID` and expects `./play-service-account.json`. Blocked on 1.3 (accounts). Agent never runs eas commands. |
+| 2.5 | `eas init` (real project ID) + fill `eas.json` placeholders | not started | founder + dev | `eas init` writes the project id — the placeholder that used to sit in `mobile/app.json` was removed, because it isn't a valid UUID and made `eas build` fail with "Invalid UUID appId" instead of offering to create the project. The **build** profiles are ready as they are; only `eas.json`'s **submit** block still has `REPLACE_WITH_YOUR_APPLE_ID_EMAIL` / `REPLACE_WITH_APP_STORE_CONNECT_APP_ID` and expects `./play-service-account.json`, and those are needed for store submission, not for getting a build to testers. See `docs/sharing-with-testers.md`. Agent never runs eas commands. |
 | 2.6 | Store descriptions, keywords, categories | done (draft) | agent | Full copy pack in `outreach/launch/store-listing.md` — founder review for tone + facts. |
 | 2.7 | App Privacy (Apple) + Data Safety (Play) form answers | done (draft) | agent | Drafted strictly from `backend.js` + migrations in `store-listing.md`. Must be re-filed if the app ever collects anything new (analytics SDK, phone numbers, precise location…). File only after 2.2's storage-purge gap is fixed, or the deletion answers overstate reality. |
 | 2.8 | Screenshots (5–8 per platform) + Play feature graphic (1024×500) | blocked-on device build | founder + dev | Need the real app on device (iPhone 6.7" and 6.5" for Apple; phone + optional tablet for Play). Icon set is already generated: `mobile/assets/icon.png`, `adaptive-icon.png`, `splash-icon.png` (referenced by `app.json`). |
@@ -502,3 +502,25 @@ a device or a card:
   Supabase config it falls back to storing waitlist emails in the *visitor's own
   browser* — everyone would see "You're on the list" and nobody would be. That
   fallback is right for a local preview and wrong for anything you send out.
+
+## Update — 2026-08-13 (getting builds to testers)
+
+- **`docs/sharing-with-testers.md`** — the three routes, honestly costed: the web
+  prototype (free, works now, on anything, but it's a demo and saves nothing);
+  an Android APK via `eas build --profile preview` (free, no Play account
+  needed, real app, ~1 hour once the backend is live); TestFlight (needs the $99
+  Apple account, 2–5 days for the first external build because of Beta App
+  Review). Includes what to write when sending each, because a tester who
+  thinks the prototype is the finished app reports "nothing saves" as a bug.
+- **Computers are not on the near-term list.** The phone app is React Native
+  with no web build — `react-native-web` isn't installed and there's no `web`
+  block in `app.json`. The parts that would need replacing are the ones a dating
+  app leans on hardest: photo picker, push, location, and both social sign-in
+  buttons are all native modules with no browser equivalent. The prototype link
+  covers laptops for now; a real web app is a separate project, not a launch
+  prerequisite.
+- **Removed the `projectId` placeholder from `app.json`.** It wasn't a valid
+  UUID, so `eas build` would have failed with "Invalid UUID appId" rather than
+  offering to create the project. Absent, `eas init` writes the real one.
+- **Expo Go is a dead end for this app** and the doc says so — Google Sign-In is
+  a third-party native module Expo Go doesn't contain.

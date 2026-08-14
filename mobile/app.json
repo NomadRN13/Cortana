@@ -53,11 +53,6 @@
         }
       ],
       "expo-apple-authentication"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "REPLACE_AFTER_RUNNING_eas_init"
-      }
-    }
+    ]
   }
 }
