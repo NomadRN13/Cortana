@@ -23,3 +23,10 @@
 [build]
   command = "bash scripts/build-site.sh"
   publish = "site"
+
+# The live site. Set here so the build stamps absolute URLs into the
+# og:image tags — some link-preview scrapers won't resolve a relative one,
+# and a link with no card is the difference between a tap and a scroll past.
+# Change this when a custom domain replaces the netlify.app one.
+[build.environment]
+  SITE_URL = "https://40-love.netlify.app"
