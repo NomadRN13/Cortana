@@ -580,3 +580,26 @@ a device or a card:
   option that doesn't contradict "we don't track you") or a third-party script,
   which adds a network destination that both store data forms and the privacy
   policy would have to declare. That's a call for the founder, not a default.
+
+## Update — 2026-08-13 (Netlify Analytics: the policy side is done)
+
+- **Turning it on is two clicks in the Netlify dashboard** and a paid add-on
+  (~$9/mo per site) — there is no script, no config file, and nothing in this
+  repo that controls it. Steps in `docs/sharing-with-testers.md` §5.
+- **The part that was ours is done: the privacy policy now discloses it.**
+  A new "Visits to our website" bullet describes what actually happens — the
+  host keeps ordinary server logs (page, time, rough location, IP), we read
+  them only as totals, no script, no cookie, nothing stored on the device,
+  nothing attached to an account, nothing that can follow anyone off the site.
+  Written to be true both before and after you enable it, since a host keeps
+  those logs either way and the add-on only surfaces them.
+- **All four "what we don't do" promises survive**, checked one by one: no data
+  sale, no ad tracking, no last name/contacts/GPS, no cross-site tracking. A
+  first-party cookieless server log contradicts none of them, which is exactly
+  why this was the option to pick over a third-party script.
+- **Neither store form changes.** Netlify Analytics and the demo funnel are both
+  website-only; `mobile/` contains no analytics call at all (verified by grep,
+  and noted in `store-listing.md` so nobody re-files on a false alarm later).
+- **Sequencing that matters:** the policy text ships with the next deploy, so
+  enable analytics at the same time as dropping the new site — otherwise the
+  policy briefly describes something not yet happening.

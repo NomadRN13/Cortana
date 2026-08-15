@@ -367,6 +367,13 @@ For both stores' "What's new" field:
 5. If the app ever adds analytics, crash reporting, precise location, or
    any new data type: **both privacy forms must be re-filed before the
    next release.**
+   - Not triggered by the website. Netlify Analytics (server logs, on
+     40-love.netlify.app) and the demo funnel (`record_demo_step`, in the web
+     prototype) are both **website-only** — neither ships in the app binary,
+     and `mobile/` contains no analytics call of any kind. Verified by grep,
+     not assumed. Both store forms describe the app, so both stay as filed.
+     The privacy policy is shared between app and website, so it does cover
+     them, under "Visits to our website" and "How the demo is used".
 6. ~~Apple token revocation on account deletion (Guideline 5.1.1(v))~~ —
    built (`supabase/functions/apple-auth` + migration
    `20260806000016_apple_identities.sql`). **Founder step before the first

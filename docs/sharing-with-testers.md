@@ -135,3 +135,36 @@ saves" as a bug.
 
 > **TestFlight:** "You'll get an email from TestFlight. Install that app first,
 > then 40/LOVE from inside it."
+
+---
+
+## 5. Knowing whether any of it worked
+
+Three different numbers, from three different places.
+
+**Did anyone visit?** — **Netlify Analytics**, on the site's *Analytics* tab.
+It's a paid add-on, about **$9/month per site**, and it's the reason to pick it
+over a free script: it reads the server logs Netlify already keeps, so there is
+nothing to install, no cookie banner to add, no third party receiving your
+visitors, and nothing that slows the page down. Turn it on:
+
+1. app.netlify.com → your **40-love** site → **Analytics**
+2. **Enable analytics** → confirm the charge
+
+It starts counting from the moment you enable it and backfills the previous 30
+days from existing logs. No deploy needed, no code change — nothing in this
+repo controls it.
+
+> The privacy policy already covers this (see "Visits to our website"), so
+> **deploy the current site at the same time you enable it** and the two stay
+> consistent.
+
+**Did anyone try the demo, and how far did they get?** — the **Numbers** tab on
+`/admin`. Needs Supabase configured. Anonymous: a step name and a random value
+the page forgets when you leave.
+
+**Did anyone join the waitlist?** — same **Numbers** tab, or the Supabase table
+editor. Also needs Supabase.
+
+The last two are free and yours. The first is the one that costs money, and
+it's the only way to know whether the links you send are being opened at all.
