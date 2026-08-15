@@ -524,3 +524,24 @@ a device or a card:
   offering to create the project. Absent, `eas init` writes the real one.
 - **Expo Go is a dead end for this app** and the doc says so — Google Sign-In is
   a third-party native module Expo Go doesn't contain.
+
+## Update — 2026-08-13 (shared links had no preview card)
+
+- **Every link shared anywhere rendered as a bare URL.** No Open Graph or
+  Twitter tags existed on any page — so a link texted to a club owner or posted
+  in a pickleball group showed no image, no title, no description. For a launch
+  whose whole plan is sending links to people, that is the cheapest thing on
+  this list to fix and one of the most visible.
+- `mobile/assets/og.png` — a 1200×630 card generated from the same
+  `scripts/lib/ball.js` as everything else, so it can't drift from the mark.
+  Wired into the landing page, the demo and the account-deletion page, each with
+  its own title and description; the demo's says plainly that it's a demo.
+- **Absolute URLs when you have a domain.** Scrapers disagree about relative
+  `og:image`, so `build-site.sh` stamps them absolute when `SITE_URL` is set:
+  `SITE_URL=https://40love.app bash scripts/build-site.sh`. Relative by default,
+  which is right for a `*.netlify.app` preview.
+- **`robots.txt`** now ships, keeping `/admin/` out of search results. The desk
+  is safe to deploy — the database authorises every action — but there is no
+  reason for a crawler to index it.
+- Added `apple-touch-icon` so the site gets the mark, not a screenshot, when
+  someone saves it to their phone home screen.

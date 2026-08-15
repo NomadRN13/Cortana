@@ -15,6 +15,7 @@ const { DEFS, ball } = require('./lib/ball');
 const NIGHT = '#0A0B0D';
 const CHALK = '#F4F6F0';
 const DIM = '#6E7167';
+const OPTIC = '#D6F44F';
 
 const defs = `<defs>${DEFS}</defs>`;
 
@@ -48,6 +49,55 @@ function ballAsset(box = 256) {
   ${defs}
   ${mark(box, box / 2 - 1, {})}
 </svg>`;
+}
+
+// ---- og.png: the card shown when a link is shared -------------------------
+// 1200x630 is the size every platform crops from. Text sits well inside the
+// safe area because Twitter, iMessage and Slack all crop the edges differently.
+function ogCard() {
+  const cx = 600, cy = 250, r = 62;
+  return `
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  ${defs}
+  <rect width="1200" height="630" fill="${NIGHT}"/>
+  <radialGradient id="og-glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="${OPTIC}" stop-opacity=".13"/>
+    <stop offset="100%" stop-color="${OPTIC}" stop-opacity="0"/>
+  </radialGradient>
+  <circle cx="1080" cy="70" r="420" fill="url(#og-glow)"/>
+  <text x="600" y="132" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+        font-size="26" font-weight="bold" letter-spacing="8" fill="${OPTIC}">SERVE. RALLY. CONNECT.</text>
+  <text id="ogL" x="0" y="290" font-family="Helvetica, Arial, sans-serif" font-size="150" font-weight="bold" fill="${CHALK}">40/L</text>
+  <g id="ogBall" transform="translate(0 0)"></g>
+  <text id="ogR" x="0" y="290" font-family="Helvetica, Arial, sans-serif" font-size="150" font-weight="bold" fill="${CHALK}">VE</text>
+  <text x="600" y="392" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+        font-size="34" fill="${CHALK}" opacity=".72">The dating app for racquet sports people.</text>
+  <text x="600" y="446" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+        font-size="34" fill="${CHALK}" opacity=".72">The first date is a game, not dinner.</text>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="25" font-weight="bold" fill="${OPTIC}" text-anchor="middle">
+    <text x="330" y="545">DATE</text><text x="600" y="545">PLAY</text><text x="870" y="545">FRIENDS</text>
+  </g>
+  <rect x="150" y="500" width="900" height="2" fill="${CHALK}" opacity=".14"/>
+</svg>`;
+}
+
+// The wordmark is laid out from the measured text, same as the splash, so the
+// ball lands in the O rather than near it.
+async function ogMeasured(page) {
+  const R = 62, GAP = 4;
+  await page.setContent(`<style>html,body{margin:0}</style>` + ogCard());
+  const m = await page.evaluate(() => ({
+    l: document.getElementById('ogL').getBBox().width,
+    r: document.getElementById('ogR').getBBox().width,
+  }));
+  const total = m.l + GAP + R * 2 + GAP + m.r;
+  const startX = 600 - total / 2;
+  const ballCx = startX + m.l + GAP + R;
+  return ogCard()
+    .replace('id="ogL" x="0"', `id="ogL" x="${startX}"`)
+    .replace('id="ogR" x="0"', `id="ogR" x="${ballCx + R + GAP}"`)
+    .replace('<g id="ogBall" transform="translate(0 0)"></g>',
+      `<g transform="translate(${ballCx - R} ${250 - R}) scale(${R / 12})">${ball()}</g>`);
 }
 
 // ---- splash-icon.png: the wordmark, 1200x400 ------------------------------
@@ -90,6 +140,7 @@ async function splash(page) {
   const out = path.join(__dirname, '..', 'mobile', 'assets') + path.sep;
   const measurePage = await browser.newPage({ viewport: { width: 1200, height: 400 } });
   const splashMarkup = await splash(measurePage);
+  const ogMarkup = await ogMeasured(measurePage);
   await measurePage.close();
 
   const jobs = [
@@ -101,6 +152,8 @@ async function splash(page) {
     // icon's generous margin would leave a speck.
     ['favicon.png', ballIcon(90, 192), 192, 192, false],
     ['ball.png', ballAsset(256), 256, 256, true],
+    // Shared-link preview card; scripts/build-site.sh copies it to site/og.png.
+    ['og.png', ogMarkup, 1200, 630, false],
   ];
 
   for (const [name, svg, w, h, transparent] of jobs) {
