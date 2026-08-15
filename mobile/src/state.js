@@ -1055,21 +1055,45 @@ export function AppStateProvider({ children }) {
 
   // ---------- safety ----------
 
+  // Blocking and reporting are the two things in here that absolutely must not
+  // fail quietly. Someone who taps Block and sees the person disappear will
+  // believe they are protected; if the call failed, they are not, and they have
+  // no way of knowing. The same goes for a report that never reaches the queue.
+  // Everything else in this file can afford to be fire-and-forget. These can't.
   const block = (id) => {
+    const wasSaved = saved[id];
     setBlocked((b) => ({ ...b, [id]: true }));
     persistSaved({ ...saved, [id]: false });
     setMatches((m) => m.filter((x) => x !== id));
     setThreads((ts) => ts.filter((t) => t.id !== id));
-    if (live) api.blockUser(id).then(() => refreshDeck(mode)).catch(() => {});
+    if (!live) return;
+    api.blockUser(id)
+      .then(() => refreshDeck(mode))
+      .catch(() => {
+        // Put them back rather than leave a block that only exists on screen.
+        setBlocked((b) => { const next = { ...b }; delete next[id]; return next; });
+        if (wasSaved) persistSaved({ ...saved, [id]: true });
+        refreshMatchesAndThreads();
+        Alert.alert(
+          'Couldn’t block them',
+          'Nothing was saved, so they can still see you. Check your connection and try again — if it keeps failing, email hello@40love.app and we’ll do it for you.'
+        );
+      });
   };
 
   const report = (id, fromDeck) => {
     if (fromDeck) setSeen((s) => ({ ...s, [id]: true }));
-    if (live) {
-      api.reportUser(id, 'Reported in-app', fromDeck ? 'deck' : 'chat').catch(() => {});
-      // B-04: permanently hide a reported profile from the reporter's deck
-      ALL_MODES.forEach((m) => api.swipe(id, m, 'pass').catch(() => {}));
-    }
+    if (!live) return;
+    api.reportUser(id, 'Reported in-app', fromDeck ? 'deck' : 'chat')
+      .catch(() => {
+        Alert.alert(
+          'Couldn’t send the report',
+          'It didn’t reach us, so nobody has seen it. Try again, or email hello@40love.app — include their name and we’ll take it from there.'
+        );
+      });
+    // B-04: permanently hide a reported profile from the reporter's deck.
+    // Best-effort on purpose: this is a convenience, not the safety action.
+    ALL_MODES.forEach((m) => api.swipe(id, m, 'pass').catch(() => {}));
   };
 
   // ---------- events ----------

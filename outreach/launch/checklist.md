@@ -603,3 +603,31 @@ a device or a card:
 - **Sequencing that matters:** the policy text ships with the next deploy, so
   enable analytics at the same time as dropping the new site — otherwise the
   policy briefly describes something not yet happening.
+
+## Update — 2026-08-13 (block/report failed silently; Play prep)
+
+- **Blocking and reporting could fail without telling anyone.** Both were
+  `.catch(() => {})`: the UI removed the person and moved on, so someone who
+  tapped Block watched them disappear and believed they were protected while the
+  server had refused and the block existed only on their screen. A report that
+  never reached the queue looked identical to one that did. In a dating app
+  that is the most consequential silent failure in the codebase, and Play
+  reviews social apps specifically for working block/report.
+  - Block now reverts the UI and says plainly that nothing was saved and the
+    person can still see them, with an email fallback.
+  - Report says the queue never got it. The "hide them from my deck" swipe
+    stays best-effort on purpose — it's a convenience, not the safety action.
+  - Found by grepping for the swallow pattern that produced the RSVP bug; the
+    other ~35 are local persistence and activity pings, which can afford it.
+- **`docs/google-play.md`** — the full route, with the thing that actually sets
+  the timeline up front: a new personal Play account must run a closed test with
+  **12+ testers opted in for 14 consecutive days** before it can publish to
+  production. Doing everything else perfectly and starting that last still leaves
+  two weeks. It should be started first.
+- **Feature graphic generated** — `mobile/assets/play-feature-graphic.png`,
+  exactly 1024×500 as the console requires, from the same ball module as
+  everything else.
+- **Screenshots deliberately not generated.** Play wants shots of the real app,
+  and rendering the web prototype instead would misrepresent it — the two look
+  nearly identical, which makes substituting one *more* misleading, not less.
+  That one needs the build on a real phone.

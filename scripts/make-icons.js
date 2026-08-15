@@ -100,6 +100,46 @@ async function ogMeasured(page) {
       `<g transform="translate(${ballCx - R} ${250 - R}) scale(${R / 12})">${ball()}</g>`);
 }
 
+// ---- play-feature-graphic.png --------------------------------------------
+// Google Play requires exactly 1024x500, shown at the top of the store listing
+// and in promotional spots. No claims about the app in it — just the mark, so
+// it can't misrepresent anything.
+function featureGraphic() {
+  return `
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  ${defs}
+  <rect width="1024" height="500" fill="${NIGHT}"/>
+  <radialGradient id="fg-glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="${OPTIC}" stop-opacity=".14"/>
+    <stop offset="100%" stop-color="${OPTIC}" stop-opacity="0"/>
+  </radialGradient>
+  <circle cx="900" cy="60" r="340" fill="url(#fg-glow)"/>
+  <text id="fgL" x="0" y="272" font-family="Helvetica, Arial, sans-serif" font-size="128" font-weight="bold" fill="${CHALK}">40/L</text>
+  <g id="fgBall"></g>
+  <text id="fgR" x="0" y="272" font-family="Helvetica, Arial, sans-serif" font-size="128" font-weight="bold" fill="${CHALK}">VE</text>
+  <text x="512" y="345" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+        font-size="25" font-weight="bold" letter-spacing="7" fill="${OPTIC}">SERVE. RALLY. CONNECT.</text>
+  <text x="512" y="400" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+        font-size="27" fill="${CHALK}" opacity=".7">The dating app for racquet sports people</text>
+</svg>`;
+}
+
+async function featureMeasured(page) {
+  const R = 53, GAP = 4, CY = 228;
+  await page.setContent(`<style>html,body{margin:0}</style>` + featureGraphic());
+  const m = await page.evaluate(() => ({
+    l: document.getElementById('fgL').getBBox().width,
+    r: document.getElementById('fgR').getBBox().width,
+  }));
+  const startX = 512 - (m.l + GAP + R * 2 + GAP + m.r) / 2;
+  const ballCx = startX + m.l + GAP + R;
+  return featureGraphic()
+    .replace('id="fgL" x="0"', `id="fgL" x="${startX}"`)
+    .replace('id="fgR" x="0"', `id="fgR" x="${ballCx + R + GAP}"`)
+    .replace('<g id="fgBall"></g>',
+      `<g transform="translate(${ballCx - R} ${CY - R}) scale(${R / 12})">${ball()}</g>`);
+}
+
 // ---- splash-icon.png: the wordmark, 1200x400 ------------------------------
 // Positions are measured from the rendered text rather than guessed, so the
 // ball sits tight in place of the O instead of floating in a gap.
@@ -141,6 +181,7 @@ async function splash(page) {
   const measurePage = await browser.newPage({ viewport: { width: 1200, height: 400 } });
   const splashMarkup = await splash(measurePage);
   const ogMarkup = await ogMeasured(measurePage);
+  const featureMarkup = await featureMeasured(measurePage);
   await measurePage.close();
 
   const jobs = [
@@ -154,6 +195,8 @@ async function splash(page) {
     ['ball.png', ballAsset(256), 256, 256, true],
     // Shared-link preview card; scripts/build-site.sh copies it to site/og.png.
     ['og.png', ogMarkup, 1200, 630, false],
+    // Google Play listing header. Exactly 1024x500 or the console rejects it.
+    ['play-feature-graphic.png', featureMarkup, 1024, 500, false],
   ];
 
   for (const [name, svg, w, h, transparent] of jobs) {
