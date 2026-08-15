@@ -1,0 +1,367 @@
+<title>40/LOVE Launch Runbook</title>
+<style>
+  :root {
+    --night: #0A0B0D;
+    --panel: #14161A;
+    --card: #1A1D22;
+    --line: rgba(244,246,240,.13);
+    --text: #F4F6F0;
+    --dim: rgba(244,246,240,.62);
+    --faint: rgba(244,246,240,.40);
+    --optic: #D6F44F;
+    --ink: #0A0B0D;
+    --warn: #E8B84B;
+    --ok: #3DC96B;
+  }
+  :root:not([data-theme="dark"]) {
+    --night: #FAFAF7;
+    --panel: #FFFFFF;
+    --card: #F2F3ED;
+    --line: rgba(10,11,13,.14);
+    --text: #14161A;
+    --dim: rgba(20,22,26,.70);
+    --faint: rgba(20,22,26,.48);
+    --optic: #7E9A14;
+    --ink: #FFFFFF;
+    --warn: #966B04;
+    --ok: #1F7A42;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --night: #0A0B0D; --panel: #14161A; --card: #1A1D22;
+      --line: rgba(244,246,240,.13); --text: #F4F6F0;
+      --dim: rgba(244,246,240,.62); --faint: rgba(244,246,240,.40);
+      --optic: #D6F44F; --ink: #0A0B0D; --warn: #E8B84B; --ok: #3DC96B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --night: #0A0B0D; --panel: #14161A; --card: #1A1D22;
+    --line: rgba(244,246,240,.13); --text: #F4F6F0;
+    --dim: rgba(244,246,240,.62); --faint: rgba(244,246,240,.40);
+    --optic: #D6F44F; --ink: #0A0B0D; --warn: #E8B84B; --ok: #3DC96B;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--night);
+    color: var(--text);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.65;
+  }
+  main { max-width: 780px; margin: 0 auto; padding: 44px 22px 90px; }
+
+  .eyebrow {
+    font-size: 11px; font-weight: 800; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--optic); margin: 0 0 10px;
+  }
+  h1 { font-size: clamp(30px, 6vw, 42px); letter-spacing: -.025em; margin: 0 0 12px; text-wrap: balance; }
+  .lede { font-size: 17px; color: var(--dim); margin: 0 0 8px; max-width: 62ch; }
+
+  .alarm {
+    display: flex; gap: 14px; align-items: flex-start;
+    border: 2px solid var(--warn); border-radius: 14px;
+    padding: 16px 18px; margin: 28px 0 34px;
+    background: color-mix(in srgb, var(--warn) 9%, transparent);
+  }
+  .alarm .mk { font-size: 20px; line-height: 1.2; }
+  .alarm p { margin: 0; font-size: 15px; color: var(--text); }
+  .alarm strong { color: var(--warn); }
+
+  .step {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; padding: 20px 20px 18px; margin: 0 0 16px;
+  }
+  .step-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+  .num {
+    flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--optic); color: var(--ink);
+    font-size: 14px; font-weight: 900; display: inline-flex;
+    align-items: center; justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .step h2 { font-size: 19px; margin: 0; letter-spacing: -.01em; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+  .tag {
+    font-size: 11px; font-weight: 800; letter-spacing: .04em;
+    padding: 3px 9px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--faint);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .tag.cost { border-color: var(--optic); color: var(--optic); }
+  .tag.wait { border-color: var(--warn); color: var(--warn); }
+
+  .site { margin: 10px 0 12px; font-size: 15px; }
+  .site a { color: var(--optic); font-weight: 700; word-break: break-all; }
+  .step p { margin: 8px 0; font-size: 15px; color: var(--dim); }
+  .step ol, .step ul { margin: 8px 0; padding-left: 20px; }
+  .step li { font-size: 15px; color: var(--dim); margin: 5px 0; }
+  .step strong { color: var(--text); }
+
+  pre {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; margin: 10px 0;
+    font-size: 13px; line-height: 1.6;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--text);
+  }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .92em; }
+  p code, li code { background: var(--card); padding: 1px 5px; border-radius: 5px; }
+
+  .note {
+    border-left: 3px solid var(--optic); background: var(--card);
+    border-radius: 0 10px 10px 0; padding: 11px 14px; margin: 12px 0;
+    font-size: 14px; color: var(--dim);
+  }
+  .note strong { color: var(--text); }
+
+  .rule { height: 1px; background: var(--line); margin: 34px 0 28px; }
+  h3.sec { font-size: 13px; text-transform: uppercase; letter-spacing: .14em; color: var(--faint); margin: 0 0 14px; font-weight: 800; }
+
+  table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--faint); }
+  td { color: var(--dim); }
+  td:first-child { color: var(--text); white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  .done { color: var(--ok); font-weight: 800; }
+</style>
+
+<main>
+  <p class="eyebrow">40/LOVE</p>
+  <h1>Every site you need, in the order you need them.</h1>
+  <p class="lede">Four new accounts, plus the Netlify one you already have.
+  About <strong>$26</strong> to start and <strong>$1&ndash;10</strong> a month.
+  The code is finished and tested — everything below is signing up, pasting keys,
+  and waiting.</p>
+
+  <div class="alarm">
+    <span class="mk">⏳</span>
+    <p><strong>Do steps 1 and 2 today, in that order, even if you do nothing else.</strong>
+    Google verifies a new developer account over several days, and once you're
+    verified the store still requires <strong>12 testers signed up for 14 straight
+    days</strong> before you're allowed to publish. That two-week clock can't be
+    shortened or skipped — it just has to be started. Everything else can happen
+    while it runs.</p>
+  </div>
+
+  <h3 class="sec">Start these today</h3>
+
+  <div class="step">
+    <div class="step-head">
+      <span class="num">1</span>
+      <h2>Google Play Console</h2>
+      <span class="tags"><span class="tag cost">$25 once</span><span class="tag wait">1–3 days</span></span>
+    </div>
+    <p class="site">→ <a href="https://play.google.com/console">play.google.com/console</a></p>
+    <p>Sign in with the Google account you want to own the app forever — this is
+    hard to change later. Pay the $25, then complete identity verification.</p>
+    <p>Choose <strong>Personal</strong> unless you already have an LLC with a
+    D-U-N-S number. An organization account skips the 12-tester rule, but getting
+    a D-U-N-S takes longer than the two weeks it saves.</p>
+    <div class="note">Nothing else here needs doing yet. You're starting the
+    verification clock, that's all. Google will email you.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <span class="num">2</span>
+      <h2>Supabase — the database</h2>
+      <span class="tags"><span class="tag cost">free</span><span class="tag">~20 min</span></span>
+    </div>
+    <p class="site">→ <a href="https://supabase.com">supabase.com</a></p>
+    <p>This is the part that makes the app real. Without it every signup, match
+    and message has nowhere to go.</p>
+    <ol>
+      <li><strong>New project.</strong> Pick a strong database password and save
+      it somewhere — you can't recover it. Region: <code>us-east-1</code>.</li>
+      <li>Wait ~2 minutes for it to finish setting up.</li>
+      <li><strong>SQL Editor → New query.</strong> Open <code>supabase/setup.sql</code>
+      from the repo, copy <em>all</em> of it, paste, and press Run. That's all 22
+      migrations — every table, every security rule, the matching engine.</li>
+      <li><strong>Authentication → Sign In / Up → Email:</strong> turn it on.
+      Check the "Magic Link" template contains <code>{{ .Token }}</code> so the
+      email carries a 6-digit code.</li>
+      <li><strong>Settings → API.</strong> Copy the <strong>Project URL</strong>
+      and the <strong>anon public</strong> key.</li>
+    </ol>
+    <div class="note"><strong>Copy the key labelled "anon" / "public" only.</strong>
+    The one below it, <code>service_role</code>, ignores every security rule in
+    the database. The script in step 3 decodes what you paste and refuses that
+    one rather than publishing it to your website — but don't rely on it.</div>
+  </div>
+
+  <div class="rule"></div>
+  <h3 class="sec">Then, in one sitting</h3>
+
+  <div class="step">
+    <div class="step-head">
+      <span class="num">3</span>
+      <h2>Connect everything to it</h2>
+      <span class="tags"><span class="tag cost">free</span><span class="tag">2 min</span></span>
+    </div>
+    <p>One command wires the phone app, the website, the demo and the moderation
+    desk, rebuilds the site, and then calls your database to prove it worked:</p>
+    <pre>./scripts/go-live.sh https://YOUR-REF.supabase.co  YOUR_ANON_KEY</pre>
+    <p>It tells you separately if the URL is wrong, the key is rejected, or the
+    database was never applied — so a typo doesn't surface later as a blank app.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <span class="num">4</span>
+      <h2>Netlify — put the site up</h2>
+      <span class="tags"><span class="tag cost">free</span><span class="tag">1 min</span></span>
+    </div>
+    <p class="site">→ <a href="https://app.netlify.com">app.netlify.com</a> → your <strong>40-love</strong> site → <strong>Deploys</strong></p>
+    <p>Drag the rebuilt <code>site</code> folder (or the zip I send you) into the
+    drop area at the bottom of that tab. Same URL, live in about 30 seconds.</p>
+    <p><strong>Optional, $9/month:</strong> the <strong>Analytics</strong> tab →
+    <em>Enable analytics</em>. It reads server logs Netlify already keeps — no
+    script, no cookies, nothing slowing the page. It's the only way to know if
+    the links you send are being opened. Your privacy policy already covers it.</p>
+    <div class="note">Deploy <em>after</em> step 3, so the site goes up with the
+    database keys in it. Deploy it before, and the waitlist form will correctly
+    tell people it isn't open yet.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <span class="num">5</span>
+      <h2>Make yourself the moderator</h2>
+      <span class="tags"><span class="tag cost">free</span><span class="tag">2 min</span></span>
+    </div>
+    <ol>
+      <li>Go to <code>your-site/admin/</code> and sign in with your email. That
+      creates your account.</li>
+      <li>Supabase → SQL Editor → run this with your real address:</li>
+    </ol>
+    <pre>insert into admins (user_id)
+select id from auth.users where email = 'you@example.com';</pre>
+    <p>Reload <code>/admin</code> and the desk appears: photo approvals, reports,
+    events, and the <strong>Numbers</strong> tab with your waitlist and demo funnel.</p>
+    <div class="note">Photos members upload stay invisible until you approve them
+    here. Nobody can add themselves to this list through the app — the table is
+    unreachable from the API by design.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <span class="num">6</span>
+      <h2>Twilio — the text messages</h2>
+      <span class="tags"><span class="tag cost">~$1.15/mo + $0.008/text</span><span class="tag">20 min</span></span>
+    </div>
+    <p class="site">→ <a href="https://www.twilio.com">twilio.com</a></p>
+    <p><strong>Signups stop dead at the phone step without this.</strong> It's the
+    step that keeps fake accounts out, so it isn't optional for a dating app.</p>
+    <ol>
+      <li>Create an account, buy a US phone number.</li>
+      <li>Note your <strong>Account SID</strong> and <strong>Auth Token</strong>,
+      then create a <strong>Messaging Service</strong>, add the number to it, and
+      copy its SID.</li>
+      <li>Supabase → Authentication → Sign In / Up → <strong>Phone</strong>:
+      enable, pick Twilio, paste all three. Leave "Phone confirmations" on.</li>
+      <li>Test with your own number — the code should arrive in seconds.</li>
+    </ol>
+  </div>
+
+  <div class="rule"></div>
+  <h3 class="sec">Building the actual app</h3>
+
+  <div class="step">
+    <div class="step-head">
+      <span class="num">7</span>
+      <h2>Expo — where the app gets built</h2>
+      <span class="tags"><span class="tag cost">free</span><span class="tag">~20 min</span></span>
+    </div>
+    <p class="site">→ <a href="https://expo.dev">expo.dev</a> — create the account, then in a terminal:</p>
+    <pre>npm install -g eas-cli
+eas login
+cd mobile
+eas init
+eas build --profile production --platform android</pre>
+    <p>The build runs on Expo's machines, takes about 15 minutes, and produces an
+    <code>.aab</code> file — the format Play wants.</p>
+    <div class="note">Let EAS manage the signing key. Losing an app signing key
+    means never being able to update the app under that listing again.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <span class="num">8</span>
+      <h2>Upload it and start the clock</h2>
+      <span class="tags"><span class="tag wait">14 days from here</span></span>
+    </div>
+    <p class="site">→ <a href="https://play.google.com/console">play.google.com/console</a> → Create app</p>
+    <p>Then <strong>Testing → Closed testing</strong> → create a track → upload
+    the <code>.aab</code> → add your testers by email.</p>
+    <p><strong>Get 12+ people on that list and keep them on it for 14 straight
+    days.</strong> This is the gate. A mixer is the natural place to find twelve
+    people who'll actually use it.</p>
+    <p>While the clock runs, fill in the listing. Everything's drafted in
+    <code>outreach/launch/store-listing.md</code>:</p>
+    <div class="scroll">
+      <table>
+        <tr><th>Field</th><th>Where it comes from</th></tr>
+        <tr><td>Descriptions</td><td>store-listing.md <span class="done">✓ drafted</span></td></tr>
+        <tr><td>App icon</td><td><code>mobile/assets/icon.png</code>, resized to 512×512</td></tr>
+        <tr><td>Feature graphic</td><td><code>mobile/assets/play-feature-graphic.png</code> <span class="done">✓ ready</span></td></tr>
+        <tr><td>Screenshots</td><td><strong>You take these</strong> — on the phone, once the build is on it</td></tr>
+        <tr><td>Category</td><td>Dating</td></tr>
+        <tr><td>Content rating</td><td>Answer honestly; expect Mature 17+</td></tr>
+        <tr><td>Target audience</td><td><strong>18+ only.</strong> Don't tick any younger band</td></tr>
+        <tr><td>Privacy policy</td><td><code>your-site/privacy/</code> <span class="done">✓ live</span></td></tr>
+        <tr><td>Account deletion URL</td><td><code>your-site/delete-account/</code> <span class="done">✓ live</span></td></tr>
+        <tr><td>Data safety form</td><td>store-listing.md, per data type <span class="done">✓ drafted</span></td></tr>
+      </table>
+    </div>
+    <div class="note">Screenshots are the one thing I can't make for you. Play
+    requires shots of the real app, and rendering the demo instead would
+    misrepresent it — they look nearly identical, which makes substituting one
+    <em>more</em> misleading, not less.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <span class="num">9</span>
+      <h2>Go live</h2>
+    </div>
+    <p>After the 14 days: <strong>Production → Create release → promote the tested
+    build</strong>. Start the rollout at 20% for a day. A bad release caught at
+    20% is a much smaller problem than one at 100%.</p>
+  </div>
+
+  <div class="rule"></div>
+  <h3 class="sec">Later, only if you want iPhone</h3>
+
+  <div class="step">
+    <div class="step-head">
+      <span class="num">10</span>
+      <h2>Apple Developer</h2>
+      <span class="tags"><span class="tag cost">$99/year</span><span class="tag wait">2–5 days</span></span>
+    </div>
+    <p class="site">→ <a href="https://developer.apple.com/programs/">developer.apple.com/programs</a></p>
+    <p>There's no free path — Apple requires this before the app runs on any
+    iPhone but your own. Everything on the code side is done, including the
+    account-deletion revocation Apple checks for. Don't start this until Android
+    is live; it's a second set of forms and a second review queue, and it will
+    slow the first launch down.</p>
+  </div>
+
+  <div class="rule"></div>
+  <h3 class="sec">What it all costs</h3>
+  <div class="scroll">
+    <table>
+      <tr><th>Site</th><th>Cost</th><th>Needed for</th></tr>
+      <tr><td>Google Play</td><td>$25 once</td><td>Android launch</td></tr>
+      <tr><td>Supabase</td><td>free</td><td>Everything — the whole backend</td></tr>
+      <tr><td>Netlify</td><td>free</td><td>The website you already have</td></tr>
+      <tr><td>Expo</td><td>free</td><td>Building the app</td></tr>
+      <tr><td>Twilio</td><td>~$1.15/mo + $0.008/text</td><td>Phone verification at signup</td></tr>
+      <tr><td>Netlify Analytics</td><td>$9/mo</td><td>Optional — knowing if links get opened</td></tr>
+      <tr><td>Apple Developer</td><td>$99/year</td><td>Only if you want iPhone</td></tr>
+    </table>
+  </div>
+  <p class="lede" style="margin-top:16px">About <strong>$26 to start</strong> and
+  <strong>$1–10 a month</strong> for Android. Add $99/year when you want iPhone.</p>
+</main>
