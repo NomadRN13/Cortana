@@ -97,13 +97,13 @@ EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=$GOOGLE_IOS
 ENV
 echo "==> Wrote $ENV_FILE"
 
-# ---- 2. the website and the moderation desk -------------------------------
+# ---- 2. the website, the moderation desk and the demo ---------------------
 
 python3 - "$URL" "$KEY" <<'PY'
 import re, sys
 url, key = sys.argv[1], sys.argv[2]
 line = "  window.FORTYLOVE = { SUPABASE_URL: '%s', SUPABASE_ANON_KEY: '%s' };" % (url, key)
-for path in ("landing/index.html", "admin/index.html"):
+for path in ("landing/index.html", "admin/index.html", "app/index.html"):
     s = open(path).read()
     new, n = re.subn(r"^\s*window\.FORTYLOVE\s*=\s*\{[^}]*\};", line, s, count=1, flags=re.M)
     if n != 1:

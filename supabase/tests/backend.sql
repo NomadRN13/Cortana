@@ -1011,6 +1011,71 @@ begin
   delete from events where id = ev;
 end $$;
 
+-- ---- 9j. Founder data: the waitlist and the demo funnel ----
+-- Both are readable by admins and nobody else. The waitlist read exists so the
+-- founder can email people when a city opens; it must not reopen the
+-- membership oracle join_waitlist was written to close.
+reset role;
+select join_waitlist('one@example.com', 'seattle');
+select join_waitlist('two@example.com', 'miami');
+select record_demo_step('11111111-1111-4111-8111-111111111111', 'landed');
+select record_demo_step('11111111-1111-4111-8111-111111111111', 'start_signup');
+select record_demo_step('11111111-1111-4111-8111-111111111111', 'landed'); -- reload
+select record_demo_step('22222222-2222-4222-8222-222222222222', 'landed');
+
+-- an ordinary member sees neither
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000002';
+do $$
+declare c int;
+begin
+  select count(*) into c from waitlist;
+  assert c = 0, format('a member can read %s waitlist rows', c);
+  select count(*) into c from demo_events;
+  assert c = 0, format('a member can read %s demo events', c);
+  begin
+    perform demo_funnel(30);
+    assert false, 'a member can read the demo funnel';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+-- anon can write a step and read nothing
+reset role;
+set role anon;
+select record_demo_step('33333333-3333-4333-8333-333333333333', 'landed');
+do $$
+declare c int;
+begin
+  begin
+    select count(*) into c from demo_events;
+    assert c = 0, 'anon can read demo events';
+  exception when insufficient_privilege then null;
+  end;
+  -- and the vocabulary is closed, so the endpoint can't be used as free storage
+  begin
+    perform record_demo_step('33333333-3333-4333-8333-333333333333', 'arbitrary junk');
+    assert false, 'record_demo_step accepted an unknown step';
+  exception when others then null;
+  end;
+end $$;
+reset role;
+
+-- the admin sees both, and the funnel counts visits rather than events
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a'; -- Aaron, an admin
+do $$
+declare c int; f jsonb;
+begin
+  select count(*) into c from waitlist;
+  assert c >= 2, format('admin cannot read the waitlist (%s rows)', c);
+  f := demo_funnel(30);
+  -- three distinct visits landed; one of them reloaded, which must not count twice
+  assert (f ->> 'landed')::int = 3, format('funnel counted events not visits: %s', f ->> 'landed');
+  assert (f ->> 'start_signup')::int = 1, format('wrong start_signup count: %s', f ->> 'start_signup');
+end $$;
+reset role;
+
 -- ---- 10. Account deletion removes everything ----
 -- The account-deletion page (landing/delete-account.html) promises each of
 -- these by name, and the store data-safety forms declare them. Give the user

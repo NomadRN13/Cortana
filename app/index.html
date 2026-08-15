@@ -1404,6 +1404,13 @@
 </div>
 
 <script>
+  /* Supabase keys — filled in by scripts/go-live.sh. The anon key is designed
+     to be public; the only thing this page uses it for is record_demo_step,
+     which takes a fixed vocabulary of step names and stores no person. Left
+     empty, the prototype runs exactly as before and reports nothing. */
+  window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
+</script>
+<script>
 (function () {
   'use strict';
 
@@ -2882,6 +2889,76 @@
     syncSettings();
   }
 }());
+
+  /* ---------- Anonymous funnel ----------
+     The prototype is the top of the funnel and used to report nothing, so
+     there was no way to tell whether people abandon at the phone step or never
+     start at all.
+
+     What is sent: a step name from a fixed list, and a random value made up on
+     page load and forgotten on unload. No account, no cookie, no IP, no user
+     agent, nothing that survives the visit — enough to say "this many of the
+     people who started finished", and not enough to say who any of them were.
+
+     Deliberately built out of DOM APIs only, with no reference to anything
+     inside the prototype's own closure: this block sits outside it, and more
+     to the point, counting should not break when the app is refactored. Fire
+     and forget, silent on failure, and completely inert unless the keys above
+     are set. */
+  (function () {
+    try {
+      var cfg = window.FORTYLOVE || {};
+      if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return;
+      var base = cfg.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/rpc/record_demo_step';
+      var visit = (window.crypto && crypto.randomUUID && crypto.randomUUID()) ||
+        'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, function () {
+          return Math.floor(Math.random() * 16).toString(16);
+        });
+      var sent = {};
+      function step(name) {
+        if (sent[name]) return;   // once per visit, so a reload isn't a new person
+        sent[name] = true;
+        try {
+          fetch(base, {
+            method: 'POST',
+            keepalive: true,
+            headers: {
+              'apikey': cfg.SUPABASE_ANON_KEY,
+              'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ p_visit: visit, p_step: name })
+          }).catch(function () {});
+        } catch (e) { /* never let counting break the prototype */ }
+      }
+
+      step('landed');
+
+      var BY_ID = {
+        'btn-create': 'start_signup',
+        'phone-verify': 'phone_verified',
+        'ob2-next': 'sports_picked',
+        'ob3-next': 'skill_picked'
+      };
+      document.addEventListener('click', function (ev) {
+        var el = ev.target && ev.target.closest && ev.target.closest('button');
+        if (!el) return;
+        if (BY_ID[el.id]) step(BY_ID[el.id]);
+        if (el.classList.contains('act-like') || el.classList.contains('act-pass')) step('swiped');
+      }, true);
+
+      // Screens and the celebration are watched rather than hooked, so this
+      // keeps working however the prototype decides to switch them.
+      function watch(id, fn) {
+        var el = document.getElementById(id);
+        if (!el || !window.MutationObserver) return;
+        new MutationObserver(fn.bind(null, el)).observe(el, { attributes: true, attributeFilter: ['class'] });
+      }
+      watch('screen-home', function (el) { if (el.classList.contains('active')) step('finished_signup'); });
+      watch('screen-conversation', function (el) { if (el.classList.contains('active')) step('opened_chat'); });
+      watch('match-overlay', function (el) { if (el.classList.contains('open')) step('matched'); });
+    } catch (e) { /* analytics must never take the page down */ }
+  })();
 </script>
 </body>
 </html>

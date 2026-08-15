@@ -191,6 +191,7 @@
       <button id="tab-photos" class="on" type="button">Photos <span class="n" id="n-photos"></span></button>
       <button id="tab-reports" type="button">Reports <span class="n" id="n-reports"></span></button>
       <button id="tab-events" type="button">Events</button>
+      <button id="tab-numbers" type="button">Numbers</button>
     </div>
 
     <div class="card" id="pane-photos">
@@ -246,6 +247,24 @@
       <h1 style="margin-top:22px; font-size:17px">Upcoming</h1>
       <div id="event-list"></div>
     </div>
+    <div class="card" id="pane-numbers" hidden>
+      <h1>Numbers</h1>
+      <p class="hint">Everything the site knows about how it's doing. The waitlist is
+      real people who asked to hear from you; the funnel is anonymous — it counts visits
+      to the demo, never who they were.</p>
+
+      <h1 style="margin-top:22px; font-size:17px">Waitlist</h1>
+      <div id="wl-summary" class="hint">loading…</div>
+      <div id="wl-cities"></div>
+      <p class="hint" style="margin-top:10px">Newest first, most recent 50:</p>
+      <div id="wl-list"></div>
+
+      <h1 style="margin-top:26px; font-size:17px">Demo funnel <span class="hint" style="font-weight:400">· last 30 days</span></h1>
+      <p class="hint">How far people get in the clickable prototype. Each row is a share
+      of the people who landed, so the biggest drop is where the flow is losing them.</p>
+      <div id="funnel"></div>
+    </div>
+
   </div>
 
   <footer>
@@ -321,6 +340,12 @@
 
   /* ---------- demo data ---------- */
   var demo = {
+    waitlist: [
+      { email: 'ellen@example.com', city: 'indianapolis', created_at: new Date(Date.now() - 2 * 3600000).toISOString() },
+      { email: 'marcus@example.com', city: 'seattle', created_at: new Date(Date.now() - 26 * 3600000).toISOString() },
+      { email: 'priya@example.com', city: 'indianapolis', created_at: new Date(Date.now() - 3 * 86400000).toISOString() }
+    ],
+    funnel: { landed: 42, start_signup: 24, phone_verified: 18, sports_picked: 17, skill_picked: 16, finished_signup: 14, swiped: 11, matched: 4, opened_chat: 3 },
     photos: [
       { id: 'd1', user: 'Maya', created_at: new Date(Date.now() - 42 * 60000).toISOString(), grad: 'linear-gradient(135deg,#2E5A45,#D6F44F)' },
       { id: 'd2', user: 'Diego', created_at: new Date(Date.now() - 3 * 3600000).toISOString(), grad: 'linear-gradient(135deg,#24424f,#7fd0e8)' },
@@ -344,15 +369,77 @@
     $('#who-email').textContent = LIVE ? (session ? session.email : '') : 'demo admin';
   }
 
-  var PANES = ['photos', 'reports', 'events'];
+  var PANES = ['photos', 'reports', 'events', 'numbers'];
   PANES.forEach(function (p) {
     $('#tab-' + p).addEventListener('click', function () {
       PANES.forEach(function (q) {
         $('#tab-' + q).classList.toggle('on', q === p);
         $('#pane-' + q).hidden = q !== p;
       });
+      if (p === 'numbers') loadNumbers();
     });
   });
+
+/* ---------- numbers ---------- */
+  var FUNNEL_STEPS = [
+    ['landed', 'Opened the demo'],
+    ['start_signup', 'Tapped Create profile'],
+    ['phone_verified', 'Verified a phone'],
+    ['sports_picked', 'Picked their sports'],
+    ['skill_picked', 'Picked a skill level'],
+    ['finished_signup', 'Finished signing up'],
+    ['swiped', 'Swiped on someone'],
+    ['matched', 'Got a match'],
+    ['opened_chat', 'Opened a chat']
+  ];
+
+  function renderWaitlist(rows) {
+    var total = rows.length;
+    $('#wl-summary').textContent = total
+      ? total + (total === 1 ? ' person has' : ' people have') + ' joined.'
+      : 'Nobody has joined yet.';
+    var byCity = {};
+    rows.forEach(function (r) { var c = r.city || '—'; byCity[c] = (byCity[c] || 0) + 1; });
+    var cities = Object.keys(byCity).sort(function (a, b) { return byCity[b] - byCity[a]; });
+    $('#wl-cities').innerHTML = cities.length
+      ? '<div class="chips">' + cities.map(function (c) {
+          return '<span class="pill">' + esc(c) + ' · ' + byCity[c] + '</span>';
+        }).join(' ') + '</div>'
+      : '';
+    $('#wl-list').innerHTML = rows.slice(0, 50).map(function (r) {
+      return '<div class="item"><div class="body"><div class="name">' + esc(r.email) + '</div>' +
+        '<div class="meta">' + esc(r.city || 'no city') + ' · ' + ago(r.created_at) + '</div></div></div>';
+    }).join('') || '<p class="hint">Nothing yet.</p>';
+  }
+
+  function renderFunnel(counts) {
+    var top = counts.landed || 0;
+    $('#funnel').innerHTML = FUNNEL_STEPS.map(function (pair) {
+      var n = counts[pair[0]] || 0;
+      var pct = top ? Math.round((n / top) * 100) : 0;
+      return '<div class="item"><div class="body">' +
+        '<div class="name">' + esc(pair[1]) + '<span class="pill">' + n + '</span></div>' +
+        '<div class="meta" style="margin-top:6px">' +
+          '<span style="display:inline-block;height:6px;border-radius:3px;background:var(--optic);width:' + pct + '%;min-width:2px;vertical-align:middle"></span>' +
+          ' <span style="margin-left:8px">' + pct + '%</span>' +
+        '</div></div></div>';
+    }).join('');
+    if (!top) $('#funnel').innerHTML = '<p class="hint">No demo visits recorded yet.</p>';
+  }
+
+  function loadNumbers() {
+    if (!LIVE) {
+      renderWaitlist(demo.waitlist);
+      renderFunnel(demo.funnel);
+      return;
+    }
+    rest('GET', '/rest/v1/waitlist?select=email,city,created_at&order=created_at.desc&limit=500')
+      .then(renderWaitlist)
+      .catch(function (e) { $('#wl-summary').textContent = 'Could not load the waitlist — ' + e.message; });
+    rest('POST', '/rest/v1/rpc/demo_funnel', { p_days: 30 })
+      .then(function (c) { renderFunnel(c || {}); })
+      .catch(function (e) { $('#funnel').innerHTML = '<p class="hint">Could not load the funnel — ' + esc(e.message) + '</p>'; });
+  }
 
   /* ---------- photos ---------- */
   function renderPhotos(items) {
@@ -604,6 +691,7 @@
     renderPhotos(demo.photos);
     renderReports(demo.reports);
     renderEvents(demo.events);
+    loadNumbers();
   } else if (session) {
     enter();
   } else {

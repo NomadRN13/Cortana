@@ -545,3 +545,38 @@ a device or a card:
   reason for a crawler to index it.
 - Added `apple-touch-icon` so the site gets the mark, not a screenshot, when
   someone saves it to their phone home screen.
+
+## Update — 2026-08-13 (the site now produces data; before this it produced none)
+
+- **Nothing was being measured.** No analytics of any kind was installed, so no
+  visitor was ever counted, and the waitlist had nowhere to write because the
+  deployed site has empty Supabase keys. Worth stating plainly: **any signups
+  made on the deployed site before this are unrecoverable** — the old fallback
+  wrote each address to the visitor's own browser and told them they'd joined.
+- **Waitlist, readable by the founder** (`20260806000021`). `join_waitlist`
+  closed the membership oracle by making the table readable by nobody; that was
+  right for strangers and wrong for the person who has to email these people.
+  Admins get a read, nobody else does, and the probe is still closed.
+- **Demo funnel, anonymous.** The prototype now reports which step a visit
+  reached — `landed → start_signup → phone_verified → sports_picked →
+  skill_picked → finished_signup → swiped → matched → opened_chat`. What is
+  stored is a step name from a fixed vocabulary and a random value the page
+  invents on load and forgets on unload. No account, no cookie, no IP, no user
+  agent. Counting distinct visits, so a reload isn't a second person.
+  - The endpoint takes only known step names, so an open write can't be turned
+    into free storage.
+  - Instrumented with DOM APIs only, deliberately not reaching into the
+    prototype's closure, so it survives the app being refactored.
+  - Inert unless the keys are set — verified: zero requests unconfigured.
+- **A "Numbers" tab on the moderation desk** — waitlist total, a breakdown by
+  city, the most recent 50, and the funnel drawn as share-of-landed so the
+  biggest drop-off is the obvious one. Works with sample data in demo mode.
+- **Privacy policy updated on both counts**: the waitlist bullet no longer
+  claims *we* can't see the list (we now can, and must, to email people), and a
+  new bullet describes the demo counting exactly as built — including that the
+  phone app does none of it.
+- **Traffic numbers are still not covered, on purpose.** Counting visitors needs
+  either Netlify Analytics (server-side, no script, no cookies, ~$9/mo — the
+  option that doesn't contradict "we don't track you") or a third-party script,
+  which adds a network destination that both store data forms and the privacy
+  policy would have to declare. That's a call for the founder, not a default.
