@@ -631,3 +631,30 @@ a device or a card:
   and rendering the web prototype instead would misrepresent it — the two look
   nearly identical, which makes substituting one *more* misleading, not less.
   That one needs the build on a real phone.
+
+## Update — 2026-08-13 (meetups go nationwide, with a city picker)
+
+- **Events were locked to the member's own city.** `listEvents` filtered on it,
+  so a member in Spokane could only ever see Spokane. The database always
+  permitted reading every event (`events_select using (true)`) — the restriction
+  was purely client-side, so no migration was needed.
+- **Nationwide is now the default**, with a picker to narrow to one of the
+  eleven cities. Defaulting to everything matters most right now: in a young app
+  the local list is usually empty, and an empty screen reads as *"nothing is
+  happening"* rather than *"nothing here yet"*. A member three states away
+  travelling for work is the other case it serves.
+- The chosen city **refetches** rather than filtering the loaded list — the
+  query is capped, so filtering locally would quietly hide events in the chosen
+  city that never came down.
+- Each card carries its city as a tag whenever the list spans more than one, and
+  the empty state differs: nationwide says nothing is on anywhere, a single city
+  points back at All cities.
+- React Native has no `<select>`, so the app's picker is a button that opens a
+  sheet — same behaviour on both platforms, no new dependency. The prototype
+  uses a real `<select>`.
+- Demo data gained four meetups outside Indianapolis (Seattle, LA, Phoenix,
+  Miami) so the picker visibly does something in the demo. First attempt used
+  "austin", which is not one of the eleven cities — caught by validating every
+  demo event's slug against the city list.
+- Backend suite asserts a member can read an event in a city they're not in,
+  which nothing exercised while the client filtered it away.

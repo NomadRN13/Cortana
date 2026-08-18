@@ -1,9 +1,65 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
 import { Tag, Avatar } from '../components/ui';
 import { useApp } from '../state';
+import { CITIES, cityLabel } from '../data/cities';
+
+// Meetups are nationwide by default. React Native has no <select>, so the
+// picker is a button that opens a sheet — the same thing a dropdown does, and
+// it behaves identically on both platforms without another dependency.
+function CityPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const label = value === 'all' ? 'All cities' : cityLabel(value);
+  const options = [{ slug: 'all', label: 'All cities' }]
+    .concat(CITIES.map((c) => ({ slug: c.slug, label: `${c.name}, ${c.state}` })));
+
+  return (
+    <>
+      <Pressable
+        onPress={() => setOpen(true)}
+        style={styles.picker}
+        accessibilityRole="button"
+        accessibilityLabel={`Showing meetups in ${label}. Change city.`}
+      >
+        <Ionicons name="location-outline" size={15} color={colors.optic} />
+        <Text style={styles.pickerText} numberOfLines={1}>{label}</Text>
+        <Ionicons name="chevron-down" size={15} color={colors.dim} />
+      </Pressable>
+
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
+          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+            <Text style={[type.eyebrow, { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 }]}>
+              Show meetups in
+            </Text>
+            <ScrollView>
+              {options.map((o) => {
+                const on = o.slug === value;
+                return (
+                  <Pressable
+                    key={o.slug}
+                    onPress={() => { onChange(o.slug); setOpen(false); }}
+                    style={[styles.option, on && { backgroundColor: colors.card2 }]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                  >
+                    <Text style={{ color: on ? colors.optic : colors.text, fontWeight: on ? '800' : '600', fontSize: 15 }}>
+                      {o.label}
+                    </Text>
+                    {on && <Ionicons name="checkmark" size={17} color={colors.optic} />}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
+  );
+}
 
 export default function EventsScreen() {
   const app = useApp();
@@ -12,11 +68,16 @@ export default function EventsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.night }} edges={['top']}>
-      <Text style={[type.display, { fontSize: 18, paddingHorizontal: 18, paddingVertical: 14 }]}>Events</Text>
+      <View style={styles.head}>
+        <Text style={[type.display, { fontSize: 18 }]}>Events</Text>
+        <CityPicker value={app.eventCity} onChange={app.setEventCity} />
+      </View>
       <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 4 }}>
         {app.events.length === 0 && (
           <Text style={[type.hint, { textAlign: 'center', paddingVertical: 30 }]}>
-            No upcoming events yet — check back soon. 🎾
+            {app.eventCity === 'all'
+              ? 'No upcoming events anywhere yet — check back soon. 🎾'
+              : `Nothing on in ${cityLabel(app.eventCity)} yet. Try All cities to see what's happening elsewhere. 🎾`}
           </Text>
         )}
         {weeks.map((w) => (
@@ -43,6 +104,7 @@ export default function EventsScreen() {
                     <View style={{ flexDirection: 'row', gap: 5, flexWrap: 'wrap' }}>
                       <Tag label={e.sport} accent />
                       <Tag label={e.level} />
+                      {app.eventCity === 'all' && !!e.city && <Tag label={cityLabel(e.city)} />}
                     </View>
                     {open && (
                       <View style={{ gap: 8, marginTop: 6 }}>
@@ -79,6 +141,30 @@ export default function EventsScreen() {
 }
 
 const styles = StyleSheet.create({
+  head: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    gap: 12, paddingHorizontal: 18, paddingVertical: 14,
+  },
+  picker: {
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    paddingVertical: 8, paddingHorizontal: 12,
+    borderRadius: 999, borderWidth: 2, borderColor: colors.line,
+    backgroundColor: colors.card, maxWidth: 210,
+  },
+  pickerText: { color: colors.text, fontWeight: '700', fontSize: 13.5, flexShrink: 1 },
+  backdrop: {
+    flex: 1, backgroundColor: 'rgba(4,5,6,0.7)',
+    alignItems: 'center', justifyContent: 'center', padding: 24,
+  },
+  sheet: {
+    width: '100%', maxWidth: 340, maxHeight: '70%',
+    backgroundColor: colors.panel, borderRadius: 20,
+    borderWidth: 2, borderColor: colors.line, overflow: 'hidden',
+  },
+  option: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 13, paddingHorizontal: 16,
+  },
   event: {
     flexDirection: 'row', gap: 12, padding: 13, marginBottom: 10,
     backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line, borderRadius: 16,

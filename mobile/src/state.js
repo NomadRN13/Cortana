@@ -136,6 +136,9 @@ export function AppStateProvider({ children }) {
   const [notifs, setNotifs] = useState(NOTIFICATIONS.map((n) => ({ ...n })));
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
   const [liveEvents, setLiveEvents] = useState(null);
+  // Which city's meetups to show. 'all' is the default: nationwide, so a new
+  // member in a quiet city sees a calendar rather than an empty screen.
+  const [eventCity, setEventCity] = useState('all');
   const [myPhotos, setMyPhotos] = useState(null); // live: [{position, url, status}]
   const [pendingMatch, setPendingMatch] = useState(null); // B-21: match made by THEIR like, waiting to celebrate
   const [devices, setDevices] = useState([]);
@@ -281,7 +284,7 @@ export function AppStateProvider({ children }) {
 
   const refreshEvents = async () => {
     try {
-      const rows = await api.listEvents((user && user.city) || DEFAULT_CITY);
+      const rows = await api.listEvents(eventCity);
       const week = (ts) => {
         const days = (new Date(ts) - new Date()) / 86400000;
         return days <= 7 ? 'This week' : days <= 14 ? 'Next week' : 'Coming up';
@@ -300,6 +303,7 @@ export function AppStateProvider({ children }) {
           time: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
           sport: cap(e.sport),
           level: e.level_range,
+          city: e.city || null,
           spotsLeft: Math.max(0, e.capacity - going.length), // B-13
           going: going.some((r) => r.user_id === myId),
           goingCount: going.length,
@@ -308,6 +312,14 @@ export function AppStateProvider({ children }) {
       }));
     } catch (e) { /* keep current state */ }
   };
+
+  // Changing the city refetches rather than filtering what's already loaded:
+  // the list is capped by the query, so filtering locally would quietly hide
+  // events in the chosen city that never came down in the first place.
+  useEffect(() => {
+    if (live) refreshEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventCity, live]);
 
   const refreshNotifs = async () => {
     try {
@@ -1216,7 +1228,7 @@ export function AppStateProvider({ children }) {
     matches, threads, profileById, ensureThread,
     sendMessage, subscribeThread, respondCourt, markRead,
     pendingMatch, clearPendingMatch: () => setPendingMatch(null),
-    events, toggleJoin, joined, eventAttendees,
+    events, toggleJoin, joined, eventAttendees, eventCity, setEventCity,
     notifs, clearNotifs, prefs,
   };
 

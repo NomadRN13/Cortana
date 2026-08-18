@@ -346,13 +346,17 @@ export function subscribeToMessages(matchId, onEvent) {
 
 // ---------- Events ----------
 
+// Pass a city slug to narrow, or nothing at all for every city. Events are
+// readable everywhere by design — a mixer three states away is still worth
+// seeing when you're travelling, and in a young app the local list is often
+// empty, which reads as "nothing is happening" rather than "not here yet".
 export async function listEvents(city) {
-  const { data, error } = await supabase
+  let q = supabase
     .from('events')
     .select('*, event_rsvps(user_id, status)')
-    .eq('city', city)
-    .gte('starts_at', new Date().toISOString())
-    .order('starts_at', { ascending: true });
+    .gte('starts_at', new Date().toISOString());
+  if (city && city !== 'all') q = q.eq('city', city);
+  const { data, error } = await q.order('starts_at', { ascending: true });
   if (error) throw error;
   return data;
 }

@@ -279,6 +279,16 @@
     padding: 16px 18px 10px;
   }
   .appbar .wordmark { font-size: 24px; }
+  .appbar select {
+    font: inherit; font-size: 13px; font-weight: 700; color: var(--text);
+    background-color: var(--card);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23F4F6F0' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 11px center;
+    border: 2px solid var(--line); border-radius: 999px;
+    padding: 8px 30px 8px 13px; appearance: none; -webkit-appearance: none;
+    max-width: 190px;
+  }
+  .appbar select:focus { outline: none; border-color: var(--optic); }
   .appbar-title { font-size: 18px; font-weight: 800; }
   .icon-btn { padding: 7px; border-radius: 10px; display: inline-flex; color: var(--text); position: relative; }
   .icon-btn:hover { background: var(--card2); }
@@ -1142,7 +1152,10 @@
 
     <!-- EVENTS -->
     <section class="screen" id="screen-events" aria-label="Events">
-      <div class="appbar"><h2 class="appbar-title">Events</h2></div>
+      <div class="appbar">
+        <h2 class="appbar-title">Events</h2>
+        <select id="event-city" aria-label="Show meetups in"></select>
+      </div>
       <div class="scroll" id="event-list"></div>
     </section>
 
@@ -1484,12 +1497,16 @@
   };
 
   var EVENTS = [
-    { id: 'e1', week: 'This week', dow: 'Fri', dom: '7',  title: 'Sunset Doubles Social', venue: 'Riverside Park Tennis Complex', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6, desc: 'Round-robin doubles as the sun goes down — partners rotate every 20 minutes, so you\'ll play with everyone.' },
-    { id: 'e2', week: 'This week', dow: 'Sat', dom: '8',  title: 'Beginner Pickleball Mixer', venue: 'Broad Ripple Park', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12, desc: 'Never held a paddle? Perfect. Loaner paddles, patient people, and zero judgment.' },
-    { id: 'e3', week: 'This week', dow: 'Sun', dom: '9',  title: '40/LOVE Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3, desc: 'The signature 40/LOVE format: short sets, rotating partners, and a built-in social break.' },
-    { id: 'e4', week: 'Next week', dow: 'Wed', dom: '12', title: 'Pickleball Under the Lights', venue: 'Ellenberger Park', time: '7:30 PM', sport: 'Pickleball', level: 'All levels', spots: 8, desc: 'Indy\'s biggest public pickleball site, under the lights. Music on, stakes low.' },
-    { id: 'e5', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Tarkington Park', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10, desc: '45 minutes of cardio tennis, then coffee at the Tarkington café — the date part is optional.' },
-    { id: 'e6', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Indy Pickleball Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5, desc: 'Season kickoff for the ladder league. Come claim a rung.' }
+    { id: 'e1', city: 'indianapolis', week: 'This week', dow: 'Fri', dom: '7',  title: 'Sunset Doubles Social', venue: 'Riverside Park Tennis Complex', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6, desc: 'Round-robin doubles as the sun goes down — partners rotate every 20 minutes, so you\'ll play with everyone.' },
+    { id: 'e2', city: 'indianapolis', week: 'This week', dow: 'Sat', dom: '8',  title: 'Beginner Pickleball Mixer', venue: 'Broad Ripple Park', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12, desc: 'Never held a paddle? Perfect. Loaner paddles, patient people, and zero judgment.' },
+    { id: 'e3', city: 'indianapolis', week: 'This week', dow: 'Sun', dom: '9',  title: '40/LOVE Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3, desc: 'The signature 40/LOVE format: short sets, rotating partners, and a built-in social break.' },
+    { id: 'e4', city: 'indianapolis', week: 'Next week', dow: 'Wed', dom: '12', title: 'Pickleball Under the Lights', venue: 'Ellenberger Park', time: '7:30 PM', sport: 'Pickleball', level: 'All levels', spots: 8, desc: 'Indy\'s biggest public pickleball site, under the lights. Music on, stakes low.' },
+    { id: 'e5', city: 'indianapolis', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Tarkington Park', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10, desc: '45 minutes of cardio tennis, then coffee at the Tarkington café — the date part is optional.' },
+    { id: 'e6', city: 'indianapolis', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Indy Pickleball Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5, desc: 'Season kickoff for the ladder league. Come claim a rung.' },
+    { id: 'e7', city: 'seattle', week: 'This week', dow: 'Sat', dom: '8',  title: 'Green Lake Pickleball Social', venue: 'Green Lake Courts', time: '11:00 AM', sport: 'Pickleball', level: 'All levels', spots: 9, desc: 'Rotating doubles by the lake, coffee after at the boathouse.' },
+    { id: 'e8', city: 'los-angeles', week: 'This week', dow: 'Sun', dom: '9',  title: 'Sunset Rally on the Westside', venue: 'Rancho Park Tennis Center', time: '5:30 PM', sport: 'Tennis', level: 'NTRP 3.5+', spots: 4, desc: 'Fast sets, sixteen courts, and the best sunset in the city.' },
+    { id: 'e9', city: 'phoenix', week: 'Next week', dow: 'Thu', dom: '13', title: 'Padel After Work', venue: 'Arcadia Padel Club', time: '6:30 PM', sport: 'Padel', level: 'Beginner–Int.', spots: 8, desc: 'Padel is the easiest racquet sport to start and the hardest to stop.' },
+    { id: 'e10', city: 'miami', week: 'Next week', dow: 'Sat', dom: '15', title: 'Beachside Doubles Mixer', venue: 'Flamingo Park', time: '8:00 AM', sport: 'Tennis', level: 'All levels', spots: 11, desc: 'Early start to beat the heat, smoothies after.' }
   ];
 
   var MODE_CFG = {
@@ -2516,12 +2533,42 @@
   });
 
   /* ---------- Events ---------- */
+  // Meetups are nationwide by default; the picker narrows to one city. Showing
+  // everything first matters early on — an empty local list reads as "nothing
+  // is happening" rather than "not here yet".
+  var eventCity = 'all';
+
+  function visibleEvents() {
+    return eventCity === 'all' ? EVENTS : EVENTS.filter(function (e) { return e.city === eventCity; });
+  }
+
+  function renderEventCityPicker() {
+    var sel = $('#event-city');
+    if (!sel || sel.dataset.ready) return;
+    sel.innerHTML = '<option value="all">All cities</option>' + CITIES.map(function (c) {
+      return '<option value="' + c.slug + '">' + c.name + ', ' + c.state + '</option>';
+    }).join('');
+    sel.value = eventCity;
+    sel.addEventListener('change', function () { eventCity = sel.value; renderEvents(); });
+    sel.dataset.ready = '1';
+  }
+
   function renderEvents() {
+    renderEventCityPicker();
     var list = $('#event-list');
+    var shown = visibleEvents();
+    if (!shown.length) {
+      list.innerHTML = '<p class="hint" style="text-align:center;padding:40px 20px">'
+        + (eventCity === 'all'
+            ? 'No upcoming meetups anywhere yet \u2014 check back soon. \uD83C\uDFBE'
+            : 'Nothing on in ' + esc(cityLabel(eventCity)) + ' yet. Choose <b>All cities</b> to see what\u2019s happening elsewhere. \uD83C\uDFBE')
+        + '</p>';
+      return;
+    }
     var weeks = [];
-    EVENTS.forEach(function (e) { if (weeks.indexOf(e.week) === -1) weeks.push(e.week); });
+    shown.forEach(function (e) { if (weeks.indexOf(e.week) === -1) weeks.push(e.week); });
     list.innerHTML = weeks.map(function (w) {
-      var rows = EVENTS.filter(function (e) { return e.week === w; }).map(function (e, wi) {
+      var rows = shown.filter(function (e) { return e.week === w; }).map(function (e, wi) {
         var going = !!state.joined[e.id];
         var spots = going ? e.spots - 1 : e.spots;
         var idx = EVENTS.indexOf(e);
@@ -2535,7 +2582,9 @@
           '<div class="event-mid">' +
             '<div class="event-title">' + esc(e.title) + '</div>' +
             '<div class="event-meta">' + esc(e.venue) + ' · ' + esc(e.time) + '</div>' +
-            '<div class="event-tags"><span class="tag tag-sport">' + esc(e.sport) + '</span><span class="tag">' + esc(e.level) + '</span></div>' +
+            '<div class="event-tags"><span class="tag tag-sport">' + esc(e.sport) + '</span><span class="tag">' + esc(e.level) + '</span>' +
+              // only worth showing when the list spans more than one city
+              (eventCity === 'all' && e.city ? '<span class="tag">' + esc(cityLabel(e.city)) + '</span>' : '') + '</div>' +
             '<div class="event-extra">' +
               '<p class="hint" style="margin:0">' + esc(e.desc || '') + '</p>' +
               '<div class="going-row">' + avas + '<span class="going-label">+' + goingCount + ' going' + (going ? ' · including you' : '') + '</span></div>' +

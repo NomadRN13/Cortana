@@ -1076,6 +1076,28 @@ begin
 end $$;
 reset role;
 
+-- ---- 9k. Meetups are nationwide ----
+-- The app used to filter events to the member's own city, so this was never
+-- exercised: a member must be able to read an event in a city they are not in,
+-- or the "All cities" picker returns their own city and nothing else.
+reset role;
+insert into events (title, venue, starts_at, sport, capacity, city)
+values ('Green Lake Social', 'Green Lake Courts', now() + interval '5 days', 'pickleball', 12, 'seattle');
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000002'; -- Diego, in Indianapolis
+do $$
+declare c int;
+begin
+  assert (select city from profiles where id = auth.uid()) <> 'seattle',
+         'test setup: this member should not be in Seattle';
+  select count(*) into c from events where city = 'seattle';
+  assert c >= 1, 'a member cannot see meetups outside their own city';
+  select count(*) into c from events;
+  assert c >= 2, 'the nationwide list should span more than one city';
+end $$;
+reset role;
+delete from events where title = 'Green Lake Social';
+
 -- ---- 10. Account deletion removes everything ----
 -- The account-deletion page (landing/delete-account.html) promises each of
 -- these by name, and the store data-safety forms declare them. Give the user
