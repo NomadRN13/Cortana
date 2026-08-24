@@ -13,6 +13,8 @@ regression in `state.js` fails here rather than on someone's phone.
   looking sent, must survive a thread refresh, and must be retryable.
 - `safety.test.js` — block, report, and RSVP either happen or say they didn't,
   and meetups list nationwide until a city is picked.
+- `settings.test.js` — every setting that decides who can see you or who you
+  see reverts and says so if the server refuses the write.
 
 The backend stub is generated at build time from whatever `state.js` actually
 calls, so adding an `api.something()` doesn't break the build.

@@ -22,3 +22,5 @@ echo
 node chat.test.js
 echo
 node safety.test.js
+echo
+node settings.test.js

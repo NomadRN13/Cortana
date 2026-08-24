@@ -438,9 +438,22 @@ export function AppStateProvider({ children }) {
     AsyncStorage.setItem(STORE_KEY, JSON.stringify(u)).catch(() => {});
   };
 
+  // A settings write the server refused is worse than one that never happened:
+  // the app goes on showing the new value, so someone believes they've left
+  // Date mode, or changed city, while the server still has the old answer and
+  // keeps showing them to people on the old terms. Put it back and say so.
+  const saveSetting = (patch, revert, what) => {
+    if (!live) return;
+    api.updateMyProfile(patch).catch(() => {
+      revert();
+      Alert.alert('Couldn\u2019t save that', `${what} didn\u2019t save, so nothing changed. Check your connection and try again.`);
+    });
+  };
+
   const updateBio = (bio) => {
+    const prev = user;
     if (user) saveUser({ ...user, bio });
-    if (live) api.updateMyProfile({ bio }).catch(() => {});
+    saveSetting({ bio }, () => saveUser(prev), 'Your bio');
   };
 
   const updatePhoto = (uri) => {
@@ -506,9 +519,10 @@ export function AppStateProvider({ children }) {
   };
 
   const updateDating = (gender, seeking) => {
+    const prev = user;
     if (user) saveUser({ ...user, gender, seeking });
     if (live) {
-      api.updateMyProfile({ gender: gender || null, seeking: seeking || [] }).catch(() => {});
+      saveSetting({ gender: gender || null, seeking: seeking || [] }, () => saveUser(prev), 'Your dating settings');
       if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
       prefsTimerRef.current = setTimeout(() => refreshDeck(mode), 700);
     }
@@ -516,9 +530,10 @@ export function AppStateProvider({ children }) {
 
   const updatePlay = (playGames, playPref) => {
     const games = playGames && playGames.length ? playGames : ALL_GAMES;
+    const prev = user;
     if (user) saveUser({ ...user, playGames: games, playPref: playPref || 'everyone' });
     if (live) {
-      api.updateMyProfile({ play_games: games, play_pref: playPref || 'everyone' }).catch(() => {});
+      saveSetting({ play_games: games, play_pref: playPref || 'everyone' }, () => saveUser(prev), 'Your Play settings');
       if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
       prefsTimerRef.current = setTimeout(() => refreshDeck(mode), 700);
     }
@@ -539,9 +554,10 @@ export function AppStateProvider({ children }) {
 
   const updateCity = (citySlug) => {
     if (!cityBySlug(citySlug) || !user) return;
+    const prev = user;
     saveUser({ ...user, city: citySlug });
     if (live) {
-      api.updateMyProfile({ city: citySlug }).catch(() => {});
+      saveSetting({ city: citySlug }, () => saveUser(prev), 'Your city');
       if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
       prefsTimerRef.current = setTimeout(() => { refreshDeck(mode); refreshEvents(); }, 700);
     }
@@ -571,33 +587,41 @@ export function AppStateProvider({ children }) {
       modes: team.isTeam ? (user.modes || []).filter((m) => m !== 'date') : user.modes,
     };
     if (team.isTeam && !next.modes.length) next.modes = ['play'];
+    const prev = user;
+    const prevMode = mode;
     saveUser(next);
     if (next.modes.indexOf(mode) === -1 && next.modes.length) setMode(next.modes[0]);
     if (live) {
-      api.updateMyProfile({
+      saveSetting({
         is_team: next.isTeam,
         partner_name: next.partnerName,
         partner_birthdate: next.partnerBirthdate,
         partner_gender: next.partnerGender,
         modes: next.modes,
-      }).catch(() => {});
+      }, () => { saveUser(prev); setMode(prevMode); }, 'Your team profile');
       if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
       prefsTimerRef.current = setTimeout(() => refreshDeck(next.modes[0] || mode), 700);
     }
   };
 
   const updateFriendsPref = (friendsPref) => {
+    const prev = user;
     if (user) saveUser({ ...user, friendsPref: friendsPref || 'everyone' });
     if (live) {
-      api.updateMyProfile({ friends_pref: friendsPref || 'everyone' }).catch(() => {});
+      saveSetting({ friends_pref: friendsPref || 'everyone' }, () => saveUser(prev), 'Your Friends settings');
       if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
       prefsTimerRef.current = setTimeout(() => refreshDeck(mode), 700);
     }
   };
 
   const updateModes = (modes) => {
+    const prev = user;
+    const prevMode = mode;
     if (user) saveUser({ ...user, modes });
-    if (live) api.updateMyProfile({ modes }).catch(() => {});
+    // Modes decide which decks you appear in. Turning Date off and having the
+    // write fail leaves you in strangers' dating decks with the app telling
+    // you otherwise, which is the one version of this that really matters.
+    saveSetting({ modes }, () => { saveUser(prev); setMode(prevMode); }, 'What you\u2019re here for');
     if (!modes.includes(mode) && modes.length) setMode(modes[0]);
   };
 
@@ -606,15 +630,19 @@ export function AppStateProvider({ children }) {
     const ageMin = Math.min(next.ageMin, next.ageMax);
     const ageMax = Math.max(next.ageMin, next.ageMax);
     const clean = { ...next, ageMin, ageMax };
-    setPrefs(clean);
-    AsyncStorage.setItem(PREFS_KEY, JSON.stringify(clean)).catch(() => {});
+    const prev = prefs;
+    const persist = (p) => {
+      setPrefs(p);
+      AsyncStorage.setItem(PREFS_KEY, JSON.stringify(p)).catch(() => {});
+    };
+    persist(clean);
     if (live) {
-      api.updateMyProfile({
+      saveSetting({
         radius_mi: clean.radius,
         age_min: clean.ageMin,
         age_max: clean.ageMax,
         same_sports_only: clean.mySportsOnly,
-      }).catch(() => {});
+      }, () => persist(prev), 'Your filters');
       // B-12: refetch the deck under the new prefs (debounced — sliders/typing)
       if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
       prefsTimerRef.current = setTimeout(() => refreshDeck(mode), 700);
