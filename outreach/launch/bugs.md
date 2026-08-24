@@ -48,6 +48,44 @@ read receipts + live match/message signal, migration 20260806000011).
 Remaining: the on-device confirmations noted above — they belong in the
 first device test round (see the TestFlight test plan).
 
+## Round-3 findings — pre-launch hardening, 2026-08-24
+
+A second adversarial pass, this time asking one question of every screen: *does
+the database enforce what this copy promises?* Almost everything found has the
+same shape — the app claiming something happened that the server never agreed
+to, or a privacy promise that only existed in the interface. Backend findings
+are covered by `supabase/tests/backend.sql`; app findings by the new
+`./scripts/test-app.sh` suite, which drives the real `state.js` in Node.
+
+| ID | Severity | Title | Repro / trace | Suspected area | Status |
+|----|----------|-------|---------------|----------------|--------|
+| B-22 | Blocker | Anyone could test whether an email address had signed up for a dating app | `waitlist_insert` policy allowed an `insert ... returning`, and a unique-violation vs. success distinguished a member from a non-member. Membership of a dating waitlist is exactly the kind of thing people are entitled not to have probed. | supabase `waitlist` policies | Fixed (`join_waitlist()` security definer, `on conflict do nothing`, insert policy dropped — migration 20260806000017) |
+| B-23 | Blocker | Every signed-in member could read every other member's exact birthdate and ~1 km home coordinates | `profiles_select` is row-level; RLS has no column dimension, and `authenticated` held table-level `SELECT`, so `select birthdate, approx_lat, approx_lng from profiles` returned the lot. The deck only ever needed age and distance. (A column-level `revoke` alone is a no-op while the table-level grant stands — the first attempt at this looked right and did nothing until the test caught it.) | supabase grants + `profiles` | Fixed (table SELECT revoked, 22 columns granted back, `get_my_profile()` / `get_profile_cards()` — migration 20260806000018) |
+| B-24 | Blocker | Blocking someone did not hide the event guest list or their sports — a blocked person could learn where someone would physically be | `rsvps_select` and `user_sports_select` were `using (true)`; only the deck and profile paths checked `is_blocked`. Block is the one safety promise that has to hold everywhere. | supabase `event_rsvps`, `user_sports` policies | Fixed (both policies check `is_blocked` both directions — migration 20260806000019) |
+| B-25 | Major | Event capacity was decoration: two people could take the last spot | Nothing counted RSVPs server-side. Both clients saw "1 spot left", both wrote, both were told they were going. | supabase `event_rsvps` | Fixed (`enforce_event_capacity()` trigger, `select … for update` on the event row before counting — migration 20260806000020) |
+| B-26 | Blocker | Block and report failed silently | `api.blockUser`/`api.reportUser` were `.catch(() => {})`. Someone who taps Block watches the person disappear from their screen and believes they're protected; if the write failed they are not, and nothing tells them. | mobile/src/state.js (`block`, `report`) | Fixed (revert + alert naming what to do instead; `safety.test.js`) |
+| B-27 | Major | An RSVP the server refused still showed as "Going" | `api.rsvp(...).catch(() => {})` — including the "event is full" refusal, which is how someone drives to a mixer they were never on the list for. | mobile/src/state.js (`toggleJoin`) | Fixed (reverts the card and the spot count; says *full* when it's full, `safety.test.js`) |
+| B-28 | Major | A chat message the server refused still appeared in the thread as sent | `api.sendTextMessage(...)` and `api.proposeCourtTime(...)` both swallowed failures. Worst case is arranging a court time the other person never received. Compounding it, the thread refresh that runs when they message you replaced the local thread wholesale, erasing the failed message with no trace. | mobile/src/state.js (`sendMessage`) | Fixed (outbox kept outside `threads`, "Not sent · tap to retry", survives refresh; `chat.test.js`) |
+| B-29 | Major | Accepting a court time could fail while the card said "Accepted — see you out there" | `api.respondCourtTime(...).catch(() => {})`. The proposer is being told whether to show up somewhere. | mobile/src/state.js (`respondCourt`) | Fixed (reverts to proposed and says so; `chat.test.js`) |
+| B-30 | Major | Eight settings wrote to the server fire-and-forget while the app kept showing the new value | Turning Date mode off and having the write fail leaves you in strangers' dating decks with Settings saying otherwise. Same shape for city, who you're looking to date, doubles-team status, Friends audience, bio and the deck filters. | mobile/src/state.js (`updateModes`, `updateCity`, `updateDating`, `updateTeam`, `updateFriendsPref`, `updatePlay`, `updatePrefs`, `updateBio`) | Fixed (one `saveSetting` helper: revert + alert; `settings.test.js`) |
+| B-31 | Major | A deployed-but-unconfigured landing page faked waitlist signups into the visitor's own browser | The local-preview fallback ran whenever the anon key was absent, which is also the state of a real deploy before `go-live.sh`. Visitors got a thank-you for a signup that reached nobody. | landing/index.html | Fixed (preview path guarded to localhost/file) |
+| B-32 | Minor | The privacy policy described a banned-phone-number list that does not exist | Store review compares the policy to the behaviour; claiming retained data you don't hold is the wrong direction to be wrong in. | landing privacy page | Fixed (copy matches what's built; building the list is a founder decision — it needs new retained data and a policy/store-form update) |
+| B-33 | Minor | Deleting an account unlinked photos but left the files in storage | `delete_account()` removed the rows; the objects stayed in the bucket. | mobile/src/api/backend.js (`deleteAccount`) | Fixed (`purgeMyPhotoFiles()` before the RPC) |
+
+### Test coverage added
+
+- `supabase/tests/backend.sql` — moved into the repo, now 22 migrations and
+  sections 9c–9k: photo storage policies, Apple token unreachability, an
+  anonymous sweep across 14 tables, profile column privacy with a
+  classification guard, a member-to-member sweep, capacity, founder analytics,
+  nationwide meetups. Header note that matters: grants go in **before**
+  migrations via `alter default privileges`, because a blanket grant afterwards
+  silently undoes any column-level revoke a migration makes.
+- `tests/app/` — the app's first automated tests. They run the shipped
+  `mobile/src/state.js` in Node with the native modules stubbed, so B-26 to
+  B-30 are regressions that fail in CI rather than on someone's phone.
+  `./scripts/test-app.sh`.
+
 ## Verified clean (checked, no bug found)
 
 - Enum casing: UI capitalizes for display only; every write path lowercases
