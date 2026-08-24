@@ -5,7 +5,7 @@
 // Screens call the same actions in both modes.
 // This revision addresses the QA findings in outreach/launch/bugs.md
 // (B-01…B-17); fixes are tagged inline.
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS, EVENTS } from './data/seed';
@@ -131,6 +131,12 @@ export function AppStateProvider({ children }) {
   const [seen, setSeen] = useState({});
   const [matches, setMatches] = useState(['maya', 'sam', 'priya']);
   const [threads, setThreads] = useState(THREADS);
+  // Messages the server refused. They are deliberately NOT kept in `threads`:
+  // a bubble sitting in the conversation with no row behind it tells the
+  // member they said something they never said. They live here instead, so
+  // they survive a thread refresh, stay visibly marked "not sent", and can be
+  // retried or thrown away. Keyed by thread id.
+  const [outbox, setOutbox] = useState({});
   const [joined, setJoined] = useState({});
   const [replied, setReplied] = useState({});
   const [notifs, setNotifs] = useState(NOTIFICATIONS.map((n) => ({ ...n })));
@@ -156,6 +162,7 @@ export function AppStateProvider({ children }) {
   const deckReqRef = useRef(0);       // refresh staleness guard (B-16)
   const prefsTimerRef = useRef(null); // debounce pref-driven deck refresh (B-12)
   const celebratedRef = useRef({});   // matchId → true (Match Point modal already shown; B-21 dedupe)
+  const localSeqRef = useRef(0);      // ids for optimistic messages, so a failed one can be found again
 
   useEffect(() => { threadsRef.current = threads; }, [threads]);
 
@@ -996,17 +1003,26 @@ export function AppStateProvider({ children }) {
   };
 
   const sendMessage = (id, msg) => {
-    appendMsg(id, msg);
+    const localId = `local-${(localSeqRef.current += 1)}`;
+    appendMsg(id, { ...msg, localId });
     if (live) {
+      // If the send doesn't land, take the bubble back out of the thread and
+      // put it in the outbox marked "not sent". Failing quietly here would let
+      // someone arrange a court time that the other person never received.
+      const failed = () => {
+        setThreads((ts) => ts.map((t) => (t.id === id
+          ? { ...t, msgs: t.msgs.filter((m) => m.localId !== localId) }
+          : t)));
+        setOutbox((o) => ({ ...o, [id]: [...(o[id] || []), { ...msg, localId, failed: true }] }));
+      };
       // B-01: never fall into the demo branch while live — resolve and send
       resolveMatchId(id).then((matchId) => {
-        if (!matchId) return;
-        if (msg.kind === 'court') {
-          api.proposeCourtTime(matchId, { venue: msg.court, day: msg.day, time: msg.time, sport: (msg.sport || 'tennis').toLowerCase() }).catch(() => {});
-        } else {
-          api.sendTextMessage(matchId, msg.text).catch(() => {});
-        }
-      });
+        if (!matchId) { failed(); return; }
+        const sent = msg.kind === 'court'
+          ? api.proposeCourtTime(matchId, { venue: msg.court, day: msg.day, time: msg.time, sport: (msg.sport || 'tennis').toLowerCase() })
+          : api.sendTextMessage(matchId, msg.text);
+        sent.catch(failed);
+      }).catch(failed);
       return;
     }
     // demo: they "type" for a moment, then one canned reply per thread
@@ -1031,6 +1047,21 @@ export function AppStateProvider({ children }) {
     }
   };
 
+  // Tapping a "not sent" message: send it again, or throw it away. Nothing
+  // else clears the outbox — an unsent message stays on screen until the
+  // member decides what to do with it.
+  const retryMessage = (threadId, localId) => {
+    const queued = (outbox[threadId] || []).find((m) => m.localId === localId);
+    if (!queued) return;
+    discardMessage(threadId, localId);
+    const { localId: _id, failed: _failed, ...body } = queued;
+    sendMessage(threadId, body);
+  };
+
+  const discardMessage = (threadId, localId) => {
+    setOutbox((o) => ({ ...o, [threadId]: (o[threadId] || []).filter((m) => m.localId !== localId) }));
+  };
+
   const subscribeThread = (id) => {
     const thread = threadsRef.current.find((t) => t.id === id);
     const matchId = (thread && thread.matchId) || matchIdsRef.current[id];
@@ -1050,10 +1081,20 @@ export function AppStateProvider({ children }) {
     if (!thread) return;
     const msg = thread.msgs[msgIndex];
     if (!msg || msg.kind !== 'court') return;
-    setThreads((ts) => ts.map((t) => (t.id === threadId
-      ? { ...t, msgs: t.msgs.map((m, i) => (i === msgIndex ? { ...m, status: accept ? 'accepted' : 'declined' } : m)) }
+    const setStatus = (status) => setThreads((ts) => ts.map((t) => (t.id === threadId
+      ? { ...t, msgs: t.msgs.map((m, i) => (i === msgIndex ? { ...m, status } : m)) }
       : t)));
-    if (live && msg.id) api.respondCourtTime(msg.id, accept).catch(() => {});
+    const before = msg.status || 'proposed';
+    setStatus(accept ? 'accepted' : 'declined');
+    // The other person is being told whether to show up somewhere. If the
+    // answer never reaches the server, put the card back the way it was and
+    // say so, rather than leaving them waiting at a court.
+    if (live && msg.id) {
+      api.respondCourtTime(msg.id, accept).catch(() => {
+        setStatus(before);
+        Alert.alert('Couldn\u2019t send your answer', 'Check your connection and tap Accept or Decline again.');
+      });
+    }
   };
 
   const markRead = (id) => {
@@ -1210,6 +1251,16 @@ export function AppStateProvider({ children }) {
     return user && !isBackendConfigured ? 'Main' : 'Welcome';
   })();
 
+  // What the screens read: the real thread plus anything stranded in the
+  // outbox, appended at the end. Internals keep using `threads` — the raw
+  // list is what matches the server, and respondCourt indexes into it.
+  const visibleThreads = useMemo(() => {
+    if (!Object.keys(outbox).some((k) => (outbox[k] || []).length)) return threads;
+    return threads.map((t) => ((outbox[t.id] || []).length
+      ? { ...t, msgs: [...t.msgs, ...outbox[t.id]] }
+      : t));
+  }, [threads, outbox]);
+
   const value = {
     user, hydrated, bootRoute, saveUser, signOut,
     session, live, isBackendConfigured,
@@ -1225,8 +1276,8 @@ export function AppStateProvider({ children }) {
     retryDeck: () => refreshDeck(mode),
     swipeLike, swipePass, likeSaved, registerLike,
     saved, setSaved: persistSaved, seen, setSeen, blocked, block, report,
-    matches, threads, profileById, ensureThread,
-    sendMessage, subscribeThread, respondCourt, markRead,
+    matches, threads: visibleThreads, profileById, ensureThread,
+    sendMessage, retryMessage, discardMessage, subscribeThread, respondCourt, markRead,
     pendingMatch, clearPendingMatch: () => setPendingMatch(null),
     events, toggleJoin, joined, eventAttendees, eventCity, setEventCity,
     notifs, clearNotifs, prefs,

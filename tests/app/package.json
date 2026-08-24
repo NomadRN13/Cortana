@@ -1,0 +1,14 @@
+{
+  "name": "fortylove-state-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Node harness for mobile/src/state.js. Lives outside mobile/ so its node_modules never reaches Metro or an EAS build.",
+  "scripts": {
+    "test": "node build.mjs && node chat.test.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "react": "19.0.0",
+    "react-test-renderer": "19.0.0"
+  }
+}

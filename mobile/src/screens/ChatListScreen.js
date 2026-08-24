@@ -9,6 +9,8 @@ function preview(t) {
   if (!t.msgs.length) return 'New match — say hi!';
   const m = t.msgs[t.msgs.length - 1];
   if (m.typing) return 'typing…';
+  // Don't preview an unsent message as though it went out.
+  if (m.failed) return 'Not sent — tap to retry';
   if (m.kind === 'court') return `🎾 ${m.court} · ${m.day} ${m.time}`;
   return `${m.who === 'me' ? 'You: ' : ''}${m.text}`;
 }

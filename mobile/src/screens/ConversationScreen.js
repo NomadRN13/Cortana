@@ -47,6 +47,19 @@ export default function ConversationScreen({ route, navigation }) {
     setText('');
   };
 
+  // A message the server refused. Tapping it is the only way it moves.
+  const handleUnsent = (m) => {
+    Alert.alert(
+      'Not sent',
+      'This message never reached them.',
+      [
+        { text: 'Try again', onPress: () => app.retryMessage(id, m.localId) },
+        { text: 'Delete', style: 'destructive', onPress: () => app.discardMessage(id, m.localId) },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+    );
+  };
+
   const suggestCourt = () => {
     app.sendMessage(id, {
       who: 'me',
@@ -107,6 +120,12 @@ export default function ConversationScreen({ route, navigation }) {
           }
           renderItem={({ item: m, index }) => {
             const mine = m.who === 'me';
+            // An unsent message is the whole tap target — dimmed, so it reads
+            // as "didn't happen" at a glance rather than only in the footer.
+            const Wrap = m.failed ? Pressable : View;
+            const wrapProps = m.failed
+              ? { onPress: () => handleUnsent(m), style: [styles.msg, mine ? styles.mine : styles.theirs, styles.msgFailed] }
+              : { style: [styles.msg, mine ? styles.mine : styles.theirs] };
             if (m.typing) {
               return (
                 <View style={[styles.msg, styles.theirs]}>
@@ -117,7 +136,7 @@ export default function ConversationScreen({ route, navigation }) {
             if (m.kind === 'court') {
               const status = m.status || 'proposed';
               return (
-                <View style={[styles.msg, mine ? styles.mine : styles.theirs]}>
+                <Wrap {...wrapProps}>
                   <View style={styles.courtCard}>
                     <View style={styles.courtTop}>
                       <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 11, letterSpacing: 0.8 }}>COURT TIME</Text>
@@ -143,19 +162,23 @@ export default function ConversationScreen({ route, navigation }) {
                       )}
                     </View>
                   </View>
-                  <Text style={styles.when}>{m.when}{mine && index === lastReadMine ? '  ·  Read \u2713' : ''}</Text>
-                </View>
+                  {m.failed
+                    ? <Text style={styles.unsent}>Not sent · Tap to retry</Text>
+                    : <Text style={styles.when}>{m.when}{mine && index === lastReadMine ? '  ·  Read \u2713' : ''}</Text>}
+                </Wrap>
               );
             }
             return (
-              <View style={[styles.msg, mine ? styles.mine : styles.theirs]}>
+              <Wrap {...wrapProps}>
                 <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
                   <Text style={{ color: mine ? colors.ink : colors.text, fontSize: 14, lineHeight: 20, fontWeight: mine ? '600' : '400' }}>
                     {m.text}
                   </Text>
                 </View>
-                <Text style={styles.when}>{m.when}{mine && index === lastReadMine ? '  ·  Read \u2713' : ''}</Text>
-              </View>
+                {m.failed
+                  ? <Text style={styles.unsent}>Not sent · Tap to retry</Text>
+                  : <Text style={styles.when}>{m.when}{mine && index === lastReadMine ? '  ·  Read \u2713' : ''}</Text>}
+              </Wrap>
             );
           }}
         />
@@ -196,6 +219,8 @@ const styles = StyleSheet.create({
   bubbleMine: { backgroundColor: colors.optic, borderBottomRightRadius: 6 },
   bubbleTheirs: { backgroundColor: colors.card2, borderBottomLeftRadius: 6 },
   when: { fontSize: 11, color: colors.dim },
+  msgFailed: { opacity: 0.62 },
+  unsent: { fontSize: 11, color: colors.danger, fontWeight: '700' },
   courtCard: { borderWidth: 2, borderColor: colors.optic, borderRadius: 14, overflow: 'hidden', minWidth: 200, backgroundColor: colors.card },
   courtTop: { backgroundColor: colors.optic, paddingVertical: 7, paddingHorizontal: 12 },
   courtBtn: { backgroundColor: colors.optic, borderRadius: 999, paddingVertical: 7, paddingHorizontal: 14 },
