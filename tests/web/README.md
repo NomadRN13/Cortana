@@ -21,6 +21,9 @@ root-absolute paths like `/favicon.png` resolve the way they do in production.
 - `funnel.test.js` — the demo's own analytics: one visit id, no step counted
   twice, nothing personal in the payload, and complete silence when no keys
   are configured.
+- `share.test.js` — what a pasted link looks like: the built site's preview
+  images are absolute URLs pointing at a file that exists. Scrapers aren't
+  browsers, so this reads the markup rather than driving one.
 
 A step that fails now fails the process. Every one of these used to print
 `FAIL` and exit 0, so a broken page looked green from the shell.

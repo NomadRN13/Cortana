@@ -20,7 +20,7 @@ fi
 
 only="${1:-}"
 fails=0
-for suite in prototype admin waitlist events funnel; do
+for suite in prototype admin waitlist events funnel share; do
   [ -n "$only" ] && [ "$only" != "$suite" ] && continue
   echo
   echo "── $suite"

@@ -1,6 +1,7 @@
-const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harness');
+const { launch, step, fail, watch, finish, serve, REPO } = require('./lib/harness');
 
 (async () => {
+  const site = await serve();
   const browser = await launch();
   const page = await browser.newPage({ viewport: { width: 900, height: 900 } });
   const errors = [];
@@ -8,7 +9,7 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
   page.on('console', (m) => { if (m.type() === 'error') errors.push('CONSOLE: ' + m.text()); });
   page.on('dialog', (d) => d.accept());
 
-  await page.goto(fileUrl('admin/index.html'));
+  await page.goto(site.url('admin/index.html'));
 
   await step('demo mode: banner + desk visible, sign-in hidden', async () => {
     await page.waitForSelector('#demo-banner:not([hidden])', { timeout: 3000 });
@@ -67,5 +68,6 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     if (!(await page.textContent('#photo-list')).includes('queue is clear')) throw new Error('no empty state');
   });
 
+  site.close();
   await finish(browser, errors);
 })();

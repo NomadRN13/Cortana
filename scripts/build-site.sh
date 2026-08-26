@@ -41,16 +41,18 @@ Disallow: /admin/
 Allow: /
 ROBOTS
 
-# Social scrapers vary on whether they resolve a relative og:image, so stamp
-# absolute URLs once the domain is known:
-#     SITE_URL=https://40love.app bash scripts/build-site.sh
-if [ -n "${SITE_URL:-}" ]; then
-  BASE="${SITE_URL%/}"
-  find site -name '*.html' -exec sed -i.bak \
-    -e "s|content=\"/og.png\"|content=\"$BASE/og.png\"|g" "{}" +
-  find site -name '*.bak' -delete
-  echo "==> Stamped absolute preview URLs at $BASE"
-fi
+# Facebook, LinkedIn and iMessage do not resolve a relative og:image, so a site
+# built without this has no preview card on any link anyone shares — which is
+# the entire point of having one. It defaults to where the site lives today
+# rather than being opt-in, because go-live.sh rebuilds without setting it and
+# the failure is invisible until someone pastes a link.
+#     SITE_URL=https://40love.app bash scripts/build-site.sh   # after a move
+BASE="${SITE_URL:-https://40-love.netlify.app}"
+BASE="${BASE%/}"
+find site -name '*.html' -exec sed -i.bak \
+  -e "s|content=\"/og.png\"|content=\"$BASE/og.png\"|g" "{}" +
+find site -name '*.bak' -delete
+echo "==> Preview cards point at $BASE/og.png"
 
 echo "site/ assembled:"
 find site -type f | sort
