@@ -152,6 +152,36 @@ export async function setMySports(sports) {
   if (error) throw error;
 }
 
+const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const B64_INDEX = (() => {
+  const t = new Int16Array(128).fill(-1);
+  for (let i = 0; i < B64.length; i += 1) t[B64.charCodeAt(i)] = i;
+  return t;
+})();
+
+// Storage wants an ArrayBuffer. Hermes has shipped `atob` for a while, so use
+// it when it's there — but a photo upload that silently depends on a global
+// being present is how B-09 happened the first time, and the failure mode is a
+// member whose profile shows initials to everyone but themselves.
+function base64ToArrayBuffer(b64) {
+  if (typeof atob === 'function') return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
+  let clean = '';
+  for (let i = 0; i < b64.length; i += 1) {
+    const c = b64.charCodeAt(i);
+    if (c < 128 && B64_INDEX[c] >= 0) clean += b64[i];
+  }
+  const out = new Uint8Array((clean.length * 3) >> 2);
+  let o = 0;
+  let buf = 0;
+  let bits = 0;
+  for (let i = 0; i < clean.length; i += 1) {
+    buf = (buf << 6) | B64_INDEX[clean.charCodeAt(i)];
+    bits += 6;
+    if (bits >= 8) { bits -= 8; out[o] = (buf >> bits) & 0xff; o += 1; }
+  }
+  return out.buffer;
+}
+
 export async function uploadProfilePhoto(localUri, position = 0) {
   const { data: { user } } = await supabase.auth.getUser();
   // Unique filename per upload: positions can be reordered, so the path
@@ -161,8 +191,7 @@ export async function uploadProfilePhoto(localUri, position = 0) {
   // Read via expo-file-system: RN's fetch is unreliable for file:// bodies (QA B-09).
   const FileSystem = require('expo-file-system');
   const b64 = await FileSystem.readAsStringAsync(localUri, { encoding: FileSystem.EncodingType.Base64 });
-  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-  const { error: upErr } = await supabase.storage.from('photos').upload(path, bytes.buffer, {
+  const { error: upErr } = await supabase.storage.from('photos').upload(path, base64ToArrayBuffer(b64), {
     contentType: 'image/jpeg',
     upsert: true,
   });

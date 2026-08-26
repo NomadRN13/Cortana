@@ -100,6 +100,7 @@ function mapMsgRow(row, myId) {
 }
 
 const BOOT_TIMEOUT_MS = 12000;
+const PHOTO_TIMEOUT_MS = 30000;
 
 // Supabase reports "there is no SMS provider configured" through the same
 // channel as "that isn't a real phone number", and the raw text reads like the
@@ -485,11 +486,6 @@ export function AppStateProvider({ children }) {
     saveSetting({ bio }, () => saveUser(prev), 'Your bio');
   };
 
-  const updatePhoto = (uri) => {
-    if (user) saveUser({ ...user, photo: uri, photos: [uri, ...((user.photos || []).slice(1))] });
-    if (live) api.uploadProfilePhoto(uri, 0).then(refreshMyPhotos).catch(() => {});
-  };
-
   // ---------- photo management (up to 6; slot 0 is the main photo) ----------
 
   const demoPhotoList = (u) => (u && (u.photos || (u.photo ? [u.photo] : []))) || [];
@@ -840,10 +836,41 @@ export function AppStateProvider({ children }) {
       );
       // The phone was verified before this profile row existed — stamp it now.
       if (draft.phoneVerified) await api.syncPhoneVerification().catch(() => {});
-      if (draft.photo) api.uploadProfilePhoto(draft.photo, 0).catch(() => {});
+      // The first photo is the one that decides whether anyone swipes right.
+      // Dropping its failure left the new member looking at their own photo on
+      // their own profile while everyone else saw initials, for the whole
+      // session — so wait for it, and say what happened.
+      let photoTrouble = null;
+      if (draft.photo) {
+        try {
+          await Promise.race([
+            api.uploadProfilePhoto(draft.photo, 0),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('slow')), PHOTO_TIMEOUT_MS)),
+          ]);
+        } catch (e) {
+          photoTrouble = (e && e.message) === 'slow' ? 'slow' : 'failed';
+        }
+      }
       // Push tokens reference the profile row, so the attempt made at sign-in
       // (before onboarding) could not have succeeded — retry now that it exists.
       getDeviceKey().then((key) => registerForPush((t, p) => api.registerPushToken(t, p, key))).catch(() => {});
+      // Live: photos come from the server, never from the local file the picker
+      // handed us — that URI exists on this phone and nowhere else.
+      saveUser({ ...draft, photo: null });
+      setMode(draft.modes[0]);
+      refreshMyPhotos();
+      if (photoTrouble === 'failed') {
+        Alert.alert(
+          'Your photo didn’t upload',
+          'You’re in — everything else saved. Add one from the Profile tab when you have a better connection. A profile with a photo gets far more matches.'
+        );
+      } else if (photoTrouble === 'slow') {
+        Alert.alert(
+          'We couldn’t confirm your photo',
+          'You’re in — everything else saved. Open the Profile tab and check; if the photo isn’t there, add it again.'
+        );
+      }
+      return;
     }
     saveUser(draft);
     setMode(draft.modes[0]);
@@ -1335,7 +1362,7 @@ export function AppStateProvider({ children }) {
     session, live, isBackendConfigured,
     requestCode, verifyCode, signInWithProvider, finishOnboarding,
     requestPhoneCode, verifyPhoneCode,
-    updateBio, updatePhoto, updatePrefs, updateModes, updateDating, updatePlay, updateFriendsPref, updateTeam,
+    updateBio, updatePrefs, updateModes, updateDating, updatePlay, updateFriendsPref, updateTeam,
     photos, addPhoto, removePhoto, makePrimary,
     topPicks,
     cities: CITIES, cityLabel, updateCity, detectCity,

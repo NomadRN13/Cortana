@@ -28,3 +28,5 @@ echo
 node boot.test.js
 echo
 node signup.test.js
+echo
+node photos.test.js

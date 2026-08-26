@@ -20,6 +20,8 @@ regression in `state.js` fails here rather than on someone's phone.
   late.
 - `signup.test.js` — a phone step that fails says whose problem it is: an
   unconfigured SMS provider is never blamed on the tester's number.
+- `photos.test.js` — the first photo either reaches the server or the member is
+  told, and their own profile never shows a file they alone can see.
 
 The backend stub is generated at build time from whatever `state.js` actually
 calls, so adding an `api.something()` doesn't break the build.
