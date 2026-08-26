@@ -26,3 +26,5 @@ echo
 node settings.test.js
 echo
 node boot.test.js
+echo
+node signup.test.js

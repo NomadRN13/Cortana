@@ -18,6 +18,8 @@ regression in `state.js` fails here rather than on someone's phone.
 - `boot.test.js` — opening the app signed in with no cached profile always
   reaches a real screen, whether the profile fetch fails, hangs, or arrives
   late.
+- `signup.test.js` — a phone step that fails says whose problem it is: an
+  unconfigured SMS provider is never blamed on the tester's number.
 
 The backend stub is generated at build time from whatever `state.js` actually
 calls, so adding an `api.something()` doesn't break the build.

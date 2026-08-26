@@ -101,6 +101,23 @@ function mapMsgRow(row, myId) {
 
 const BOOT_TIMEOUT_MS = 12000;
 
+// Supabase reports "there is no SMS provider configured" through the same
+// channel as "that isn't a real phone number", and the raw text reads like the
+// number is at fault. Since the phone step is a hard gate, an unconfigured
+// provider blocks every signup — and a tester who believes it's their number
+// retypes it three times and gives up without telling anyone. Name the cases
+// apart so the failure reaches the person who can actually fix it.
+const RATE_LIMITED = /rate limit|too many|only request this after|429/i;
+const PROVIDER_FAULT = /provider|not enabled|disabled|unsupported|configur|sending sms|sending confirmation|twilio|messagebird|vonage/i;
+const NOT_CONFIGURED = 'Text messages aren’t switched on for 40/LOVE yet — that’s on us, not your number. Email hello@40love.app and we’ll get you in.';
+
+function phoneError(e, fallback) {
+  const text = `${(e && (e.message || e.msg)) || ''} ${(e && (e.code || e.error_code)) || ''}`;
+  if (RATE_LIMITED.test(text)) return 'Too many tries just now — give it a minute, then tap send again.';
+  if (PROVIDER_FAULT.test(text)) return NOT_CONFIGURED;
+  return (e && e.message) || fallback;
+}
+
 const NOTIF_ICONS = { match: 'heart', message: 'chatbubble', court_time: 'tennisball', event_reminder: 'calendar', system: 'notifications' };
 const ALL_MODES = ['date', 'play', 'friends'];
 const ALL_GAMES = ['singles', 'doubles', 'mixed_doubles'];
@@ -707,7 +724,13 @@ export function AppStateProvider({ children }) {
   const requestPhoneCode = async (raw) => {
     const e164 = toE164(raw);
     if (!e164) throw new Error('Enter a 10-digit US phone number.');
-    if (isBackendConfigured) await api.startPhoneVerification(e164);
+    if (isBackendConfigured) {
+      try {
+        await api.startPhoneVerification(e164);
+      } catch (e) {
+        throw new Error(phoneError(e, 'Check the number and try again.'));
+      }
+    }
     // Demo mode: no SMS is sent; any 6-digit code verifies.
     return e164;
   };
@@ -715,7 +738,12 @@ export function AppStateProvider({ children }) {
   const verifyPhoneCode = async (e164, code) => {
     if (!/^\d{6}$/.test(code)) throw new Error('Enter the 6-digit code.');
     if (isBackendConfigured) {
-      const ok = await api.confirmPhoneVerification(e164, code);
+      let ok = false;
+      try {
+        ok = await api.confirmPhoneVerification(e164, code);
+      } catch (e) {
+        throw new Error(phoneError(e, 'That code didn’t match — check the newest text or resend.'));
+      }
       if (!ok) throw new Error('That code didn’t match — check the newest text or resend.');
     }
     if (user) saveUser({ ...user, phoneVerified: true });
