@@ -185,6 +185,14 @@
       <li><strong>Settings → API.</strong> Copy the <strong>Project URL</strong>
       and the <strong>anon public</strong> key.</li>
     </ol>
+    <div class="note"><strong>Supabase's built-in email sender only allows a
+    handful of codes an hour, for the whole project.</strong> That's fine while
+    it's you testing, and it will fall over on the night twelve testers sign up
+    at a mixer — they'll see "too many codes have gone out in the last hour" and
+    go home. Before that evening, add your own mail provider under
+    <em>Project Settings → Authentication → SMTP Settings</em>. Resend and
+    SendGrid both have free tiers big enough for a whole launch. Apple and Google
+    sign-in don't send email at all, so they're unaffected.</div>
     <div class="note"><strong>Copy the key labelled "anon" / "public" only.</strong>
     The one below it, <code>service_role</code>, ignores every security rule in
     the database. The script in step 3 decodes what you paste and refuses that

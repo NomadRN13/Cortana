@@ -48,7 +48,7 @@ export default function SignInScreen({ navigation }) {
         routes: [res.hasProfile ? { name: 'Main' } : { name: 'Onboarding', params: { firstName: res.firstName } }],
       });
     } catch (e) {
-      if (!isCancelledSignIn(e)) setError(friendly(e));
+      if (!isCancelledSignIn(e)) setError(friendly(e, provider));
     } finally {
       setBusy(false);
     }
@@ -70,7 +70,7 @@ export default function SignInScreen({ navigation }) {
       setCooldown(RESEND_SECONDS);
       setTimeout(() => codeRef.current && codeRef.current.focus(), 250);
     } catch (e) {
-      setError(friendly(e));
+      setError(friendly(e, 'email'));
     } finally {
       setBusy(false);
     }
@@ -84,7 +84,7 @@ export default function SignInScreen({ navigation }) {
       await app.requestCode(email);
       setCooldown(RESEND_SECONDS);
     } catch (e) {
-      setError(friendly(e));
+      setError(friendly(e, 'email'));
     } finally {
       setBusy(false);
     }
@@ -101,7 +101,7 @@ export default function SignInScreen({ navigation }) {
       const { hasProfile } = await app.verifyCode(email, code);
       navigation.reset({ index: 0, routes: [{ name: hasProfile ? 'Main' : 'Onboarding' }] });
     } catch (e) {
-      setError(friendly(e));
+      setError(friendly(e, 'email'));
       setBusy(false);
     }
   };
@@ -233,16 +233,32 @@ export default function SignInScreen({ navigation }) {
   );
 }
 
-function friendly(e) {
+// `method` is which route the person just tried, because the advice depends on
+// it: telling someone whose email code failed to "use an email code instead" is
+// a dead end, and a backend that can't send mail is ours to fix, not theirs.
+function friendly(e, method) {
   const msg = (e && e.message) || '';
   const code = (e && e.code) || '';
+  const onEmail = method === 'email';
+  const ours = 'That’s on us, not you — email hello@40love.app and we’ll get you in.';
+  // Supabase's built-in mailer allows only a handful of codes an hour, so
+  // "wait a minute" would be wrong advice for the one people actually hit.
+  if (/email rate limit/i.test(msg)) {
+    return 'Too many codes have gone out in the last hour. Try again a little later, or sign in with Apple or Google.';
+  }
   if (/rate/i.test(msg)) return 'Too many attempts — wait a minute and try again.';
   if (/nonce/i.test(msg)) return 'Sign-in couldn’t be verified. Try again.';
   if (code === 'PLAY_SERVICES_NOT_AVAILABLE' || /play services/i.test(msg)) {
     return 'Google sign-in needs Google Play Services on this device — use an email code instead.';
   }
-  if (/provider is not enabled|not enabled/i.test(msg)) {
-    return 'That sign-in method isn’t switched on yet. Use an email code for now.';
+  if (/provider is not enabled|not enabled|signups not allowed/i.test(msg)) {
+    return onEmail
+      ? `Email sign-in isn’t switched on for 40/LOVE yet. ${ours}`
+      : 'That sign-in method isn’t switched on yet. Use an email code for now.';
+  }
+  // Supabase says this when there's no mail provider behind the code.
+  if (/sending (the )?(confirmation|magic link|recovery|invite)?\s*(e-?mail|otp)|smtp/i.test(msg)) {
+    return `We couldn’t send your code. ${ours}`;
   }
   if (/expired|invalid/i.test(msg)) return 'That code didn’t match. Check the newest email or resend.';
   if (/network|fetch/i.test(msg)) return 'No connection — check your internet and try again.';
