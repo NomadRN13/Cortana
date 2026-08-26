@@ -89,8 +89,16 @@ are covered by `supabase/tests/backend.sql`; app findings by the new
   silently undoes any column-level revoke a migration makes.
 - `tests/app/` — the app's first automated tests. They run the shipped
   `mobile/src/state.js` in Node with the native modules stubbed, so B-26 to
-  B-30 are regressions that fail in CI rather than on someone's phone.
-  `./scripts/test-app.sh`.
+  B-30, B-34, B-35 and B-37 are regressions that fail in CI rather than on
+  someone's phone. `./scripts/test-app.sh`.
+- `tests/web/` — the browser suites, moved into the repo from a scratch
+  directory that dies with the session: 50 checks over the demo prototype, the
+  moderation desk, the waitlist form, the meetup city picker and the demo
+  funnel's privacy. Two things changed in the move. Every suite now **fails the
+  process** when a step fails — all but one printed `FAIL` and exited 0, so a
+  broken page looked green. And the pages are served over http rather than
+  opened as files, so root-absolute asset paths resolve the way they do on
+  Netlify. `./scripts/test-web.sh`.
 
 ## Verified clean (checked, no bug found)
 

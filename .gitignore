@@ -1,3 +1,4 @@
 node_modules/
 tests/app/.build/
+tests/web/.artifacts/
 .DS_Store
