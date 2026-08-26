@@ -24,3 +24,5 @@ echo
 node safety.test.js
 echo
 node settings.test.js
+echo
+node boot.test.js

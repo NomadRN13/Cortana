@@ -57,6 +57,7 @@ const entry = `
 export { AppStateProvider, useApp } from ${JSON.stringify(path.join(src, 'state.js'))};
 export { impl, calls } from './api/backend.js';
 export { alerts } from 'react-native';
+export { reset as resetStorage } from '@react-native-async-storage/async-storage';
 `;
 
 const swap = {

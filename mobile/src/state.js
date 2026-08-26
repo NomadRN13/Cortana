@@ -99,6 +99,8 @@ function mapMsgRow(row, myId) {
   return { ...base, text: row.body };
 }
 
+const BOOT_TIMEOUT_MS = 12000;
+
 const NOTIF_ICONS = { match: 'heart', message: 'chatbubble', court_time: 'tennisball', event_reminder: 'calendar', system: 'notifications' };
 const ALL_MODES = ['date', 'play', 'friends'];
 const ALL_GAMES = ['singles', 'doubles', 'mixed_doubles'];
@@ -155,6 +157,10 @@ export function AppStateProvider({ children }) {
   // session exists, not just whether local storage had a profile.
   const [sessionChecked, setSessionChecked] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  // Set when we know the phone is signed in but couldn't fetch the profile.
+  // Without this the app waits for an answer that never comes, on black.
+  const [bootError, setBootError] = useState(false);
+  const [bootAttempt, setBootAttempt] = useState(0);
 
   const cacheRef = useRef({});        // userId → mapped profile (live)
   const matchIdsRef = useRef({});     // otherUserId → matchId (live; B-01)
@@ -214,14 +220,20 @@ export function AppStateProvider({ children }) {
   // to land back on the welcome screen as if it were a stranger. Rebuild
   // the profile from the server instead.
   useEffect(() => {
-    if (!live || user || !hydrated) return;
+    if (!live || user || !hydrated) return undefined;
     let alive = true;
-    bootstrapAfterSignIn()
+    setBootError(false);
+    // A request that hangs is the same problem as one that fails: the app is
+    // waiting on black either way, so give it a deadline.
+    const deadline = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), BOOT_TIMEOUT_MS));
+    Promise.race([bootstrapAfterSignIn(), deadline])
       .then((r) => { if (alive && !r.hasProfile) setNeedsOnboarding(true); })
-      .catch(() => {});
+      .catch(() => { if (alive) setBootError(true); });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [live, hydrated, user]);
+  }, [live, hydrated, user, bootAttempt]);
+
+  const retryBoot = () => { setBootError(false); setBootAttempt((n) => n + 1); };
 
   // ---------- live loaders ----------
 
@@ -650,6 +662,7 @@ export function AppStateProvider({ children }) {
   };
 
   const signOut = () => {
+    setBootError(false);
     if (isBackendConfigured) api.signOut().catch(() => {});
     // Also clear the native Google session, so the next sign-in offers the
     // account picker instead of silently reusing the last account.
@@ -1299,6 +1312,9 @@ export function AppStateProvider({ children }) {
     topPicks,
     cities: CITIES, cityLabel, updateCity, detectCity,
     devices, deviceKey, refreshDevices, signOutDevice, revokedHere,
+    // A profile that arrives after the deadline still counts: showing the
+    // error over a loaded profile would be its own kind of lie.
+    bootError: bootError && !user, retryBoot,
     mode, setMode,
     currentProfile, advance, rewind, deckError, peekNext, resetDeck,
     retryDeck: () => refreshDeck(mode),

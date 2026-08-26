@@ -15,6 +15,9 @@ regression in `state.js` fails here rather than on someone's phone.
   and meetups list nationwide until a city is picked.
 - `settings.test.js` — every setting that decides who can see you or who you
   see reverts and says so if the server refuses the write.
+- `boot.test.js` — opening the app signed in with no cached profile always
+  reaches a real screen, whether the profile fetch fails, hangs, or arrives
+  late.
 
 The backend stub is generated at build time from whatever `state.js` actually
 calls, so adding an `api.something()` doesn't break the build.
