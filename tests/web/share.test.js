@@ -45,6 +45,36 @@ const PAGES = ['index.html', 'demo/index.html'];
     });
   }
 
+  // Play rejects a submission whose account-deletion or privacy URL 404s, and
+  // these live in a markdown file nobody rebuilds. Check every site URL the
+  // launch docs hand a reviewer actually resolves to a page in the build.
+  const DOCS = ['outreach/launch/store-listing.md', 'docs/google-play.md', 'docs/launch-runbook.html'];
+  const SITE_ORIGIN = 'https://40-love.netlify.app';
+  const claimed = new Map();
+  for (const doc of DOCS) {
+    const text = fs.readFileSync(path.join(REPO, doc), 'utf8');
+    for (const m of text.matchAll(/https:\/\/40-?love[a-z0-9.-]*\.(?:netlify\.app|app)(\/[a-z0-9/-]*)?/gi)) {
+      if (!claimed.has(m[0])) claimed.set(m[0], doc);
+    }
+  }
+
+  await step('the launch docs name at least the two URLs Play asks for', async () => {
+    const urls = [...claimed.keys()].join(' ');
+    if (!urls.includes('/delete-account/')) throw new Error('no account-deletion URL is documented');
+    if (!urls.includes('/privacy/')) throw new Error('no privacy-policy URL is documented');
+  });
+
+  for (const [url, doc] of claimed) {
+    await step(`${url} (${path.basename(doc)}) is a page that exists`, async () => {
+      if (!url.startsWith(SITE_ORIGIN)) {
+        throw new Error('points at a domain we do not own — the build is served from ' + SITE_ORIGIN);
+      }
+      const rel = new URL(url).pathname.replace(/^\/+/, '');
+      const target = rel === '' ? 'index.html' : (rel.endsWith('/') || !path.extname(rel) ? path.join(rel, 'index.html') : rel);
+      if (!fs.existsSync(path.join(SITE, target))) throw new Error('no site/' + target);
+    });
+  }
+
   await step('the moderation desk stays out of search results', async () => {
     const robots = fs.readFileSync(path.join(SITE, 'robots.txt'), 'utf8');
     if (!/Disallow:\s*\/admin\//.test(robots)) throw new Error('admin is not disallowed');

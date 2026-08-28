@@ -244,7 +244,10 @@ Global answers:
 - **Users can request data deletion:** Yes — in-app, Settings → Delete
   account.
 - **Account deletion URL** (Play requires a web page, not just the in-app
-  button): `https://40love.app/delete-account/`
+  button): `https://40-love.netlify.app/delete-account/`
+  — the live site. `40love.app` is not registered; paste a URL that 404s and
+  the submission is rejected. Update this and the privacy URL below together
+  if the site ever moves to a custom domain.
   (source: `landing/delete-account.html`, deployed by `scripts/build-site.sh`).
   It documents both routes — the in-app button and an email request for people
   who have already uninstalled — and lists, table by table, exactly what is
@@ -262,7 +265,7 @@ Per data type (Collected / Shared / Purpose / Optional):
 | Personal info → Email address | Yes | No | Account management (one-time-code sign-in) | No — required to sign in |
 | Personal info → Phone number | Yes (verified once by SMS at signup; never shown to members) | No | Account management / fraud prevention (one-time check that a new member is a real person) | No — required at signup |
 | Personal info → User IDs | Yes (Supabase account UUID; plus the Apple `sub` / Google account id when social sign-in is used) | No | Account management | No |
-| Device or other IDs | Yes (push token; plus a random per-install tag and the device's own name, for the sign-out-a-device list) | No | Account management / fraud prevention | **Yes** — only if notifications are enabled; the device list itself is core to account security |
+| Device or other IDs | Yes (a random per-install tag and the device's own name, for the sign-out-a-device list; plus the push token when notifications are on) | No | Account management / fraud prevention; notifications | No — the device list is core to account security, so answer No overall even though the push token alone is optional |
 | Personal info → Name | Yes (first name only) | No | App functionality (shown on your profile) | No |
 | Personal info → Date of birth ("Other info") | Yes | No | App functionality (18+ enforcement; only your age is shown) | No |
 | Personal info → Sexual orientation | Yes (inferable from gender + dating preferences) | No | App functionality (Date-mode matching) | **Yes** — only needed for Date mode; Play/Friends modes work without it |
@@ -272,7 +275,6 @@ Per data type (Collected / Shared / Purpose / Optional):
 | Messages → Other in-app messages | Yes (chat with matches, court-time proposals) | No | App functionality; reported messages may be reviewed by a human moderator | No — required for chat |
 | App activity → App interactions | Yes (likes/passes, matches, event RSVPs) | No | App functionality (the matching engine) | No |
 | App info and performance | **No** (no crash/diagnostics SDK) | — | — | — |
-| Device or other IDs | Yes (push token, only if notifications are enabled) | No | App functionality (notifications) | **Yes** |
 | Contacts / Calendar / Files / Audio / Health / Financial / Web browsing | **No** | — | — | — |
 
 ---
@@ -331,8 +333,7 @@ review notes fields. Same substance for both.
 > the product), birthdate, sports/skill, photos, and an approximate location
 > rounded to ~1 km on the device — exact coordinates never reach our
 > servers. No ads, no tracking SDKs, no data sale. Privacy policy:
-> [FILL IN — https://<domain>/privacy once deployed] · Support:
-> hello@40love.app
+> https://40-love.netlify.app/privacy/ · Support: hello@40love.app
 
 ---
 

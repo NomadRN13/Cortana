@@ -536,10 +536,12 @@ a device or a card:
   `scripts/lib/ball.js` as everything else, so it can't drift from the mark.
   Wired into the landing page, the demo and the account-deletion page, each with
   its own title and description; the demo's says plainly that it's a demo.
-- **Absolute URLs when you have a domain.** Scrapers disagree about relative
-  `og:image`, so `build-site.sh` stamps them absolute when `SITE_URL` is set:
-  `SITE_URL=https://40love.app bash scripts/build-site.sh`. Relative by default,
-  which is right for a `*.netlify.app` preview.
+- **Absolute URLs, always.** Facebook, LinkedIn and iMessage don't resolve a
+  relative `og:image`, so `build-site.sh` stamps them absolute on every build —
+  defaulting to `https://40-love.netlify.app`, where the site lives. Override
+  it after a domain move: `SITE_URL=https://40love.app bash scripts/build-site.sh`.
+  (It used to be opt-in, and `go-live.sh` rebuilds without setting it, so a
+  launch build would have shipped previews that render as a grey box — B-40.)
 - **`robots.txt`** now ships, keeping `/admin/` out of search results. The desk
   is safe to deploy — the database authorises every action — but there is no
   reason for a crawler to index it.
