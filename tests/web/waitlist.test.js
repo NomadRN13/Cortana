@@ -11,6 +11,10 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     const page = await browser.newPage();
     page.on('request', (r) => { if (r.url().includes('supabase')) throw new Error('demo mode made a network call'); });
     await page.goto(URL);
+    // Say what we mean rather than relying on the repo being un-wired: after
+    // go-live.sh these files carry real keys, and this step would break the
+    // day the project went live.
+    await page.evaluate(() => { window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' }; });
     await page.fill('#hero-email', 'demo@example.com');
     await page.click('#hero-form button');
     await page.waitForSelector('#hero-success', { state: 'visible', timeout: 2000 });
@@ -89,9 +93,16 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
   // stranger is looking at a real domain.
   await step('deployed + unconfigured: refuses to fake a signup', async () => {
     const page = await browser.newPage();
-    // Served over http from a real-looking host, with no window.FORTYLOVE.
+    // Served over http from a real-looking host with the keys blanked. The
+    // state under test is "deployed AND unconfigured", so build it rather than
+    // inherit it from the repo — after go-live.sh this file carries real keys
+    // and the step would quietly start testing something else.
+    const unconfigured = require('fs')
+      .readFileSync(require('path').join(REPO, 'landing/index.html'), 'utf8')
+      .replace(/window\.FORTYLOVE = \{[^}]*\};/,
+        "window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };");
     await page.route('https://40love.app/', (route) =>
-      route.fulfill({ status: 200, contentType: 'text/html', body: require('fs').readFileSync('/home/user/Cortana/landing/index.html', 'utf8') }));
+      route.fulfill({ status: 200, contentType: 'text/html', body: unconfigured }));
     await page.goto('https://40love.app/');
     await page.fill('#hero-email', 'stranger@example.com');
     await page.click('#hero-form button');

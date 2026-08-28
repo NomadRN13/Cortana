@@ -28,6 +28,14 @@ root-absolute paths like `/favicon.png` resolve the way they do in production.
 A step that fails now fails the process. Every one of these used to print
 `FAIL` and exit 0, so a broken page looked green from the shell.
 
+Two things keep them honest. Every page is **sealed off from the network** —
+anything that isn't localhost is aborted, so a suite tests the page rather than
+the internet. And pages are served with the Supabase config **blanked**, because
+after `go-live.sh` these files carry real keys: without that, the suites that
+test demo behaviour would leave demo mode mid-run and either fail or hang
+against the founder's live project. Verified both ways — all 60 checks pass
+whether the repo is wired or not.
+
 First run installs `playwright-core` here. Chromium comes from the session
 image; set `PW_CHROMIUM` to a binary if yours is elsewhere. Screenshots and
 image fixtures are written to `.artifacts/`, which is ignored.

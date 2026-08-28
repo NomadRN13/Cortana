@@ -153,6 +153,11 @@ Done wiring. What's left, in order:
 
   1. Turn on email sign-in     Authentication → Sign In / Up → Email
                                (check the Magic Link template contains {{ .Token }})
+                               Before a tester night, also add your own SMTP
+                               under Project Settings → Authentication. The
+                               built-in sender allows only a few codes an hour
+                               for the whole project — fine for you alone, not
+                               for twelve people signing up at a mixer.
   2. Make yourself an admin    sign in once at /admin, then run the one-line
                                SQL from docs/backend-setup.md
   3. Text verification         add Twilio under Authentication → Phone,

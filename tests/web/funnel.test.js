@@ -56,11 +56,18 @@ async function walk(page) {
   });
   await p.close();
 
-  // unconfigured — must be completely silent
+  // Unconfigured — must be completely silent. The page reads its config once at
+  // load, so this has to be served with the keys blanked rather than cleared
+  // afterwards; serving it also means the check still means something after
+  // go-live.sh has written real keys into the file.
+  const blank = fs.readFileSync(require('path').join(REPO, 'app/index.html'), 'utf8')
+    .replace(/window\.FORTYLOVE = \{[^}]*\};/,
+      "window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };");
   p = await b.newPage({ viewport: { width: 390, height: 844 } });
   let calls = 0;
   p.on('request', (r) => { if (/supabase|record_demo_step/.test(r.url())) calls += 1; });
-  await p.goto(URL);
+  await p.route('https://demo.local/', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: blank }));
+  await p.goto('https://demo.local/');
   await p.waitForTimeout(400);
   await walk(p);
   await step('an unconfigured demo sends nothing at all', async () => {

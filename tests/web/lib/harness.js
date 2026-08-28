@@ -38,7 +38,21 @@ async function serve() {
     if (!file.startsWith(REPO) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
       res.writeHead(404); res.end('not found'); return;
     }
-    res.writeHead(200, { 'content-type': MIME[path.extname(file)] || 'application/octet-stream' });
+    const type = MIME[path.extname(file)] || 'application/octet-stream';
+    if (type === 'text/html') {
+      // These suites test the pages as a visitor with no backend sees them.
+      // After go-live.sh the files carry real keys, and the pages would leave
+      // demo mode mid-suite — so blank the config on the way out rather than
+      // depending on the repo never having been wired.
+      const html = fs.readFileSync(file, 'utf8').replace(
+        /window\.FORTYLOVE\s*=\s*\{[^}]*\};/,
+        "window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };"
+      );
+      res.writeHead(200, { 'content-type': type });
+      res.end(html);
+      return;
+    }
+    res.writeHead(200, { 'content-type': type });
     fs.createReadStream(file).pipe(res);
   });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
@@ -46,11 +60,28 @@ async function serve() {
   return { url: (rel) => `${origin}/${rel.replace(/^\/+/, '')}`, close: () => server.close() };
 }
 
+// Every page is sealed off from the internet. Two reasons: a suite that can
+// reach the network isn't testing the page, it's testing the network — and
+// once go-live.sh writes real keys into these files, an un-sealed suite starts
+// calling the founder's actual project and hangs. Suites register their own
+// routes after this one, and Playwright matches the most recent first, so
+// deliberate fulfils still win.
+const LOCAL = /^(https?:\/\/(127\.0\.0\.1|localhost)([:/]|$)|file:|data:|blob:|about:)/;
+
 async function launch() {
-  return chromium.launch({
+  const browser = await chromium.launch({
     executablePath: EXECUTABLE,
     args: ['--no-sandbox', '--disable-gpu'],
   });
+  const newPage = browser.newPage.bind(browser);
+  browser.newPage = async (opts) => {
+    const page = await newPage(opts);
+    await page.route('**/*', (route) => (LOCAL.test(route.request().url())
+      ? route.continue()
+      : route.abort('blockedbyclient')));
+    return page;
+  };
+  return browser;
 }
 
 // One counter per process; `finish` is what makes the shell believe the result.
