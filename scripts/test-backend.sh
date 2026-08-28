@@ -15,6 +15,10 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# setup.sql is what actually creates the launch database — check it matches the
+# migrations before spending 30 seconds proving the migrations are correct.
+./scripts/build-setup-sql.sh --check
+
 PORT="${PGTEST_PORT:-5433}"
 WORK="$(mktemp -d)"
 DATA="$WORK/data"

@@ -1,5 +1,5 @@
 -- 40/LOVE — complete backend in one paste
--- Generated from supabase/migrations/ (regenerate: cat supabase/migrations/*.sql > supabase/setup.sql + this header)
+-- Generated from supabase/migrations/ by scripts/build-setup-sql.sh — don't edit by hand.
 -- Use: Supabase Dashboard → SQL Editor → New query → paste ALL of this → Run.
 -- Safe to run once on a fresh project. Do NOT also run 'supabase db push' afterwards — pick one path.
 -- (Development seed data is separate and optional: supabase/seed.sql — never on the launch project.)
