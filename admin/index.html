@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>40/LOVE — Admin</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+  :root {
+    --night: #0A0B0D;
+    --panel: #101215;
+    --card: #17191D;
+    --card2: #1F2227;
+    --optic: #D6F44F;
+    --text: #F4F6F0;
+    --dim: rgba(244, 246, 240, 0.62);
+    --line: rgba(244, 246, 240, 0.13);
+    --ok: #3DC96B;
+    --danger: #E15A72;
+    --ink: #0A0B0D;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--night);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 20px 18px 60px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0 18px; }
+  .mark { font-weight: 900; font-size: 20px; letter-spacing: 0.2px; }
+  .mark .o { color: var(--optic); }
+  .mark .ball { display: inline-block; width: 0.80em; height: 0.80em; vertical-align: -0.04em; margin: 0 0.015em; }
+  .mark .ball svg { width: 100%; height: 100%; display: block; }
+  .mark .sub { display: block; font-size: 11px; font-weight: 700; color: var(--dim); letter-spacing: 2.2px; text-transform: uppercase; margin-top: 2px; }
+  .who { font-size: 12.5px; color: var(--dim); text-align: right; }
+  .who button { background: none; border: 0; color: var(--optic); font-weight: 800; font-size: 12.5px; cursor: pointer; padding: 4px 0 0; }
+
+  .banner {
+    border: 2px solid var(--optic); background: rgba(214, 244, 79, 0.07);
+    color: var(--text); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;
+  }
+  .banner b { color: var(--optic); }
+
+  .card { background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 18px; }
+  .card + .card { margin-top: 12px; }
+  h1 { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+  .hint { font-size: 13px; color: var(--dim); line-height: 1.55; }
+  label { display: block; font-size: 13px; font-weight: 700; color: var(--dim); margin: 14px 0 6px; }
+  input, select {
+    width: 100%; border: 2px solid var(--line); background: var(--card2); color: var(--text);
+    border-radius: 12px; padding: 12px 14px; font-size: 15px; font-family: inherit;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--optic); }
+  .btn {
+    display: inline-block; border: 0; border-radius: 999px; padding: 13px 22px;
+    font-weight: 900; font-size: 14.5px; cursor: pointer; font-family: inherit;
+  }
+  .btn-primary { background: var(--optic); color: var(--ink); }
+  .btn-primary:disabled { opacity: 0.5; cursor: default; }
+  .btn-ghost { background: transparent; color: var(--text); border: 2px solid var(--line); }
+  .btn-ok { background: transparent; color: var(--ok); border: 2px solid var(--ok); }
+  .btn-danger { background: transparent; color: var(--danger); border: 2px solid var(--danger); }
+  .btn-sm { padding: 9px 16px; font-size: 13px; }
+  .row-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .msg { font-size: 13.5px; margin-top: 10px; min-height: 18px; }
+  .msg.err { color: var(--danger); }
+  .msg.ok { color: var(--ok); }
+
+  .tabs { display: flex; gap: 8px; margin: 4px 0 14px; flex-wrap: wrap; }
+  .tabs button {
+    background: var(--card); border: 2px solid var(--line); color: var(--dim);
+    border-radius: 999px; padding: 10px 18px; font-weight: 800; font-size: 13.5px; cursor: pointer; font-family: inherit;
+  }
+  .tabs button.on { border-color: var(--optic); color: var(--optic); background: rgba(214, 244, 79, 0.07); }
+  .tabs button .n { display: inline-block; min-width: 18px; margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--optic); color: var(--ink); font-size: 11.5px; }
+  .tabs button .n:empty { display: none; }
+
+  .item { display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--line); }
+  .item:first-child { border-top: 0; padding-top: 4px; }
+  .item .photo {
+    width: 84px; height: 84px; border-radius: 12px; background: var(--card2); flex: 0 0 auto;
+    background-size: cover; background-position: center; border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; color: var(--dim); font-size: 11px; overflow: hidden;
+  }
+  .item .body { flex: 1; min-width: 0; }
+  .item .name { font-weight: 800; font-size: 15px; }
+  .item .meta { font-size: 12.5px; color: var(--dim); margin-top: 2px; line-height: 1.5; overflow-wrap: anywhere; }
+  .item .reason { font-size: 14px; margin-top: 6px; line-height: 1.5; overflow-wrap: anywhere; }
+  .empty { padding: 26px 0 14px; text-align: center; color: var(--dim); font-size: 14px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--dim); margin-left: 8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+  footer { margin-top: 26px; text-align: center; font-size: 12px; color: var(--dim); line-height: 1.6; }
+  code { background: var(--card2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 12px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<!--mark:defs-->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<radialGradient id="pb-body" cx="33%" cy="27%" r="80%">
+  <stop offset="0%" stop-color="#F6FFB0"/><stop offset="20%" stop-color="#E7FB74"/>
+  <stop offset="46%" stop-color="#D2F048"/><stop offset="72%" stop-color="#A9CE2F"/>
+  <stop offset="90%" stop-color="#74911E"/><stop offset="100%" stop-color="#516A14"/>
+</radialGradient>
+<radialGradient id="pb-term" cx="70%" cy="74%" r="48%">
+  <stop offset="0%" stop-color="#2E3C0C" stop-opacity=".3"/>
+  <stop offset="70%" stop-color="#2E3C0C" stop-opacity=".1"/>
+  <stop offset="100%" stop-color="#2E3C0C" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="pb-bounce" cx="78%" cy="82%" r="30%">
+  <stop offset="0%" stop-color="#CFE85E" stop-opacity="0"/>
+  <stop offset="78%" stop-color="#CFE85E" stop-opacity=".16"/>
+  <stop offset="100%" stop-color="#DDF17E" stop-opacity=".34"/>
+</radialGradient>
+<radialGradient id="pb-sheen" cx="50%" cy="50%" r="50%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".4"/>
+  <stop offset="55%" stop-color="#FFFFFF" stop-opacity=".12"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="pb-hot" cx="50%" cy="50%" r="50%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".92"/>
+  <stop offset="45%" stop-color="#FFFFFF" stop-opacity=".4"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+</radialGradient>
+<linearGradient id="pb-rim" x1="18%" y1="8%" x2="84%" y2="96%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".45"/>
+  <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity=".12"/>
+</linearGradient>
+<linearGradient id="pb-hole-0" x1="22%" y1="12%" x2="82%" y2="94%"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-0" x1="22%" y1="12%" x2="82%" y2="94%"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-60" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-60 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-60" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-60 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-120" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-120 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-120" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-120 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-180" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-180 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-180" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-180 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-240" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-240 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-240" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-240 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-300" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-300 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-300" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-300 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-30" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-30 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-30" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-30 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-90" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-90 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-90" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-90 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-150" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-150 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-150" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-150 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-210" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-210 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-210" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-210 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-270" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-270 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-270" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-270 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-330" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-330 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-330" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-330 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient>
+<symbol id="pb-mark" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="url(#pb-body)"/><circle cx="12" cy="12" r="11" fill="url(#pb-term)"/><circle cx="12" cy="12" r="11" fill="url(#pb-bounce)"/><ellipse cx="8.4" cy="7.6" rx="5.6" ry="4.3" fill="url(#pb-sheen)" transform="rotate(-30 8.4 7.6)"/><ellipse cx="7.5" cy="6.6" rx="2.2" ry="1.5" fill="url(#pb-hot)" transform="rotate(-30 7.5 6.6)"/><circle cx="12" cy="12" r="10.7" fill="none" stroke="url(#pb-rim)" stroke-width=".7"/><ellipse cx="12" cy="12" rx="1.750" ry="1.750" fill="url(#pb-hole-0)"/><ellipse cx="12" cy="12" rx="1.750" ry="1.750" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/><ellipse cx="18.2" cy="12" rx="1.446" ry="1.750" transform="rotate(0.00 18.2 12)" fill="url(#pb-hole-0)"/><ellipse cx="18.2" cy="12" rx="1.446" ry="1.750" transform="rotate(0.00 18.2 12)" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/><ellipse cx="15.1" cy="17.369" rx="1.446" ry="1.750" transform="rotate(60.00 15.1 17.369)" fill="url(#pb-hole-60)"/><ellipse cx="15.1" cy="17.369" rx="1.446" ry="1.750" transform="rotate(60.00 15.1 17.369)" fill="none" stroke="url(#pb-lip-60)" stroke-width=".26"/><ellipse cx="8.9" cy="17.369" rx="1.446" ry="1.750" transform="rotate(120.00 8.9 17.369)" fill="url(#pb-hole-120)"/><ellipse cx="8.9" cy="17.369" rx="1.446" ry="1.750" transform="rotate(120.00 8.9 17.369)" fill="none" stroke="url(#pb-lip-120)" stroke-width=".26"/><ellipse cx="5.8" cy="12" rx="1.446" ry="1.750" transform="rotate(180.00 5.8 12)" fill="url(#pb-hole-180)"/><ellipse cx="5.8" cy="12" rx="1.446" ry="1.750" transform="rotate(180.00 5.8 12)" fill="none" stroke="url(#pb-lip-180)" stroke-width=".26"/><ellipse cx="8.9" cy="6.631" rx="1.446" ry="1.750" transform="rotate(240.00 8.9 6.631)" fill="url(#pb-hole-240)"/><ellipse cx="8.9" cy="6.631" rx="1.446" ry="1.750" transform="rotate(240.00 8.9 6.631)" fill="none" stroke="url(#pb-lip-240)" stroke-width=".26"/><ellipse cx="15.1" cy="6.631" rx="1.446" ry="1.750" transform="rotate(300.00 15.1 6.631)" fill="url(#pb-hole-300)"/><ellipse cx="15.1" cy="6.631" rx="1.446" ry="1.750" transform="rotate(300.00 15.1 6.631)" fill="none" stroke="url(#pb-lip-300)" stroke-width=".26"/><ellipse cx="20.011" cy="16.625" rx="0.947" ry="1.750" transform="rotate(30.00 20.011 16.625)" fill="url(#pb-hole-30)"/><ellipse cx="20.011" cy="16.625" rx="0.947" ry="1.750" transform="rotate(30.00 20.011 16.625)" fill="none" stroke="url(#pb-lip-30)" stroke-width=".26"/><ellipse cx="16.625" cy="20.011" rx="0.947" ry="1.750" transform="rotate(60.00 16.625 20.011)" fill="url(#pb-hole-60)"/><ellipse cx="16.625" cy="20.011" rx="0.947" ry="1.750" transform="rotate(60.00 16.625 20.011)" fill="none" stroke="url(#pb-lip-60)" stroke-width=".26"/><ellipse cx="12" cy="21.25" rx="0.947" ry="1.750" transform="rotate(90.00 12 21.25)" fill="url(#pb-hole-90)"/><ellipse cx="12" cy="21.25" rx="0.947" ry="1.750" transform="rotate(90.00 12 21.25)" fill="none" stroke="url(#pb-lip-90)" stroke-width=".26"/><ellipse cx="7.375" cy="20.011" rx="0.947" ry="1.750" transform="rotate(120.00 7.375 20.011)" fill="url(#pb-hole-120)"/><ellipse cx="7.375" cy="20.011" rx="0.947" ry="1.750" transform="rotate(120.00 7.375 20.011)" fill="none" stroke="url(#pb-lip-120)" stroke-width=".26"/><ellipse cx="3.989" cy="16.625" rx="0.947" ry="1.750" transform="rotate(150.00 3.989 16.625)" fill="url(#pb-hole-150)"/><ellipse cx="3.989" cy="16.625" rx="0.947" ry="1.750" transform="rotate(150.00 3.989 16.625)" fill="none" stroke="url(#pb-lip-150)" stroke-width=".26"/><ellipse cx="2.75" cy="12" rx="0.947" ry="1.750" transform="rotate(180.00 2.75 12)" fill="url(#pb-hole-180)"/><ellipse cx="2.75" cy="12" rx="0.947" ry="1.750" transform="rotate(180.00 2.75 12)" fill="none" stroke="url(#pb-lip-180)" stroke-width=".26"/><ellipse cx="3.989" cy="7.375" rx="0.947" ry="1.750" transform="rotate(210.00 3.989 7.375)" fill="url(#pb-hole-210)"/><ellipse cx="3.989" cy="7.375" rx="0.947" ry="1.750" transform="rotate(210.00 3.989 7.375)" fill="none" stroke="url(#pb-lip-210)" stroke-width=".26"/><ellipse cx="7.375" cy="3.989" rx="0.947" ry="1.750" transform="rotate(240.00 7.375 3.989)" fill="url(#pb-hole-240)"/><ellipse cx="7.375" cy="3.989" rx="0.947" ry="1.750" transform="rotate(240.00 7.375 3.989)" fill="none" stroke="url(#pb-lip-240)" stroke-width=".26"/><ellipse cx="12" cy="2.75" rx="0.947" ry="1.750" transform="rotate(270.00 12 2.75)" fill="url(#pb-hole-270)"/><ellipse cx="12" cy="2.75" rx="0.947" ry="1.750" transform="rotate(270.00 12 2.75)" fill="none" stroke="url(#pb-lip-270)" stroke-width=".26"/><ellipse cx="16.625" cy="3.989" rx="0.947" ry="1.750" transform="rotate(300.00 16.625 3.989)" fill="url(#pb-hole-300)"/><ellipse cx="16.625" cy="3.989" rx="0.947" ry="1.750" transform="rotate(300.00 16.625 3.989)" fill="none" stroke="url(#pb-lip-300)" stroke-width=".26"/><ellipse cx="20.011" cy="7.375" rx="0.947" ry="1.750" transform="rotate(330.00 20.011 7.375)" fill="url(#pb-hole-330)"/><ellipse cx="20.011" cy="7.375" rx="0.947" ry="1.750" transform="rotate(330.00 20.011 7.375)" fill="none" stroke="url(#pb-lip-330)" stroke-width=".26"/><ellipse cx="21.25" cy="12" rx="0.947" ry="1.750" transform="rotate(0.00 21.25 12)" fill="url(#pb-hole-0)"/><ellipse cx="21.25" cy="12" rx="0.947" ry="1.750" transform="rotate(0.00 21.25 12)" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/></symbol>
+</defs></svg>
+<!--/mark:defs-->
+<div class="wrap">
+  <header>
+    <div class="mark">40<span class="o">/</span>L<span class="ball"><!--mark:ball--><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg><!--/mark:ball--></span>VE<span class="sub">Admin · Moderation Desk</span></div>
+    <div class="who" id="who" hidden>
+      <span id="who-email"></span>
+      <button id="sign-out" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <div class="banner" id="demo-banner" hidden>
+    <b>Demo mode.</b> This backend isn't connected yet, so you're looking at sample data —
+    approve and dismiss away, nothing is saved. To go live, paste your Supabase URL and anon
+    public key into the config at the top of this file (same two values as the landing page).
+  </div>
+
+  <!-- SIGN IN -->
+  <div class="card" id="view-signin">
+    <h1>Sign in</h1>
+    <p class="hint">Admins only. You'll get a 6-digit code by email — same passwordless sign-in as the app.</p>
+    <div id="si-step1">
+      <label for="si-email">Email</label>
+      <input type="email" id="si-email" autocomplete="email" placeholder="you@example.com">
+      <div class="row-btns"><button class="btn btn-primary" id="si-send" type="button">Email me a code</button></div>
+    </div>
+    <div id="si-step2" hidden>
+      <label for="si-code">6-digit code</label>
+      <input type="text" id="si-code" inputmode="numeric" maxlength="6" placeholder="123456">
+      <div class="row-btns">
+        <button class="btn btn-primary" id="si-verify" type="button">Verify</button>
+        <button class="btn btn-ghost" id="si-back" type="button">Change email</button>
+      </div>
+    </div>
+    <p class="msg" id="si-msg"></p>
+  </div>
+
+  <!-- NOT AN ADMIN -->
+  <div class="card" id="view-noadmin" hidden>
+    <h1>This account isn't an admin</h1>
+    <p class="hint" style="margin-top:8px">
+      You're signed in, but this account isn't on the admin list. Membership can only be granted
+      in the Supabase dashboard (that's a security feature): open <b>SQL Editor</b> and run —
+    </p>
+    <p style="margin:12px 0"><code>insert into admins (user_id) select id from auth.users where email = 'your@email.com';</code></p>
+    <p class="hint">
+      Signed in with Apple and hiding your email? Then there's no address to match on — use your
+      user ID instead. It's shown below; copy it into:
+      <code>insert into admins (user_id) values ('&lt;that id&gt;');</code>
+    </p>
+    <p class="hint" style="margin-top:8px">Your user ID: <code id="my-uid">—</code></p>
+    <p class="hint">Then reload this page. Full walkthrough: <code>docs/backend-setup.md</code>.</p>
+  </div>
+
+  <!-- DESK -->
+  <div id="view-desk" hidden>
+    <div class="tabs">
+      <button id="tab-photos" class="on" type="button">Photos <span class="n" id="n-photos"></span></button>
+      <button id="tab-reports" type="button">Reports <span class="n" id="n-reports"></span></button>
+      <button id="tab-events" type="button">Events</button>
+      <button id="tab-numbers" type="button">Numbers</button>
+    </div>
+
+    <div class="card" id="pane-photos">
+      <h1>Photo approvals</h1>
+      <p class="hint">New photos are hidden from members until you approve them. Reject anything that isn't clearly the person (or breaks the guidelines) — rejected photos never become visible.</p>
+      <div id="photo-list"></div>
+    </div>
+
+    <div class="card" id="pane-reports" hidden>
+      <h1>Open reports</h1>
+      <p class="hint">Target: reviewed within 24 hours. <b>Dismiss</b> closes a report that needs no action. <b>Mark actioned</b> records that you did something — warnings, suspensions, and bans still happen in the Supabase dashboard at alpha volume.</p>
+      <div id="report-list"></div>
+    </div>
+
+    <div class="card" id="pane-events" hidden>
+      <h1>Create an event</h1>
+      <div class="grid2">
+        <div><label for="ev-title">Title</label><input id="ev-title" maxlength="80" placeholder="40/LOVE Social Mixer"></div>
+        <div><label for="ev-venue">Venue</label><input id="ev-venue" maxlength="80" placeholder="Broad Ripple Courts"></div>
+        <div><label for="ev-date">Date</label><input id="ev-date" type="date"></div>
+        <div><label for="ev-time">Start time</label><input id="ev-time" type="time" value="18:00"></div>
+        <div>
+          <label for="ev-sport">Sport</label>
+          <select id="ev-sport">
+            <option value="pickleball">Pickleball</option>
+            <option value="tennis">Tennis</option>
+            <option value="padel">Padel</option>
+            <option value="racquetball">Racquetball</option>
+            <option value="squash">Squash</option>
+          </select>
+        </div>
+        <div><label for="ev-capacity">Capacity</label><input id="ev-capacity" type="number" min="2" max="500" value="24"></div>
+        <div>
+          <label for="ev-city">City</label>
+          <select id="ev-city">
+            <option value="indianapolis">Indianapolis, IN</option>
+            <option value="los-angeles">Los Angeles, CA</option>
+            <option value="san-diego">San Diego, CA</option>
+            <option value="phoenix">Phoenix, AZ</option>
+            <option value="seattle">Seattle, WA</option>
+            <option value="spokane">Spokane, WA</option>
+            <option value="dallas">Dallas, TX</option>
+            <option value="houston">Houston, TX</option>
+            <option value="orlando">Orlando, FL</option>
+            <option value="miami">Miami, FL</option>
+            <option value="washington-dc">Washington, DC</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1"><label for="ev-level">Level range</label><input id="ev-level" maxlength="40" value="All levels"></div>
+      </div>
+      <div class="row-btns"><button class="btn btn-primary" id="ev-create" type="button">Create event</button></div>
+      <p class="msg" id="ev-msg"></p>
+      <h1 style="margin-top:22px; font-size:17px">Upcoming</h1>
+      <div id="event-list"></div>
+    </div>
+    <div class="card" id="pane-numbers" hidden>
+      <h1>Numbers</h1>
+      <p class="hint">Everything the site knows about how it's doing. The waitlist is
+      real people who asked to hear from you; the funnel is anonymous — it counts visits
+      to the demo, never who they were.</p>
+
+      <h1 style="margin-top:22px; font-size:17px">Waitlist</h1>
+      <div id="wl-summary" class="hint">loading…</div>
+      <div id="wl-cities"></div>
+      <p class="hint" style="margin-top:10px">Newest first, most recent 50:</p>
+      <div id="wl-list"></div>
+
+      <h1 style="margin-top:26px; font-size:17px">Demo funnel <span class="hint" style="font-weight:400">· last 30 days</span></h1>
+      <p class="hint">How far people get in the clickable prototype. Each row is a share
+      of the people who landed, so the biggest drop is where the flow is losing them.</p>
+      <div id="funnel"></div>
+    </div>
+
+  </div>
+
+  <footer>
+    40/LOVE moderation desk ·
+    This page is safe to deploy publicly: every action is checked against the admin list by the
+    database itself, not by this page.
+  </footer>
+</div>
+
+<script>
+  /* To go live, paste the SAME two values as the landing page (Supabase
+     Dashboard → Settings → API). The anon key is designed to be public;
+     admin powers come from your signed-in account being on the admins list,
+     never from this page. NEVER put the service_role key here. */
+  window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
+</script>
+<script>
+(function () {
+  'use strict';
+
+  var cfg = window.FORTYLOVE || {};
+  var LIVE = !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
+  var BASE = LIVE ? cfg.SUPABASE_URL.replace(/\/+$/, '') : '';
+  var TOKEN_KEY = '40love.admin.session';
+
+  function $(s) { return document.querySelector(s); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function ago(iso) {
+    var mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    if (mins < 60) return mins + 'm ago';
+    if (mins < 1440) return Math.round(mins / 60) + 'h ago';
+    return Math.round(mins / 1440) + 'd ago';
+  }
+
+  /* ---------- session ---------- */
+  var session = null;
+  try { session = JSON.parse(sessionStorage.getItem(TOKEN_KEY)); } catch (e) { session = null; }
+  if (session && session.expires_at && session.expires_at * 1000 < Date.now()) session = null;
+
+  function saveSession(s) {
+    session = s;
+    try {
+      if (s) sessionStorage.setItem(TOKEN_KEY, JSON.stringify(s));
+      else sessionStorage.removeItem(TOKEN_KEY);
+    } catch (e) { /* private mode: session lives in memory */ }
+  }
+
+  function authHeaders() {
+    return {
+      'apikey': cfg.SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + (session ? session.access_token : cfg.SUPABASE_ANON_KEY),
+      'Content-Type': 'application/json'
+    };
+  }
+
+  function rest(method, path, body, extraHeaders) {
+    var h = authHeaders();
+    if (extraHeaders) for (var k in extraHeaders) h[k] = extraHeaders[k];
+    return fetch(BASE + path, {
+      method: method,
+      headers: h,
+      body: body === undefined ? undefined : JSON.stringify(body)
+    }).then(function (res) {
+      if (res.status === 401) { saveSession(null); show('signin'); throw new Error('Session expired — sign in again.'); }
+      if (!res.ok) return res.text().then(function (t) { throw new Error('HTTP ' + res.status + (t ? ': ' + t.slice(0, 200) : '')); });
+      return res.status === 204 ? null : res.text().then(function (t) { return t ? JSON.parse(t) : null; });
+    });
+  }
+
+  /* ---------- demo data ---------- */
+  var demo = {
+    waitlist: [
+      { email: 'ellen@example.com', city: 'indianapolis', created_at: new Date(Date.now() - 2 * 3600000).toISOString() },
+      { email: 'marcus@example.com', city: 'seattle', created_at: new Date(Date.now() - 26 * 3600000).toISOString() },
+      { email: 'priya@example.com', city: 'indianapolis', created_at: new Date(Date.now() - 3 * 86400000).toISOString() }
+    ],
+    funnel: { landed: 42, start_signup: 24, phone_verified: 18, sports_picked: 17, skill_picked: 16, finished_signup: 14, swiped: 11, matched: 4, opened_chat: 3 },
+    photos: [
+      { id: 'd1', user: 'Maya', created_at: new Date(Date.now() - 42 * 60000).toISOString(), grad: 'linear-gradient(135deg,#2E5A45,#D6F44F)' },
+      { id: 'd2', user: 'Diego', created_at: new Date(Date.now() - 3 * 3600000).toISOString(), grad: 'linear-gradient(135deg,#24424f,#7fd0e8)' },
+      { id: 'd3', user: 'Priya', created_at: new Date(Date.now() - 26 * 3600000).toISOString(), grad: 'linear-gradient(135deg,#4f2438,#e87fb0)' }
+    ],
+    reports: [
+      { id: 'r1', reporter: 'Sam', target: 'Alex', reason: 'Profile photo is a stock image, not a real person.', context: 'deck', created_at: new Date(Date.now() - 2 * 3600000).toISOString() },
+      { id: 'r2', reporter: 'Elena', target: 'Jordan', reason: 'Kept pushing to move the chat off the app after I said no.', context: 'chat', created_at: new Date(Date.now() - 20 * 3600000).toISOString() }
+    ],
+    events: [
+      { id: 'e1', title: '40/LOVE Social Mixer', venue: 'Broad Ripple Courts', starts_at: new Date(Date.now() + 6 * 86400000).toISOString(), sport: 'pickleball', level_range: 'All levels', capacity: 24, city: 'indianapolis' }
+    ]
+  };
+
+  /* ---------- views ---------- */
+  function show(view) {
+    $('#view-signin').hidden = view !== 'signin';
+    $('#view-noadmin').hidden = view !== 'noadmin';
+    $('#view-desk').hidden = view !== 'desk';
+    $('#who').hidden = !(session || !LIVE) || view === 'signin';
+    $('#who-email').textContent = LIVE ? (session ? session.email : '') : 'demo admin';
+  }
+
+  var PANES = ['photos', 'reports', 'events', 'numbers'];
+  PANES.forEach(function (p) {
+    $('#tab-' + p).addEventListener('click', function () {
+      PANES.forEach(function (q) {
+        $('#tab-' + q).classList.toggle('on', q === p);
+        $('#pane-' + q).hidden = q !== p;
+      });
+      if (p === 'numbers') loadNumbers();
+    });
+  });
+
+/* ---------- numbers ---------- */
+  var FUNNEL_STEPS = [
+    ['landed', 'Opened the demo'],
+    ['start_signup', 'Tapped Create profile'],
+    ['phone_verified', 'Verified a phone'],
+    ['sports_picked', 'Picked their sports'],
+    ['skill_picked', 'Picked a skill level'],
+    ['finished_signup', 'Finished signing up'],
+    ['swiped', 'Swiped on someone'],
+    ['matched', 'Got a match'],
+    ['opened_chat', 'Opened a chat']
+  ];
+
+  function renderWaitlist(rows) {
+    var total = rows.length;
+    $('#wl-summary').textContent = total
+      ? total + (total === 1 ? ' person has' : ' people have') + ' joined.'
+      : 'Nobody has joined yet.';
+    var byCity = {};
+    rows.forEach(function (r) { var c = r.city || '—'; byCity[c] = (byCity[c] || 0) + 1; });
+    var cities = Object.keys(byCity).sort(function (a, b) { return byCity[b] - byCity[a]; });
+    $('#wl-cities').innerHTML = cities.length
+      ? '<div class="chips">' + cities.map(function (c) {
+          return '<span class="pill">' + esc(c) + ' · ' + byCity[c] + '</span>';
+        }).join(' ') + '</div>'
+      : '';
+    $('#wl-list').innerHTML = rows.slice(0, 50).map(function (r) {
+      return '<div class="item"><div class="body"><div class="name">' + esc(r.email) + '</div>' +
+        '<div class="meta">' + esc(r.city || 'no city') + ' · ' + ago(r.created_at) + '</div></div></div>';
+    }).join('') || '<p class="hint">Nothing yet.</p>';
+  }
+
+  function renderFunnel(counts) {
+    var top = counts.landed || 0;
+    $('#funnel').innerHTML = FUNNEL_STEPS.map(function (pair) {
+      var n = counts[pair[0]] || 0;
+      var pct = top ? Math.round((n / top) * 100) : 0;
+      return '<div class="item"><div class="body">' +
+        '<div class="name">' + esc(pair[1]) + '<span class="pill">' + n + '</span></div>' +
+        '<div class="meta" style="margin-top:6px">' +
+          '<span style="display:inline-block;height:6px;border-radius:3px;background:var(--optic);width:' + pct + '%;min-width:2px;vertical-align:middle"></span>' +
+          ' <span style="margin-left:8px">' + pct + '%</span>' +
+        '</div></div></div>';
+    }).join('');
+    if (!top) $('#funnel').innerHTML = '<p class="hint">No demo visits recorded yet.</p>';
+  }
+
+  function loadNumbers() {
+    if (!LIVE) {
+      renderWaitlist(demo.waitlist);
+      renderFunnel(demo.funnel);
+      return;
+    }
+    rest('GET', '/rest/v1/waitlist?select=email,city,created_at&order=created_at.desc&limit=500')
+      .then(renderWaitlist)
+      .catch(function (e) { $('#wl-summary').textContent = 'Could not load the waitlist — ' + e.message; });
+    rest('POST', '/rest/v1/rpc/demo_funnel', { p_days: 30 })
+      .then(function (c) { renderFunnel(c || {}); })
+      .catch(function (e) { $('#funnel').innerHTML = '<p class="hint">Could not load the funnel — ' + esc(e.message) + '</p>'; });
+  }
+
+  /* ---------- photos ---------- */
+  function renderPhotos(items) {
+    $('#n-photos').textContent = items.length || '';
+    $('#photo-list').innerHTML = items.length ? items.map(function (ph) {
+      return '<div class="item" data-id="' + esc(ph.id) + '">' +
+        '<div class="photo" data-path="' + esc(ph.path || '') + '"' + (ph.grad ? ' style="background:' + ph.grad + '"' : '') + '>' + (ph.grad ? '' : 'loading…') + '</div>' +
+        '<div class="body">' +
+          '<div class="name">' + esc(ph.user) + '<span class="pill">pending</span></div>' +
+          '<div class="meta">uploaded ' + ago(ph.created_at) + '</div>' +
+          '<div class="row-btns">' +
+            '<button class="btn btn-ok btn-sm" data-act="approve">Approve</button>' +
+            '<button class="btn btn-danger btn-sm" data-act="reject">Reject</button>' +
+          '</div>' +
+        '</div></div>';
+    }).join('') : '<div class="empty">No photos waiting — the queue is clear. 🎾</div>';
+    if (LIVE) {
+      Array.prototype.forEach.call(document.querySelectorAll('#photo-list .photo[data-path]'), function (el) {
+        var path = el.getAttribute('data-path');
+        if (!path) return;
+        fetch(BASE + '/storage/v1/object/authenticated/photos/' + path, { headers: authHeaders() })
+          .then(function (r) { return r.ok ? r.blob() : null; })
+          .then(function (b) { if (b) { el.style.backgroundImage = 'url(' + URL.createObjectURL(b) + ')'; el.textContent = ''; } else { el.textContent = 'no file'; } })
+          .catch(function () { el.textContent = 'no file'; });
+      });
+    }
+  }
+
+  function loadPhotos() {
+    if (!LIVE) { renderPhotos(demo.photos); return; }
+    rest('GET', '/rest/v1/profile_photos?select=id,user_id,storage_path,position,created_at,profiles(first_name)&moderation_status=eq.pending&order=created_at.asc')
+      .then(function (rows) {
+        renderPhotos(rows.map(function (r) {
+          return { id: r.id, user: (r.profiles && r.profiles.first_name) || 'Member', path: r.storage_path, created_at: r.created_at };
+        }));
+      })
+      .catch(function (e) { $('#photo-list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  }
+
+  $('#photo-list').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[data-act]');
+    if (!btn) return;
+    var row = btn.closest('.item');
+    var id = row.getAttribute('data-id');
+    var status = btn.getAttribute('data-act') === 'approve' ? 'approved' : 'rejected';
+    if (!LIVE) {
+      demo.photos = demo.photos.filter(function (p) { return p.id !== id; });
+      renderPhotos(demo.photos);
+      return;
+    }
+    rest('PATCH', '/rest/v1/profile_photos?id=eq.' + encodeURIComponent(id), { moderation_status: status }, { 'Prefer': 'return=minimal' })
+      .then(loadPhotos)
+      .catch(function (e) { alert('Could not update: ' + e.message); });
+  });
+
+  /* ---------- reports ---------- */
+  function renderReports(items) {
+    $('#n-reports').textContent = items.length || '';
+    $('#report-list').innerHTML = items.length ? items.map(function (r) {
+      return '<div class="item" data-id="' + esc(r.id) + '">' +
+        '<div class="body">' +
+          '<div class="name">' + esc(r.reporter) + ' reported ' + esc(r.target) +
+            '<span class="pill">' + esc(r.context) + '</span></div>' +
+          '<div class="meta">' + ago(r.created_at) + '</div>' +
+          '<div class="reason">&ldquo;' + esc(r.reason) + '&rdquo;</div>' +
+          '<div class="row-btns">' +
+            '<button class="btn btn-ghost btn-sm" data-act="reviewed">Dismiss</button>' +
+            '<button class="btn btn-danger btn-sm" data-act="actioned">Mark actioned</button>' +
+          '</div>' +
+        '</div></div>';
+    }).join('') : '<div class="empty">No open reports. A quiet court is a good court.</div>';
+  }
+
+  function loadReports() {
+    if (!LIVE) { renderReports(demo.reports); return; }
+    rest('GET', '/rest/v1/reports?select=id,reason,context,created_at,reporter:profiles!reports_reporter_id_fkey(first_name),target:profiles!reports_target_id_fkey(first_name)&status=eq.open&order=created_at.asc')
+      .then(function (rows) {
+        renderReports(rows.map(function (r) {
+          return { id: r.id, reason: r.reason, context: r.context, created_at: r.created_at,
+                   reporter: (r.reporter && r.reporter.first_name) || 'Member',
+                   target: (r.target && r.target.first_name) || 'Member' };
+        }));
+      })
+      .catch(function (e) { $('#report-list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  }
+
+  $('#report-list').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[data-act]');
+    if (!btn) return;
+    var id = btn.closest('.item').getAttribute('data-id');
+    var status = btn.getAttribute('data-act');
+    if (!LIVE) {
+      demo.reports = demo.reports.filter(function (r) { return r.id !== id; });
+      renderReports(demo.reports);
+      return;
+    }
+    rest('PATCH', '/rest/v1/reports?id=eq.' + encodeURIComponent(id), { status: status }, { 'Prefer': 'return=minimal' })
+      .then(loadReports)
+      .catch(function (e) { alert('Could not update: ' + e.message); });
+  });
+
+  /* ---------- events ---------- */
+  function renderEvents(items) {
+    $('#event-list').innerHTML = items.length ? items.map(function (e) {
+      var d = new Date(e.starts_at);
+      var when = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) +
+        ' · ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      return '<div class="item" data-id="' + esc(e.id) + '">' +
+        '<div class="body">' +
+          '<div class="name">' + esc(e.title) + '<span class="pill">' + esc(e.sport) + '</span></div>' +
+          '<div class="meta">' + esc(e.venue) + ' · ' + esc(when) + ' · ' + esc(e.level_range) + ' · cap ' + esc(e.capacity) +
+            (e.city ? ' · ' + esc(e.city) : '') + '</div>' +
+          '<div class="row-btns"><button class="btn btn-danger btn-sm" data-act="delete">Delete</button></div>' +
+        '</div></div>';
+    }).join('') : '<div class="empty">No upcoming events yet — create the first one above.</div>';
+  }
+
+  function loadEvents() {
+    if (!LIVE) { renderEvents(demo.events); return; }
+    rest('GET', '/rest/v1/events?select=*&starts_at=gte.' + encodeURIComponent(new Date().toISOString()) + '&order=starts_at.asc')
+      .then(renderEvents)
+      .catch(function (e) { $('#event-list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  }
+
+  $('#ev-create').addEventListener('click', function () {
+    var msg = $('#ev-msg');
+    msg.className = 'msg';
+    var title = $('#ev-title').value.trim();
+    var venue = $('#ev-venue').value.trim();
+    var date = $('#ev-date').value;
+    var time = $('#ev-time').value || '18:00';
+    var capacity = parseInt($('#ev-capacity').value, 10);
+    if (!title || !venue || !date) { msg.textContent = 'Title, venue, and date are required.'; msg.className = 'msg err'; return; }
+    if (!capacity || capacity < 2 || capacity > 500) { msg.textContent = 'Capacity must be between 2 and 500.'; msg.className = 'msg err'; return; }
+    var starts = new Date(date + 'T' + time);
+    if (!(starts.getTime() > Date.now())) { msg.textContent = 'Pick a future date and time.'; msg.className = 'msg err'; return; }
+    var body = {
+      title: title, venue: venue, starts_at: starts.toISOString(),
+      sport: $('#ev-sport').value, level_range: $('#ev-level').value.trim() || 'All levels',
+      capacity: capacity, city: $('#ev-city').value
+    };
+    if (!LIVE) {
+      demo.events.push({ id: 'e' + Date.now(), title: body.title, venue: body.venue, starts_at: body.starts_at, sport: body.sport, level_range: body.level_range, capacity: body.capacity, city: body.city });
+      demo.events.sort(function (a, b) { return a.starts_at < b.starts_at ? -1 : 1; });
+      renderEvents(demo.events);
+      msg.textContent = 'Event created (demo).'; msg.className = 'msg ok';
+      $('#ev-title').value = ''; $('#ev-date').value = '';
+      return;
+    }
+    rest('POST', '/rest/v1/events', body, { 'Prefer': 'return=minimal' })
+      .then(function () {
+        msg.textContent = 'Event created — it’s live in the app.'; msg.className = 'msg ok';
+        $('#ev-title').value = ''; $('#ev-date').value = '';
+        loadEvents();
+      })
+      .catch(function (e) { msg.textContent = 'Could not create: ' + e.message; msg.className = 'msg err'; });
+  });
+
+  $('#event-list').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[data-act="delete"]');
+    if (!btn) return;
+    var id = btn.closest('.item').getAttribute('data-id');
+    if (!confirm('Delete this event? Members who RSVPed will simply no longer see it.')) return;
+    if (!LIVE) {
+      demo.events = demo.events.filter(function (e) { return e.id !== id; });
+      renderEvents(demo.events);
+      return;
+    }
+    rest('DELETE', '/rest/v1/events?id=eq.' + encodeURIComponent(id), undefined, { 'Prefer': 'return=minimal' })
+      .then(loadEvents)
+      .catch(function (e) { alert('Could not delete: ' + e.message); });
+  });
+
+  /* ---------- auth ---------- */
+  $('#si-send').addEventListener('click', function () {
+    var email = $('#si-email').value.trim().toLowerCase();
+    var msg = $('#si-msg');
+    msg.className = 'msg';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.textContent = 'Enter a valid email.'; msg.className = 'msg err'; return; }
+    fetch(BASE + '/auth/v1/otp', {
+      method: 'POST',
+      headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    }).then(function (res) {
+      if (!res.ok) return res.text().then(function (t) { throw new Error(t.slice(0, 200)); });
+      $('#si-step1').hidden = true;
+      $('#si-step2').hidden = false;
+      $('#si-step2').setAttribute('data-email', email);
+      msg.textContent = 'Code sent to ' + email + ' — check your inbox.';
+      msg.className = 'msg ok';
+    }).catch(function (e) { msg.textContent = 'Could not send the code: ' + e.message; msg.className = 'msg err'; });
+  });
+
+  $('#si-back').addEventListener('click', function () {
+    $('#si-step1').hidden = false;
+    $('#si-step2').hidden = true;
+    $('#si-msg').textContent = '';
+  });
+
+  $('#si-verify').addEventListener('click', function () {
+    var email = $('#si-step2').getAttribute('data-email');
+    var code = $('#si-code').value.trim();
+    var msg = $('#si-msg');
+    msg.className = 'msg';
+    if (!/^\d{6}$/.test(code)) { msg.textContent = 'Enter the 6-digit code.'; msg.className = 'msg err'; return; }
+    fetch(BASE + '/auth/v1/verify', {
+      method: 'POST',
+      headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'email', email: email, token: code })
+    }).then(function (res) { return res.json().then(function (j) { return res.ok ? j : Promise.reject(new Error((j.msg || j.error_description || 'verification failed').slice(0, 200))); }); })
+      .then(function (j) {
+        saveSession({ access_token: j.access_token, expires_at: j.expires_at, email: email });
+        return enter();
+      })
+      .catch(function (e) { msg.textContent = 'Could not verify: ' + e.message; msg.className = 'msg err'; });
+  });
+
+  $('#sign-out').addEventListener('click', function () {
+    saveSession(null);
+    if (LIVE) { show('signin'); $('#si-back').click(); }
+  });
+
+  /* ---------- entry ---------- */
+  function showMyUid() {
+    // So an admin whose email is hidden (Apple relay) can still bootstrap.
+    fetch(BASE + '/auth/v1/user', { headers: authHeaders() })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j && j.id) $('#my-uid').textContent = j.id; })
+      .catch(function () { /* leave the dash */ });
+  }
+
+  function enter() {
+    return rest('POST', '/rest/v1/rpc/is_admin', {})
+      .then(function (isAdmin) {
+        if (isAdmin === true) {
+          show('desk');
+          loadPhotos(); loadReports(); loadEvents();
+        } else {
+          show('noadmin');
+          showMyUid();
+        }
+      })
+      .catch(function () { show('noadmin'); showMyUid(); });
+  }
+
+  if (!LIVE) {
+    $('#demo-banner').hidden = false;
+    show('desk');
+    renderPhotos(demo.photos);
+    renderReports(demo.reports);
+    renderEvents(demo.events);
+    loadNumbers();
+  } else if (session) {
+    enter();
+  } else {
+    show('signin');
+  }
+})();
+</script>
+</body>
+</html>
