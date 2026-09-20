@@ -12,8 +12,12 @@ root-absolute paths like `/favicon.png` resolve the way they do in production.
 - `prototype.test.js` — 26 steps through the demo people are actually being
   sent to: onboarding, the deck, blocking, matching, chat, events, photos,
   sign-out.
-- `admin.test.js` — the moderation desk: photo queue, approve/reject, reports,
-  events, empty states. If this breaks, every tester's photo stays invisible.
+- `admin.test.js` — the moderation desk in demo mode: photo queue,
+  approve/reject, reports, events, empty states. If this breaks, every tester's
+  photo stays invisible.
+- `admin-live.test.js` — the desk signed in against a project, which is the
+  path the founder actually uses. Chiefly that the three ways in stay distinct:
+  not an admin, signed out, and couldn't reach the database.
 - `waitlist.test.js` — the signup form, including the two that matter: a repeat
   address gives nothing away, and a deployed-but-unconfigured page refuses to
   fake a signup instead of thanking someone into their own browser.

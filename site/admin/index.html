@@ -186,6 +186,20 @@
     <p class="hint">Then reload this page. Full walkthrough: <code>docs/backend-setup.md</code>.</p>
   </div>
 
+  <div class="card" id="view-trouble" hidden>
+    <h1>Couldn't load the desk</h1>
+    <p class="hint" style="margin-top:8px">
+      Your account is fine — we couldn't reach the database to check it. This is
+      usually a connection blip, or a project that hasn't had
+      <code>supabase/setup.sql</code> applied yet.
+    </p>
+    <p class="hint" style="margin-top:8px">Details: <code id="trouble-why">—</code></p>
+    <p style="margin-top:14px">
+      <button id="trouble-retry" class="btn btn-primary" type="button">Try again</button>
+      <button id="trouble-signout" class="btn btn-ghost" type="button">Sign out</button>
+    </p>
+  </div>
+
   <!-- DESK -->
   <div id="view-desk" hidden>
     <div class="tabs">
@@ -333,7 +347,12 @@
       headers: h,
       body: body === undefined ? undefined : JSON.stringify(body)
     }).then(function (res) {
-      if (res.status === 401) { saveSession(null); show('signin'); throw new Error('Session expired — sign in again.'); }
+      if (res.status === 401) {
+        saveSession(null); show('signin');
+        var e401 = new Error('Session expired — sign in again.');
+        e401.authFailed = true;   // so enter() doesn't relabel this "not an admin"
+        throw e401;
+      }
       if (!res.ok) return res.text().then(function (t) { throw new Error('HTTP ' + res.status + (t ? ': ' + t.slice(0, 200) : '')); });
       return res.status === 204 ? null : res.text().then(function (t) { return t ? JSON.parse(t) : null; });
     });
@@ -365,6 +384,7 @@
   function show(view) {
     $('#view-signin').hidden = view !== 'signin';
     $('#view-noadmin').hidden = view !== 'noadmin';
+    $('#view-trouble').hidden = view !== 'trouble';
     $('#view-desk').hidden = view !== 'desk';
     $('#who').hidden = !(session || !LIVE) || view === 'signin';
     $('#who-email').textContent = LIVE ? (session ? session.email : '') : 'demo admin';
@@ -672,6 +692,11 @@
       .catch(function () { /* leave the dash */ });
   }
 
+  // Three different things used to look identical here: not an admin, signed
+  // out, and couldn't reach the database. Telling the founder "this account
+  // isn't an admin" because their wifi dropped sends them hunting for a
+  // permissions problem that doesn't exist — and on an expired session it
+  // stranded them on a page with no way back to sign-in.
   function enter() {
     return rest('POST', '/rest/v1/rpc/is_admin', {})
       .then(function (isAdmin) {
@@ -683,8 +708,22 @@
           showMyUid();
         }
       })
-      .catch(function () { show('noadmin'); showMyUid(); });
+      .catch(function (e) {
+        if (e && e.authFailed) return;   // rest() already sent them to sign-in
+        $('#trouble-why').textContent = (e && e.message) || 'no answer from the database';
+        show('trouble');
+      });
   }
+
+  $('#trouble-retry').addEventListener('click', function () {
+    $('#trouble-why').textContent = 'checking…';
+    enter();
+  });
+  $('#trouble-signout').addEventListener('click', function () {
+    saveSession(null);
+    show('signin');
+    $('#si-back').click();
+  });
 
   if (!LIVE) {
     $('#demo-banner').hidden = false;
