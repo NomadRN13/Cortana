@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>40/LOVE — The dating app for racquet sports people</title>
+<meta name="description" content="40/LOVE connects active singles through tennis, pickleball and more — the first date is a game instead of dinner. Now opening in 11 US cities. Join the waitlist.">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta property="og:title" content="40/LOVE — The dating app for racquet sports people">
+<meta property="og:description" content="Meet active singles through tennis, pickleball, padel, racquetball and squash. The first date is a game, not dinner. Now opening in 11 US cities.">
+<meta property="og:image" content="https://40-love.netlify.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="40/LOVE">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="40/LOVE — The dating app for racquet sports people">
+<meta name="twitter:description" content="Meet active singles through tennis, pickleball, padel, racquetball and squash. The first date is a game, not dinner. Now opening in 11 US cities.">
+<meta name="twitter:image" content="https://40-love.netlify.app/og.png">
+<style>
+  :root {
+    /* Night Court — matches the app (brand guide §8) */
+    --court: #0A0B0D;
+    --court-deep: #121418;
+    --ink: #0A0B0D;
+    --chalk: #F4F6F0;
+    --optic: #D6F44F;
+    --rose: #E15A72;
+    --blue: #3E7C9B;
+    --rose-deep: #C23B55;
+    --chalk-dim: rgba(244, 246, 240, 0.62);
+    --chalk-line: rgba(244, 246, 240, 0.14);
+    --serif: Georgia, 'Times New Roman', serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--court);
+    color: var(--chalk);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3 { margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+  p { margin: 0; }
+  section { scroll-margin-top: 84px; }
+
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--optic);
+  }
+
+  .mark { font-weight: 900; letter-spacing: -0.03em; white-space: nowrap; }
+  .mark .slash { color: var(--optic); font-weight: 800; }
+  .mark .love { font-weight: 900; color: var(--chalk); }
+  .ballo { display: inline-block; width: 0.80em; height: 0.80em; vertical-align: -0.04em; margin: 0 0.015em; }
+  .ballo svg { width: 100%; height: 100%; display: block; }
+
+  button, .btn { font: inherit; cursor: pointer; }
+  a { color: var(--optic); }
+  button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--optic);
+    outline-offset: 3px;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(10, 11, 13, 0.92);
+    border-bottom: 2px solid var(--chalk-line);
+    backdrop-filter: blur(6px);
+  }
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+  .nav .mark { font-size: 22px; }
+  .nav-cta {
+    display: inline-block;
+    background: var(--optic);
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 14px;
+    padding: 10px 18px;
+    border-radius: 999px;
+  }
+  .nav-cta:hover { background: #DCEE55; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    padding: 72px 0 64px;
+    background:
+      linear-gradient(var(--chalk-line), var(--chalk-line)) 0 100% / 100% 2px no-repeat,
+      var(--court);
+  }
+  /* court corner ticks */
+  .hero::before, .hero::after {
+    content: "";
+    position: absolute;
+    width: 34px; height: 34px;
+    border: 3px solid var(--chalk-line);
+  }
+  .hero::before { top: 26px; left: 26px; border-right: 0; border-bottom: 0; }
+  .hero::after { bottom: 26px; right: 26px; border-left: 0; border-top: 0; }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    gap: 48px;
+    align-items: center;
+  }
+  .hero h1 {
+    font-size: clamp(42px, 6.5vw, 72px);
+    font-weight: 900;
+    line-height: 1.02;
+    margin: 18px 0 10px;
+  }
+  .hero h1 .serve {
+    display: block;
+    font-weight: 800;
+    font-size: 0.42em;
+    letter-spacing: 0.01em;
+    color: var(--optic);
+    margin-top: 14px;
+  }
+  .hero-sub {
+    font-size: 18px;
+    color: var(--chalk-dim);
+    max-width: 46ch;
+    margin: 18px 0 30px;
+  }
+
+  .waitlist { display: flex; gap: 10px; flex-wrap: wrap; max-width: 480px; }
+  .waitlist input {
+    flex: 1 1 220px;
+    padding: 15px 18px;
+    font: inherit;
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--chalk);
+    border: 0;
+    border-radius: 12px;
+  }
+  /* Matches the email field beside it — same light treatment, plus a chevron
+     since appearance:none removes the native one. Uses this page's tokens
+     (--chalk / --ink), not the app's. */
+  .waitlist select {
+    flex: 1 1 200px;
+    min-width: 0;
+    padding: 15px 40px 15px 18px;
+    font: inherit;
+    font-size: 16px;
+    color: var(--ink);
+    background-color: var(--chalk);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230A0B0D' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    border: 0;
+    border-radius: 12px;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .waitlist select:focus { outline: 3px solid var(--optic); outline-offset: 2px; }
+  .waitlist button {
+    flex: 0 0 auto;
+    padding: 15px 24px;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--optic);
+    border: 0;
+    border-radius: 12px;
+  }
+  .waitlist button:hover { background: #DCEE55; }
+  .form-note { font-size: 13px; color: var(--chalk-dim); margin-top: 12px; }
+  .demo-cta { margin-top: 8px; font-size: 14px; }
+  .demo-cta a { color: var(--optic); font-weight: 800; text-decoration: none; border-bottom: 2px solid rgba(214, 244, 79, 0.35); padding-bottom: 1px; }
+  .demo-cta a:hover { border-bottom-color: var(--optic); }
+  .form-error { font-size: 14px; color: var(--rose); font-weight: 600; margin-top: 10px; min-height: 1.2em; }
+  .form-success {
+    display: none;
+    padding: 18px 20px;
+    border: 2px solid var(--optic);
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    max-width: 480px;
+  }
+
+  /* Mini phone mockup */
+  .mini-phone {
+    justify-self: center;
+    width: 250px;
+    background: #17191D;
+    border-radius: 26px;
+    border: 8px solid #1B1D21;
+    box-shadow: 0 0 0 2px rgba(214, 244, 79, 0.12), 0 24px 50px rgba(0, 0, 0, 0.55);
+    overflow: hidden;
+    color: var(--chalk);
+    transform: rotate(3deg);
+  }
+  .mp-photo {
+    height: 190px;
+    background: linear-gradient(135deg, #B7E04A, #3D6E2C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(10, 11, 13, 0.55);
+    font-size: 44px;
+    font-weight: 900;
+  }
+  .mp-body { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .mp-name { font-weight: 800; font-size: 17px; letter-spacing: -0.01em; }
+  .mp-name small { font-weight: 600; color: var(--chalk-dim); }
+  .mp-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .mp-tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border: 2px solid var(--chalk-line);
+    color: var(--chalk-dim);
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
+  .mp-tag.is-sport { border-color: var(--optic); color: var(--optic); }
+  .mp-acts { display: flex; justify-content: center; gap: 14px; padding-top: 6px; }
+  .mp-act {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: 2px solid var(--chalk-line);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    background: #1F2227;
+  }
+  .mp-act.like { border-color: var(--optic); background: var(--optic); }
+
+  /* ---------- Scoreboard strip ---------- */
+  .scorestrip {
+    border-bottom: 2px solid var(--chalk-line);
+    background: var(--court-deep);
+    overflow-x: auto;
+  }
+  .scorestrip-in {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 16px 24px;
+    min-width: max-content;
+    margin: 0 auto;
+  }
+  .score-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 2px solid var(--chalk-line);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .score-chip.is-date { border-color: var(--optic); color: var(--optic); }
+  .score-chip.is-play { border-color: var(--optic); color: var(--optic); }
+  .score-chip.is-friends { border-color: var(--optic); color: var(--optic); }
+
+  /* ---------- Sections ---------- */
+  .section { padding: 76px 0; border-bottom: 2px solid var(--chalk-line); }
+  .section-head { max-width: 56ch; margin-bottom: 40px; }
+  .section-head h2 {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 900;
+    margin-top: 12px;
+  }
+  .section-head p { color: var(--chalk-dim); margin-top: 12px; font-size: 16.5px; }
+
+  /* How it works — service box grid */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 2px solid var(--chalk-line);
+  }
+  .step { padding: 28px 24px 32px; }
+  .step + .step { border-left: 2px solid var(--chalk-line); }
+  .step-num {
+    font-size: 40px;
+    font-weight: 900;
+    color: var(--optic);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .step h3 { font-size: 19px; margin: 14px 0 8px; }
+  .step p { font-size: 15px; color: var(--chalk-dim); }
+
+  /* Modes */
+  .modes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .mode-card {
+    border: 2px solid var(--chalk-line);
+    border-top-width: 6px;
+    border-radius: 16px;
+    padding: 26px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mode-card.is-date, .mode-card.is-play, .mode-card.is-friends { border-top-color: var(--optic); }
+  .mode-card .emoji { font-size: 30px; }
+  .mode-card h3 { font-size: 21px; }
+  .mode-card p { font-size: 15px; color: var(--chalk-dim); }
+  .modes-note {
+    margin-top: 22px;
+    font-size: 15px;
+    color: var(--chalk-dim);
+  }
+
+  /* Why a game beats dinner */
+  .args { display: flex; flex-direction: column; }
+  .arg {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 20px;
+    padding: 26px 0;
+    align-items: start;
+  }
+  .arg + .arg { border-top: 2px solid var(--chalk-line); }
+  .arg-score {
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    font-variant-numeric: tabular-nums;
+    color: var(--optic);
+    padding-top: 3px;
+  }
+  .arg h3 { font-size: 20px; margin-bottom: 6px; }
+  .arg p { color: var(--chalk-dim); font-size: 15.5px; max-width: 62ch; }
+
+  /* Founding members */
+  .perks { display: flex; flex-direction: column; gap: 0; border: 2px solid var(--chalk-line); }
+  .perk {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    font-size: 16.5px;
+    font-weight: 600;
+  }
+  .perk + .perk { border-top: 2px solid var(--chalk-line); }
+  .perk .tick { color: var(--optic); font-weight: 900; font-size: 18px; }
+
+  /* Cities */
+  .cities { display: flex; flex-wrap: wrap; gap: 10px; }
+  .city {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 18px;
+    border: 2px solid var(--chalk-line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--chalk);
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .city:hover { border-color: var(--optic); }
+  .city .count {
+    font-size: 12.5px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--optic);
+    min-width: 2ch;
+    text-align: center;
+  }
+  .city-launch {
+    border-color: var(--optic);
+    color: var(--optic);
+    cursor: default;
+  }
+  .city-launch .badge {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .cities-note { margin-top: 16px; font-size: 13.5px; color: var(--chalk-dim); }
+
+  /* FAQ */
+  .faq { display: flex; flex-direction: column; border: 2px solid var(--chalk-line); }
+  .faq details + details { border-top: 2px solid var(--chalk-line); }
+  .faq summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    font-size: 17px;
+    font-weight: 800;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; font-size: 22px; font-weight: 700; color: var(--optic); flex: 0 0 auto; }
+  .faq details[open] summary::after { content: "–"; }
+  .faq .faq-a { padding: 0 24px 22px; color: var(--chalk-dim); font-size: 15.5px; max-width: 70ch; }
+
+  /* Closing CTA */
+  .closing { padding: 84px 0; text-align: center; }
+  .closing h2 { font-size: clamp(30px, 4.6vw, 46px); font-weight: 900; }
+  .closing .serve { font-weight: 800; color: var(--optic); }
+  .closing .waitlist { margin: 30px auto 0; justify-content: center; }
+  .closing .form-success { margin: 30px auto 0; }
+
+  /* Footer */
+  footer { border-top: 2px solid var(--chalk-line); background: var(--court-deep); }
+  .foot {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 34px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    font-size: 14px;
+    color: var(--chalk-dim);
+  }
+  .foot .mark { font-size: 19px; }
+  .foot-links { display: flex; gap: 20px; flex-wrap: wrap; }
+  .foot a { color: var(--chalk-dim); text-decoration: none; }
+  .foot a:hover { color: var(--optic); }
+
+  /* Reveal animation */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+  }
+
+  @media (max-width: 860px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+    .mini-phone { display: none; }
+    .steps { grid-template-columns: 1fr; }
+    .step + .step { border-left: 0; border-top: 2px solid var(--chalk-line); }
+    .modes { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<!--mark:defs-->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<radialGradient id="pb-body" cx="33%" cy="27%" r="80%">
+  <stop offset="0%" stop-color="#F6FFB0"/><stop offset="20%" stop-color="#E7FB74"/>
+  <stop offset="46%" stop-color="#D2F048"/><stop offset="72%" stop-color="#A9CE2F"/>
+  <stop offset="90%" stop-color="#74911E"/><stop offset="100%" stop-color="#516A14"/>
+</radialGradient>
+<radialGradient id="pb-term" cx="70%" cy="74%" r="48%">
+  <stop offset="0%" stop-color="#2E3C0C" stop-opacity=".3"/>
+  <stop offset="70%" stop-color="#2E3C0C" stop-opacity=".1"/>
+  <stop offset="100%" stop-color="#2E3C0C" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="pb-bounce" cx="78%" cy="82%" r="30%">
+  <stop offset="0%" stop-color="#CFE85E" stop-opacity="0"/>
+  <stop offset="78%" stop-color="#CFE85E" stop-opacity=".16"/>
+  <stop offset="100%" stop-color="#DDF17E" stop-opacity=".34"/>
+</radialGradient>
+<radialGradient id="pb-sheen" cx="50%" cy="50%" r="50%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".4"/>
+  <stop offset="55%" stop-color="#FFFFFF" stop-opacity=".12"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="pb-hot" cx="50%" cy="50%" r="50%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".92"/>
+  <stop offset="45%" stop-color="#FFFFFF" stop-opacity=".4"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+</radialGradient>
+<linearGradient id="pb-rim" x1="18%" y1="8%" x2="84%" y2="96%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".45"/>
+  <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity=".12"/>
+</linearGradient>
+<linearGradient id="pb-hole-0" x1="22%" y1="12%" x2="82%" y2="94%"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-0" x1="22%" y1="12%" x2="82%" y2="94%"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-60" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-60 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-60" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-60 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-120" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-120 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-120" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-120 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-180" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-180 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-180" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-180 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-240" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-240 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-240" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-240 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-300" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-300 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-300" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-300 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-30" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-30 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-30" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-30 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-90" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-90 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-90" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-90 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-150" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-150 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-150" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-150 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-210" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-210 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-210" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-210 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-270" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-270 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-270" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-270 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-330" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-330 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-330" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-330 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient>
+<symbol id="pb-mark" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="url(#pb-body)"/><circle cx="12" cy="12" r="11" fill="url(#pb-term)"/><circle cx="12" cy="12" r="11" fill="url(#pb-bounce)"/><ellipse cx="8.4" cy="7.6" rx="5.6" ry="4.3" fill="url(#pb-sheen)" transform="rotate(-30 8.4 7.6)"/><ellipse cx="7.5" cy="6.6" rx="2.2" ry="1.5" fill="url(#pb-hot)" transform="rotate(-30 7.5 6.6)"/><circle cx="12" cy="12" r="10.7" fill="none" stroke="url(#pb-rim)" stroke-width=".7"/><ellipse cx="12" cy="12" rx="1.750" ry="1.750" fill="url(#pb-hole-0)"/><ellipse cx="12" cy="12" rx="1.750" ry="1.750" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/><ellipse cx="18.2" cy="12" rx="1.446" ry="1.750" transform="rotate(0.00 18.2 12)" fill="url(#pb-hole-0)"/><ellipse cx="18.2" cy="12" rx="1.446" ry="1.750" transform="rotate(0.00 18.2 12)" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/><ellipse cx="15.1" cy="17.369" rx="1.446" ry="1.750" transform="rotate(60.00 15.1 17.369)" fill="url(#pb-hole-60)"/><ellipse cx="15.1" cy="17.369" rx="1.446" ry="1.750" transform="rotate(60.00 15.1 17.369)" fill="none" stroke="url(#pb-lip-60)" stroke-width=".26"/><ellipse cx="8.9" cy="17.369" rx="1.446" ry="1.750" transform="rotate(120.00 8.9 17.369)" fill="url(#pb-hole-120)"/><ellipse cx="8.9" cy="17.369" rx="1.446" ry="1.750" transform="rotate(120.00 8.9 17.369)" fill="none" stroke="url(#pb-lip-120)" stroke-width=".26"/><ellipse cx="5.8" cy="12" rx="1.446" ry="1.750" transform="rotate(180.00 5.8 12)" fill="url(#pb-hole-180)"/><ellipse cx="5.8" cy="12" rx="1.446" ry="1.750" transform="rotate(180.00 5.8 12)" fill="none" stroke="url(#pb-lip-180)" stroke-width=".26"/><ellipse cx="8.9" cy="6.631" rx="1.446" ry="1.750" transform="rotate(240.00 8.9 6.631)" fill="url(#pb-hole-240)"/><ellipse cx="8.9" cy="6.631" rx="1.446" ry="1.750" transform="rotate(240.00 8.9 6.631)" fill="none" stroke="url(#pb-lip-240)" stroke-width=".26"/><ellipse cx="15.1" cy="6.631" rx="1.446" ry="1.750" transform="rotate(300.00 15.1 6.631)" fill="url(#pb-hole-300)"/><ellipse cx="15.1" cy="6.631" rx="1.446" ry="1.750" transform="rotate(300.00 15.1 6.631)" fill="none" stroke="url(#pb-lip-300)" stroke-width=".26"/><ellipse cx="20.011" cy="16.625" rx="0.947" ry="1.750" transform="rotate(30.00 20.011 16.625)" fill="url(#pb-hole-30)"/><ellipse cx="20.011" cy="16.625" rx="0.947" ry="1.750" transform="rotate(30.00 20.011 16.625)" fill="none" stroke="url(#pb-lip-30)" stroke-width=".26"/><ellipse cx="16.625" cy="20.011" rx="0.947" ry="1.750" transform="rotate(60.00 16.625 20.011)" fill="url(#pb-hole-60)"/><ellipse cx="16.625" cy="20.011" rx="0.947" ry="1.750" transform="rotate(60.00 16.625 20.011)" fill="none" stroke="url(#pb-lip-60)" stroke-width=".26"/><ellipse cx="12" cy="21.25" rx="0.947" ry="1.750" transform="rotate(90.00 12 21.25)" fill="url(#pb-hole-90)"/><ellipse cx="12" cy="21.25" rx="0.947" ry="1.750" transform="rotate(90.00 12 21.25)" fill="none" stroke="url(#pb-lip-90)" stroke-width=".26"/><ellipse cx="7.375" cy="20.011" rx="0.947" ry="1.750" transform="rotate(120.00 7.375 20.011)" fill="url(#pb-hole-120)"/><ellipse cx="7.375" cy="20.011" rx="0.947" ry="1.750" transform="rotate(120.00 7.375 20.011)" fill="none" stroke="url(#pb-lip-120)" stroke-width=".26"/><ellipse cx="3.989" cy="16.625" rx="0.947" ry="1.750" transform="rotate(150.00 3.989 16.625)" fill="url(#pb-hole-150)"/><ellipse cx="3.989" cy="16.625" rx="0.947" ry="1.750" transform="rotate(150.00 3.989 16.625)" fill="none" stroke="url(#pb-lip-150)" stroke-width=".26"/><ellipse cx="2.75" cy="12" rx="0.947" ry="1.750" transform="rotate(180.00 2.75 12)" fill="url(#pb-hole-180)"/><ellipse cx="2.75" cy="12" rx="0.947" ry="1.750" transform="rotate(180.00 2.75 12)" fill="none" stroke="url(#pb-lip-180)" stroke-width=".26"/><ellipse cx="3.989" cy="7.375" rx="0.947" ry="1.750" transform="rotate(210.00 3.989 7.375)" fill="url(#pb-hole-210)"/><ellipse cx="3.989" cy="7.375" rx="0.947" ry="1.750" transform="rotate(210.00 3.989 7.375)" fill="none" stroke="url(#pb-lip-210)" stroke-width=".26"/><ellipse cx="7.375" cy="3.989" rx="0.947" ry="1.750" transform="rotate(240.00 7.375 3.989)" fill="url(#pb-hole-240)"/><ellipse cx="7.375" cy="3.989" rx="0.947" ry="1.750" transform="rotate(240.00 7.375 3.989)" fill="none" stroke="url(#pb-lip-240)" stroke-width=".26"/><ellipse cx="12" cy="2.75" rx="0.947" ry="1.750" transform="rotate(270.00 12 2.75)" fill="url(#pb-hole-270)"/><ellipse cx="12" cy="2.75" rx="0.947" ry="1.750" transform="rotate(270.00 12 2.75)" fill="none" stroke="url(#pb-lip-270)" stroke-width=".26"/><ellipse cx="16.625" cy="3.989" rx="0.947" ry="1.750" transform="rotate(300.00 16.625 3.989)" fill="url(#pb-hole-300)"/><ellipse cx="16.625" cy="3.989" rx="0.947" ry="1.750" transform="rotate(300.00 16.625 3.989)" fill="none" stroke="url(#pb-lip-300)" stroke-width=".26"/><ellipse cx="20.011" cy="7.375" rx="0.947" ry="1.750" transform="rotate(330.00 20.011 7.375)" fill="url(#pb-hole-330)"/><ellipse cx="20.011" cy="7.375" rx="0.947" ry="1.750" transform="rotate(330.00 20.011 7.375)" fill="none" stroke="url(#pb-lip-330)" stroke-width=".26"/><ellipse cx="21.25" cy="12" rx="0.947" ry="1.750" transform="rotate(0.00 21.25 12)" fill="url(#pb-hole-0)"/><ellipse cx="21.25" cy="12" rx="0.947" ry="1.750" transform="rotate(0.00 21.25 12)" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/></symbol>
+</defs></svg>
+<!--/mark:defs-->
+
+<header>
+  <div class="nav">
+    <span class="mark" role="img" aria-label="40/LOVE">40<span class="slash">/</span>L<span class="ballo" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg></span>VE</span>
+    <a class="nav-cta" href="#join">Join the waitlist</a>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">A dating app for racquet sports people</p>
+      <h1>The first date is a game.<span class="serve">Love at first serve.</span></h1>
+      <p class="hero-sub">40/LOVE connects active singles through the racquet sports they already love — tennis, pickleball, padel, racquetball, and squash. Match on sport, skill, and vibe, then meet on the court instead of across a table.</p>
+      <form class="waitlist" id="hero-form" novalidate>
+        <input type="email" id="hero-email" placeholder="you@example.com" aria-label="Email address" autocomplete="email">
+        <select id="hero-city" aria-label="Your city">
+          <option value="">Where do you play?</option>
+          <option value="indianapolis">Indianapolis, IN</option>
+          <option value="los-angeles">Los Angeles, CA</option>
+          <option value="san-diego">San Diego, CA</option>
+          <option value="phoenix">Phoenix, AZ</option>
+          <option value="seattle">Seattle, WA</option>
+          <option value="spokane">Spokane, WA</option>
+          <option value="dallas">Dallas, TX</option>
+          <option value="houston">Houston, TX</option>
+          <option value="orlando">Orlando, FL</option>
+          <option value="miami">Miami, FL</option>
+          <option value="washington-dc">Washington, DC</option>
+          <option value="somewhere-else">Somewhere else</option>
+        </select>
+        <button type="submit">Join the waitlist</button>
+      </form>
+      <p class="form-success" id="hero-success">You're on the list — see you on the court. 🎾</p>
+      <p class="form-error" id="hero-error" role="alert" aria-live="polite"></p>
+      <p class="form-note">Now opening in 11 cities. Free for founding members.</p>
+      <p class="demo-cta"><a href="/demo/">Can't wait? Play with the clickable demo →</a></p>
+    </div>
+    <div class="mini-phone" aria-hidden="true">
+      <div class="mp-photo">P</div>
+      <div class="mp-body">
+        <div class="mp-name">Priya <small>29</small></div>
+        <div class="mp-tags">
+          <span class="mp-tag">Tennis · NTRP 3.5</span>
+          <span class="mp-tag">0.8 mi</span>
+        </div>
+        <div class="mp-acts">
+          <span class="mp-act">✕</span>
+          <span class="mp-act">🎾</span>
+          <span class="mp-act like">❤️</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="scorestrip" aria-hidden="true">
+  <div class="scorestrip-in">
+    <span class="score-chip">40 – LOVE</span>
+    <span class="score-chip is-date">❤️ DATE</span>
+    <span class="score-chip is-play">🎾 PLAY</span>
+    <span class="score-chip is-friends">👥 FRIENDS</span>
+    <span class="score-chip">15 – 30 – 40 – ❤</span>
+  </div>
+</div>
+
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">How it works</p>
+      <h2>From match to match point in three steps.</h2>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Create your player profile</h3>
+        <p>Your sports, your level (NTRP, DUPR, or just "beginner and loving it"), your availability, and what you're here for.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Match on sport, skill &amp; vibe</h3>
+        <p>We surface people nearby who play what you play, at a level that makes for a real rally — not a lopsided one.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Meet on the court</h3>
+        <p>Propose a court, day, and time right in the chat. An hour of doubles says more than a week of texting.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="modes">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Three modes</p>
+      <h2>Dating is the headline. Playing is the point.</h2>
+    </div>
+    <div class="modes reveal">
+      <div class="mode-card is-date">
+        <span class="emoji" aria-hidden="true">❤️</span>
+        <h3>Date</h3>
+        <p>Find romantic matches who'd rather rally than sit through another interview over drinks.</p>
+      </div>
+      <div class="mode-card is-play">
+        <span class="emoji" aria-hidden="true">🎾</span>
+        <h3>Play</h3>
+        <p>Find hitting and practice partners at your level, on your schedule, at your courts.</p>
+      </div>
+      <div class="mode-card is-friends">
+        <span class="emoji" aria-hidden="true">👥</span>
+        <h3>Friends</h3>
+        <p>Meet people for leagues, round robins, and social mixers — your racquet community, in one place.</p>
+      </div>
+    </div>
+    <p class="modes-note reveal">Not dating? Play and Friends modes are for everyone.</p>
+  </div>
+</section>
+
+<section class="section" id="why">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Why it works</p>
+      <h2>A game beats dinner.</h2>
+    </div>
+    <div class="args">
+      <div class="arg reveal">
+        <span class="arg-score">15–0</span>
+        <div>
+          <h3>You already share something you love</h3>
+          <p>The hardest part of a first date is finding common ground. Yours is literally painted on the court before you say a word.</p>
+        </div>
+      </div>
+      <div class="arg reveal">
+        <span class="arg-score">30–0</span>
+        <div>
+          <h3>Rallying beats small talk</h3>
+          <p>An hour of play shows you how someone competes, laughs, loses, and celebrates. No résumé recital required.</p>
+        </div>
+      </div>
+      <div class="arg reveal">
+        <span class="arg-score">40–0</span>
+        <div>
+          <h3>Public courts, low pressure</h3>
+          <p>Daylight, public places, a natural end time, and an easy "same time next week?" if it clicks. First dates the comfortable way.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="founding">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Founding members</p>
+      <h2>Early birds get the court.</h2>
+      <p>Join the waitlist now and you're a founding member when we launch in your city.</p>
+    </div>
+    <div class="perks reveal">
+      <div class="perk"><span class="tick" aria-hidden="true">✓</span> Free premium for your first 6 months</div>
+      <div class="perk"><span class="tick" aria-hidden="true">✓</span> First invites to 40/LOVE Social Mixers and round robins</div>
+      <div class="perk"><span class="tick" aria-hidden="true">✓</span> A vote on which cities we launch next</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="cities">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">City by city</p>
+      <h2>Open in 11 cities. Yours next?</h2>
+      <p>A dating app only works when the people on it live near you, so 40/LOVE builds one local community at a time — you're matched with players in your own city, not three states away. Here's where we're open:</p>
+    </div>
+    <div class="cities reveal" id="city-list">
+      <span class="city city-launch">🎾 Indianapolis <span class="badge">First city</span></span>
+      <span class="city city-launch">Los Angeles</span>
+      <span class="city city-launch">San Diego</span>
+      <span class="city city-launch">Phoenix</span>
+      <span class="city city-launch">Seattle</span>
+      <span class="city city-launch">Spokane</span>
+      <span class="city city-launch">Dallas</span>
+      <span class="city city-launch">Houston</span>
+      <span class="city city-launch">Orlando</span>
+      <span class="city city-launch">Miami</span>
+      <span class="city city-launch">Washington, DC</span>
+    </div>
+    <p class="cities-note" style="margin-bottom:14px">Not on the list? Tell us where you play and we'll come to you:</p>
+    <div class="cities reveal" id="vote-list">
+      <button class="city" data-city="Chicago">Chicago <span class="count">0</span></button>
+      <button class="city" data-city="New York">New York <span class="count">0</span></button>
+      <button class="city" data-city="Atlanta">Atlanta <span class="count">0</span></button>
+      <button class="city" data-city="Denver">Denver <span class="count">0</span></button>
+      <button class="city" data-city="Austin">Austin <span class="count">0</span></button>
+      <button class="city" data-city="Your city?">Your city? <span class="count">0</span></button>
+    </div>
+    <p class="cities-note">Votes are stored on this device in this demo — the live site will count them for real.</p>
+  </div>
+</section>
+
+<section class="section" id="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">FAQ</p>
+      <h2>Before you ask.</h2>
+    </div>
+    <div class="faq reveal">
+      <details>
+        <summary>Is 40/LOVE only for dating?</summary>
+        <p class="faq-a">No — dating is one of three modes. Play mode finds you hitting partners and Friends mode is for leagues and social play. Plenty of members will never use Date mode, and that's the plan.</p>
+      </details>
+      <details>
+        <summary>Which sports are included?</summary>
+        <p class="faq-a">Tennis, pickleball, padel, racquetball, and squash at launch. You can list more than one — most players do.</p>
+      </details>
+      <details>
+        <summary>What skill level do I need?</summary>
+        <p class="faq-a">Any. You set your level — from "started last month" to tournament ratings like NTRP or DUPR — and we match you with people who make for a fun, competitive-enough rally.</p>
+      </details>
+      <details>
+        <summary>When does it launch?</summary>
+        <p class="faq-a">40/LOVE is open in Indianapolis, Los Angeles, San Diego, Phoenix, Seattle, Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC. You're matched with players in your own city — a dating app is only as good as who's actually near you. Not on the list? Vote above and we'll go where the players are; waitlist members hear first.</p>
+      </details>
+      <details>
+        <summary>How much will it cost?</summary>
+        <p class="faq-a">Free to join, match, and message. A premium tier with extras comes later — founding members get it free for 6 months.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="closing" id="join">
+  <div class="wrap">
+    <p class="eyebrow reveal">Your serve</p>
+    <h2 class="reveal">Meet someone on the court,<br><span class="serve">not at a bar.</span></h2>
+    <form class="waitlist" id="join-form" novalidate>
+      <input type="email" id="join-email" placeholder="you@example.com" aria-label="Email address" autocomplete="email">
+      <select id="join-city" aria-label="Your city">
+        <option value="">Where do you play?</option>
+        <option value="indianapolis">Indianapolis, IN</option>
+        <option value="los-angeles">Los Angeles, CA</option>
+        <option value="san-diego">San Diego, CA</option>
+        <option value="phoenix">Phoenix, AZ</option>
+        <option value="seattle">Seattle, WA</option>
+        <option value="spokane">Spokane, WA</option>
+        <option value="dallas">Dallas, TX</option>
+        <option value="houston">Houston, TX</option>
+        <option value="orlando">Orlando, FL</option>
+        <option value="miami">Miami, FL</option>
+        <option value="washington-dc">Washington, DC</option>
+        <option value="somewhere-else">Somewhere else</option>
+      </select>
+      <button type="submit">Join the waitlist</button>
+    </form>
+    <p class="form-success" id="join-success">You're on the list — see you on the court. 🎾</p>
+    <p class="form-error" id="join-error" role="alert" aria-live="polite"></p>
+  </div>
+</section>
+
+<footer>
+  <div class="foot">
+    <span class="mark" role="img" aria-label="40/LOVE">40<span class="slash">/</span>L<span class="ballo" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg></span>VE</span>
+    <div class="foot-links">
+      <a href="/demo/">Try the demo</a>
+      <a href="mailto:hello@40love.app">hello@40love.app</a>
+      <a href="#top">Instagram @fortylove</a>
+      <a href="#top">TikTok @fortylove</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/delete-account/">Delete account</a>
+    </div>
+    <span>© 2026 40/LOVE</span>
+  </div>
+</footer>
+
+<script>
+  /* To collect real signups: deploy this page (see landing/README.md) and
+     paste your Supabase project's URL + anon PUBLIC key below. The anon key
+     is designed to be public; the database only lets it INSERT emails —
+     never read them. Left empty, the form runs in demo mode and saves to
+     the visitor's own browser. */
+  window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
+</script>
+<script>
+(function () {
+  'use strict';
+
+  var LIST_KEY = '40love.waitlist';
+  var VOTE_KEY = '40love.cityvotes';
+
+  function readJson(key, fallback) {
+    try {
+      var v = JSON.parse(localStorage.getItem(key));
+      return v === null || v === undefined ? fallback : v;
+    } catch (e) { return fallback; }
+  }
+  function writeJson(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* private mode: demo continues in memory */ }
+  }
+
+  /* Waitlist forms — POST to Supabase when configured, browser-only demo otherwise */
+  function backendReady() {
+    var cfg = window.FORTYLOVE || {};
+    return !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
+  }
+
+  // Opening the file straight off disk, or from a dev server, means someone is
+  // previewing the page rather than visiting it.
+  function localPreview() {
+    return location.protocol === 'file:'
+      || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  }
+
+  // Goes through join_waitlist rather than POSTing to the table, so an address
+  // that is already on the list is indistinguishable from one that isn't. The
+  // anon key below is public — it ships in this page — so anything that told
+  // these two apart would let anyone test whether a given person had signed up
+  // for a dating app, one address at a time or from a list.
+  function joinRemote(email, city) {
+    var cfg = window.FORTYLOVE;
+    return fetch(cfg.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/rpc/join_waitlist', {
+      method: 'POST',
+      headers: {
+        'apikey': cfg.SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ p_email: email, p_city: city || '', p_source: 'landing' })
+    }).then(function (res) {
+      if (res.ok) return 'joined';
+      throw new Error('HTTP ' + res.status);
+    });
+  }
+
+  function wireForm(formId, emailId, successId, errorId, cityId) {
+    var form = document.getElementById(formId);
+    var email = document.getElementById(emailId);
+    var citySel = cityId ? document.getElementById(cityId) : null;
+    var success = document.getElementById(successId);
+    var error = document.getElementById(errorId);
+    var btn = form.querySelector('button');
+
+    // One message, always — see joinRemote.
+    function showSuccess() {
+      success.textContent = 'You’re on the list — see you on the court. 🎾';
+      form.style.display = 'none';
+      success.style.display = 'block';
+    }
+
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var val = email.value.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) {
+        error.textContent = 'That email doesn’t look right — check it and try again.';
+        return;
+      }
+      error.textContent = '';
+
+      if (backendReady()) {
+        var prevLabel = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Joining…';
+        joinRemote(val, citySel ? citySel.value : '')
+          .then(function () { showSuccess(); })
+          .catch(function () {
+            error.textContent = 'Couldn’t join right now — check your connection and try again.';
+            btn.disabled = false;
+            btn.textContent = prevLabel;
+          });
+        return;
+      }
+
+      // Deployed with no backend configured. The local-preview path below
+      // stores the address in this browser, which is fine when you are looking
+      // at your own page and a lie when a stranger is: they would be told they
+      // are on a list that does not exist anywhere, and the signup would be
+      // lost. Say so, and give them a way to reach us that actually works.
+      if (!localPreview()) {
+        error.innerHTML = 'The waitlist isn’t open yet — email '
+          + '<a href="mailto:hello@40love.app?subject=Waitlist">hello@40love.app</a>'
+          + ' and we’ll add you by hand.';
+        return;
+      }
+
+      var list = readJson(LIST_KEY, []);
+      if (list.indexOf(val) === -1) {
+        list.push(val);
+        writeJson(LIST_KEY, list);
+      }
+      showSuccess();
+    });
+  }
+  wireForm('hero-form', 'hero-email', 'hero-success', 'hero-error', 'hero-city');
+  wireForm('join-form', 'join-email', 'join-success', 'join-error', 'join-city');
+
+  /* City votes */
+  var votes = readJson(VOTE_KEY, {});
+  var cityButtons = document.querySelectorAll('#vote-list button.city[data-city]');
+  Array.prototype.forEach.call(cityButtons, function (btn) {
+    var name = btn.getAttribute('data-city');
+    var count = btn.querySelector('.count');
+    count.textContent = votes[name] || 0;
+    btn.addEventListener('click', function () {
+      votes[name] = (votes[name] || 0) + 1;
+      writeJson(VOTE_KEY, votes);
+      count.textContent = votes[name];
+    });
+  });
+
+  /* Scroll reveal */
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reveals = document.querySelectorAll('.reveal');
+  if (reduced || !('IntersectionObserver' in window)) {
+    Array.prototype.forEach.call(reveals, function (el) { el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          en.target.classList.add('in');
+          io.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    Array.prototype.forEach.call(reveals, function (el) { io.observe(el); });
+  }
+}());
+</script>
+</body>
+</html>

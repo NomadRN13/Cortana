@@ -1,0 +1,8 @@
+{
+  "name": "fortylove-web-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Headless-browser suites for the landing page, the demo prototype and the moderation desk.",
+  "scripts": { "test": "../../scripts/test-web.sh" },
+  "devDependencies": { "playwright-core": "^1.49.0" }
+}

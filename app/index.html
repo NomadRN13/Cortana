@@ -1,0 +1,3013 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>40/LOVE — App Prototype</title>
+<meta name="description" content="Clickable prototype of 40/LOVE, the dating and social app for racquet sports players. Serve. Rally. Connect.">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta property="og:title" content="40/LOVE — Try the app">
+<meta property="og:description" content="A clickable demo of 40/LOVE: sign up, swipe, match and chat. Runs in your browser; nothing is saved.">
+<meta property="og:image" content="/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="40/LOVE">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="40/LOVE — Try the app">
+<meta name="twitter:description" content="A clickable demo of 40/LOVE: sign up, swipe, match and chat. Runs in your browser; nothing is saved.">
+<meta name="twitter:image" content="/og.png">
+<style>
+  :root {
+    --night: #0A0B0D;
+    --panel: #101215;
+    --card: #17191D;
+    --card2: #1F2227;
+    --line: rgba(244, 246, 240, 0.13);
+    --text: #F4F6F0;
+    --dim: rgba(244, 246, 240, 0.62);
+    --optic: #D6F44F;
+    --optic-dim: rgba(214, 244, 79, 0.16);
+    --ok: #3DC96B;
+    --ink: #0A0B0D;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--night);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ---------- Stage (desktop marketing composition) ---------- */
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 72px;
+    padding: 40px 24px;
+    background:
+      radial-gradient(560px 560px at 88% 4%, rgba(214, 244, 79, 0.16), transparent 65%),
+      radial-gradient(700px 500px at 8% 100%, rgba(214, 244, 79, 0.05), transparent 60%),
+      var(--night);
+  }
+
+  .promo { max-width: 340px; display: flex; flex-direction: column; gap: 30px; }
+  .promo-head {
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .promo-head .hl { color: var(--optic); }
+  .promo-rule { height: 2px; background: var(--line); }
+  .promo-rows { display: flex; flex-direction: column; gap: 26px; }
+  .promo-row { display: flex; gap: 18px; align-items: flex-start; }
+  .promo-icon {
+    flex: 0 0 auto;
+    width: 58px; height: 58px;
+    border: 2px solid var(--optic);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+  }
+  .promo-icon svg { width: 26px; height: 26px; }
+  .promo-row h3 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--optic);
+  }
+  .promo-row p { margin: 0; font-size: 14.5px; color: var(--dim); line-height: 1.5; max-width: 22ch; }
+  .promo-foot { display: flex; flex-direction: column; gap: 8px; }
+  .promo-foot .tagline {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  /* Wordmark with pickleball "o" */
+  .wordmark {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    color: var(--text);
+  }
+  .wordmark .ball {
+    display: inline-block;
+    width: 0.80em; height: 0.80em;
+    vertical-align: -0.04em;
+    margin: 0 0.015em;
+  }
+  .wordmark .ball svg { width: 100%; height: 100%; display: block; }
+
+  .phone {
+    width: 392px;
+    max-width: 100%;
+    height: 800px;
+    max-height: 88vh;
+    background: var(--night);
+    border-radius: 38px;
+    border: 10px solid #1B1D21;
+    box-shadow: 0 0 0 2px rgba(214,244,79,0.10), 0 34px 70px rgba(0, 0, 0, 0.65);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (max-width: 860px) { .promo { display: none; } .stage { gap: 0; } }
+  @media (max-width: 520px) {
+    .stage { padding: 0; }
+    .phone {
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      max-height: none;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+
+  /* ---------- Base UI ---------- */
+  .screen { display: none; flex-direction: column; flex: 1; min-height: 0; }
+  .screen.active { display: flex; }
+  .scroll { flex: 1; overflow-y: auto; min-height: 0; padding: 16px 18px 24px; }
+
+  h1, h2, h3 { margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+  }
+
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 12px; -webkit-tap-highlight-color: transparent; color: var(--text); background: none; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 3px solid var(--optic);
+    outline-offset: 2px;
+  }
+
+  .btn { display: block; width: 100%; padding: 15px 18px; font-size: 16px; font-weight: 800; border-radius: 14px; text-align: center; }
+  .btn-primary { background: var(--optic); color: var(--ink); }
+  .btn-primary:hover { filter: brightness(1.07); }
+  .btn-ghost { background: transparent; color: var(--text); border: 2px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--text); }
+
+  input[type="text"], input[type="number"], textarea {
+    width: 100%;
+    padding: 13px 14px;
+    font: inherit;
+    font-size: 16px;
+    color: var(--text);
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 12px;
+  }
+  input::placeholder, textarea::placeholder { color: rgba(244,246,240,0.35); }
+  input:focus, textarea:focus { border-color: var(--optic); outline: none; }
+  label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 6px; color: var(--dim); }
+
+  /* ---------- Welcome ---------- */
+  #screen-welcome { justify-content: space-between; padding: 54px 28px 36px;
+    background: radial-gradient(420px 420px at 100% 0%, rgba(214,244,79,0.14), transparent 65%), var(--night); }
+  .welcome-top { display: flex; flex-direction: column; gap: 14px; }
+  .welcome-top .tagline {
+    font-size: 12px; font-weight: 800; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--optic);
+  }
+  .welcome-mark { font-size: 54px; }
+  .welcome-line {
+    margin: 10px 0 0; padding-top: 18px; border-top: 2px solid var(--line);
+    font-size: 15px; line-height: 1.6; color: var(--dim); max-width: 30ch;
+  }
+  .welcome-score {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 20px;
+    padding: 7px 14px; border: 2px solid var(--line); border-radius: 999px;
+    font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em; align-self: flex-start; color: var(--optic);
+  }
+  .welcome-actions { display: flex; flex-direction: column; gap: 10px; }
+  .welcome-modes { display: flex; flex-direction: column; gap: 18px; margin: 24px 0; }
+  .wm-row { display: flex; align-items: center; gap: 14px; }
+  .wm-icon {
+    flex: 0 0 auto; width: 48px; height: 48px;
+    border: 2px solid var(--optic); border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--text);
+  }
+  .wm-icon svg { width: 21px; height: 21px; }
+  .wm-row strong {
+    display: block; font-size: 13px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--optic);
+    margin-bottom: 2px;
+  }
+  .wm-desc { font-size: 13.5px; color: var(--dim); }
+  #screen-welcome { overflow-y: auto; }
+
+  /* ---------- Onboarding ---------- */
+  .ob-head { padding: 20px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+  .dots { display: flex; gap: 6px; }
+  .dots span { width: 26px; height: 5px; border-radius: 3px; background: var(--line); }
+  .dots span.on { background: var(--optic); }
+  .ob-body { display: flex; flex-direction: column; gap: 16px; padding-top: 14px; }
+  .ob-foot { padding: 14px 18px 24px; display: flex; gap: 10px; }
+  .ob-foot .btn-back { flex: 0 0 auto; width: auto; padding: 15px 18px; }
+  .hint { font-size: 13px; color: var(--dim); line-height: 1.5; margin: 0; }
+  .ob-body select {
+    width: 100%; padding: 13px 40px 13px 14px; font: inherit; font-size: 16px;
+    color: var(--text); background-color: var(--card);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23F4F6F0' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+    border: 2px solid var(--line); border-radius: 12px; appearance: none; -webkit-appearance: none;
+  }
+  .ob-body select:focus { outline: none; border-color: var(--optic); }
+  .linklike { background: none; border: 0; padding: 4px; font-size: 13.5px; font-weight: 800; color: var(--optic); cursor: pointer; }
+  .linklike.dim { color: var(--dim); }
+  .phone-verified {
+    display: flex; align-items: center; gap: 10px; padding: 14px;
+    background: var(--card); border: 2px solid var(--ok); border-radius: 14px;
+    font-size: 15px; font-weight: 800; color: var(--text);
+  }
+  .phone-verified span:first-child { color: var(--ok); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 10px 15px; border: 2px solid var(--line); border-radius: 999px;
+    background: var(--card); color: var(--text); font-size: 14px; font-weight: 600;
+  }
+  .chip[aria-pressed="true"] { background: var(--optic); border-color: var(--optic); color: var(--ink); }
+
+  .mode-rows { display: flex; flex-direction: column; gap: 10px; }
+  .seeking-box {
+    margin-left: 14px; padding: 14px;
+    border-left: 2px solid var(--optic);
+    background: var(--card); border-radius: 12px;
+  }
+  /* The hidden attribute must beat any class that sets display, or an
+     element we mark hidden in JS stays on screen. This bit us twice:
+     .topmatch and .mode-pill both set display and ignored [hidden]. */
+  [hidden] { display: none !important; }
+  .mode-row {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    padding: 14px; background: var(--card); border: 2px solid var(--line); border-radius: 14px;
+  }
+  .mode-row[aria-pressed="true"] { border-color: var(--optic); background: var(--optic-dim); }
+  .mode-row svg { width: 22px; height: 22px; flex: 0 0 auto; }
+  .mode-name { font-weight: 800; font-size: 15px; }
+  .mode-desc { font-size: 13px; color: var(--dim); display: block; }
+  .mode-check { margin-left: auto; font-weight: 800; color: var(--optic); visibility: hidden; }
+  .mode-row[aria-pressed="true"] .mode-check { visibility: visible; }
+
+  /* ---------- App bar ---------- */
+  .appbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 18px 10px;
+  }
+  .appbar .wordmark { font-size: 24px; }
+  .appbar select {
+    font: inherit; font-size: 13px; font-weight: 700; color: var(--text);
+    background-color: var(--card);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23F4F6F0' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 11px center;
+    border: 2px solid var(--line); border-radius: 999px;
+    padding: 8px 30px 8px 13px; appearance: none; -webkit-appearance: none;
+    max-width: 190px;
+  }
+  .appbar select:focus { outline: none; border-color: var(--optic); }
+  .appbar-title { font-size: 18px; font-weight: 800; }
+  .icon-btn { padding: 7px; border-radius: 10px; display: inline-flex; color: var(--text); position: relative; }
+  .icon-btn:hover { background: var(--card2); }
+  .icon-btn svg { width: 22px; height: 22px; }
+  .bell-dot {
+    position: absolute; top: 4px; right: 4px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--optic); border: 2px solid var(--night);
+  }
+
+  /* ---------- Tab bar ---------- */
+  .tabbar {
+    display: flex; border-top: 2px solid var(--line); background: var(--panel);
+    padding: 8px 4px calc(10px + env(safe-area-inset-bottom));
+  }
+  .tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 6px 2px; color: var(--dim); font-size: 10.5px; font-weight: 700; border-radius: 10px;
+  }
+  .tab svg { width: 22px; height: 22px; }
+  .tab.on { color: var(--optic); }
+
+  /* ---------- Home ---------- */
+  .greet { padding: 6px 18px 0; }
+  .greet h1 { font-size: 24px; font-weight: 800; }
+  .greet p { margin: 3px 0 0; font-size: 14px; color: var(--dim); }
+
+  .mode-pills { display: flex; gap: 8px; padding: 14px 18px 4px; overflow-x: auto; scrollbar-width: none; }
+  .mode-pills::-webkit-scrollbar { display: none; }
+  .mode-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 14px; border: 2px solid var(--line); border-radius: 999px;
+    background: var(--card); font-size: 13px; font-weight: 700; color: var(--text);
+    white-space: nowrap;
+  }
+  .mode-pill svg { width: 16px; height: 16px; }
+  .mode-pill.on { background: var(--optic); border-color: var(--optic); color: var(--ink); }
+
+  .home-scroll { flex: 1; overflow-y: auto; min-height: 0; padding: 10px 18px 16px; display: flex; flex-direction: column; gap: 14px; }
+
+  .topmatch {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 18px;
+    padding: 18px 16px;
+  }
+  .topmatch-mid { flex: 1; }
+  .topmatch h2 { font-size: 19px; font-weight: 800; }
+  .topmatch p { margin: 5px 0 12px; font-size: 13.5px; color: var(--dim); line-height: 1.45; max-width: 20ch; }
+  .topmatch-btn {
+    display: inline-block; background: var(--optic); color: var(--ink);
+    font-size: 13.5px; font-weight: 800; padding: 10px 16px; border-radius: 10px;
+  }
+  .picks { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 16px; margin-bottom: 14px; }
+  .picks-head { display: flex; align-items: baseline; justify-content: space-between; }
+  .picks-head h2 { font-size: 19px; font-weight: 800; }
+  .picks-strip { display: flex; gap: 10px; overflow-x: auto; margin-top: 10px; padding-bottom: 4px; scrollbar-width: none; }
+  .picks-strip::-webkit-scrollbar { display: none; }
+  .pick {
+    position: relative; flex: 0 0 auto; width: 108px; padding: 10px; border-radius: 14px;
+    background: var(--card2); display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+  }
+  .pick .ava { width: 54px; height: 54px; font-size: 19px; }
+  .pick .pn { font-size: 13.5px; font-weight: 800; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pick .pr { font-size: 11px; color: var(--dim); line-height: 1.35; }
+  .pick-rank {
+    position: absolute; top: 6px; left: 6px; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--optic); color: var(--ink); font-size: 11px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .topmatch-art { flex: 0 0 auto; width: 84px; height: 84px; }
+  .topmatch-art svg { width: 100%; height: 100%; }
+
+  /* Deck card */
+  .deck { position: relative; }
+  .card {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 2px solid var(--line);
+    background: var(--card);
+    touch-action: pan-y;
+  }
+  .card.dragging { transition: none; }
+  .card.springing { transition: transform 0.25s ease, opacity 0.25s ease; }
+  .card-photo {
+    height: 330px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 84px; font-weight: 900; color: rgba(10,11,13,0.55);
+    letter-spacing: 0.02em;
+  }
+  .badge-new {
+    position: absolute; top: 14px; left: 14px;
+    background: var(--optic); color: var(--ink);
+    font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+    padding: 6px 11px; border-radius: 999px;
+  }
+  .bookmark {
+    position: absolute; top: 10px; right: 10px;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(10, 11, 13, 0.55);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .bookmark svg { width: 19px; height: 19px; }
+  .bookmark.saved { color: var(--optic); }
+  .card-like {
+    position: absolute; right: 14px; top: 296px;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--optic); color: var(--ink);
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+  }
+  .card-like svg { width: 26px; height: 26px; }
+  .card-info {
+    padding: 14px 16px 16px;
+    background: linear-gradient(180deg, rgba(23,25,29,0.2), var(--card) 30%);
+    display: flex; flex-direction: column; gap: 7px;
+  }
+  .card-name { font-size: 23px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  .card-name .age { font-weight: 600; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .verified {
+    display: inline-flex; width: 19px; height: 19px; border-radius: 50%;
+    background: var(--ok); color: var(--ink); align-items: center; justify-content: center;
+  }
+  .verified svg { width: 11px; height: 11px; }
+  .card-line { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .card-line svg { width: 15px; height: 15px; flex: 0 0 auto; color: var(--optic); }
+  .card-bio { font-size: 13.5px; line-height: 1.5; margin: 3px 0 0; color: var(--dim); }
+  .stamp {
+    position: absolute; top: 24px; padding: 6px 14px;
+    border: 3px solid; border-radius: 10px;
+    font-size: 20px; font-weight: 900; letter-spacing: 0.06em;
+    transform: rotate(-12deg); opacity: 0; pointer-events: none;
+    background: rgba(10,11,13,0.5); z-index: 3;
+  }
+  .stamp-like { left: 16px; border-color: var(--optic); color: var(--optic); }
+  .stamp-pass { right: 16px; border-color: #E15A72; color: #E15A72; transform: rotate(12deg); }
+
+  .deck-actions { display: flex; align-items: center; justify-content: center; gap: 16px; padding-top: 4px; }
+  .act {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: var(--card2); border: 2px solid var(--line);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--text);
+  }
+  .act svg { width: 22px; height: 22px; }
+  .act:hover { transform: translateY(-2px); border-color: var(--dim); }
+  .act-like { width: 66px; height: 66px; background: var(--optic); border-color: var(--optic); color: var(--ink); }
+  .act-like svg { width: 30px; height: 30px; }
+  .deck-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; text-align: center; padding: 44px 24px;
+    border: 2px dashed var(--line); border-radius: 20px;
+  }
+  .deck-empty .big { font-size: 40px; }
+
+  /* ---------- Matches grid ---------- */
+  .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .match-cell {
+    background: var(--card); border: 2px solid var(--line); border-radius: 16px;
+    overflow: hidden; text-align: left; padding: 0; display: flex; flex-direction: column;
+  }
+  .match-photo {
+    height: 120px; display: flex; align-items: center; justify-content: center;
+    font-size: 38px; font-weight: 900; color: rgba(10,11,13,0.55);
+  }
+  .match-meta { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; }
+  .match-meta .n { font-weight: 800; font-size: 15px; }
+  .match-meta .s { font-size: 12px; color: var(--dim); }
+  .match-meta .go { margin-top: 7px; font-size: 12.5px; font-weight: 800; color: var(--optic); }
+
+  /* ---------- Chat ---------- */
+  .thread {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    padding: 12px 10px; border-radius: 14px; border-bottom: 2px solid var(--line);
+  }
+  .thread:hover { background: var(--card); }
+  .ava {
+    flex: 0 0 auto; width: 52px; height: 52px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: rgba(10,11,13,0.6); font-weight: 900; font-size: 18px;
+  }
+  .thread-mid { flex: 1; min-width: 0; }
+  .thread-name { font-weight: 800; font-size: 15px; }
+  .thread-prev { font-size: 13px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .thread-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .serve-badge {
+    font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--optic); border: 2px solid var(--optic); padding: 3px 7px; border-radius: 999px;
+  }
+  .unread-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--optic); }
+
+  .chat-head { display: flex; align-items: center; gap: 10px; padding: 14px; border-bottom: 2px solid var(--line); }
+  .chat-head .ava { width: 40px; height: 40px; font-size: 15px; }
+  .chat-head-name { font-weight: 800; }
+  .chat-head-sub { font-size: 12px; color: var(--dim); }
+  .chat-log { flex: 1; overflow-y: auto; min-height: 0; padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 78%; display: flex; flex-direction: column; gap: 3px; }
+  .msg .bubble { padding: 10px 13px; border-radius: 16px; font-size: 14px; line-height: 1.45; }
+  .msg .when { font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .msg.them { align-self: flex-start; }
+  .msg.them .bubble { background: var(--card2); border-bottom-left-radius: 6px; }
+  .msg.me { align-self: flex-end; align-items: flex-end; }
+  .msg.me .bubble { background: var(--optic); color: var(--ink); border-bottom-right-radius: 6px; font-weight: 600; }
+  .courtcard { border: 2px solid var(--optic); border-radius: 14px; overflow: hidden; min-width: 200px; }
+  .courtcard-top {
+    background: var(--optic); color: var(--ink); padding: 7px 12px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .courtcard-body { padding: 10px 12px; font-size: 13px; display: flex; flex-direction: column; gap: 3px; background: var(--card); color: var(--text); }
+  .courtcard-body strong { font-size: 14px; }
+  .courtcard-body span { font-variant-numeric: tabular-nums; color: var(--dim); }
+  .chat-tools { display: flex; gap: 8px; padding: 8px 14px 0; }
+  .tool-chip {
+    font-size: 12px; font-weight: 800; padding: 8px 13px;
+    border: 2px solid var(--optic); color: var(--optic); border-radius: 999px;
+  }
+  .tool-chip:hover { background: var(--optic); color: var(--ink); }
+  .chat-input { display: flex; gap: 8px; padding: 10px 14px calc(14px + env(safe-area-inset-bottom)); }
+  .chat-input input { flex: 1; border-radius: 999px; }
+  .chat-send { flex: 0 0 auto; padding: 0 20px; border-radius: 999px; background: var(--optic); color: var(--ink); font-weight: 800; }
+
+  /* ---------- Events ---------- */
+  .week-head {
+    font-size: 12px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--dim); margin: 18px 0 8px;
+  }
+  .week-head:first-child { margin-top: 4px; }
+  .event {
+    display: flex; gap: 12px; padding: 13px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 16px; margin-bottom: 10px;
+  }
+  .event-date {
+    flex: 0 0 auto; width: 52px; border: 2px solid var(--optic); border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8px 4px; font-variant-numeric: tabular-nums;
+  }
+  .event-date .dow { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dim); }
+  .event-date .dom { font-size: 20px; font-weight: 900; color: var(--optic); }
+  .event-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .event-title { font-size: 15px; font-weight: 800; }
+  .event-meta { font-size: 12.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .event-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag {
+    font-size: 11px; font-weight: 700; padding: 4px 9px;
+    border: 2px solid var(--line); border-radius: 999px;
+    font-variant-numeric: tabular-nums; color: var(--dim);
+  }
+  .tag-sport { border-color: var(--optic); color: var(--optic); }
+  .event-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 8px; }
+  .spots { font-size: 11px; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .join-btn { font-size: 13px; font-weight: 800; padding: 8px 14px; border-radius: 999px; background: var(--optic); color: var(--ink); white-space: nowrap; }
+  .join-btn.going { background: transparent; color: var(--optic); border: 2px solid var(--optic); }
+
+  /* ---------- Profile & settings ---------- */
+  .profile-card {
+    display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+    padding: 22px 16px 18px; background: var(--card); border: 2px solid var(--line); border-radius: 18px;
+  }
+  .profile-card .ava { width: 84px; height: 84px; font-size: 30px; }
+  .tagrow { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .tagrow .tag { font-size: 12px; padding: 5px 10px; }
+  .stats { display: flex; gap: 8px; margin-top: 14px; }
+  .stat { flex: 1; border: 2px solid var(--line); border-radius: 14px; padding: 12px 8px; text-align: center; background: var(--card); }
+  .stat .num { font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--optic); }
+  .stat .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--dim); margin-top: 2px; }
+  .bio-edit { margin-top: 14px; }
+  .bio-edit textarea { min-height: 74px; resize: vertical; }
+
+  .set-group { margin-bottom: 20px; }
+  .set-group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--dim); margin-bottom: 8px; }
+  .set-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 13px 14px; background: var(--card); border: 2px solid var(--line);
+    border-radius: 14px; margin-bottom: 8px;
+  }
+  .set-row .lab { font-size: 14px; font-weight: 700; }
+  .set-row .sub { font-size: 12px; color: var(--dim); margin-top: 2px; }
+  .switch { flex: 0 0 auto; width: 50px; height: 30px; border-radius: 999px; background: var(--card2); border: 2px solid var(--line); position: relative; }
+  .switch::after {
+    content: ""; position: absolute; top: 2px; left: 2px;
+    width: 22px; height: 22px; border-radius: 50%; background: var(--dim);
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .switch[aria-checked="true"] { background: var(--optic-dim); border-color: var(--optic); }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); background: var(--optic); }
+  input[type="range"] { width: 100%; accent-color: var(--optic); }
+  .range-val { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--optic); }
+  .age-inputs { display: flex; align-items: center; gap: 8px; }
+  .age-inputs input { width: 74px; text-align: center; font-variant-numeric: tabular-nums; }
+  .danger { display: block; width: 100%; padding: 14px; font-weight: 800; color: #E15A72; border: 2px solid #E15A72; border-radius: 14px; background: transparent; }
+  .danger:hover { background: #E15A72; color: var(--text); }
+
+  /* ---------- Overlays ---------- */
+  .overlay {
+    position: absolute; inset: 0; background: rgba(4, 5, 6, 0.7);
+    display: none; align-items: center; justify-content: center; padding: 24px; z-index: 30;
+  }
+  .overlay.open { display: flex; }
+  .match-modal {
+    background: var(--panel); border: 3px solid var(--optic); border-radius: 22px;
+    padding: 28px 22px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    max-width: 320px; width: 100%;
+  }
+  .match-modal .score {
+    font-size: 13px; font-weight: 800; letter-spacing: 0.14em;
+    font-variant-numeric: tabular-nums; color: var(--optic);
+  }
+  .match-modal h2 { font-size: 27px; }
+  .match-modal h2 .hl { color: var(--optic); }
+  .match-avas { display: flex; }
+  .match-avas .ava { width: 68px; height: 68px; font-size: 24px; border: 3px solid var(--optic); }
+  .match-avas .ava + .ava { margin-left: -14px; }
+  .match-modal p { margin: 0; font-size: 14px; color: var(--dim); line-height: 1.5; }
+
+  .toast {
+    position: absolute; left: 50%; bottom: 96px;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--card2); border: 2px solid var(--optic);
+    color: var(--text); font-size: 13.5px; font-weight: 600;
+    padding: 11px 18px; border-radius: 999px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 40; max-width: 85%; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Action sheet (report/block) */
+  .sheet {
+    background: var(--panel); border: 2px solid var(--line); border-radius: 20px;
+    width: 100%; max-width: 320px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .sheet-title { font-size: 13px; font-weight: 700; color: var(--dim); text-align: center; padding: 8px 0 4px; }
+  .sheet button { width: 100%; padding: 14px; font-size: 15px; font-weight: 800; border-radius: 12px; background: var(--card); }
+  .sheet button:hover { background: var(--card2); }
+  .sheet .sheet-danger { color: #E15A72; }
+  .sheet .sheet-cancel { background: transparent; color: var(--dim); font-weight: 700; }
+
+  /* Notifications panel */
+  .notif-panel {
+    background: var(--panel); border: 2px solid var(--line); border-radius: 20px;
+    width: 100%; max-width: 340px; max-height: 70%; overflow-y: auto;
+    display: flex; flex-direction: column; padding: 14px;
+  }
+  .notif-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 10px; }
+  .notif-head h2 { font-size: 18px; }
+  .notif-clear { font-size: 12.5px; font-weight: 800; color: var(--optic); padding: 6px 10px; border-radius: 8px; }
+  .notif-item { display: flex; gap: 11px; padding: 11px 6px; border-top: 2px solid var(--line); align-items: flex-start; }
+  .notif-item .ico { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; background: var(--optic-dim); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
+  .notif-item .txt { font-size: 13.5px; line-height: 1.45; }
+  .notif-item .sub { font-size: 11.5px; color: var(--dim); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .notif-empty { text-align: center; color: var(--dim); font-size: 13.5px; padding: 18px 6px; }
+
+  /* Card more button */
+  .card-more {
+    position: absolute; top: 10px; right: 58px;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(10, 11, 13, 0.55);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .card-more svg { width: 19px; height: 19px; }
+
+  /* Saved strip on Matches */
+  .saved-head { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: var(--dim); margin: 0 0 8px; }
+  .saved-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 16px; scrollbar-width: none; }
+  .saved-strip::-webkit-scrollbar { display: none; }
+  .saved-cell {
+    flex: 0 0 auto; width: 86px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 10px 6px;
+  }
+  .saved-cell .ava { width: 44px; height: 44px; font-size: 16px; }
+  .saved-cell .n { font-size: 12px; font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .saved-like { width: 30px; height: 30px; border-radius: 50%; background: var(--optic); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; }
+  .saved-like svg { width: 14px; height: 14px; }
+
+  /* Photo picker */
+  .photo-pick { display: flex; align-items: center; gap: 14px; }
+  .photo-preview {
+    flex: 0 0 auto; width: 74px; height: 74px; border-radius: 50%;
+    border: 2px dashed var(--line); background: var(--card);
+    background-size: cover; background-position: center;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--dim); font-size: 24px;
+  }
+  .photo-preview.has { border-style: solid; border-color: var(--optic); color: transparent; }
+  .photo-btn { font-size: 13.5px; font-weight: 800; padding: 10px 14px; border: 2px solid var(--optic); color: var(--optic); border-radius: 999px; }
+  .photo-btn:hover { background: var(--optic); color: var(--ink); }
+  .ava.has-photo { background-size: cover; background-position: center; color: transparent; }
+  .pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ptile {
+    position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; padding: 0;
+    border: 2px solid var(--line); background: var(--card); background-size: cover; background-position: center; cursor: pointer;
+  }
+  .ptile-add { display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--dim); border-style: dashed; opacity: 0.55; }
+  .ptile-add.next { color: var(--optic); border-color: var(--optic); opacity: 1; }
+  .ptag { position: absolute; bottom: 5px; left: 5px; background: var(--optic); color: var(--ink); font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
+  .pdel {
+    position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; padding: 0;
+    background: rgba(10, 11, 13, 0.78); color: var(--text); font-size: 15px; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---------- Interactivity & motion ---------- */
+  @keyframes screenIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .screen.active { animation: screenIn 0.22s ease; }
+
+  .act, .btn, .chip, .join-btn, .mode-pill, .tool-chip, .chat-send, .topmatch-btn, .icon-btn, .tab {
+    transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .act:active, .btn:active, .chip:active, .join-btn:active, .mode-pill:active,
+  .tool-chip:active, .chat-send:active, .topmatch-btn:active { transform: scale(0.94); }
+
+  @keyframes wiggle { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-14deg); } 60% { transform: rotate(11deg); } }
+  .bookmark.saved svg { animation: wiggle 0.4s ease; }
+
+  @keyframes ballBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+  #mark-welcome .ball { animation: ballBounce 2.4s ease-in-out infinite; }
+
+  /* Deck stack: the next card peeks out behind the top card */
+  .deck-stack { position: relative; }
+  .card-behind {
+    position: absolute; inset: 0;
+    transform: scale(0.94) translateY(16px);
+    opacity: 0.55;
+    pointer-events: none;
+    border-radius: 20px; overflow: hidden;
+    border: 2px solid var(--line); background: var(--card);
+  }
+  .deck { position: relative; }
+  .card { position: relative; z-index: 1; }
+  .card .card-photo { cursor: pointer; }
+
+  /* Match Point: modal pop + confetti */
+  @keyframes popIn { 0% { transform: scale(0.72); opacity: 0; } 70% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); } }
+  .overlay.open .match-modal { animation: popIn 0.3s ease; }
+  .confetti {
+    position: absolute; top: 42%; left: 50%;
+    font-size: 22px; pointer-events: none; z-index: 50;
+    animation: confettiFly 1.15s ease-out forwards;
+  }
+  @keyframes confettiFly {
+    0% { transform: translate(-50%, -50%) scale(0.5) rotate(0deg); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.1) rotate(var(--rot)); opacity: 0; }
+  }
+
+  /* Chat typing indicator */
+  .typing-bubble { display: inline-flex; gap: 4px; padding: 14px; background: var(--card2); border-radius: 16px; border-bottom-left-radius: 6px; }
+  .typing-bubble i {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--dim); font-style: normal;
+    animation: typingBlink 1s infinite;
+  }
+  .typing-bubble i:nth-child(2) { animation-delay: 0.15s; }
+  .typing-bubble i:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes typingBlink { 0%, 60%, 100% { opacity: 0.3; transform: none; } 30% { opacity: 1; transform: translateY(-3px); } }
+  @keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .chat-log .msg { animation: msgIn 0.18s ease; }
+
+  /* Profile detail sheet */
+  .profile-sheet {
+    background: var(--panel); border: 2px solid var(--line); border-radius: 22px;
+    width: 100%; max-width: 340px; max-height: 86%; overflow-y: auto;
+  }
+  @keyframes sheetUp { from { transform: translateY(26px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .overlay.open .profile-sheet { animation: sheetUp 0.25s ease; }
+  .psheet-photo {
+    height: 190px; display: flex; align-items: center; justify-content: center;
+    font-size: 64px; font-weight: 900; color: rgba(10, 11, 13, 0.55);
+  }
+  .psheet-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .psheet-actions { display: flex; justify-content: center; gap: 14px; padding: 6px 0 2px; }
+  .psheet-close { align-self: center; padding: 10px 18px; color: var(--dim); font-weight: 700; font-size: 13px; }
+
+  /* Expandable event cards */
+  .event { cursor: pointer; transition: border-color 0.15s ease; }
+  .event.expanded { border-color: var(--optic); }
+  .event-extra { display: none; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .event.expanded .event-extra { display: flex; }
+  .going-row { display: flex; align-items: center; gap: 6px; }
+  .going-row .ava { width: 26px; height: 26px; font-size: 10px; }
+  .going-row .ava + .ava { margin-left: -10px; }
+  .going-label { font-size: 12px; color: var(--dim); margin-left: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<!--mark:defs-->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<radialGradient id="pb-body" cx="33%" cy="27%" r="80%">
+  <stop offset="0%" stop-color="#F6FFB0"/><stop offset="20%" stop-color="#E7FB74"/>
+  <stop offset="46%" stop-color="#D2F048"/><stop offset="72%" stop-color="#A9CE2F"/>
+  <stop offset="90%" stop-color="#74911E"/><stop offset="100%" stop-color="#516A14"/>
+</radialGradient>
+<radialGradient id="pb-term" cx="70%" cy="74%" r="48%">
+  <stop offset="0%" stop-color="#2E3C0C" stop-opacity=".3"/>
+  <stop offset="70%" stop-color="#2E3C0C" stop-opacity=".1"/>
+  <stop offset="100%" stop-color="#2E3C0C" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="pb-bounce" cx="78%" cy="82%" r="30%">
+  <stop offset="0%" stop-color="#CFE85E" stop-opacity="0"/>
+  <stop offset="78%" stop-color="#CFE85E" stop-opacity=".16"/>
+  <stop offset="100%" stop-color="#DDF17E" stop-opacity=".34"/>
+</radialGradient>
+<radialGradient id="pb-sheen" cx="50%" cy="50%" r="50%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".4"/>
+  <stop offset="55%" stop-color="#FFFFFF" stop-opacity=".12"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="pb-hot" cx="50%" cy="50%" r="50%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".92"/>
+  <stop offset="45%" stop-color="#FFFFFF" stop-opacity=".4"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+</radialGradient>
+<linearGradient id="pb-rim" x1="18%" y1="8%" x2="84%" y2="96%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".45"/>
+  <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity=".12"/>
+</linearGradient>
+<linearGradient id="pb-hole-0" x1="22%" y1="12%" x2="82%" y2="94%"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-0" x1="22%" y1="12%" x2="82%" y2="94%"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-60" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-60 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-60" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-60 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-120" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-120 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-120" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-120 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-180" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-180 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-180" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-180 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-240" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-240 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-240" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-240 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-300" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-300 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-300" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-300 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-30" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-30 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-30" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-30 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-90" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-90 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-90" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-90 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-150" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-150 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-150" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-150 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-210" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-210 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-210" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-210 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-270" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-270 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-270" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-270 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-330" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-330 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-330" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-330 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient>
+<symbol id="pb-mark" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="url(#pb-body)"/><circle cx="12" cy="12" r="11" fill="url(#pb-term)"/><circle cx="12" cy="12" r="11" fill="url(#pb-bounce)"/><ellipse cx="8.4" cy="7.6" rx="5.6" ry="4.3" fill="url(#pb-sheen)" transform="rotate(-30 8.4 7.6)"/><ellipse cx="7.5" cy="6.6" rx="2.2" ry="1.5" fill="url(#pb-hot)" transform="rotate(-30 7.5 6.6)"/><circle cx="12" cy="12" r="10.7" fill="none" stroke="url(#pb-rim)" stroke-width=".7"/><ellipse cx="12" cy="12" rx="1.750" ry="1.750" fill="url(#pb-hole-0)"/><ellipse cx="12" cy="12" rx="1.750" ry="1.750" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/><ellipse cx="18.2" cy="12" rx="1.446" ry="1.750" transform="rotate(0.00 18.2 12)" fill="url(#pb-hole-0)"/><ellipse cx="18.2" cy="12" rx="1.446" ry="1.750" transform="rotate(0.00 18.2 12)" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/><ellipse cx="15.1" cy="17.369" rx="1.446" ry="1.750" transform="rotate(60.00 15.1 17.369)" fill="url(#pb-hole-60)"/><ellipse cx="15.1" cy="17.369" rx="1.446" ry="1.750" transform="rotate(60.00 15.1 17.369)" fill="none" stroke="url(#pb-lip-60)" stroke-width=".26"/><ellipse cx="8.9" cy="17.369" rx="1.446" ry="1.750" transform="rotate(120.00 8.9 17.369)" fill="url(#pb-hole-120)"/><ellipse cx="8.9" cy="17.369" rx="1.446" ry="1.750" transform="rotate(120.00 8.9 17.369)" fill="none" stroke="url(#pb-lip-120)" stroke-width=".26"/><ellipse cx="5.8" cy="12" rx="1.446" ry="1.750" transform="rotate(180.00 5.8 12)" fill="url(#pb-hole-180)"/><ellipse cx="5.8" cy="12" rx="1.446" ry="1.750" transform="rotate(180.00 5.8 12)" fill="none" stroke="url(#pb-lip-180)" stroke-width=".26"/><ellipse cx="8.9" cy="6.631" rx="1.446" ry="1.750" transform="rotate(240.00 8.9 6.631)" fill="url(#pb-hole-240)"/><ellipse cx="8.9" cy="6.631" rx="1.446" ry="1.750" transform="rotate(240.00 8.9 6.631)" fill="none" stroke="url(#pb-lip-240)" stroke-width=".26"/><ellipse cx="15.1" cy="6.631" rx="1.446" ry="1.750" transform="rotate(300.00 15.1 6.631)" fill="url(#pb-hole-300)"/><ellipse cx="15.1" cy="6.631" rx="1.446" ry="1.750" transform="rotate(300.00 15.1 6.631)" fill="none" stroke="url(#pb-lip-300)" stroke-width=".26"/><ellipse cx="20.011" cy="16.625" rx="0.947" ry="1.750" transform="rotate(30.00 20.011 16.625)" fill="url(#pb-hole-30)"/><ellipse cx="20.011" cy="16.625" rx="0.947" ry="1.750" transform="rotate(30.00 20.011 16.625)" fill="none" stroke="url(#pb-lip-30)" stroke-width=".26"/><ellipse cx="16.625" cy="20.011" rx="0.947" ry="1.750" transform="rotate(60.00 16.625 20.011)" fill="url(#pb-hole-60)"/><ellipse cx="16.625" cy="20.011" rx="0.947" ry="1.750" transform="rotate(60.00 16.625 20.011)" fill="none" stroke="url(#pb-lip-60)" stroke-width=".26"/><ellipse cx="12" cy="21.25" rx="0.947" ry="1.750" transform="rotate(90.00 12 21.25)" fill="url(#pb-hole-90)"/><ellipse cx="12" cy="21.25" rx="0.947" ry="1.750" transform="rotate(90.00 12 21.25)" fill="none" stroke="url(#pb-lip-90)" stroke-width=".26"/><ellipse cx="7.375" cy="20.011" rx="0.947" ry="1.750" transform="rotate(120.00 7.375 20.011)" fill="url(#pb-hole-120)"/><ellipse cx="7.375" cy="20.011" rx="0.947" ry="1.750" transform="rotate(120.00 7.375 20.011)" fill="none" stroke="url(#pb-lip-120)" stroke-width=".26"/><ellipse cx="3.989" cy="16.625" rx="0.947" ry="1.750" transform="rotate(150.00 3.989 16.625)" fill="url(#pb-hole-150)"/><ellipse cx="3.989" cy="16.625" rx="0.947" ry="1.750" transform="rotate(150.00 3.989 16.625)" fill="none" stroke="url(#pb-lip-150)" stroke-width=".26"/><ellipse cx="2.75" cy="12" rx="0.947" ry="1.750" transform="rotate(180.00 2.75 12)" fill="url(#pb-hole-180)"/><ellipse cx="2.75" cy="12" rx="0.947" ry="1.750" transform="rotate(180.00 2.75 12)" fill="none" stroke="url(#pb-lip-180)" stroke-width=".26"/><ellipse cx="3.989" cy="7.375" rx="0.947" ry="1.750" transform="rotate(210.00 3.989 7.375)" fill="url(#pb-hole-210)"/><ellipse cx="3.989" cy="7.375" rx="0.947" ry="1.750" transform="rotate(210.00 3.989 7.375)" fill="none" stroke="url(#pb-lip-210)" stroke-width=".26"/><ellipse cx="7.375" cy="3.989" rx="0.947" ry="1.750" transform="rotate(240.00 7.375 3.989)" fill="url(#pb-hole-240)"/><ellipse cx="7.375" cy="3.989" rx="0.947" ry="1.750" transform="rotate(240.00 7.375 3.989)" fill="none" stroke="url(#pb-lip-240)" stroke-width=".26"/><ellipse cx="12" cy="2.75" rx="0.947" ry="1.750" transform="rotate(270.00 12 2.75)" fill="url(#pb-hole-270)"/><ellipse cx="12" cy="2.75" rx="0.947" ry="1.750" transform="rotate(270.00 12 2.75)" fill="none" stroke="url(#pb-lip-270)" stroke-width=".26"/><ellipse cx="16.625" cy="3.989" rx="0.947" ry="1.750" transform="rotate(300.00 16.625 3.989)" fill="url(#pb-hole-300)"/><ellipse cx="16.625" cy="3.989" rx="0.947" ry="1.750" transform="rotate(300.00 16.625 3.989)" fill="none" stroke="url(#pb-lip-300)" stroke-width=".26"/><ellipse cx="20.011" cy="7.375" rx="0.947" ry="1.750" transform="rotate(330.00 20.011 7.375)" fill="url(#pb-hole-330)"/><ellipse cx="20.011" cy="7.375" rx="0.947" ry="1.750" transform="rotate(330.00 20.011 7.375)" fill="none" stroke="url(#pb-lip-330)" stroke-width=".26"/><ellipse cx="21.25" cy="12" rx="0.947" ry="1.750" transform="rotate(0.00 21.25 12)" fill="url(#pb-hole-0)"/><ellipse cx="21.25" cy="12" rx="0.947" ry="1.750" transform="rotate(0.00 21.25 12)" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/></symbol>
+</defs></svg>
+<!--/mark:defs-->
+<div class="stage">
+
+  <div class="phone" id="phone">
+
+    <!-- WELCOME -->
+    <section class="screen active" id="screen-welcome" aria-label="Welcome">
+      <div class="welcome-top">
+        <span class="tagline">Serve. Rally. Connect.</span>
+        <div class="wordmark welcome-mark" id="mark-welcome"></div>
+        <p class="welcome-line">Meet the racquet-sports people near you — the first date is a game, not dinner.</p>
+        <span class="welcome-score">40 – LOVE</span>
+      </div>
+      <div class="welcome-modes">
+        <div class="wm-row">
+          <span class="wm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg></span>
+          <div><strong>Date Mode</strong><span class="wm-desc">Find your perfect match.</span></div>
+        </div>
+        <div class="wm-row">
+          <span class="wm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg></span>
+          <div><strong>Play Mode</strong><span class="wm-desc">Find players for your next match.</span></div>
+        </div>
+        <div class="wm-row">
+          <span class="wm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg></span>
+          <div><strong>Friends Mode</strong><span class="wm-desc">Expand your circle on and off the court.</span></div>
+        </div>
+      </div>
+      <div class="welcome-actions">
+        <button class="btn btn-primary" id="btn-create">Create profile</button>
+        <button class="btn btn-ghost" id="btn-continue">I already have an account</button>
+      </div>
+    </section>
+
+    <!-- ONBOARDING 1 -->
+    <section class="screen" id="screen-ob1" aria-label="Your name and age">
+      <div class="ob-head">
+        <div class="dots"><span class="on"></span><span></span><span></span><span></span><span></span></div>
+        <h1>First things first</h1>
+      </div>
+      <div class="scroll ob-body">
+        <div>
+          <label for="ob-name">First name</label>
+          <input type="text" id="ob-name" autocomplete="given-name" placeholder="e.g. Aaron">
+        </div>
+        <div>
+          <label for="ob-age">Age</label>
+          <input type="number" id="ob-age" inputmode="numeric" min="18" max="99" placeholder="e.g. 34">
+        </div>
+        <div>
+          <label>I am</label>
+          <div class="chips" id="ob-gender" role="group" aria-label="I am">
+            <button class="chip" aria-pressed="false" data-gender="woman">Woman</button>
+            <button class="chip" aria-pressed="false" data-gender="man">Man</button>
+            <button class="chip" aria-pressed="false" data-gender="nonbinary">Nonbinary</button>
+          </div>
+        </div>
+        <div>
+          <label>Playing as a pair?</label>
+          <div class="mode-rows">
+            <button class="mode-row" id="ob-team" aria-pressed="false" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg>
+              <span><span class="mode-name">We're a doubles team</span><span class="mode-desc">Two of you, one profile — for Play and Friends</span></span>
+              <span class="mode-check" aria-hidden="true">✓</span>
+            </button>
+          </div>
+          <div class="seeking-box" id="team-box" hidden>
+            <label for="ob-partner-name">Your partner</label>
+            <input type="text" id="ob-partner-name" placeholder="Their first name" maxlength="40">
+            <input type="text" id="ob-partner-age" inputmode="numeric" placeholder="Their age" style="margin-top:8px">
+            <label style="margin-top:12px">They are</label>
+            <div class="chips" id="ob-partner-gender" data-single role="group" aria-label="Partner gender">
+              <button class="chip" aria-pressed="false" data-gender="woman">Woman</button>
+              <button class="chip" aria-pressed="false" data-gender="man">Man</button>
+              <button class="chip" aria-pressed="false" data-gender="nonbinary">Nonbinary</button>
+            </div>
+            <p class="hint" style="margin-top:8px">Both of you must be 18+. Ask before you add someone — their name and age go on a public profile. You stay responsible for the account.</p>
+          </div>
+        </div>
+        <div>
+          <label for="ob-city">Where do you play?</label>
+          <select id="ob-city" aria-label="Your city"></select>
+          <p class="hint" style="margin-top:8px">You'll meet players in this city. You can change it any time in Settings.</p>
+        </div>
+        <div>
+          <label for="photo-input">Profile photo <span style="font-weight:400">(optional)</span></label>
+          <div class="photo-pick">
+            <span class="photo-preview" id="photo-preview" aria-hidden="true">📷</span>
+            <button class="photo-btn" id="photo-btn" type="button">Add photo</button>
+            <input type="file" id="photo-input" accept="image/*" style="display:none" aria-label="Choose profile photo">
+          </div>
+        </div>
+        <p class="hint">Your name, age, and photo appear on your player card. Photos stay on this device in the prototype. You must be 18 or older.</p>
+      </div>
+      <div class="ob-foot">
+        <button class="btn btn-primary" id="ob1-next">Next</button>
+      </div>
+    </section>
+
+    <!-- ONBOARDING — PHONE VERIFICATION -->
+    <section class="screen" id="screen-obphone" aria-label="Verify your phone number">
+      <div class="ob-head">
+        <div class="dots"><span class="on"></span><span class="on"></span><span></span><span></span><span></span></div>
+        <h1>Prove you&rsquo;re real</h1>
+      </div>
+      <div class="scroll ob-body">
+        <div id="phone-entry">
+          <label for="ob-phone">Mobile number</label>
+          <input type="tel" id="ob-phone" autocomplete="tel" inputmode="tel" placeholder="(317) 555-0142">
+          <button class="btn btn-primary" id="phone-send" style="margin-top:12px;width:100%">Text me a code</button>
+        </div>
+        <div id="phone-code-box" hidden>
+          <label for="ob-phone-code" id="phone-code-label">Enter the 6-digit code we texted you</label>
+          <input type="text" id="ob-phone-code" inputmode="numeric" maxlength="6" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;">
+          <button class="btn btn-primary" id="phone-verify" style="margin-top:12px;width:100%">Verify</button>
+          <div style="display:flex;gap:22px;justify-content:center;margin-top:14px">
+            <button class="linklike" id="phone-resend" type="button">Resend code</button>
+            <button class="linklike dim" id="phone-change" type="button">Change number</button>
+          </div>
+        </div>
+        <div class="phone-verified" id="phone-verified-row" hidden>
+          <span aria-hidden="true">✓</span>
+          <span>Phone verified &mdash; <span id="phone-verified-num"></span></span>
+        </div>
+        <p class="hint">A one-time text keeps 40/LOVE real people only. Your number is never shown to other members and never used for marketing.</p>
+        <p class="hint" style="color:var(--optic)">Demo: no text is actually sent &mdash; enter any 6-digit code.</p>
+      </div>
+      <div class="ob-foot">
+        <button class="btn btn-ghost btn-back" data-back="screen-ob1">Back</button>
+        <button class="btn btn-primary" id="obphone-next">Next</button>
+      </div>
+    </section>
+
+    <!-- ONBOARDING 2 -->
+    <section class="screen" id="screen-ob2" aria-label="Pick your sports">
+      <div class="ob-head">
+        <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></div>
+        <h1>What do you play?</h1>
+      </div>
+      <div class="scroll ob-body">
+        <div class="chips" id="ob-sports" role="group" aria-label="Sports">
+          <button class="chip" aria-pressed="false" data-sport="Tennis">Tennis</button>
+          <button class="chip" aria-pressed="false" data-sport="Pickleball">Pickleball</button>
+          <button class="chip" aria-pressed="false" data-sport="Padel">Padel</button>
+          <button class="chip" aria-pressed="false" data-sport="Racquetball">Racquetball</button>
+          <button class="chip" aria-pressed="false" data-sport="Squash">Squash</button>
+        </div>
+        <p class="hint">Pick everything you play — you'll match with people who share at least one sport.</p>
+      </div>
+      <div class="ob-foot">
+        <button class="btn btn-ghost btn-back" data-back="screen-obphone">Back</button>
+        <button class="btn btn-primary" id="ob2-next">Next</button>
+      </div>
+    </section>
+
+    <!-- ONBOARDING 3 -->
+    <section class="screen" id="screen-ob3" aria-label="Your skill level">
+      <div class="ob-head">
+        <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+        <h1>How's your game?</h1>
+      </div>
+      <div class="scroll ob-body">
+        <div class="chips" id="ob-skill" role="group" aria-label="Skill level">
+          <button class="chip" aria-pressed="false" data-skill="Beginner">Beginner</button>
+          <button class="chip" aria-pressed="false" data-skill="Intermediate">Intermediate</button>
+          <button class="chip" aria-pressed="false" data-skill="Advanced">Advanced</button>
+          <button class="chip" aria-pressed="false" data-skill="Competitive">Competitive</button>
+        </div>
+        <div>
+          <label for="ob-rating">Official rating <span style="font-weight:400">(optional)</span></label>
+          <input type="text" id="ob-rating" placeholder="e.g. NTRP 3.5 or DUPR 4.0">
+        </div>
+        <p class="hint">Honest levels make better matches — nobody enjoys a 6–0, 6–0 first date.</p>
+      </div>
+      <div class="ob-foot">
+        <button class="btn btn-ghost btn-back" data-back="screen-ob2">Back</button>
+        <button class="btn btn-primary" id="ob3-next">Next</button>
+      </div>
+    </section>
+
+    <!-- ONBOARDING 4 -->
+    <section class="screen" id="screen-ob4" aria-label="Choose your modes">
+      <div class="ob-head">
+        <div class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div>
+        <h1>What are you here for?</h1>
+      </div>
+      <div class="scroll ob-body">
+        <div class="mode-rows" id="ob-modes" role="group" aria-label="Modes">
+          <button class="mode-row" aria-pressed="true" data-mode="date">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
+            <span><span class="mode-name">Date Mode</span><span class="mode-desc">Find your perfect match</span></span>
+            <span class="mode-check" aria-hidden="true">✓</span>
+          </button>
+          <div class="seeking-box" id="seeking-box">
+            <label>Looking to date</label>
+            <div class="chips" id="ob-seeking" role="group" aria-label="Looking to date">
+              <button class="chip" aria-pressed="false" data-seek="woman">Women</button>
+              <button class="chip" aria-pressed="false" data-seek="man">Men</button>
+              <button class="chip" aria-pressed="false" data-seek="nonbinary">Nonbinary people</button>
+            </div>
+            <p class="hint" style="margin-top:8px">Pick everyone you're open to — you'll only match with people looking for someone like you, too.</p>
+          </div>
+          <button class="mode-row" aria-pressed="false" data-mode="play">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>
+            <span><span class="mode-name">Play Mode</span><span class="mode-desc">Find players for your next match</span></span>
+            <span class="mode-check" aria-hidden="true">✓</span>
+          </button>
+          <div class="seeking-box" id="play-box" hidden>
+            <label>Game types</label>
+            <div class="chips" id="ob-playgames" role="group" aria-label="Game types">
+              <button class="chip" aria-pressed="true" data-game="singles">Singles</button>
+              <button class="chip" aria-pressed="true" data-game="doubles">Doubles</button>
+              <button class="chip" aria-pressed="true" data-game="mixed_doubles">Mixed doubles</button>
+            </div>
+            <label style="margin-top:12px">Play singles/doubles with</label>
+            <div class="chips" id="ob-playpref" data-single role="group" aria-label="Play singles and doubles with">
+              <button class="chip" aria-pressed="false" data-pref="women">Women</button>
+              <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+              <button class="chip" aria-pressed="false" data-pref="nonbinary">Nonbinary people</button>
+              <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
+            </div>
+            <p class="hint" style="margin-top:8px">Mixed doubles is open to everyone by nature.</p>
+          </div>
+          <button class="mode-row" aria-pressed="false" data-mode="friends">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg>
+            <span><span class="mode-name">Friends Mode</span><span class="mode-desc">Expand your circle on and off the court</span></span>
+            <span class="mode-check" aria-hidden="true">✓</span>
+          </button>
+          <div class="seeking-box" id="friends-box" hidden>
+            <label>Meet</label>
+            <div class="chips" id="ob-friendspref" data-single role="group" aria-label="Meet">
+              <button class="chip" aria-pressed="false" data-pref="women">Women</button>
+              <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+              <button class="chip" aria-pressed="false" data-pref="nonbinary">Nonbinary people</button>
+              <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
+            </div>
+          </div>
+        </div>
+        <p class="hint">Pick at least one — you can switch modes anytime from Home. Play and Friends are for everyone, whatever your dating preference.</p>
+      </div>
+      <div class="ob-foot">
+        <button class="btn btn-ghost btn-back" data-back="screen-ob3">Back</button>
+        <button class="btn btn-primary" id="ob4-done">Step on court</button>
+      </div>
+    </section>
+
+    <!-- HOME -->
+    <section class="screen" id="screen-home" aria-label="Home">
+      <div class="appbar">
+        <button class="icon-btn" id="menu-btn" aria-label="Menu and settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h16"></path></svg>
+        </button>
+        <div class="wordmark" id="mark-home"></div>
+        <button class="icon-btn" id="bell-btn" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z"></path><path d="M10 19.5a2.2 2.2 0 0 0 4 0"></path></svg>
+          <span class="bell-dot" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="greet">
+        <h1 id="greet-line">Good morning 👋</h1>
+        <p>Ready to rally?</p>
+      </div>
+      <div class="mode-pills" role="group" aria-label="Mode" id="mode-pills">
+        <button class="mode-pill on" data-mode="date">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
+          Date Mode
+        </button>
+        <button class="mode-pill" data-mode="play">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>
+          Play Mode
+        </button>
+        <button class="mode-pill" data-mode="friends">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg>
+          Friends Mode
+        </button>
+      </div>
+      <div class="home-scroll" id="home-scroll">
+        <div class="picks" id="picks-panel" hidden>
+          <div class="picks-head">
+            <h2>Your top <span id="picks-count">5</span></h2>
+            <span class="hint">Best fits right now</span>
+          </div>
+          <div class="picks-strip" id="picks-strip"></div>
+        </div>
+        <div class="topmatch" id="topmatch-panel">
+          <div class="topmatch-mid">
+            <h2>Top Match</h2>
+            <p>A great match is just a game away.</p>
+            <button class="topmatch-btn" id="view-matches">View Matches</button>
+          </div>
+          <div class="topmatch-art" aria-hidden="true">
+            <svg viewBox="0 0 84 84" fill="none">
+              <circle cx="42" cy="42" r="26" fill="#D6F44F"></circle>
+              <path d="M24 24c10 10 10 26 0 36" stroke="#0A0B0D" stroke-width="2.5" fill="none"></path>
+              <path d="M60 24c-10 10-10 26 0 36" stroke="#0A0B0D" stroke-width="2.5" fill="none"></path>
+              <path d="M42 50s-7-4.4-7-9.2c0-2.3 1.8-4.1 4-4.1 1.2 0 2.3.6 3 1.5.7-.9 1.8-1.5 3-1.5 2.2 0 4 1.8 4 4.1 0 4.8-7 9.2-7 9.2z" fill="#0A0B0D"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="deck" id="deck"></div>
+      </div>
+    </section>
+
+    <!-- MATCHES -->
+    <section class="screen" id="screen-matches" aria-label="Your matches">
+      <div class="appbar"><h2 class="appbar-title">Matches</h2></div>
+      <div class="scroll" id="match-grid-wrap"></div>
+    </section>
+
+    <!-- CHAT LIST -->
+    <section class="screen" id="screen-chat" aria-label="Chats">
+      <div class="appbar"><h2 class="appbar-title">Chat</h2></div>
+      <div class="scroll" id="thread-list"></div>
+    </section>
+
+    <!-- CONVERSATION -->
+    <section class="screen" id="screen-convo" aria-label="Conversation">
+      <div class="chat-head">
+        <button class="icon-btn" id="chat-back" aria-label="Back to chats">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+        </button>
+        <span class="ava" id="chat-ava"></span>
+        <div>
+          <div class="chat-head-name" id="chat-name"></div>
+          <div class="chat-head-sub" id="chat-sub"></div>
+        </div>
+        <button class="icon-btn" id="chat-more" aria-label="More options" style="margin-left:auto">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+        </button>
+      </div>
+      <div class="chat-log" id="chat-log"></div>
+      <div class="chat-tools">
+        <button class="tool-chip" id="suggest-time">🎾 Suggest court time</button>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="chat-text" placeholder="Your serve…" aria-label="Message">
+        <button class="chat-send" id="chat-sendbtn">Send</button>
+      </div>
+    </section>
+
+    <!-- EVENTS -->
+    <section class="screen" id="screen-events" aria-label="Events">
+      <div class="appbar">
+        <h2 class="appbar-title">Events</h2>
+        <select id="event-city" aria-label="Show meetups in"></select>
+      </div>
+      <div class="scroll" id="event-list"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="screen" id="screen-profile" aria-label="Your profile">
+      <div class="appbar">
+        <h2 class="appbar-title">Profile</h2>
+        <button class="icon-btn" id="open-settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"></path></svg>
+        </button>
+      </div>
+      <div class="scroll" id="profile-body"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="screen" id="screen-settings" aria-label="Settings">
+      <div class="chat-head">
+        <button class="icon-btn" id="settings-back" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+        </button>
+        <div class="chat-head-name">Settings</div>
+      </div>
+      <div class="scroll">
+        <div class="set-group">
+          <h3>Modes</h3>
+          <div class="set-row">
+            <div><div class="lab">Date Mode</div><div class="sub">Find your perfect match</div></div>
+            <button class="switch" id="sw-date" role="switch" aria-checked="true" aria-label="Date mode"></button>
+          </div>
+          <div class="set-row">
+            <div><div class="lab">Play Mode</div><div class="sub">Find players for your next match</div></div>
+            <button class="switch" id="sw-play" role="switch" aria-checked="false" aria-label="Play mode"></button>
+          </div>
+          <div class="set-row">
+            <div><div class="lab">Friends Mode</div><div class="sub">Expand your circle</div></div>
+            <button class="switch" id="sw-friends" role="switch" aria-checked="false" aria-label="Friends mode"></button>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Dating</h3>
+          <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div>
+              <span class="lab">I am</span>
+              <div class="chips" id="set-gender" style="margin-top:8px">
+                <button class="chip" aria-pressed="false" data-gender="woman">Woman</button>
+                <button class="chip" aria-pressed="false" data-gender="man">Man</button>
+                <button class="chip" aria-pressed="false" data-gender="nonbinary">Nonbinary</button>
+              </div>
+            </div>
+            <div>
+              <span class="lab">Looking to date</span>
+              <div class="chips" id="set-seeking" style="margin-top:8px">
+                <button class="chip" aria-pressed="false" data-seek="woman">Women</button>
+                <button class="chip" aria-pressed="false" data-seek="man">Men</button>
+                <button class="chip" aria-pressed="false" data-seek="nonbinary">Nonbinary people</button>
+              </div>
+            </div>
+            <p class="hint">Date mode only shows people who fit what you're looking for — and who are looking for someone like you.</p>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Play</h3>
+          <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div>
+              <span class="lab">Game types</span>
+              <div class="chips" id="set-playgames" style="margin-top:8px">
+                <button class="chip" aria-pressed="true" data-game="singles">Singles</button>
+                <button class="chip" aria-pressed="true" data-game="doubles">Doubles</button>
+                <button class="chip" aria-pressed="true" data-game="mixed_doubles">Mixed doubles</button>
+              </div>
+            </div>
+            <div>
+              <span class="lab">Play singles/doubles with</span>
+              <div class="chips" id="set-playpref" style="margin-top:8px">
+                <button class="chip" aria-pressed="false" data-pref="women">Women</button>
+                <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+                <button class="chip" aria-pressed="false" data-pref="nonbinary">Nonbinary people</button>
+                <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
+              </div>
+            </div>
+            <p class="hint">Play mode shows players who want the same game types. Mixed doubles is open to everyone by nature.</p>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>City</h3>
+          <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div>
+              <div class="chips" id="set-city"></div>
+              <p class="hint" style="margin-top:8px">You match with players in your city. Moving, or splitting time between two? Switch any time — your matches and messages come with you.</p>
+            </div>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Friends</h3>
+          <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div>
+              <span class="lab">Meet</span>
+              <div class="chips" id="set-friendspref" style="margin-top:8px">
+                <button class="chip" aria-pressed="false" data-pref="women">Women</button>
+                <button class="chip" aria-pressed="false" data-pref="men">Men</button>
+                <button class="chip" aria-pressed="false" data-pref="nonbinary">Nonbinary people</button>
+                <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Discovery</h3>
+          <div class="set-row" style="flex-direction:column; align-items:stretch;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+              <span class="lab">Distance</span>
+              <span class="range-val"><span id="radius-val">15</span> mi</span>
+            </div>
+            <input type="range" id="radius" min="1" max="50" value="15" aria-label="Discovery radius in miles">
+          </div>
+          <div class="set-row">
+            <div class="lab">Age range</div>
+            <div class="age-inputs">
+              <input type="number" id="age-min" value="25" min="18" max="99" aria-label="Minimum age">
+              <span aria-hidden="true">–</span>
+              <input type="number" id="age-max" value="55" min="18" max="99" aria-label="Maximum age">
+            </div>
+          </div>
+          <div class="set-row">
+            <div><div class="lab">Only my sports</div><div class="sub">Show only players who share a sport with you</div></div>
+            <button class="switch" id="sw-mysports" role="switch" aria-checked="false" aria-label="Only show players who share my sports"></button>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Notifications</h3>
+          <div class="set-row">
+            <div><div class="lab">New matches</div><div class="sub">It's a Match Point! alerts</div></div>
+            <button class="switch" id="sw-notif-match" role="switch" aria-checked="true" aria-label="New match notifications"></button>
+          </div>
+          <div class="set-row">
+            <div><div class="lab">Messages</div><div class="sub">When it's your serve</div></div>
+            <button class="switch" id="sw-notif-msg" role="switch" aria-checked="true" aria-label="Message notifications"></button>
+          </div>
+        </div>
+        <button class="danger" id="sign-out">Sign out</button>
+        <p class="hint" style="text-align:center; margin-top:12px;" id="settings-footer">40/LOVE prototype · not a real account</p>
+      </div>
+    </section>
+
+    <!-- Tab bar -->
+    <nav class="tabbar" id="tabbar" style="display:none" aria-label="Main navigation">
+      <button class="tab on" data-screen="screen-home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"></path></svg>
+        Home
+      </button>
+      <button class="tab" data-screen="screen-matches">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
+        Matches
+      </button>
+      <button class="tab" data-screen="screen-chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5c0 4.1-4 7.5-9 7.5-1 0-2-.13-2.9-.38L4 20l1.3-3.1C3.9 15.5 3 13.6 3 11.5 3 7.4 7 4 12 4s9 3.4 9 7.5z"></path></svg>
+        Chat
+      </button>
+      <button class="tab" data-screen="screen-events">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"></rect><path d="M3.5 10h17M8 2.8V7M16 2.8V7"></path></svg>
+        Events
+      </button>
+      <button class="tab" data-screen="screen-profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8.4" r="4"></circle><path d="M4.5 20.5c1.3-3.6 4.1-5.4 7.5-5.4s6.2 1.8 7.5 5.4"></path></svg>
+        Profile
+      </button>
+    </nav>
+
+    <!-- Profile detail sheet -->
+    <div class="overlay" id="psheet-overlay">
+      <div class="profile-sheet" role="dialog" aria-modal="true" aria-labelledby="psheet-name">
+        <div class="psheet-photo" id="psheet-photo"></div>
+        <div class="psheet-body">
+          <div class="card-name" id="psheet-name"></div>
+          <div id="psheet-rows"></div>
+          <p class="card-bio" id="psheet-bio"></p>
+          <div class="psheet-actions">
+            <button class="act" id="psheet-pass" aria-label="Pass">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+            </button>
+            <button class="act act-like" id="psheet-like" aria-label="Like">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
+            </button>
+            <button class="act" id="psheet-ace" aria-label="Ace — super like">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.7l5.9-.8z"></path></svg>
+            </button>
+          </div>
+          <button class="psheet-close" id="psheet-close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Match modal -->
+    <div class="overlay" id="match-overlay">
+      <div class="match-modal" role="dialog" aria-modal="true" aria-labelledby="match-title">
+        <div class="score">40 – LOVE</div>
+        <h2 id="match-title">It's a <span class="hl">Match Point!</span></h2>
+        <div class="match-avas">
+          <span class="ava" id="match-ava-me"></span>
+          <span class="ava" id="match-ava-them"></span>
+        </div>
+        <p id="match-text"></p>
+        <button class="btn btn-primary" id="match-message">Send a message</button>
+        <button class="btn btn-ghost" id="match-keep">Keep playing</button>
+      </div>
+    </div>
+
+    <!-- Report / block sheet -->
+    <div class="overlay" id="more-overlay">
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+        <div class="sheet-title" id="sheet-title"></div>
+        <button id="sheet-report">Report</button>
+        <button class="sheet-danger" id="sheet-block">Block</button>
+        <button class="sheet-cancel" id="sheet-cancel">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Notifications panel -->
+    <div class="overlay" id="notif-overlay">
+      <div class="notif-panel" role="dialog" aria-modal="true" aria-labelledby="notif-title">
+        <div class="notif-head">
+          <h2 id="notif-title">Notifications</h2>
+          <button class="notif-clear" id="notif-clear">Clear all</button>
+        </div>
+        <div id="notif-list"></div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- Desktop marketing panel (decorative) -->
+  <aside class="promo" aria-hidden="true">
+    <div class="promo-head">More than<br>a match.<br><span class="hl">A community.</span></div>
+    <div class="promo-rule"></div>
+    <div class="promo-rows">
+      <div class="promo-row">
+        <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg></span>
+        <div><h3>Date Mode</h3><p>Find your perfect match.</p></div>
+      </div>
+      <div class="promo-row">
+        <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg></span>
+        <div><h3>Play Mode</h3><p>Find players for your next match.</p></div>
+      </div>
+      <div class="promo-row">
+        <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg></span>
+        <div><h3>Friends Mode</h3><p>Expand your circle on and off the court.</p></div>
+      </div>
+      <div class="promo-row">
+        <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"></rect><path d="M3.5 10h17M8 2.8V7M16 2.8V7"></path><path d="M9 15.5l2 2 4-4"></path></svg></span>
+        <div><h3>Events</h3><p>Tournaments, leagues &amp; socials near you.</p></div>
+      </div>
+    </div>
+    <div class="promo-foot">
+      <div class="wordmark" id="mark-promo" style="font-size:38px"></div>
+      <span class="tagline">Serve. Rally. Connect.</span>
+    </div>
+  </aside>
+</div>
+
+<script>
+  /* Supabase keys — filled in by scripts/go-live.sh. The anon key is designed
+     to be public; the only thing this page uses it for is record_demo_step,
+     which takes a fixed vocabulary of step names and stores no person. Left
+     empty, the prototype runs exactly as before and reports nothing. */
+  window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
+</script>
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Wordmark ---------- */
+  /*mark:ball*/
+  var BALL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg>';
+  /*/mark:ball*/
+  function renderMark(el) {
+    el.innerHTML = '40/L<span class="ball">' + BALL_SVG + '</span>VE';
+  }
+  ['mark-welcome', 'mark-home', 'mark-promo'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) renderMark(el);
+  });
+
+  /* ---------- Data ---------- */
+  var GRADS = [
+    ['#D6F44F', '#6E8F2C'], ['#8FD14F', '#2C6E4F'], ['#F2E86D', '#8F6E2C'],
+    ['#B7E04A', '#3D6E2C'], ['#D6F44F', '#4A7A6E'], ['#E0D24A', '#6E4F2C'],
+    ['#A3E04A', '#2C5A6E'], ['#D6F44F', '#7A5A2C'], ['#C9E858', '#3F5A20'],
+    ['#EAF48F', '#5A6E2C'], ['#B0D93F', '#2C4A3D'], ['#DDE84A', '#4F3D6E']
+  ];
+
+  var PROFILES = [
+    { id: 'maya',   name: 'Maya',   age: 31, gender: 'woman', seeking: ['man'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 1.2, sports: ['Tennis'], skill: 'Advanced', rating: '4.0', isNew: true,  verified: true,  avail: 'Weekday evenings · Sat mornings', bio: 'Litigator by day, baseline grinder by night. Looking for someone who can keep a rally going — in conversation too.' },
+    { id: 'diego',  name: 'Diego',  age: 38, gender: 'man', seeking: ['woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 2.8, sports: ['Padel', 'Pickleball'], skill: 'Intermediate', rating: '', isNew: true, verified: false, avail: 'Weekends', bio: 'Moved here from Madrid two years ago — converting Indy to padel one pickleball game at a time.' },
+    { id: 'priya',  name: 'Priya',  age: 29, gender: 'woman', seeking: ['man'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 0.8, sports: ['Tennis', 'Pickleball'], skill: 'Intermediate', rating: '3.5', isNew: true, verified: true, avail: 'Sun + Wed evenings', bio: 'Product designer who treats every third ball like a drop-shot opportunity. Winner picks the coffee spot after.' },
+    { id: 'sam',    name: 'Sam',    age: 45, gender: 'woman', seeking: ['man'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 3.1, sports: ['Pickleball'], skill: 'Competitive', rating: '4.2', isNew: false, verified: true, avail: 'Early mornings, most days', bio: 'Recovering marathoner, fully converted to the kitchen line. I play hard and brunch harder.' },
+    { id: 'elena',  name: 'Elena',  age: 52, gender: 'woman', seeking: ['man'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'women', dist: 1.9, sports: ['Pickleball'], skill: 'Intermediate', rating: '3.4', isNew: false, verified: true, avail: 'Weekday mornings', bio: 'Retired teacher, new to the city, and pickleball has been the best welcome committee.' },
+    { id: 'marcus', name: 'Marcus', age: 34, gender: 'man', seeking: ['man'], playGames: ['singles'], playPref: 'men', friendsPref: 'everyone', dist: 4.5, sports: ['Squash'], skill: 'Advanced', rating: '', isNew: false, verified: false, avail: 'Tue + Thu after 6', bio: 'Architect who thinks best inside four glass walls. If you can hold a T, you already have my attention.' },
+    { id: 'jordan', name: 'Jordan', age: 30, gender: 'woman', seeking: ['man','woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 3.0, sports: ['Tennis', 'Pickleball'], skill: 'Advanced', rating: '4.0', isNew: true, verified: true, avail: 'Flexible — I make time', bio: 'Coach says my forehand is a weapon; my dog says I need to get out more. They can both be right.' },
+    { id: 'grace',  name: 'Grace',  age: 41, gender: 'woman', seeking: ['man'], playGames: ['doubles','mixed_doubles'], playPref: 'women', friendsPref: 'everyone', dist: 5.2, sports: ['Tennis', 'Padel'], skill: 'Advanced', rating: '4.5', isNew: false, verified: true, avail: 'Sat + Sun mornings', bio: 'ER nurse with a wicked slice. Weekends are sacred court time — see if you can break serve.' },
+    { id: 'gracerosa', name: 'Grace', age: 41, gender: 'woman', isTeam: true, partnerName: 'Rosa', partnerAge: 38, partnerGender: 'woman', seeking: [], modes: ['play','friends'], playGames: ['doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 3.4, sports: ['Tennis'], skill: 'Advanced', rating: '4.5', isNew: true, verified: true, avail: 'Sunday mornings', bio: 'Doubles partners of nine years. We bring the balls, the coffee, and an unreasonable number of lobs. Looking for another pair to play sets with.' },
+    { id: 'theo',   name: 'Theo',   age: 58, gender: 'man', seeking: ['woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 2.2, sports: ['Racquetball'], skill: 'Intermediate', rating: '', isNew: false, verified: false, avail: 'Mon/Wed/Fri lunch', bio: 'Thirty years of racquetball and still learning new angles. Grandkids say I’m cool; verify in person.' },
+    { id: 'nadia',  name: 'Nadia',  age: 33, gender: 'woman', seeking: ['man','woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 6.7, sports: ['Pickleball'], skill: 'Beginner', rating: '', isNew: false, verified: true, avail: 'Weekend afternoons', bio: 'Food scientist who joined a pickleball league on a dare and stayed for the people. Post-game taco recs are my specialty.' },
+    { id: 'chris',  name: 'Chris',  age: 48, gender: 'man', seeking: ['woman'], playGames: ['singles','doubles','mixed_doubles'], playPref: 'everyone', friendsPref: 'everyone', dist: 3.8, sports: ['Pickleball', 'Tennis'], skill: 'Advanced', rating: '4.0', isNew: false, verified: true, avail: 'Evenings after 7', bio: 'Two kids, one dog, zero interest in small talk at bars. Ten minutes of doubles tells you more than any bio could.' },
+    { id: 'lena',   name: 'Lena',   age: 25, gender: 'woman', seeking: ['woman'], playGames: ['singles'], playPref: 'women', friendsPref: 'everyone', dist: 9.8, sports: ['Squash', 'Tennis'], skill: 'Competitive', rating: '', isNew: false, verified: false, avail: 'Weekday evenings', bio: 'Grad student and former junior squash champ. Fair warning: I call every let.' }
+  ];
+
+  var THREADS = [
+    {
+      id: 'maya', unread: true, yourServe: true,
+      msgs: [
+        { who: 'them', text: 'Okay your backhand slice is genuinely rude 😄', when: 'Yesterday 8:42 PM' },
+        { who: 'me',   text: 'Years of being too lazy to hit topspin finally paying off', when: 'Yesterday 8:50 PM' },
+        { who: 'them', text: 'Rematch this weekend? Loser buys smoothies', when: 'Yesterday 9:03 PM' }
+      ]
+    },
+    {
+      id: 'sam', unread: false, yourServe: false,
+      msgs: [
+        { who: 'them', text: 'Great meeting you at the mixer! You held that kitchen line like a pro', when: 'Tue 7:15 PM' },
+        { who: 'me',   text: 'Ha, I was terrified the whole time. Let’s play again soon?', when: 'Tue 7:31 PM' },
+        { who: 'them', type: 'court', court: 'Broad Ripple Park', day: 'Sat', time: '9:00 AM', sport: 'Pickleball', when: 'Tue 7:40 PM' },
+        { who: 'me',   text: 'Booked it. Bringing my A-game and electrolytes', when: 'Tue 8:02 PM' }
+      ]
+    },
+    {
+      id: 'priya', unread: false, yourServe: true,
+      msgs: [
+        { who: 'them', text: 'So verdict on the new courts at Riverside?', when: 'Mon 6:20 PM' },
+        { who: 'them', text: 'Also I found a coffee place two blocks away. Strategic post-match option 👀', when: 'Mon 6:21 PM' }
+      ]
+    }
+  ];
+
+  var REPLIES = {
+    maya:  'Deal. Saturday, 10am, bring your rude slice 😤',
+    sam:   'That’s what I like to hear. See you at the kitchen line!',
+    priya: 'Right?? Okay — Riverside Thursday, coffee verdict after 🎾'
+  };
+
+  var EVENTS = [
+    { id: 'e1', city: 'indianapolis', week: 'This week', dow: 'Fri', dom: '7',  title: 'Sunset Doubles Social', venue: 'Riverside Park Tennis Complex', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6, desc: 'Round-robin doubles as the sun goes down — partners rotate every 20 minutes, so you\'ll play with everyone.' },
+    { id: 'e2', city: 'indianapolis', week: 'This week', dow: 'Sat', dom: '8',  title: 'Beginner Pickleball Mixer', venue: 'Broad Ripple Park', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12, desc: 'Never held a paddle? Perfect. Loaner paddles, patient people, and zero judgment.' },
+    { id: 'e3', city: 'indianapolis', week: 'This week', dow: 'Sun', dom: '9',  title: '40/LOVE Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3, desc: 'The signature 40/LOVE format: short sets, rotating partners, and a built-in social break.' },
+    { id: 'e4', city: 'indianapolis', week: 'Next week', dow: 'Wed', dom: '12', title: 'Pickleball Under the Lights', venue: 'Ellenberger Park', time: '7:30 PM', sport: 'Pickleball', level: 'All levels', spots: 8, desc: 'Indy\'s biggest public pickleball site, under the lights. Music on, stakes low.' },
+    { id: 'e5', city: 'indianapolis', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Tarkington Park', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10, desc: '45 minutes of cardio tennis, then coffee at the Tarkington café — the date part is optional.' },
+    { id: 'e6', city: 'indianapolis', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Indy Pickleball Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5, desc: 'Season kickoff for the ladder league. Come claim a rung.' },
+    { id: 'e7', city: 'seattle', week: 'This week', dow: 'Sat', dom: '8',  title: 'Green Lake Pickleball Social', venue: 'Green Lake Courts', time: '11:00 AM', sport: 'Pickleball', level: 'All levels', spots: 9, desc: 'Rotating doubles by the lake, coffee after at the boathouse.' },
+    { id: 'e8', city: 'los-angeles', week: 'This week', dow: 'Sun', dom: '9',  title: 'Sunset Rally on the Westside', venue: 'Rancho Park Tennis Center', time: '5:30 PM', sport: 'Tennis', level: 'NTRP 3.5+', spots: 4, desc: 'Fast sets, sixteen courts, and the best sunset in the city.' },
+    { id: 'e9', city: 'phoenix', week: 'Next week', dow: 'Thu', dom: '13', title: 'Padel After Work', venue: 'Arcadia Padel Club', time: '6:30 PM', sport: 'Padel', level: 'Beginner–Int.', spots: 8, desc: 'Padel is the easiest racquet sport to start and the hardest to stop.' },
+    { id: 'e10', city: 'miami', week: 'Next week', dow: 'Sat', dom: '15', title: 'Beachside Doubles Mixer', venue: 'Flamingo Park', time: '8:00 AM', sport: 'Tennis', level: 'All levels', spots: 11, desc: 'Early start to beat the heat, smoothies after.' }
+  ];
+
+  var MODE_CFG = {
+    date:    { likeName: 'Like' },
+    play:    { likeName: 'Request to hit' },
+    friends: { likeName: 'Wave' }
+  };
+
+  var ALL_GAMES = ['singles', 'doubles', 'mixed_doubles'];
+  function prefOk(pref, g) {
+    return !pref || pref === 'everyone'
+      || (pref === 'men' && g === 'man')
+      || (pref === 'women' && g === 'woman')
+      || (pref === 'nonbinary' && g === 'nonbinary');
+  }
+  var REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var GAME_LABELS = { singles: 'Singles', doubles: 'Doubles', mixed_doubles: 'Mixed doubles' };
+
+  /* ---------- State ---------- */
+  var STORE_KEY = '40love.profile';
+  var state = {
+    user: null,
+    mode: 'date',
+    deckPos: 0,
+    likeCount: 0,
+    history: [],
+    saved: {},
+    blocked: {},
+    seen: {},
+    matchedId: null,
+    matches: ['maya', 'sam', 'priya'],
+    joined: {},
+    expandedEvents: {},
+    replied: {},
+    threads: THREADS,
+    prefs: { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false },
+    notifs: [
+      { ico: '❤️', txt: 'It’s a Match Point! You and Maya matched.', sub: 'Yesterday 9:05 PM' },
+      { ico: '🎾', txt: 'Your serve — Priya sent you two messages.', sub: 'Mon 6:21 PM' },
+      { ico: '📅', txt: 'Sunset Doubles Social is this Friday at 6:00 PM — 6 spots left.', sub: 'Mon 9:00 AM' }
+    ]
+  };
+
+  function loadUser() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return null;
+      var u = JSON.parse(raw);
+      if (u && typeof u.name === 'string' && u.name) return u;
+      return null;
+    } catch (e) { return null; }
+  }
+  function saveUser() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state.user)); } catch (e) { /* private mode: demo continues in memory */ }
+  }
+
+  /* Discovery preferences persist too. They used to live only in memory, so
+     a member set their age range and distance, reopened the app, and found
+     them back at the defaults. */
+  var PREFS_KEY = '40love.prefs';
+  function savePrefs() {
+    try { localStorage.setItem(PREFS_KEY, JSON.stringify(state.prefs)); } catch (e) { /* memory-only fallback */ }
+  }
+  function loadPrefs() {
+    try {
+      var raw = localStorage.getItem(PREFS_KEY);
+      if (!raw) return null;
+      var p = JSON.parse(raw);
+      if (!p || typeof p !== 'object') return null;
+      return {
+        radius: clampNum(p.radius, 1, 50, 15),
+        ageMin: clampNum(p.ageMin, 18, 99, 25),
+        ageMax: clampNum(p.ageMax, 18, 99, 55),
+        mySportsOnly: !!p.mySportsOnly
+      };
+    } catch (e) { return null; }
+  }
+  function clampNum(v, lo, hi, fallback) {
+    var n = parseInt(v, 10);
+    if (isNaN(n)) return fallback;
+    return Math.min(hi, Math.max(lo, n));
+  }
+
+  /* ---------- Helpers ---------- */
+  function $(sel) { return document.querySelector(sel); }
+  function $all(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+  function profileById(id) {
+    for (var i = 0; i < PROFILES.length; i++) if (PROFILES[i].id === id) return PROFILES[i];
+    return null;
+  }
+  function gradFor(id) {
+    var idx = 0;
+    for (var i = 0; i < id.length; i++) idx = (idx + id.charCodeAt(i)) % GRADS.length;
+    var g = GRADS[idx];
+    return 'linear-gradient(150deg, ' + g[0] + ', ' + g[1] + ')';
+  }
+  function initials(name) {
+    return name.trim().split(/\s+/).map(function (w) { return w.charAt(0).toUpperCase(); }).slice(0, 2).join('');
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
+  }
+
+  var TABS = ['screen-home', 'screen-matches', 'screen-chat', 'screen-events', 'screen-profile'];
+  function show(id) {
+    $all('.screen').forEach(function (s) { s.classList.toggle('active', s.id === id); });
+    var isTab = TABS.indexOf(id) !== -1;
+    $('#tabbar').style.display = isTab ? 'flex' : 'none';
+    $all('.tab').forEach(function (t) { t.classList.toggle('on', t.getAttribute('data-screen') === id); });
+    if (id === 'screen-home') { renderGreeting(); renderDeck(); }
+    if (id === 'screen-matches') renderMatches();
+    if (id === 'screen-chat') renderThreads();
+    if (id === 'screen-events') renderEvents();
+    if (id === 'screen-profile') renderProfile();
+  }
+
+  function singleSelect(groupEl) {
+    groupEl.addEventListener('click', function (ev) {
+      var btn = ev.target.closest('.chip');
+      if (!btn) return;
+      $all('#' + groupEl.id + ' .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+    });
+  }
+  function multiSelect(groupEl) {
+    groupEl.addEventListener('click', function (ev) {
+      var btn = ev.target.closest('.chip, .mode-row');
+      if (!btn) return;
+      // Pick-one groups (Play "with", Friends "Meet") are nested inside this
+      // container. Clicks bubble outward, so their own handler has already
+      // run by now — toggling here would flip the chosen chip straight back
+      // off, leaving nothing selected. Leave them alone.
+      if (btn.closest('[data-single]')) return;
+      btn.setAttribute('aria-pressed', String(btn.getAttribute('aria-pressed') !== 'true'));
+    });
+  }
+
+  /* ---------- Photo picker ---------- */
+  var draftPhoto = null;
+  $('#photo-btn').addEventListener('click', function () { $('#photo-input').click(); });
+  $('#photo-input').addEventListener('change', function () {
+    var file = $('#photo-input').files && $('#photo-input').files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var size = 384;
+        var canvas = document.createElement('canvas');
+        var scale = Math.max(size / img.width, size / img.height);
+        canvas.width = Math.min(img.width * scale, size);
+        canvas.height = Math.min(img.height * scale, size);
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        draftPhoto = canvas.toDataURL('image/jpeg', 0.82);
+        if (state.user) {
+          // Signed in: the picker adds to the photo grid (up to 6).
+          var list = photoList(state.user);
+          if (list.length >= PHOTO_SLOTS) { toast('All ' + PHOTO_SLOTS + ' slots are full — remove one first'); return; }
+          list.push(draftPhoto);
+          state.user.photos = list;
+          state.user.photo = list[0];
+          saveUser();
+          if ($('#screen-profile').classList.contains('active')) renderProfile();
+          toast('Photo added');
+        } else {
+          var prev = $('#photo-preview');
+          prev.style.backgroundImage = 'url(' + draftPhoto + ')';
+          prev.classList.add('has');
+          $('#photo-btn').textContent = 'Change photo';
+        }
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+    $('#photo-input').value = ''; // same file can be picked again
+  });
+  /* Cities 40/LOVE is open in — mirrors public.cities in the migration. */
+  var CITIES = [
+    { slug: 'indianapolis',  name: 'Indianapolis', state: 'IN' },
+    { slug: 'los-angeles',   name: 'Los Angeles',  state: 'CA' },
+    { slug: 'san-diego',     name: 'San Diego',    state: 'CA' },
+    { slug: 'phoenix',       name: 'Phoenix',      state: 'AZ' },
+    { slug: 'seattle',       name: 'Seattle',      state: 'WA' },
+    { slug: 'spokane',       name: 'Spokane',      state: 'WA' },
+    { slug: 'dallas',        name: 'Dallas',       state: 'TX' },
+    { slug: 'houston',       name: 'Houston',      state: 'TX' },
+    { slug: 'orlando',       name: 'Orlando',      state: 'FL' },
+    { slug: 'miami',         name: 'Miami',        state: 'FL' },
+    { slug: 'washington-dc', name: 'Washington',   state: 'DC' }
+  ];
+  var DEFAULT_CITY = 'indianapolis';
+  function cityLabel(slug) {
+    for (var ci = 0; ci < CITIES.length; ci++) {
+      if (CITIES[ci].slug === slug) return CITIES[ci].name + ', ' + CITIES[ci].state;
+    }
+    return '';
+  }
+  var PHOTO_SLOTS = 6; // one main photo plus five more
+  // A member's photo list: photos[] when present, else the single legacy photo.
+  function photoList(u) {
+    return u.photos ? u.photos.slice() : (u.photo ? [u.photo] : []);
+  }
+  function applyPhoto(el, photo, fallbackBg) {
+    if (photo) {
+      el.classList.add('has-photo');
+      el.style.backgroundImage = 'url(' + photo + ')';
+    } else {
+      el.classList.remove('has-photo');
+      el.style.backgroundImage = '';
+      if (fallbackBg) el.style.background = fallbackBg;
+    }
+  }
+
+  /* ---------- Welcome + onboarding ---------- */
+  $('#btn-create').addEventListener('click', function () { show('screen-ob1'); });
+  $('#btn-continue').addEventListener('click', function () {
+    if (state.user) { show('screen-home'); }
+    else { toast('No saved profile on this device yet — create one!'); }
+  });
+  $all('.btn-back').forEach(function (b) {
+    b.addEventListener('click', function () { show(b.getAttribute('data-back')); });
+  });
+
+  singleSelect($('#ob-gender'));
+  singleSelect($('#ob-partner-gender'));
+  $('#ob-city').innerHTML = CITIES.map(function (c) {
+    return '<option value="' + c.slug + '"' + (c.slug === DEFAULT_CITY ? ' selected' : '') + '>' +
+      esc(c.name + ', ' + c.state) + '</option>';
+  }).join('');
+  $('#ob-team').addEventListener('click', function () {
+    var on = $('#ob-team').getAttribute('aria-pressed') !== 'true';
+    $('#ob-team').setAttribute('aria-pressed', String(on));
+    $('#team-box').hidden = !on;
+  });
+  $('#ob1-next').addEventListener('click', function () {
+    var name = $('#ob-name').value.trim();
+    var age = parseInt($('#ob-age').value, 10);
+    var genderSel = $('#ob-gender .chip[aria-pressed="true"]');
+    if (!name) { toast('Add your first name to continue'); return; }
+    if (!age || age < 18 || age > 99) { toast('Enter an age between 18 and 99'); return; }
+    if (!genderSel) { toast('Tell us who you are so matching works'); return; }
+    var cityVal = $('#ob-city').value;
+    if (!cityVal) { toast('Pick the city you play in'); return; }
+    var isTeam = $('#ob-team').getAttribute('aria-pressed') === 'true';
+    var pName = '', pAge = null, pGender = null;
+    if (isTeam) {
+      pName = $('#ob-partner-name').value.trim();
+      pAge = parseInt($('#ob-partner-age').value, 10);
+      var pgSel = $('#ob-partner-gender .chip[aria-pressed="true"]');
+      if (!pName) { toast('Add your partner’s first name'); return; }
+      if (!pAge || pAge < 18 || pAge > 99) { toast('Both people on a team must be 18 or older'); return; }
+      if (!pgSel) { toast('Tell us your partner’s gender so matching works'); return; }
+      pGender = pgSel.getAttribute('data-gender');
+    }
+    state.draft = { name: name, age: age, gender: genderSel.getAttribute('data-gender'), photo: draftPhoto,
+      phone: phoneOk ? phoneE164 : null, phoneVerified: phoneOk,
+      isTeam: isTeam, partnerName: pName, partnerAge: pAge, partnerGender: pGender,
+      city: cityVal };
+    // A shared profile is never a dating profile — take Date off the table.
+    var dateRow = $('#ob-modes .mode-row[data-mode="date"]');
+    dateRow.hidden = isTeam;
+    if (isTeam) {
+      dateRow.setAttribute('aria-pressed', 'false');
+      var playRow = $('#ob-modes .mode-row[data-mode="play"]');
+      if (playRow.getAttribute('aria-pressed') !== 'true') playRow.setAttribute('aria-pressed', 'true');
+      syncSeekingBox();
+    }
+    show('screen-obphone');
+  });
+
+  /* Phone verification — the prototype simulates the SMS; the real app sends
+     a code through Supabase auth and the flag only syncs server-side. */
+  function toE164(raw) {
+    var digits = String(raw).replace(/\D/g, '');
+    if (digits.length === 10) return '+1' + digits;
+    if (digits.length === 11 && digits.charAt(0) === '1') return '+' + digits;
+    return null;
+  }
+  var phoneE164 = null, phoneOk = false;
+  function syncPhoneUI() {
+    $('#phone-entry').hidden = !!phoneE164 || phoneOk;
+    $('#phone-code-box').hidden = !phoneE164 || phoneOk;
+    $('#phone-verified-row').hidden = !phoneOk;
+    if (phoneOk) $('#phone-verified-num').textContent = phoneE164;
+  }
+  $('#phone-send').addEventListener('click', function () {
+    var e164 = toE164($('#ob-phone').value);
+    if (!e164) { toast('Enter a 10-digit US phone number'); return; }
+    phoneE164 = e164;
+    $('#ob-phone-code').value = '';
+    $('#phone-code-label').textContent = 'Enter the 6-digit code we texted ' + e164;
+    syncPhoneUI();
+    toast('Code sent to ' + e164);
+  });
+  $('#phone-resend').addEventListener('click', function () {
+    $('#ob-phone-code').value = '';
+    toast('New code sent to ' + phoneE164);
+  });
+  $('#phone-change').addEventListener('click', function () {
+    phoneE164 = null;
+    syncPhoneUI();
+  });
+  $('#phone-verify').addEventListener('click', function () {
+    var code = $('#ob-phone-code').value.trim();
+    if (!/^\d{6}$/.test(code)) { toast('Enter the 6-digit code'); return; }
+    phoneOk = true;
+    if (state.draft) { state.draft.phone = phoneE164; state.draft.phoneVerified = true; }
+    syncPhoneUI();
+    toast('Phone verified ✓');
+  });
+  $('#obphone-next').addEventListener('click', function () {
+    if (!phoneOk) { toast('Verify your phone number to continue'); return; }
+    show('screen-ob2');
+  });
+
+  multiSelect($('#ob-sports'));
+  $('#ob2-next').addEventListener('click', function () {
+    var sports = $all('#ob-sports .chip[aria-pressed="true"]').map(function (c) { return c.getAttribute('data-sport'); });
+    if (!sports.length) { toast('Pick at least one sport'); return; }
+    state.draft.sports = sports;
+    show('screen-ob3');
+  });
+
+  singleSelect($('#ob-skill'));
+  $('#ob3-next').addEventListener('click', function () {
+    var sel = $('#ob-skill .chip[aria-pressed="true"]');
+    if (!sel) { toast('Pick your skill level'); return; }
+    state.draft.skill = sel.getAttribute('data-skill');
+    state.draft.rating = $('#ob-rating').value.trim();
+    show('screen-ob4');
+  });
+
+  multiSelect($('#ob-modes'));
+  function syncSeekingBox() {
+    function modeOn(m) {
+      return $('#ob-modes .mode-row[data-mode="' + m + '"]').getAttribute('aria-pressed') === 'true';
+    }
+    $('#seeking-box').hidden = !modeOn('date');
+    $('#play-box').hidden = !modeOn('play');
+    $('#friends-box').hidden = !modeOn('friends');
+  }
+  $('#ob-modes').addEventListener('click', function (ev) {
+    if (ev.target.closest('.mode-row')) syncSeekingBox();
+  });
+  syncSeekingBox();
+  // Pick-one behavior for the preference chip groups. They're marked
+  // data-single so the surrounding #ob-modes multi-toggle skips them.
+  ['ob-playpref', 'ob-friendspref'].forEach(function (id) {
+    singleSelect(document.getElementById(id));
+  });
+  $('#ob4-done').addEventListener('click', function () {
+    var modes = $all('#ob-modes .mode-row[aria-pressed="true"]').map(function (r) { return r.getAttribute('data-mode'); });
+    var seeking = $all('#ob-seeking .chip[aria-pressed="true"]').map(function (c) { return c.getAttribute('data-seek'); });
+    var playGames = $all('#ob-playgames .chip[aria-pressed="true"]').map(function (c) { return c.getAttribute('data-game'); });
+    var playPrefSel = $('#ob-playpref .chip[aria-pressed="true"]');
+    var friendsPrefSel = $('#ob-friendspref .chip[aria-pressed="true"]');
+    if (!modes.length) { toast('Pick at least one mode'); return; }
+    if (state.draft.isTeam && modes.indexOf('date') !== -1) {
+      toast('Teams can’t use Date mode — each of you needs your own profile');
+      return;
+    }
+    if (modes.indexOf('date') !== -1 && !seeking.length) { toast('Tell us who you’d like to date — pick at least one'); return; }
+    if (modes.indexOf('play') !== -1 && !playGames.length) { toast('Pick at least one game type for Play mode'); return; }
+    state.draft.modes = modes;
+    state.draft.seeking = modes.indexOf('date') !== -1 ? seeking : [];
+    state.draft.playGames = playGames.length ? playGames : ['singles', 'doubles', 'mixed_doubles'];
+    state.draft.playPref = playPrefSel ? playPrefSel.getAttribute('data-pref') : 'everyone';
+    state.draft.friendsPref = friendsPrefSel ? friendsPrefSel.getAttribute('data-pref') : 'everyone';
+    state.draft.bio = '';
+    state.draft.photos = state.draft.photo ? [state.draft.photo] : [];
+    state.user = state.draft;
+    delete state.draft;
+    saveUser();
+    state.mode = state.user.modes[0];
+    syncModeUI();
+    syncSettings();
+    toast('Welcome to the court, ' + state.user.name + '!');
+    show('screen-home');
+  });
+
+  /* ---------- Home ---------- */
+  function renderGreeting() {
+    var h = new Date().getHours();
+    var part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+    var name = state.user ? ', ' + state.user.name : '';
+    $('#greet-line').textContent = 'Good ' + part + name + ' 👋';
+  }
+
+  /* ---------- Top picks ----------
+     The deck is already ranked by fit, so the best candidates are simply the
+     top of it. Showing why each was picked makes the ranking visible —
+     otherwise the order looks arbitrary. */
+  var TOP_PICKS = 5;
+  function pickReason(p) {
+    var mine = (state.user && state.user.sports) || [];
+    var shared = (p.sports || []).filter(function (sp) { return mine.indexOf(sp) !== -1; });
+    if (state.mode === 'play' && shared.length && state.user && p.skill === state.user.skill) {
+      return shared[0] + ' at your level — an even match';
+    }
+    if (shared.length > 1) return 'Plays ' + shared[0] + ' and ' + shared[1] + ' like you';
+    if (shared.length) return 'Also plays ' + shared[0];
+    if (p.dist != null && p.dist <= 3) return 'Just ' + p.dist.toFixed(1) + ' miles away';
+    if (p.isNew) return 'New to 40/LOVE this week';
+    if (p.verified) return 'Verified player nearby';
+    return 'Worth a look';
+  }
+  function renderPicks() {
+    var picks = [];
+    for (var i = nextEligibleIndex(state.deckPos); i < PROFILES.length && picks.length < TOP_PICKS; i++) {
+      if (eligible(PROFILES[i])) picks.push(PROFILES[i]);
+    }
+    $('#picks-panel').hidden = picks.length === 0;
+    $('#topmatch-panel').hidden = picks.length > 0;
+    if (!picks.length) return;
+    $('#picks-count').textContent = String(picks.length);
+    $('#picks-strip').innerHTML = picks.map(function (p, idx) {
+      var nm = p.isTeam && p.partnerName ? p.name + ' & ' + p.partnerName : p.name;
+      return '<button class="pick" data-pick="' + esc(p.id) + '" aria-label="Top pick ' + (idx + 1) + ': ' + esc(nm) + '">' +
+        '<span class="pick-rank" aria-hidden="true">' + (idx + 1) + '</span>' +
+        '<span class="ava' + (p.photo ? ' has-photo' : '') + '" style="background:' + gradFor(p.id) +
+          (p.photo ? '; background-image:url(' + p.photo + '); background-size:cover; background-position:center' : '') + '">' +
+          esc(initials(p.name)) + '</span>' +
+        '<span class="pn">' + esc(nm) + '</span>' +
+        '<span class="pr">' + esc(pickReason(p)) + '</span>' +
+      '</button>';
+    }).join('');
+  }
+  $('#picks-strip').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.pick');
+    if (!btn) return;
+    var prof = profileById(btn.getAttribute('data-pick'));
+    if (prof) openPSheet(prof);
+  });
+
+  function syncModeUI() {
+    $all('.mode-pill').forEach(function (p) {
+      var m = p.getAttribute('data-mode');
+      // Only offer the modes they turned on — otherwise they can browse a
+      // mode whose preference question they were never asked.
+      p.hidden = !!(state.user && state.user.modes && state.user.modes.indexOf(m) === -1);
+      p.classList.toggle('on', m === state.mode);
+    });
+  }
+  $all('.mode-pill').forEach(function (p) {
+    p.addEventListener('click', function () {
+      state.mode = p.getAttribute('data-mode');
+      syncModeUI();
+      renderDeck();
+    });
+  });
+
+  $('#menu-btn').addEventListener('click', function () { syncSettings(); show('screen-settings'); });
+  $('#view-matches').addEventListener('click', function () { show('screen-matches'); });
+
+  /* ---------- Notifications ---------- */
+  function renderNotifs() {
+    $('#notif-list').innerHTML = state.notifs.length
+      ? state.notifs.map(function (n) {
+          return '<div class="notif-item"><span class="ico" aria-hidden="true">' + n.ico + '</span>' +
+            '<div><div class="txt">' + esc(n.txt) + '</div><div class="sub">' + esc(n.sub) + '</div></div></div>';
+        }).join('')
+      : '<div class="notif-empty">You’re all caught up 🎾</div>';
+    $('#bell-btn .bell-dot').style.display = state.notifs.length ? '' : 'none';
+  }
+  $('#bell-btn').addEventListener('click', function () {
+    renderNotifs();
+    $('#notif-overlay').classList.add('open');
+  });
+  $('#notif-clear').addEventListener('click', function () {
+    state.notifs = [];
+    renderNotifs();
+  });
+  $('#notif-overlay').addEventListener('click', function (ev) {
+    if (ev.target === $('#notif-overlay')) $('#notif-overlay').classList.remove('open');
+  });
+
+  /* ---------- Report / block ---------- */
+  var sheetCtx = { id: null, from: null };
+  function openSheet(id, from) {
+    var p = profileById(id);
+    if (!p) return;
+    sheetCtx = { id: id, from: from };
+    $('#sheet-title').textContent = p.name + ' · ' + p.sports.join(' & ');
+    $('#sheet-report').textContent = 'Report ' + p.name;
+    $('#sheet-block').textContent = 'Block ' + p.name;
+    $('#more-overlay').classList.add('open');
+  }
+  function closeSheet() { $('#more-overlay').classList.remove('open'); }
+  $('#sheet-cancel').addEventListener('click', closeSheet);
+  $('#more-overlay').addEventListener('click', function (ev) {
+    if (ev.target === $('#more-overlay')) closeSheet();
+  });
+  $('#sheet-report').addEventListener('click', function () {
+    var p = profileById(sheetCtx.id);
+    closeSheet();
+    if (sheetCtx.from === 'deck') { state.seen[sheetCtx.id] = true; renderDeck(); }
+    toast('Thanks — our safety team will review ' + (p ? p.name : 'this profile'));
+  });
+  $('#sheet-block').addEventListener('click', function () {
+    var id = sheetCtx.id;
+    var p = profileById(id);
+    closeSheet();
+    state.blocked[id] = true;
+    state.saved[id] = false;
+    state.matches = state.matches.filter(function (m) { return m !== id; });
+    state.threads = state.threads.filter(function (t) { return t.id !== id; });
+    if (sheetCtx.from === 'chat') { show('screen-chat'); }
+    else { renderDeck(); }
+    toast((p ? p.name : 'They') + ' won’t see you, and you won’t see them');
+  });
+
+  function eligible(p) {
+    if (state.blocked[p.id] || state.seen[p.id]) return false;
+    if (p.dist > state.prefs.radius) return false;
+    if (p.age < state.prefs.ageMin || p.age > state.prefs.ageMax) return false;
+    // Date mode: mutual fit — they're who I'm looking for AND I'm who
+    // they're looking for. Play/Friends are for everyone.
+    if (state.mode === 'date' && state.user && state.user.gender) {
+      // Empty 'looking to date' matches nobody rather than disabling the
+      // filter — otherwise we'd show people they explicitly ruled out.
+      if (!state.user.seeking || !state.user.seeking.length) return false;
+      if (!p.gender || !p.seeking) return false;
+      if (state.user.seeking.indexOf(p.gender) === -1) return false;
+      if (p.seeking.indexOf(state.user.gender) === -1) return false;
+    }
+    // Play mode: shared game type; singles/doubles honor both players'
+    // play-with preference; mixed doubles is open by nature.
+    if (state.mode === 'play' && state.user) {
+      var myGames = (state.user.playGames && state.user.playGames.length) ? state.user.playGames : ALL_GAMES;
+      var theirGames = (p.playGames && p.playGames.length) ? p.playGames : ALL_GAMES;
+      var overlap = myGames.filter(function (g) { return theirGames.indexOf(g) !== -1; });
+      if (!overlap.length) return false;
+      var playOk = overlap.some(function (g) {
+        return g === 'mixed_doubles' || (prefOk(state.user.playPref, p.gender) && prefOk(p.playPref, state.user.gender));
+      });
+      if (!playOk) return false;
+    }
+    // Friends mode: mutual meet preference (defaults to everyone).
+    if (state.mode === 'friends' && state.user) {
+      if (!(prefOk(state.user.friendsPref, p.gender) && prefOk(p.friendsPref, state.user.gender))) return false;
+    }
+    if (state.prefs.mySportsOnly && state.user && state.user.sports) {
+      var shares = p.sports.some(function (s) { return state.user.sports.indexOf(s) !== -1; });
+      if (!shares) return false;
+    }
+    return true;
+  }
+
+  function nextEligibleIndex(from) {
+    var i = from;
+    while (i < PROFILES.length && !eligible(PROFILES[i])) i += 1;
+    return i;
+  }
+  function currentProfile() {
+    var i = nextEligibleIndex(state.deckPos);
+    return i < PROFILES.length ? PROFILES[i] : null;
+  }
+
+  function skillLabel(p) {
+    return p.rating ? p.rating + ' Skill Level' : p.skill;
+  }
+
+  function renderDeck() {
+    renderPicks();
+    var deck = $('#deck');
+    var p = currentProfile();
+    var cfg = MODE_CFG[state.mode];
+    if (!p) {
+      deck.innerHTML =
+        '<div class="deck-empty">' +
+        '<div class="big" aria-hidden="true">🎾</div>' +
+        '<h2>That’s everyone nearby</h2>' +
+        '<p class="hint">You’ve seen all the players in range. Check back soon, or widen your radius in Settings.</p>' +
+        '<button class="btn btn-ghost" id="reset-deck" style="width:auto; padding:12px 20px;">New balls — reset the deck</button>' +
+        '</div>';
+      $('#reset-deck').addEventListener('click', function () {
+        state.seen = {};
+        state.deckPos = 0;
+        state.history = [];
+        renderDeck();
+        toast('Fresh balls! The deck is reset 🎾');
+      });
+      return;
+    }
+    // the card peeking out behind the top one
+    var nextP = null;
+    for (var ni = state.deckPos + 1; ni < PROFILES.length; ni++) {
+      if (PROFILES[ni].id !== p.id && eligible(PROFILES[ni])) { nextP = PROFILES[ni]; break; }
+    }
+    var behindHtml = nextP
+      ? '<div class="card-behind" aria-hidden="true">' +
+          '<div class="card-photo" style="background:' + gradFor(nextP.id) + '">' + esc(initials(nextP.name)) + '</div>' +
+          '<div class="card-info"><div class="card-name">' + esc(nextP.name) + '<span class="age">' + nextP.age + '</span></div></div>' +
+        '</div>'
+      : '';
+    deck.innerHTML =
+      '<div class="deck-stack">' + behindHtml +
+      '<div class="card springing" id="deck-card">' +
+        '<div class="stamp stamp-like" id="stamp-like">' + (state.mode === 'date' ? 'LIKE' : state.mode === 'play' ? 'HIT?' : 'HEY!') + '</div>' +
+        '<div class="stamp stamp-pass" id="stamp-pass">PASS</div>' +
+        '<div class="card-photo" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</div>' +
+        (p.isNew ? '<span class="badge-new">NEW</span>' : '') +
+        '<button class="bookmark' + (state.saved[p.id] ? ' saved' : '') + '" id="bookmark-btn" aria-label="Save ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="' + (state.saved[p.id] ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"></path></svg>' +
+        '</button>' +
+        '<button class="card-more" id="card-more" aria-label="More options for ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>' +
+        '</button>' +
+        '<button class="card-like" id="card-like" aria-label="' + esc(cfg.likeName) + ' ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>' +
+        '</button>' +
+        '<div class="card-info">' +
+          '<div class="card-name">' + esc(p.isTeam && p.partnerName ? p.name + ' & ' + p.partnerName : p.name) +
+            '<span class="age">' + (p.isTeam && p.partnerAge ? p.age + ' & ' + p.partnerAge : p.age) + '</span>' +
+            (p.isTeam ? '<span class="tag tag-sport" style="margin-left:8px">Doubles team</span>' : '') +
+            (p.verified ? '<span class="verified" aria-label="Verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>' : '') +
+          '</div>' +
+          '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>' + esc(p.sports.join(' & ')) + '</div>' +
+          '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s-6.5-5.4-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.6 12 21 12 21z"></path><circle cx="12" cy="10.2" r="2.4"></circle></svg>' + p.dist.toFixed(1) + ' miles away</div>' +
+          '<div class="card-line"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="14" width="3.4" height="6" rx="1"></rect><rect x="10.3" y="10" width="3.4" height="10" rx="1"></rect><rect x="16.6" y="5" width="3.4" height="15" rx="1"></rect></svg>' + esc(skillLabel(p)) + '</div>' +
+          '<p class="card-bio">' + esc(p.bio) + '</p>' +
+        '</div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="deck-actions">' +
+        '<button class="act" id="act-rewind" aria-label="Rewind last card">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"></path><path d="M4 9h9a7 7 0 1 1-6.7 9"></path></svg>' +
+        '</button>' +
+        '<button class="act" id="act-pass" aria-label="Pass on ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>' +
+        '</button>' +
+        '<button class="act act-like" id="act-like" aria-label="' + esc(cfg.likeName) + ' ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>' +
+        '</button>' +
+        '<button class="act" id="act-ace" aria-label="Ace — super like ' + esc(p.name) + '">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.7l5.9-.8z"></path></svg>' +
+        '</button>' +
+      '</div>';
+
+    $('#act-pass').addEventListener('click', function () { swipeOut(false, false); });
+    $('#act-like').addEventListener('click', function () { swipeOut(true, false); });
+    $('#card-like').addEventListener('click', function () { swipeOut(true, false); });
+    $('#act-ace').addEventListener('click', function () { swipeOut(true, true); });
+    $('#act-rewind').addEventListener('click', rewind);
+    $('#bookmark-btn').addEventListener('click', function () {
+      state.saved[p.id] = !state.saved[p.id];
+      renderDeck();
+      toast(state.saved[p.id] ? 'Saved ' + p.name + ' for later' : 'Removed from saved');
+    });
+    $('#card-more').addEventListener('click', function () { openSheet(p.id, 'deck'); });
+    $('#deck-card').addEventListener('click', function (ev) {
+      if (ev.target.closest('button')) return;
+      if (suppressCardClick) { suppressCardClick = false; return; }
+      openPSheet(p);
+    });
+    attachDrag($('#deck-card'));
+  }
+
+  function rewind() {
+    if (!state.history.length) { toast('Nothing to rewind yet'); return; }
+    state.deckPos = state.history.pop();
+    renderDeck();
+    toast('Second serve — take another look');
+  }
+
+  function advance() {
+    state.history.push(state.deckPos);
+    state.deckPos = nextEligibleIndex(state.deckPos) + 1;
+    renderDeck();
+  }
+
+  function swipeOut(liked, ace) {
+    var p = currentProfile();
+    if (!p) return;
+    var card = $('#deck-card');
+    if (card) {
+      card.classList.add('springing');
+      card.style.transform = 'translateX(' + (liked ? '' : '-') + '480px) rotate(' + (liked ? '' : '-') + '14deg)';
+      card.style.opacity = '0';
+    }
+    setTimeout(function () {
+      if (liked) {
+        state.likeCount += 1;
+        if (ace || state.likeCount % 3 === 0) { openMatch(p, ace); }
+        else {
+          toast(state.mode === 'date' ? 'Liked ' + p.name + ' ❤️' : state.mode === 'play' ? 'Hit request sent to ' + p.name : 'You waved at ' + p.name + ' 👋');
+        }
+      }
+      advance();
+    }, 180);
+  }
+
+  /* ---------- Profile detail sheet ---------- */
+  function openPSheet(p) {
+    var photo = $('#psheet-photo');
+    photo.style.background = gradFor(p.id);
+    photo.textContent = initials(p.name);
+    $('#psheet-name').innerHTML = esc(p.isTeam && p.partnerName ? p.name + ' & ' + p.partnerName : p.name) +
+      '<span class="age">' + (p.isTeam && p.partnerAge ? p.age + ' & ' + p.partnerAge : p.age) + '</span>' +
+      (p.isTeam ? '<span class="tag tag-sport" style="margin-left:8px">Doubles team</span>' : '') +
+      (p.verified ? '<span class="verified" aria-label="Verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>' : '');
+    var games = (p.playGames && p.playGames.length ? p.playGames : ALL_GAMES).map(function (g) { return GAME_LABELS[g]; }).join(' · ');
+    $('#psheet-rows').innerHTML =
+      '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>' + esc(p.sports.join(' & ')) + ' · ' + esc(p.rating ? p.rating + ' Skill Level' : p.skill) + '</div>' +
+      '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s-6.5-5.4-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.6 12 21 12 21z"></path><circle cx="12" cy="10.2" r="2.4"></circle></svg>' + p.dist.toFixed(1) + ' miles away</div>' +
+      '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>' + esc(p.avail) + '</div>' +
+      '<div class="card-line"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="14" width="3.4" height="6" rx="1"></rect><rect x="10.3" y="10" width="3.4" height="10" rx="1"></rect><rect x="16.6" y="5" width="3.4" height="15" rx="1"></rect></svg>' + games + '</div>';
+    $('#psheet-bio').textContent = p.bio;
+    $('#psheet-overlay').classList.add('open');
+  }
+  function closePSheet() { $('#psheet-overlay').classList.remove('open'); }
+  $('#psheet-close').addEventListener('click', closePSheet);
+  $('#psheet-overlay').addEventListener('click', function (ev) {
+    if (ev.target === $('#psheet-overlay')) closePSheet();
+  });
+  $('#psheet-pass').addEventListener('click', function () { closePSheet(); swipeOut(false, false); });
+  $('#psheet-like').addEventListener('click', function () { closePSheet(); swipeOut(true, false); });
+  $('#psheet-ace').addEventListener('click', function () { closePSheet(); swipeOut(true, true); });
+
+  /* Drag-to-swipe (buttons remain the primary path) */
+  var suppressCardClick = false;
+  function attachDrag(card) {
+    if (!card || !window.PointerEvent) return;
+    var startX = 0, dx = 0, active = false;
+    card.addEventListener('pointerdown', function (ev) {
+      if (ev.target.closest('button')) return;
+      active = true; startX = ev.clientX; dx = 0;
+      card.classList.add('dragging');
+      card.classList.remove('springing');
+      card.setPointerCapture(ev.pointerId);
+    });
+    card.addEventListener('pointermove', function (ev) {
+      if (!active) return;
+      dx = ev.clientX - startX;
+      card.style.transform = 'translateX(' + dx + 'px) rotate(' + (dx / 22) + 'deg)';
+      var op = Math.min(Math.abs(dx) / 90, 1);
+      $('#stamp-like').style.opacity = dx > 0 ? op : 0;
+      $('#stamp-pass').style.opacity = dx < 0 ? op : 0;
+    });
+    function release() {
+      if (!active) return;
+      active = false;
+      if (Math.abs(dx) > 6) suppressCardClick = true;
+      card.classList.remove('dragging');
+      card.classList.add('springing');
+      if (dx > 90) { swipeOut(true, false); }
+      else if (dx < -90) { swipeOut(false, false); }
+      else {
+        card.style.transform = '';
+        $('#stamp-like').style.opacity = 0;
+        $('#stamp-pass').style.opacity = 0;
+      }
+    }
+    card.addEventListener('pointerup', release);
+    card.addEventListener('pointercancel', release);
+  }
+
+  /* ---------- Match modal ---------- */
+  function throwConfetti() {
+    if (REDUCED_MOTION) return;
+    var overlay = $('#match-overlay');
+    var emo = ['🎾', '❤️', '✨'];
+    for (var i = 0; i < 14; i++) {
+      var s = document.createElement('span');
+      s.className = 'confetti';
+      s.textContent = emo[i % emo.length];
+      s.style.setProperty('--dx', (Math.random() * 300 - 150).toFixed(0) + 'px');
+      s.style.setProperty('--dy', (Math.random() * -240 + 30).toFixed(0) + 'px');
+      s.style.setProperty('--rot', (Math.random() * 540 - 270).toFixed(0) + 'deg');
+      s.style.animationDelay = (Math.random() * 0.15).toFixed(2) + 's';
+      overlay.appendChild(s);
+      (function (el) { setTimeout(function () { el.remove(); }, 1500); })(s);
+    }
+  }
+
+  function openMatch(p, ace) {
+    state.matchedId = p.id;
+    if (state.matches.indexOf(p.id) === -1) state.matches.unshift(p.id);
+    var me = $('#match-ava-me');
+    var them = $('#match-ava-them');
+    me.style.background = gradFor(state.user ? state.user.name : 'you');
+    me.textContent = initials(state.user ? state.user.name : 'You');
+    applyPhoto(me, state.user && state.user.photo);
+    them.style.background = gradFor(p.id);
+    them.textContent = initials(p.name);
+    $('#match-text').textContent = (ace ? 'An ace! ' : '') + 'You and ' + p.name + ' matched. Skip the small talk — the court is the icebreaker.';
+    $('#match-overlay').classList.add('open');
+    throwConfetti();
+  }
+  function ensureThread(id) {
+    for (var i = 0; i < state.threads.length; i++) if (state.threads[i].id === id) return state.threads[i];
+    var t = { id: id, unread: false, yourServe: true, msgs: [] };
+    state.threads.unshift(t);
+    return t;
+  }
+  $('#match-message').addEventListener('click', function () {
+    $('#match-overlay').classList.remove('open');
+    ensureThread(state.matchedId);
+    openConvo(state.matchedId);
+  });
+  $('#match-keep').addEventListener('click', function () {
+    $('#match-overlay').classList.remove('open');
+  });
+
+  /* ---------- Matches grid ---------- */
+  function renderMatches() {
+    var wrap = $('#match-grid-wrap');
+    var savedIds = Object.keys(state.saved).filter(function (k) { return state.saved[k] && !state.blocked[k]; });
+    var savedHtml = '';
+    if (savedIds.length) {
+      savedHtml = '<div class="saved-head">Saved for later</div><div class="saved-strip">' +
+        savedIds.map(function (id) {
+          var p = profileById(id);
+          if (!p) return '';
+          return '<div class="saved-cell">' +
+            '<span class="ava" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</span>' +
+            '<span class="n">' + esc(p.name) + '</span>' +
+            '<button class="saved-like" data-id="' + p.id + '" aria-label="Like ' + esc(p.name) + '">' +
+              '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>' +
+            '</button>' +
+          '</div>';
+        }).join('') + '</div>';
+    }
+    var gridHtml;
+    if (!state.matches.length) {
+      gridHtml = '<div class="deck-empty"><div class="big" aria-hidden="true">🎾</div><h2>No matches yet</h2><p class="hint">Head Home and start swinging.</p></div>';
+    } else {
+      gridHtml = '<div class="match-grid">' + state.matches.map(function (id) {
+        var p = profileById(id);
+        if (!p) return '';
+        return '<button class="match-cell" data-id="' + p.id + '">' +
+          '<span class="match-photo" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</span>' +
+          '<span class="match-meta">' +
+            '<span class="n">' + esc(p.name) + ', ' + p.age + '</span>' +
+            '<span class="s">' + esc(p.sports.join(' & ')) + '</span>' +
+            '<span class="go">Message →</span>' +
+          '</span>' +
+        '</button>';
+      }).join('') + '</div>';
+    }
+    wrap.innerHTML = savedHtml + gridHtml;
+    $all('.match-cell').forEach(function (el) {
+      el.addEventListener('click', function () {
+        ensureThread(el.getAttribute('data-id'));
+        openConvo(el.getAttribute('data-id'));
+      });
+    });
+    $all('.saved-like').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-id');
+        var p = profileById(id);
+        state.saved[id] = false;
+        state.seen[id] = true;
+        state.likeCount += 1;
+        if (state.likeCount % 3 === 0) { openMatch(p, false); }
+        else { toast('Liked ' + p.name + ' ❤️'); }
+        renderMatches();
+      });
+    });
+  }
+
+  /* ---------- Chat ---------- */
+  function lastPreview(t) {
+    if (!t.msgs.length) return 'New match — say hi!';
+    var m = t.msgs[t.msgs.length - 1];
+    if (m.typing) return 'typing…';
+    if (m.type === 'court') return '🎾 ' + m.court + ' · ' + m.day + ' ' + m.time;
+    return (m.who === 'me' ? 'You: ' : '') + m.text;
+  }
+
+  function renderThreads() {
+    var list = $('#thread-list');
+    if (!state.threads.length) {
+      list.innerHTML = '<div class="deck-empty"><div class="big" aria-hidden="true">💬</div><h2>No chats yet</h2><p class="hint">Match with someone first — then it’s your serve.</p></div>';
+      return;
+    }
+    list.innerHTML = state.threads.map(function (t) {
+      var p = profileById(t.id);
+      if (!p) return '';
+      return '<button class="thread" data-id="' + p.id + '">' +
+        '<span class="ava" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</span>' +
+        '<span class="thread-mid">' +
+          '<span class="thread-name">' + esc(p.name) + '</span>' +
+          '<span class="thread-prev" style="display:block">' + esc(lastPreview(t)) + '</span>' +
+        '</span>' +
+        '<span class="thread-side">' +
+          (t.yourServe ? '<span class="serve-badge">Your serve</span>' : '') +
+          (t.unread ? '<span class="unread-dot" aria-label="Unread"></span>' : '') +
+        '</span>' +
+      '</button>';
+    }).join('');
+    $all('#thread-list .thread').forEach(function (el) {
+      el.addEventListener('click', function () { openConvo(el.getAttribute('data-id')); });
+    });
+  }
+
+  var chatId = null;
+  function threadById(id) {
+    for (var i = 0; i < state.threads.length; i++) if (state.threads[i].id === id) return state.threads[i];
+    return null;
+  }
+
+  function msgHtml(m, isLastReadMine) {
+    if (m.typing) {
+      return '<div class="msg them is-typing" aria-label="Typing"><div class="typing-bubble"><i></i><i></i><i></i></div></div>';
+    }
+    var when = esc(m.when) + (isLastReadMine ? ' &nbsp;·&nbsp; Read ✓' : '');
+    if (m.type === 'court') {
+      return '<div class="msg ' + (m.who === 'me' ? 'me' : 'them') + '">' +
+        '<div class="courtcard">' +
+          '<div class="courtcard-top">Court time</div>' +
+          '<div class="courtcard-body">' +
+            '<strong>' + esc(m.court) + '</strong>' +
+            '<span>' + esc(m.day) + ' · ' + esc(m.time) + ' · ' + esc(m.sport) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<span class="when">' + when + '</span>' +
+      '</div>';
+    }
+    return '<div class="msg ' + (m.who === 'me' ? 'me' : 'them') + '">' +
+      '<div class="bubble">' + esc(m.text) + '</div>' +
+      '<span class="when">' + when + '</span>' +
+    '</div>';
+  }
+
+  function renderChatLog() {
+    var t = threadById(chatId);
+    var log = $('#chat-log');
+    if (!t) { log.innerHTML = ''; return; }
+    var lastReadMine = -1;
+    for (var i = 0; i < t.msgs.length; i++) {
+      if (t.msgs[i].who === 'me' && t.msgs[i].read) lastReadMine = i;
+    }
+    log.innerHTML = t.msgs.length
+      ? t.msgs.map(function (m, i) { return msgHtml(m, i === lastReadMine); }).join('')
+      : '<p class="hint" style="text-align:center">It’s a Match Point! Serve first — say hi. 🎾</p>';
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function openConvo(id) {
+    chatId = id;
+    var p = profileById(id);
+    var t = threadById(id);
+    if (!p) return;
+    if (t) { t.unread = false; }
+    $('#chat-ava').style.background = gradFor(p.id);
+    $('#chat-ava').textContent = initials(p.name);
+    $('#chat-name').textContent = p.name;
+    $('#chat-sub').textContent = p.sports.join(' & ') + ' · ' + p.dist.toFixed(1) + ' mi';
+    renderChatLog();
+    show('screen-convo');
+  }
+
+  $('#chat-back').addEventListener('click', function () { show('screen-chat'); });
+  $('#chat-more').addEventListener('click', function () { if (chatId) openSheet(chatId, 'chat'); });
+
+  function deliverReply(id) {
+    if (state.replied[id]) return;
+    state.replied[id] = true;
+    // they start "typing"…
+    setTimeout(function () {
+      var t = threadById(id);
+      if (!t) return;
+      t.msgs.push({ who: 'them', typing: true });
+      if (chatId === id && $('#screen-convo').classList.contains('active')) renderChatLog();
+    }, 500);
+    // …then the reply lands
+    setTimeout(function () {
+      var t = threadById(id);
+      if (!t) return;
+      for (var i = t.msgs.length - 1; i >= 0; i--) {
+        if (t.msgs[i].typing) { t.msgs.splice(i, 1); break; }
+      }
+      // they replied — so they read everything you'd sent
+      for (var j = 0; j < t.msgs.length; j++) {
+        if (t.msgs[j].who === 'me') t.msgs[j].read = true;
+      }
+      t.msgs.push({ who: 'them', text: REPLIES[id] || 'Sounds great — see you on the court! 🎾', when: 'Just now' });
+      t.yourServe = true;
+      if (chatId === id && $('#screen-convo').classList.contains('active')) { renderChatLog(); }
+      else { t.unread = true; }
+    }, 1800);
+  }
+
+  function sendMsg() {
+    var input = $('#chat-text');
+    var text = input.value.trim();
+    if (!text || !chatId) return;
+    var t = ensureThread(chatId);
+    t.msgs.push({ who: 'me', text: text, when: 'Just now' });
+    t.yourServe = false;
+    input.value = '';
+    renderChatLog();
+    deliverReply(chatId);
+  }
+  $('#chat-sendbtn').addEventListener('click', sendMsg);
+  $('#chat-text').addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter') { ev.preventDefault(); sendMsg(); }
+  });
+
+  $('#suggest-time').addEventListener('click', function () {
+    if (!chatId) return;
+    var p = profileById(chatId);
+    var t = ensureThread(chatId);
+    t.msgs.push({
+      who: 'me', type: 'court',
+      court: 'Riverside Park Tennis Complex', day: 'Sat', time: '10:00 AM',
+      sport: (p && p.sports[0]) || 'Tennis', when: 'Just now'
+    });
+    t.yourServe = false;
+    renderChatLog();
+    deliverReply(chatId);
+  });
+
+  /* ---------- Events ---------- */
+  // Meetups are nationwide by default; the picker narrows to one city. Showing
+  // everything first matters early on — an empty local list reads as "nothing
+  // is happening" rather than "not here yet".
+  var eventCity = 'all';
+
+  function visibleEvents() {
+    return eventCity === 'all' ? EVENTS : EVENTS.filter(function (e) { return e.city === eventCity; });
+  }
+
+  function renderEventCityPicker() {
+    var sel = $('#event-city');
+    if (!sel || sel.dataset.ready) return;
+    sel.innerHTML = '<option value="all">All cities</option>' + CITIES.map(function (c) {
+      return '<option value="' + c.slug + '">' + c.name + ', ' + c.state + '</option>';
+    }).join('');
+    sel.value = eventCity;
+    sel.addEventListener('change', function () { eventCity = sel.value; renderEvents(); });
+    sel.dataset.ready = '1';
+  }
+
+  function renderEvents() {
+    renderEventCityPicker();
+    var list = $('#event-list');
+    var shown = visibleEvents();
+    if (!shown.length) {
+      list.innerHTML = '<p class="hint" style="text-align:center;padding:40px 20px">'
+        + (eventCity === 'all'
+            ? 'No upcoming meetups anywhere yet \u2014 check back soon. \uD83C\uDFBE'
+            : 'Nothing on in ' + esc(cityLabel(eventCity)) + ' yet. Choose <b>All cities</b> to see what\u2019s happening elsewhere. \uD83C\uDFBE')
+        + '</p>';
+      return;
+    }
+    var weeks = [];
+    shown.forEach(function (e) { if (weeks.indexOf(e.week) === -1) weeks.push(e.week); });
+    list.innerHTML = weeks.map(function (w) {
+      var rows = shown.filter(function (e) { return e.week === w; }).map(function (e, wi) {
+        var going = !!state.joined[e.id];
+        var spots = going ? e.spots - 1 : e.spots;
+        var idx = EVENTS.indexOf(e);
+        var attendees = [PROFILES[(idx * 3) % PROFILES.length], PROFILES[(idx * 3 + 4) % PROFILES.length], PROFILES[(idx * 3 + 8) % PROFILES.length]];
+        var avas = attendees.map(function (a) {
+          return '<span class="ava" style="background:' + gradFor(a.id) + '">' + esc(initials(a.name)) + '</span>';
+        }).join('');
+        var goingCount = 3 + ((idx * 5) % 7) + (going ? 1 : 0);
+        return '<div class="event' + (state.expandedEvents[e.id] ? ' expanded' : '') + '" data-id="' + e.id + '" role="button" tabindex="0" aria-expanded="' + (state.expandedEvents[e.id] ? 'true' : 'false') + '">' +
+          '<div class="event-date"><span class="dow">' + esc(e.dow) + '</span><span class="dom">' + esc(e.dom) + '</span></div>' +
+          '<div class="event-mid">' +
+            '<div class="event-title">' + esc(e.title) + '</div>' +
+            '<div class="event-meta">' + esc(e.venue) + ' · ' + esc(e.time) + '</div>' +
+            '<div class="event-tags"><span class="tag tag-sport">' + esc(e.sport) + '</span><span class="tag">' + esc(e.level) + '</span>' +
+              // only worth showing when the list spans more than one city
+              (eventCity === 'all' && e.city ? '<span class="tag">' + esc(cityLabel(e.city)) + '</span>' : '') + '</div>' +
+            '<div class="event-extra">' +
+              '<p class="hint" style="margin:0">' + esc(e.desc || '') + '</p>' +
+              '<div class="going-row">' + avas + '<span class="going-label">+' + goingCount + ' going' + (going ? ' · including you' : '') + '</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="event-side">' +
+            '<span class="spots">' + spots + ' spots left</span>' +
+            '<button class="join-btn' + (going ? ' going' : '') + '" data-id="' + e.id + '">' + (going ? 'Going ✓' : 'Join') + '</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      return '<div class="week-head">' + esc(w) + '</div>' + rows;
+    }).join('');
+    $all('#event-list .event').forEach(function (el) {
+      el.addEventListener('click', function (ev) {
+        if (ev.target.closest('.join-btn')) return;
+        var id = el.getAttribute('data-id');
+        state.expandedEvents[id] = !state.expandedEvents[id];
+        el.classList.toggle('expanded', state.expandedEvents[id]);
+        el.setAttribute('aria-expanded', String(!!state.expandedEvents[id]));
+      });
+    });
+    $all('#event-list .join-btn').forEach(function (b) {
+      b.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        var id = b.getAttribute('data-id');
+        state.joined[id] = !state.joined[id];
+        renderEvents();
+        if (state.joined[id]) toast('See you there! Added to your events 🎾');
+      });
+    });
+  }
+
+  /* ---------- Profile ---------- */
+  function renderProfile() {
+    var u = state.user;
+    var body = $('#profile-body');
+    if (!u) { body.innerHTML = '<p class="hint">No profile yet.</p>'; return; }
+    var tags = u.sports.map(function (s) { return '<span class="tag tag-sport">' + esc(s) + '</span>'; }).join('') +
+      '<span class="tag">' + esc(u.skill) + (u.rating ? ' · ' + esc(u.rating) : '') + '</span>';
+    var joinedCount = Object.keys(state.joined).filter(function (k) { return state.joined[k]; }).length;
+    var plist = photoList(u);
+    // Draw every slot, filled or not, so the room to add more is visible
+    // instead of something you have to discover.
+    var cells = [];
+    for (var pi = 0; pi < PHOTO_SLOTS; pi++) {
+      if (pi < plist.length) {
+        cells.push('<div class="ptile" data-i="' + pi + '" role="button" tabindex="0" ' +
+          'aria-label="' + (pi === 0 ? 'Main photo' : 'Photo ' + (pi + 1) + ' — tap to make it your main photo') + '" ' +
+          'style="background-image:url(' + plist[pi] + ')">' +
+          (pi === 0 ? '<span class="ptag">Main</span>' : '') +
+          '<button class="pdel" data-del="' + pi + '" aria-label="Remove photo ' + (pi + 1) + '">×</button>' +
+        '</div>');
+      } else {
+        cells.push('<button class="ptile ptile-add' + (pi === plist.length ? ' next' : '') + '" ' +
+          (pi === plist.length ? 'id="ptile-add" ' : '') +
+          'type="button" aria-label="Add photo ' + (pi + 1) + ' of ' + PHOTO_SLOTS + '">+</button>');
+      }
+    }
+    var grid = '<div class="pgrid" id="pgrid">' + cells.join('') + '</div>';
+    body.innerHTML =
+      '<div class="profile-card">' +
+        '<span class="ava' + (u.photo ? ' has-photo' : '') + '" style="background:' + gradFor(u.name) + (u.photo ? '; background-image:url(' + u.photo + '); background-size:cover; background-position:center' : '') + '">' + esc(initials(u.name)) + '</span>' +
+        '<div class="card-name" style="justify-content:center">' + esc(u.name) + '<span class="age">' + u.age + '</span></div>' +
+        '<div class="tagrow">' + tags + '</div>' +
+        (u.phoneVerified ? '<div style="display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--ok)"><span aria-hidden="true">✓</span>Phone verified</div>' : '') +
+      '</div>' +
+      '<div class="bio-edit">' +
+        '<label>Photos <span style="font-weight:400">(' + plist.length + ' of ' + PHOTO_SLOTS + ')</span></label>' +
+        grid +
+        '<p class="hint">Your main photo is your card — add up to ' + (PHOTO_SLOTS - 1) + ' more and players can tap through them. Tap any photo to make it your main one. In the real app, new photos are reviewed before other players see them.</p>' +
+      '</div>' +
+      '<div class="stats">' +
+        '<div class="stat"><div class="num">' + state.matches.length + '</div><div class="lbl">Matches</div></div>' +
+        '<div class="stat"><div class="num">' + joinedCount + '</div><div class="lbl">Events</div></div>' +
+        '<div class="stat"><div class="num">' + Object.keys(state.saved).filter(function (k) { return state.saved[k]; }).length + '</div><div class="lbl">Saved</div></div>' +
+      '</div>' +
+      '<div class="bio-edit">' +
+        '<label for="bio-text">Bio</label>' +
+        '<textarea id="bio-text" placeholder="Tell players what you’re about — favorite courts, playing style, best post-match snack…">' + esc(u.bio || '') + '</textarea>' +
+        '<p class="hint">Saved automatically when you tap away.</p>' +
+      '</div>';
+    $('#bio-text').addEventListener('blur', function () {
+      state.user.bio = $('#bio-text').value.trim();
+      saveUser();
+      toast('Bio saved');
+    });
+    $('#pgrid').addEventListener('click', function (ev) {
+      var del = ev.target.closest('.pdel');
+      if (del) {
+        var di = parseInt(del.getAttribute('data-del'), 10);
+        var dl = photoList(state.user);
+        dl.splice(di, 1);
+        state.user.photos = dl;
+        state.user.photo = dl[0] || null;
+        saveUser(); renderProfile();
+        toast('Photo removed');
+        return;
+      }
+      if (ev.target.closest('.ptile-add')) { $('#photo-input').click(); return; }
+      var tile = ev.target.closest('.ptile[data-i]');
+      if (tile) {
+        var ti = parseInt(tile.getAttribute('data-i'), 10);
+        if (ti > 0) {
+          var tl = photoList(state.user);
+          var tmp = tl[0]; tl[0] = tl[ti]; tl[ti] = tmp;
+          state.user.photos = tl;
+          state.user.photo = tl[0];
+          saveUser(); renderProfile();
+          toast('Main photo updated');
+        }
+      }
+    });
+    // stat numbers count up
+    if (!REDUCED_MOTION) {
+      $all('#profile-body .stat .num').forEach(function (el) {
+        var target = parseInt(el.textContent, 10);
+        if (!target) return;
+        var start = null;
+        el.textContent = '0';
+        function tick(ts) {
+          if (start === null) start = ts;
+          var k = Math.min(1, (ts - start) / 600);
+          el.textContent = String(Math.round(target * k));
+          if (k < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }
+  }
+
+  /* ---------- Settings ---------- */
+  function syncSettings() {
+    var modes = (state.user && state.user.modes) || ['date'];
+    $('#sw-date').setAttribute('aria-checked', String(modes.indexOf('date') !== -1));
+    $('#sw-play').setAttribute('aria-checked', String(modes.indexOf('play') !== -1));
+    $('#sw-friends').setAttribute('aria-checked', String(modes.indexOf('friends') !== -1));
+    var g = state.user && state.user.gender;
+    $all('#set-gender .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(c.getAttribute('data-gender') === g));
+    });
+    var seeking = (state.user && state.user.seeking) || [];
+    $all('#set-seeking .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(seeking.indexOf(c.getAttribute('data-seek')) !== -1));
+    });
+    var games = (state.user && state.user.playGames) || ALL_GAMES;
+    $all('#set-playgames .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(games.indexOf(c.getAttribute('data-game')) !== -1));
+    });
+    var ppref = (state.user && state.user.playPref) || 'everyone';
+    $all('#set-playpref .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(c.getAttribute('data-pref') === ppref));
+    });
+    var fpref = (state.user && state.user.friendsPref) || 'everyone';
+    $all('#set-friendspref .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(c.getAttribute('data-pref') === fpref));
+    });
+    var curCity = (state.user && state.user.city) || DEFAULT_CITY;
+    $('#set-city').innerHTML = CITIES.map(function (c) {
+      return '<button class="chip" aria-pressed="' + (c.slug === curCity ? 'true' : 'false') +
+        '" data-city="' + c.slug + '">' + esc(c.name + ', ' + c.state) + '</button>';
+    }).join('');
+    $('#settings-footer').textContent = '40/LOVE prototype · ' + cityLabel(curCity) + ' · not a real account';
+    // Draw the discovery prefs from state, so the controls always show what
+    // is actually saved rather than whatever the DOM happens to be holding.
+    $('#radius').value = state.prefs.radius;
+    $('#radius-val').textContent = state.prefs.radius;
+    $('#age-min').value = state.prefs.ageMin;
+    $('#age-max').value = state.prefs.ageMax;
+    $('#sw-mysports').setAttribute('aria-checked', String(!!state.prefs.mySportsOnly));
+  }
+  $('#set-city').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    $all('#set-city .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+    state.user.city = btn.getAttribute('data-city');
+    saveUser();
+    $('#settings-footer').textContent = '40/LOVE prototype · ' + cityLabel(state.user.city) + ' · not a real account';
+    toast('Now playing in ' + cityLabel(state.user.city));
+  });
+
+  $('#set-playgames').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    btn.setAttribute('aria-pressed', String(btn.getAttribute('aria-pressed') !== 'true'));
+    var games = $all('#set-playgames .chip[aria-pressed="true"]').map(function (c) { return c.getAttribute('data-game'); });
+    state.user.playGames = games.length ? games : ALL_GAMES;
+    saveUser();
+  });
+  $('#set-playpref').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    $all('#set-playpref .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+    state.user.playPref = btn.getAttribute('data-pref');
+    saveUser();
+  });
+  $('#set-friendspref').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    $all('#set-friendspref .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+    state.user.friendsPref = btn.getAttribute('data-pref');
+    saveUser();
+  });
+
+  $('#set-gender').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    $all('#set-gender .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+    state.user.gender = btn.getAttribute('data-gender');
+    saveUser();
+  });
+  $('#set-seeking').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn || !state.user) return;
+    var wasOn = btn.getAttribute('aria-pressed') === 'true';
+    if (wasOn && $all('#set-seeking .chip[aria-pressed="true"]').length === 1) {
+      toast('Keep at least one — Date mode needs to know who to show you');
+      return;
+    }
+    btn.setAttribute('aria-pressed', String(!wasOn));
+    state.user.seeking = $all('#set-seeking .chip[aria-pressed="true"]').map(function (c) { return c.getAttribute('data-seek'); });
+    saveUser();
+  });
+  function wireModeSwitch(id, mode) {
+    $(id).addEventListener('click', function () {
+      var el = $(id);
+      var on = el.getAttribute('aria-checked') === 'true';
+      if (!on && mode === 'date' && state.user && state.user.isTeam) {
+        // A shared profile can't date, and the database enforces it — so
+        // don't let Settings put the profile into a state that won't save.
+        toast('Teams can’t use Date mode — each of you needs your own profile');
+        return;
+      }
+      if (on && state.user && state.user.modes.length === 1 && state.user.modes[0] === mode) {
+        toast('Keep at least one mode on');
+        return;
+      }
+      el.setAttribute('aria-checked', String(!on));
+      if (state.user) {
+        if (on) { state.user.modes = state.user.modes.filter(function (m) { return m !== mode; }); }
+        else if (state.user.modes.indexOf(mode) === -1) { state.user.modes.push(mode); }
+        saveUser();
+        // Don't strand them on a deck they just switched off.
+        if (state.user.modes.indexOf(state.mode) === -1 && state.user.modes.length) {
+          state.mode = state.user.modes[0];
+        }
+        syncModeUI();
+      }
+    });
+  }
+  wireModeSwitch('#sw-date', 'date');
+  wireModeSwitch('#sw-play', 'play');
+  wireModeSwitch('#sw-friends', 'friends');
+
+  $all('#sw-notif-match, #sw-notif-msg').forEach(function (el) {
+    el.addEventListener('click', function () {
+      el.setAttribute('aria-checked', String(el.getAttribute('aria-checked') !== 'true'));
+    });
+  });
+
+  $('#radius').addEventListener('input', function () {
+    state.prefs.radius = clampNum($('#radius').value, 1, 50, state.prefs.radius);
+    $('#radius-val').textContent = state.prefs.radius;
+    savePrefs();
+  });
+  // Commit on 'change' (blur / stepper), not on every keystroke — otherwise
+  // typing "30" would clamp the intermediate "3" up to 18 mid-entry.
+  function commitAge() {
+    var lo = clampNum($('#age-min').value, 18, 99, state.prefs.ageMin);
+    var hi = clampNum($('#age-max').value, 18, 99, state.prefs.ageMax);
+    if (lo > hi) { var t = lo; lo = hi; hi = t; }
+    state.prefs.ageMin = lo;
+    state.prefs.ageMax = hi;
+    // Reflect what was actually stored, so the field can never disagree
+    // with the filter that's running.
+    $('#age-min').value = lo;
+    $('#age-max').value = hi;
+    savePrefs();
+  }
+  $('#age-min').addEventListener('change', commitAge);
+  $('#age-max').addEventListener('change', commitAge);
+  $('#sw-mysports').addEventListener('click', function () {
+    var el = $('#sw-mysports');
+    var on = el.getAttribute('aria-checked') === 'true';
+    el.setAttribute('aria-checked', String(!on));
+    state.prefs.mySportsOnly = !on;
+    savePrefs();
+  });
+
+  $('#open-settings').addEventListener('click', function () { syncSettings(); show('screen-settings'); });
+  $('#settings-back').addEventListener('click', function () {
+    show(state.user ? 'screen-home' : 'screen-welcome');
+  });
+
+  $('#sign-out').addEventListener('click', function () {
+    try { localStorage.removeItem(STORE_KEY); } catch (e) { /* nothing to clear */ }
+    state.user = null;
+    state.deckPos = 0;
+    state.likeCount = 0;
+    state.history = [];
+    state.saved = {};
+    state.blocked = {};
+    state.seen = {};
+    state.prefs = { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false };
+    try { localStorage.removeItem(PREFS_KEY); } catch (e) { /* nothing to clear */ }
+    draftPhoto = null;
+    phoneE164 = null;
+    phoneOk = false;
+    $('#ob-phone').value = '';
+    syncPhoneUI();
+    // Clear the whole signup form — otherwise the next person to create a
+    // profile on this device inherits the last one's name, city, and partner.
+    $('#ob-name').value = '';
+    $('#ob-age').value = '';
+    $('#ob-rating').value = '';
+    $all('#ob-gender .chip, #ob-sports .chip, #ob-skill .chip, #ob-seeking .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', 'false');
+    });
+    $('#ob-team').setAttribute('aria-pressed', 'false');
+    $('#team-box').hidden = true;
+    $('#ob-partner-name').value = '';
+    $('#ob-partner-age').value = '';
+    $all('#ob-partner-gender .chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+    $('#ob-city').value = DEFAULT_CITY;
+    $('#ob-modes .mode-row[data-mode="date"]').hidden = false;
+    $all('#ob-modes .mode-row').forEach(function (r) {
+      r.setAttribute('aria-pressed', String(r.getAttribute('data-mode') === 'date'));
+    });
+    syncSeekingBox();
+    $('#photo-preview').classList.remove('has');
+    $('#photo-preview').style.backgroundImage = '';
+    $('#photo-btn').textContent = 'Add photo';
+    $('#btn-continue').textContent = 'I already have an account';
+    show('screen-welcome');
+    toast('Signed out — see you court-side');
+  });
+
+  /* ---------- Tab bar ---------- */
+  $all('.tab').forEach(function (t) {
+    t.addEventListener('click', function () { show(t.getAttribute('data-screen')); });
+  });
+
+  /* ---------- Boot ---------- */
+  state.user = loadUser();
+  var storedPrefs = loadPrefs();
+  if (storedPrefs) state.prefs = storedPrefs;
+  if (state.user) {
+    $('#btn-continue').textContent = 'Continue as ' + state.user.name;
+    if (state.user.modes && state.user.modes.length) { state.mode = state.user.modes[0]; }
+    syncModeUI();
+    syncSettings();
+  }
+}());
+
+  /* ---------- Anonymous funnel ----------
+     The prototype is the top of the funnel and used to report nothing, so
+     there was no way to tell whether people abandon at the phone step or never
+     start at all.
+
+     What is sent: a step name from a fixed list, and a random value made up on
+     page load and forgotten on unload. No account, no cookie, no IP, no user
+     agent, nothing that survives the visit — enough to say "this many of the
+     people who started finished", and not enough to say who any of them were.
+
+     Deliberately built out of DOM APIs only, with no reference to anything
+     inside the prototype's own closure: this block sits outside it, and more
+     to the point, counting should not break when the app is refactored. Fire
+     and forget, silent on failure, and completely inert unless the keys above
+     are set. */
+  (function () {
+    try {
+      var cfg = window.FORTYLOVE || {};
+      if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return;
+      var base = cfg.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/rpc/record_demo_step';
+      var visit = (window.crypto && crypto.randomUUID && crypto.randomUUID()) ||
+        'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, function () {
+          return Math.floor(Math.random() * 16).toString(16);
+        });
+      var sent = {};
+      function step(name) {
+        if (sent[name]) return;   // once per visit, so a reload isn't a new person
+        sent[name] = true;
+        try {
+          fetch(base, {
+            method: 'POST',
+            keepalive: true,
+            headers: {
+              'apikey': cfg.SUPABASE_ANON_KEY,
+              'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ p_visit: visit, p_step: name })
+          }).catch(function () {});
+        } catch (e) { /* never let counting break the prototype */ }
+      }
+
+      step('landed');
+
+      var BY_ID = {
+        'btn-create': 'start_signup',
+        'phone-verify': 'phone_verified',
+        'ob2-next': 'sports_picked',
+        'ob3-next': 'skill_picked'
+      };
+      document.addEventListener('click', function (ev) {
+        var el = ev.target && ev.target.closest && ev.target.closest('button');
+        if (!el) return;
+        if (BY_ID[el.id]) step(BY_ID[el.id]);
+        if (el.classList.contains('act-like') || el.classList.contains('act-pass')) step('swiped');
+      }, true);
+
+      // Screens and the celebration are watched rather than hooked, so this
+      // keeps working however the prototype decides to switch them.
+      function watch(id, fn) {
+        var el = document.getElementById(id);
+        if (!el || !window.MutationObserver) return;
+        new MutationObserver(fn.bind(null, el)).observe(el, { attributes: true, attributeFilter: ['class'] });
+      }
+      watch('screen-home', function (el) { if (el.classList.contains('active')) step('finished_signup'); });
+      watch('screen-conversation', function (el) { if (el.classList.contains('active')) step('opened_chat'); });
+      watch('match-overlay', function (el) { if (el.classList.contains('open')) step('matched'); });
+    } catch (e) { /* analytics must never take the page down */ }
+  })();
+</script>
+</body>
+</html>
