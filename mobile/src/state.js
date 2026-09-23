@@ -766,6 +766,8 @@ export function AppStateProvider({ children }) {
       playPref: remote.play_pref || 'everyone',
       friendsPref: remote.friends_pref || 'everyone',
       phoneVerified: !!remote.phone_verified_at,
+      suspendedAt: remote.suspended_at || null,
+      suspendedReason: remote.suspended_reason || '',
       city: remote.city || DEFAULT_CITY,
       isTeam: !!remote.is_team,
       partnerName: remote.partner_name || '',
@@ -1370,6 +1372,10 @@ export function AppStateProvider({ children }) {
     // A profile that arrives after the deadline still counts: showing the
     // error over a loaded profile would be its own kind of lie.
     bootError: bootError && !user, retryBoot,
+    // A suspended member gets an empty deck and a wall of refused writes. Say
+    // what happened instead of letting the app look broken.
+    suspended: !!(live && user && user.suspendedAt),
+    suspendedReason: (user && user.suspendedReason) || '',
     mode, setMode,
     currentProfile, advance, rewind, deckError, peekNext, resetDeck,
     retryDeck: () => refreshDeck(mode),

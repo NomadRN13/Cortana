@@ -115,5 +115,52 @@ const visible = (page, sel) => page.evaluate((s) => {
     await page.close();
   });
 
+  // Suspension is the only thing the desk does that changes someone's account.
+  await step('Suspend asks first, calls suspend_member, and closes the report', async () => {
+    const page = await browser.newPage({ viewport: { width: 1000, height: 900 } });
+    await page.route(HOST, (r) => r.fulfill({ status: 200, contentType: 'text/html', body: PAGE }));
+    await page.route('**/rest/v1/rpc/is_admin', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: 'true' }));
+    await page.route('**/rest/v1/profile_photos**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+    await page.route('**/rest/v1/events**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+    let served = false;
+    await page.route('**/rest/v1/reports**', (r) => {
+      if (r.request().method() === 'PATCH') { patched = r.request().postDataJSON(); return r.fulfill({ status: 204, body: '' }); }
+      const rows = served ? [] : [{
+        id: 'rep-1', reason: 'kept messaging after I said no', context: 'chat',
+        created_at: new Date().toISOString(), target_id: 'target-uuid-9',
+        reporter: { first_name: 'Elena' }, target: { first_name: 'Jordan' },
+      }];
+      served = true;
+      return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(rows) });
+    });
+    let suspended = null;
+    let patched = null;
+    await page.route('**/rest/v1/rpc/suspend_member', (r) => {
+      suspended = r.request().postDataJSON();
+      return r.fulfill({ status: 200, contentType: 'application/json', body: 'true' });
+    });
+    await page.addInitScript(([key, s2]) => { sessionStorage.setItem(key, s2); },
+      [TOKEN_KEY, JSON.stringify({ access_token: 'jwt', expires_at: 9e9, email: 'founder@example.com' })]);
+
+    // Refuse the confirm the first time: nothing may happen.
+    page.once('dialog', (d) => d.dismiss());
+    await page.goto(HOST);
+    await page.waitForTimeout(300);
+    await page.click('#tab-reports');
+    await page.click('#report-list button[data-act="suspend"]');
+    await page.waitForTimeout(200);
+    if (suspended) throw new Error('suspended without being confirmed');
+
+    // Accept it, and answer the note prompt.
+    page.on('dialog', (d) => (d.type() === 'prompt' ? d.accept('kept messaging') : d.accept()));
+    await page.click('#report-list button[data-act="suspend"]');
+    await page.waitForTimeout(400);
+    if (!suspended) throw new Error('confirmed but suspend_member was never called');
+    if (suspended.p_user !== 'target-uuid-9') throw new Error('suspended the wrong member: ' + JSON.stringify(suspended));
+    if (suspended.p_reason !== 'kept messaging') throw new Error('note not passed: ' + JSON.stringify(suspended));
+    if (!patched || patched.status !== 'actioned') throw new Error('report not closed: ' + JSON.stringify(patched));
+    await page.close();
+  });
+
   await finish(browser);
 })();

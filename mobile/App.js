@@ -4,10 +4,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, Alert } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppStateProvider, useApp } from './src/state';
+import * as api from './src/api/backend';
 import { colors, type } from './src/theme';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import SignInScreen from './src/screens/SignInScreen';
@@ -108,8 +109,55 @@ function CantLoad({ onRetry, onSignOut }) {
   );
 }
 
+// Suspended by the moderation desk. Without this the app just stops working:
+// an empty deck, messages that won't send, events that won't join, and no
+// explanation anywhere. Signing out and deleting the account both still work.
+function Suspended({ reason, onSignOut }) {
+  const remove = () => Alert.alert(
+    'Delete your account?',
+    'This permanently deletes your profile, photos, matches and messages. It cannot be undone.',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete forever',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await api.deleteAccount();
+            onSignOut();
+          } catch (e) {
+            Alert.alert('Couldn’t delete your account', (e && e.message) || 'Check your connection and try again.');
+          }
+        },
+      },
+    ]
+  );
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.night, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 10 }}>
+      <Text style={{ fontSize: 40 }}>🎾</Text>
+      <Text style={[type.display, { fontSize: 20, textAlign: 'center' }]}>Your account is suspended</Text>
+      <Text style={[type.hint, { textAlign: 'center' }]}>
+        {reason
+          ? `A moderator paused your account: “${reason}”.`
+          : 'A moderator paused your account after a report.'}
+        {' '}You can’t be seen or send messages while it’s paused.
+      </Text>
+      <Text style={[type.hint, { textAlign: 'center' }]}>
+        If you think this is a mistake, email hello@40love.app and a person will read it.
+      </Text>
+      <Pressable onPress={onSignOut} style={{ backgroundColor: colors.optic, borderRadius: 999, paddingVertical: 13, paddingHorizontal: 30, marginTop: 14 }}>
+        <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 15 }}>Sign out</Text>
+      </Pressable>
+      <Pressable onPress={remove} hitSlop={8} style={{ marginTop: 6 }}>
+        <Text style={{ color: colors.dim, fontWeight: '700', fontSize: 13 }}>Delete my account</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function Root() {
-  const { bootRoute, bootError, retryBoot, signOut } = useApp();
+  const { bootRoute, bootError, retryBoot, signOut, suspended, suspendedReason } = useApp();
+  if (suspended) return <Suspended reason={suspendedReason} onSignOut={signOut} />;
   if (bootError) return <CantLoad onRetry={retryBoot} onSignOut={signOut} />;
   // Hold the splash until we know whether this device is still signed in —
   // deciding from local storage alone made a signed-in phone with no cached

@@ -89,6 +89,27 @@ async function main() {
   check('signing out clears the error', !app.bootError, app.bootError);
   await act(async () => { renderer.unmount(); });
 
+  // 4b. suspended by the desk: the app must say so rather than just stop working
+  impl.getMyProfile = () => ({
+    id: 'me-uuid', first_name: 'Sam', birthdate: '1994-01-01', city: 'indianapolis',
+    modes: ['date'], radius_mi: 25, age_min: 25, age_max: 40, same_sports_only: false,
+    bio: '', user_sports: [],
+    suspended_at: '2026-09-01T10:00:00Z', suspended_reason: 'kept messaging after being asked to stop',
+  });
+  renderer = await mount();
+  check('a suspended member is told, not left with a broken app', app.suspended === true, app.suspended);
+  check('and told why', /kept messaging/.test(app.suspendedReason), app.suspendedReason);
+  await act(async () => { renderer.unmount(); });
+
+  impl.getMyProfile = () => ({
+    id: 'me-uuid', first_name: 'Sam', birthdate: '1994-01-01', city: 'indianapolis',
+    modes: ['date'], radius_mi: 25, age_min: 25, age_max: 40, same_sports_only: false,
+    bio: '', user_sports: [],
+  });
+  renderer = await mount();
+  check('an ordinary account is not flagged as suspended', app.suspended === false, app.suspended);
+  await act(async () => { renderer.unmount(); });
+
   // 5. signed in with no profile yet → onboarding, not an error
   impl.getMyProfile = () => null;
   renderer = await mount();

@@ -372,8 +372,8 @@
       { id: 'd3', user: 'Priya', created_at: new Date(Date.now() - 26 * 3600000).toISOString(), grad: 'linear-gradient(135deg,#4f2438,#e87fb0)' }
     ],
     reports: [
-      { id: 'r1', reporter: 'Sam', target: 'Alex', reason: 'Profile photo is a stock image, not a real person.', context: 'deck', created_at: new Date(Date.now() - 2 * 3600000).toISOString() },
-      { id: 'r2', reporter: 'Elena', target: 'Jordan', reason: 'Kept pushing to move the chat off the app after I said no.', context: 'chat', created_at: new Date(Date.now() - 20 * 3600000).toISOString() }
+      { id: 'r1', reporter: 'Sam', target: 'Alex', target_id: 'demo-alex', reason: 'Profile photo is a stock image, not a real person.', context: 'deck', created_at: new Date(Date.now() - 2 * 3600000).toISOString() },
+      { id: 'r2', reporter: 'Elena', target: 'Jordan', target_id: 'demo-jordan', reason: 'Kept pushing to move the chat off the app after I said no.', context: 'chat', created_at: new Date(Date.now() - 20 * 3600000).toISOString() }
     ],
     events: [
       { id: 'e1', title: '40/LOVE Social Mixer', venue: 'Broad Ripple Courts', starts_at: new Date(Date.now() + 6 * 86400000).toISOString(), sport: 'pickleball', level_range: 'All levels', capacity: 24, city: 'indianapolis' }
@@ -520,7 +520,8 @@
   function renderReports(items) {
     $('#n-reports').textContent = items.length || '';
     $('#report-list').innerHTML = items.length ? items.map(function (r) {
-      return '<div class="item" data-id="' + esc(r.id) + '">' +
+      return '<div class="item" data-id="' + esc(r.id) + '" data-target="' + esc(r.target_id || '') +
+        '" data-target-name="' + esc(r.target) + '">' +
         '<div class="body">' +
           '<div class="name">' + esc(r.reporter) + ' reported ' + esc(r.target) +
             '<span class="pill">' + esc(r.context) + '</span></div>' +
@@ -528,7 +529,8 @@
           '<div class="reason">&ldquo;' + esc(r.reason) + '&rdquo;</div>' +
           '<div class="row-btns">' +
             '<button class="btn btn-ghost btn-sm" data-act="reviewed">Dismiss</button>' +
-            '<button class="btn btn-danger btn-sm" data-act="actioned">Mark actioned</button>' +
+            '<button class="btn btn-ghost btn-sm" data-act="actioned">Actioned elsewhere</button>' +
+            '<button class="btn btn-danger btn-sm" data-act="suspend">Suspend ' + esc(r.target) + '</button>' +
           '</div>' +
         '</div></div>';
     }).join('') : '<div class="empty">No open reports. A quiet court is a good court.</div>';
@@ -536,10 +538,11 @@
 
   function loadReports() {
     if (!LIVE) { renderReports(demo.reports); return; }
-    rest('GET', '/rest/v1/reports?select=id,reason,context,created_at,reporter:profiles!reports_reporter_id_fkey(first_name),target:profiles!reports_target_id_fkey(first_name)&status=eq.open&order=created_at.asc')
+    rest('GET', '/rest/v1/reports?select=id,reason,context,created_at,target_id,reporter:profiles!reports_reporter_id_fkey(first_name),target:profiles!reports_target_id_fkey(first_name)&status=eq.open&order=created_at.asc')
       .then(function (rows) {
         renderReports(rows.map(function (r) {
           return { id: r.id, reason: r.reason, context: r.context, created_at: r.created_at,
+                   target_id: r.target_id,
                    reporter: (r.reporter && r.reporter.first_name) || 'Member',
                    target: (r.target && r.target.first_name) || 'Member' };
         }));
@@ -550,8 +553,31 @@
   $('#report-list').addEventListener('click', function (ev) {
     var btn = ev.target.closest('button[data-act]');
     if (!btn) return;
-    var id = btn.closest('.item').getAttribute('data-id');
+    var item = btn.closest('.item');
+    var id = item.getAttribute('data-id');
     var status = btn.getAttribute('data-act');
+
+    // Suspending is the one thing here that changes somebody's account, so it
+    // asks first, and it says what it does and doesn't do.
+    if (status === 'suspend') {
+      var who = item.getAttribute('data-target-name') || 'this member';
+      var target = item.getAttribute('data-target');
+      if (!target) { alert('This report has no member attached — it may already be deleted.'); return; }
+      if (!confirm('Suspend ' + who + '?\n\nThey disappear from everyone\u2019s deck, their open '
+        + 'conversations close, and they can\u2019t message, swipe or join events. They can still sign in '
+        + 'and delete their own account, and you can undo this.')) return;
+      var reason = prompt('A short note for the record (optional):', '') || '';
+      rest('POST', '/rest/v1/rpc/suspend_member', { p_user: target, p_reason: reason })
+        .then(function (ok) {
+          if (ok !== true) throw new Error('the database refused it — is this account on the admin list?');
+          return rest('PATCH', '/rest/v1/reports?id=eq.' + encodeURIComponent(id),
+            { status: 'actioned' }, { 'Prefer': 'return=minimal' });
+        })
+        .then(loadReports)
+        .catch(function (e) { alert('Could not suspend: ' + e.message); });
+      return;
+    }
+
     if (!LIVE) {
       demo.reports = demo.reports.filter(function (r) { return r.id !== id; });
       renderReports(demo.reports);

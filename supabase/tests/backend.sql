@@ -836,7 +836,11 @@ begin
   from information_schema.columns c
   where c.table_schema = 'public' and c.table_name = 'profiles'
     and c.column_name not in (
-      'birthdate', 'partner_birthdate', 'approx_lat', 'approx_lng')
+      'birthdate', 'partner_birthdate', 'approx_lat', 'approx_lng',
+      -- Whether an account is suspended, and why, is between the member and
+      -- the desk. A suspended profile is hidden from other members anyway;
+      -- the member's own row comes back whole through get_my_profile().
+      'suspended_at', 'suspended_reason')
     and not has_column_privilege('authenticated', 'public.profiles', c.column_name, 'select');
   assert unclassified is null,
     format('profiles column(s) neither readable nor deliberately withheld: %s '
@@ -1097,6 +1101,130 @@ begin
 end $$;
 reset role;
 delete from events where title = 'Green Lake Social';
+
+-- ---- 9l. Suspension actually stops someone ----
+-- The desk could mark a report "actioned" and nothing happened; the privacy
+-- policy says we enforce bans. Every one of these is a thing a suspended
+-- member must no longer be able to do, and the last two are things they must
+-- still be able to do.
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000001';  -- Aaron, not an admin
+
+do $$
+declare ok boolean;
+begin
+  ok := suspend_member('00000000-0000-4000-8000-000000000002', 'test');
+  assert ok = false, 'a non-admin was able to suspend someone';
+  assert (select suspended_at from profiles where id = '00000000-0000-4000-8000-000000000002') is null,
+    'a non-admin suspension changed the row anyway';
+end $$;
+
+-- Now as a real admin.
+insert into admins (user_id) values ('00000000-0000-4000-8000-000000000001')
+  on conflict do nothing;
+
+do $$
+declare ok boolean; n int;
+begin
+  ok := suspend_member('00000000-0000-4000-8000-000000000001', 'cannot suspend yourself');
+  assert ok = false, 'an admin suspended themselves, locking out the only person who could undo it';
+
+  ok := suspend_member('00000000-0000-4000-8000-000000000002', 'abusive messages');
+  assert ok = true, 'suspend_member refused an admin';
+  assert (select suspended_at from profiles where id = '00000000-0000-4000-8000-000000000002') is not null,
+    'suspend_member did not set suspended_at';
+
+  select count(*) into n from matches
+   where closed_at is null
+     and (user_a = '00000000-0000-4000-8000-000000000002' or user_b = '00000000-0000-4000-8000-000000000002');
+  assert n = 0, format('suspension left %s open conversation(s)', n);
+end $$;
+
+-- Nobody sees them in discovery any more.
+do $$
+declare ids uuid[];
+begin
+  select array_agg(user_id) into ids from get_discovery_deck('date', 50);
+  assert not ('00000000-0000-4000-8000-000000000002' = any(coalesce(ids, '{}'))),
+    'a suspended member is still in the deck';
+end $$;
+
+-- And their own deck is empty, so they cannot start anything new.
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000002';
+do $$
+declare n int;
+begin
+  select count(*) into n from get_discovery_deck('date', 50);
+  assert n = 0, format('a suspended member still had %s card(s) to swipe', n);
+end $$;
+
+-- Writes are refused, not silently dropped. RLS does not apply to the table
+-- owner, so these have to run as `authenticated` the way the app does.
+set role authenticated;
+do $$
+declare failed boolean;
+begin
+  begin
+    insert into swipes (actor_id, target_id, mode, action)
+    values ('00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000003', 'date', 'like');
+    failed := false;
+  exception when others then failed := true;
+  end;
+  assert failed, 'a suspended member could still swipe';
+
+  begin
+    insert into event_rsvps (event_id, user_id)
+    select id, '00000000-0000-4000-8000-000000000002' from events limit 1;
+    failed := false;
+  exception when others then failed := true;
+  end;
+  assert failed, 'a suspended member could still RSVP to an event';
+
+  begin
+    insert into messages (match_id, sender_id, body)
+    select id, '00000000-0000-4000-8000-000000000002', 'let me back in'
+      from matches
+     where user_a = '00000000-0000-4000-8000-000000000002'
+        or user_b = '00000000-0000-4000-8000-000000000002'
+     limit 1;
+    failed := false;
+  exception when others then failed := true;
+  end;
+  assert failed, 'a suspended member could still send a message';
+end $$;
+
+-- They can still see their own profile, so the app works well enough to leave.
+do $$
+declare me jsonb;
+begin
+  me := get_my_profile();
+  assert me is not null, 'a suspended member cannot load their own profile';
+  assert (me->>'suspended_at') is not null, 'their own profile does not tell them they are suspended';
+end $$;
+
+-- Other members cannot read the suspension state off the row.
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000003';
+do $$
+declare n int;
+begin
+  select count(*) into n from profiles where id = '00000000-0000-4000-8000-000000000002';
+  assert n = 0, 'a suspended profile is still selectable by another member';
+end $$;
+reset role;
+
+-- Undo restores them.
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000001';
+do $$
+declare ok boolean; n int;
+begin
+  ok := unsuspend_member('00000000-0000-4000-8000-000000000002');
+  assert ok = true, 'unsuspend_member refused an admin';
+  assert (select suspended_at from profiles where id = '00000000-0000-4000-8000-000000000002') is null,
+    'unsuspend did not clear suspended_at';
+  select count(*) into n from get_discovery_deck('date', 50);
+  assert n > 0, 'the admin deck is empty after an unsuspend, which means something else broke';
+end $$;
+
+delete from admins where user_id = '00000000-0000-4000-8000-000000000001';
 
 -- ---- 10. Account deletion removes everything ----
 -- The account-deletion page (landing/delete-account.html) promises each of
