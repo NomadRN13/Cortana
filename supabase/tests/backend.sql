@@ -1131,6 +1131,11 @@ select id, '00000000-0000-4000-8000-000000000012', 'see you on court'
 insert into event_rsvps (event_id, user_id)
 select id, '00000000-0000-4000-8000-000000000012' from events limit 1;
 
+-- Joined the waitlist before making an account, which is the ordinary order of
+-- events for anyone who found 40/LOVE through the website.
+insert into waitlist (email, city, source)
+values ((select lower(email) from auth.users where id = '00000000-0000-4000-8000-000000000012'), 'indianapolis', 'delete-test');
+
 do $$
 declare c int; t text;
 begin
@@ -1164,7 +1169,8 @@ begin
     'select count(*) from devices where user_id = $1',
     'select count(*) from reports where reporter_id = $1 or target_id = $1',
     'select count(*) from blocks where blocker_id = $1 or blocked_id = $1',
-    'select count(*) from apple_identities where user_id = $1'
+    'select count(*) from apple_identities where user_id = $1',
+    'select count(*) from user_sports where user_id = $1'
   ] loop
     execute t into c using '00000000-0000-4000-8000-000000000012'::uuid;
     assert c = 0, format('account deletion left %s row(s) behind: %s', c, t);
@@ -1173,6 +1179,39 @@ begin
   select count(*) into c from storage.objects
    where name like '00000000-0000-4000-8000-000000000012/%';
   assert c = 0, format('account deletion left %s photo object(s) in storage', c);
+end $$;
+
+-- The waitlist is keyed on an email address rather than a user id, so nothing
+-- cascades to it. The deletion page tells Play that the email is deleted.
+do $$
+declare c int;
+begin
+  select count(*) into c from waitlist where source = 'delete-test';
+  assert c = 0, format('account deletion left %s waitlist row(s) under the deleted address', c);
+end $$;
+
+-- Belt and braces: every uuid column of every public table, swept for the
+-- deleted member's id. A table added later that holds user data and forgets to
+-- cascade fails here rather than in someone's deletion request.
+do $$
+declare
+  r record;
+  c int;
+  uid uuid := '00000000-0000-4000-8000-000000000012';
+begin
+  for r in
+    select col.table_name, col.column_name
+      from information_schema.columns col
+      join information_schema.tables t
+        on t.table_schema = col.table_schema and t.table_name = col.table_name
+     where col.table_schema = 'public'
+       and col.data_type = 'uuid'
+       and t.table_type = 'BASE TABLE'
+  loop
+    execute format('select count(*) from public.%I where %I = $1', r.table_name, r.column_name)
+      into c using uid;
+    assert c = 0, format('account deletion left %s row(s) in %s.%s', c, r.table_name, r.column_name);
+  end loop;
 end $$;
 
 select 'ALL BACKEND TESTS PASSED' as result;
