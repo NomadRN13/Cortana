@@ -9,6 +9,7 @@ import { useApp, ageFromBirthdate } from '../state';
 import { SPORTS, SKILLS } from '../data/seed';
 import { CITIES, DEFAULT_CITY } from '../data/cities';
 import { parseBirthdate, formatBirthdateInput } from '../lib/birthdate';
+import { LINKS, openLink } from '../lib/links';
 
 const MODES = [
   { key: 'date', icon: 'heart-outline', name: 'Date Mode', desc: 'Find your perfect match' },
@@ -455,6 +456,15 @@ export default function OnboardingScreen({ navigation, route }) {
               );
             })}
             <Text style={type.hint}>Pick at least one — you can switch modes anytime from Home. Play and Friends are for everyone, whatever your dating preference.</Text>
+            <Text style={[type.hint, { marginTop: 6 }]}>
+              By tapping Step on court you confirm you're 18 or older and agree to our{' '}
+              <Text style={styles.link} onPress={() => openLink(LINKS.terms)} accessibilityRole="link">Terms of Service</Text>
+              {' '}and{' '}
+              <Text style={styles.link} onPress={() => openLink(LINKS.privacy)} accessibilityRole="link">Privacy Policy</Text>
+              . We don't run background checks — read our{' '}
+              <Text style={styles.link} onPress={() => openLink(LINKS.safety)} accessibilityRole="link">safety tips</Text>
+              {' '}before you meet anyone.
+            </Text>
           </>
         )}
       </ScrollView>
@@ -478,6 +488,7 @@ function Field({ label, children }) {
 
 const styles = StyleSheet.create({
   head: { paddingHorizontal: 18, paddingTop: 20, gap: 14 },
+  link: { color: colors.optic, fontWeight: '800' },
   dot: { width: 26, height: 5, borderRadius: 3, backgroundColor: colors.line },
   body: { padding: 18, gap: 16 },
   input: {

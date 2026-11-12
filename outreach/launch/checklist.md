@@ -765,3 +765,35 @@ neither is fixed yet.
   full 72-entry tournament to a champion in the browser suite.
 - A 72-entry bracket is a long scroll on a phone (71 matches, round by round).
   It works; whether it is pleasant has not been judged on a device.
+
+## Update — 2026-11-12 (terms, safety page and signup consent, for legal review)
+
+- **Terms of Service rewritten** (`landing/terms.html`, 10 → 16 sections) to
+  cover what was built since August: tournaments, places to play, doubles
+  partners, text messages, assumption of risk beyond events, a clear "no
+  background or identity checks", zero tolerance, a copyright complaint
+  route, informal dispute resolution first. **Still a draft** — not reviewed by
+  a lawyer.
+- **New `/safety/` page** (`landing/safety.html`): meeting tips, scams, health,
+  how reporting works, hotlines. Linked from the site footer, the terms, the
+  app's Settings and the last signup step.
+- **Privacy Policy:** Twilio named as the text-message processor (it was
+  missing), and a "Your rights" section (access, correction, deletion within
+  45 days, for everyone).
+- **The app never asked anyone to agree to the terms.** The last signup step
+  now says "By tapping Step on court you confirm you're 18 or older and agree
+  to our Terms of Service and Privacy Policy", with links, in the app and the
+  prototype. Settings has a Safety and legal group. Links use
+  `EXPO_PUBLIC_SITE_URL` (default `https://40-love.netlify.app`).
+- **Small notices** in the tournament card (players record results, the
+  organiser decides, no prizes, own risk), the places list (no venue
+  affiliation), and the Settings partner form (partner is 18+ and agreed).
+
+### Founder actions this adds
+- [ ] Send `docs/legal-review-2026-11.md` and the three pages to a lawyer — it
+      lists 11 questions, the state dating-safety laws (Texas especially) and
+      arbitration among them.
+- [ ] Decide whether you can keep the "review every report within 24 hours"
+      promise before launch, or change the wording.
+- [ ] Refile the Apple App Privacy and Play Data safety forms.
+- [ ] After sign-off: set effective dates, remove the "Founder note" boxes.

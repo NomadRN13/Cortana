@@ -9,6 +9,7 @@ import { parseBirthdate, formatBirthdateInput, birthdateToText } from '../lib/bi
 import { CITIES, DEFAULT_CITY } from '../data/cities';
 import { isBackendConfigured } from '../lib/supabase';
 import * as api from '../api/backend';
+import { LINKS, openLink } from '../lib/links';
 
 const GENDERS = [
   { key: 'woman', label: 'Woman' },
@@ -420,6 +421,9 @@ export default function SettingsScreen({ navigation }) {
                     <Chip key={g.key} label={g.label} active={pGender === g.key} onPress={() => setPGender(g.key)} />
                   ))}
                 </View>
+                <Text style={[type.hint, { fontSize: 12, marginTop: 8 }]}>
+                  By adding a partner you confirm they're 18 or older and agreed to be on your profile. Their first name, age and gender appear on your shared card.
+                </Text>
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
                   <Pressable style={styles.partnerSave} onPress={savePartner} accessibilityRole="button">
                     <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 14 }}>
@@ -494,6 +498,20 @@ export default function SettingsScreen({ navigation }) {
           <Text style={[type.hint, { fontSize: 12 }]}>
             Looking for “Only my sports”? It's on the Home screen now, right above the players it filters.
           </Text>
+        </Group>
+
+        <Group title="Safety and legal">
+          {[
+            { label: 'Safety tips', url: LINKS.safety, icon: 'shield-checkmark-outline' },
+            { label: 'Terms of Service', url: LINKS.terms, icon: 'document-text-outline' },
+            { label: 'Privacy Policy', url: LINKS.privacy, icon: 'lock-closed-outline' },
+          ].map((l) => (
+            <Pressable key={l.label} onPress={() => openLink(l.url)} accessibilityRole="link">
+              <Row label={l.label}>
+                <Ionicons name={l.icon} size={18} color={colors.dim} />
+              </Row>
+            </Pressable>
+          ))}
         </Group>
 
         <Pressable style={styles.danger} onPress={signOut}>

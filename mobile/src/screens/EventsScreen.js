@@ -158,7 +158,7 @@ function Tournaments({ app }) {
                     : t.entryCount ? `${t.entryCount} entered.` : 'Nobody yet — be the first.'}
                 </Text>
                 <Text style={[type.hint, { fontSize: 11.5, marginTop: 6 }]}>
-                  When entries close the organiser makes the draw: the bracket is built for however many have entered, up to {t.max}, and everyone is placed in it automatically.
+                  When entries close the organiser makes the draw: the bracket is built for however many have entered, up to {t.max}, and everyone is placed in it automatically. Players record their own results, the organiser’s decisions are final, and there are no prizes. You play at your own risk.
                 </Text>
               </View>
             )}
@@ -235,7 +235,7 @@ function PlacesToPlay({ cities, courtsFor }) {
         );
       })}
       <Text style={[type.hint, { fontSize: 11.5, marginTop: 6 }]}>
-        Courts change — hours, fees and nets are the venue's call. Check before you make the drive.
+        Courts change — hours, fees and nets are the venue's call. Check before you make the drive. 40/LOVE isn't affiliated with any venue listed.
       </Text>
     </View>
   );

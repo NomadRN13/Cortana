@@ -636,6 +636,9 @@
   }
   .set-row .lab { font-size: 14px; font-weight: 700; }
   .set-row .sub { font-size: 12px; color: var(--dim); margin-top: 2px; }
+  a.set-row { color: inherit; text-decoration: none; }
+  a.set-row::after { content: '\2197'; color: var(--dim); }
+  #ob-consent a { color: var(--optic); font-weight: 800; }
   .switch { flex: 0 0 auto; width: 50px; height: 30px; border-radius: 999px; background: var(--card2); border: 2px solid var(--line); position: relative; }
   .switch::after {
     content: ""; position: absolute; top: 2px; left: 2px;
@@ -1119,6 +1122,7 @@
           </div>
         </div>
         <p class="hint">Pick at least one — you can switch modes anytime from Home. Play and Friends are for everyone, whatever your dating preference.</p>
+        <p class="hint" id="ob-consent">By tapping Step on court you confirm you're 18 or older and agree to our <a href="/terms/" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy/" target="_blank" rel="noopener">Privacy Policy</a>. We don't run background checks — read our <a href="/safety/" target="_blank" rel="noopener">safety tips</a> before you meet anyone.</p>
       </div>
       <div class="ob-foot">
         <button class="btn btn-ghost btn-back" data-back="screen-ob3">Back</button>
@@ -1400,6 +1404,12 @@
             <div><div class="lab">Messages</div><div class="sub">When it's your serve</div></div>
             <button class="switch" id="sw-notif-msg" role="switch" aria-checked="true" aria-label="Message notifications"></button>
           </div>
+        </div>
+        <div class="set-group" id="legal-links">
+          <h3>Safety and legal</h3>
+          <a class="set-row" href="/safety/" target="_blank" rel="noopener"><div><div class="lab">Safety tips</div></div></a>
+          <a class="set-row" href="/terms/" target="_blank" rel="noopener"><div><div class="lab">Terms of Service</div></div></a>
+          <a class="set-row" href="/privacy/" target="_blank" rel="noopener"><div><div class="lab">Privacy Policy</div></div></a>
         </div>
         <button class="danger" id="sign-out">Sign out</button>
         <p class="hint" style="text-align:center; margin-top:12px;" id="settings-footer">40/LOVE prototype · not a real account</p>
@@ -2953,7 +2963,7 @@
       var detail = '';
       if (isOpen && t.status === 'registration') {
         detail = '<p class="place-note">' + (t.entries.length ? esc(t.entries.map(tName).join(' \u00B7 ')) : 'Nobody yet \u2014 be the first.') + '</p>' +
-          '<p class="places-foot">When entries close the organiser makes the draw: the bracket is built for however many have entered, up to ' + t.max + ', and everyone is placed in it automatically.</p>';
+          '<p class="places-foot">When entries close the organiser makes the draw: the bracket is built for however many have entered, up to ' + t.max + ', and everyone is placed in it automatically. Players record their own results, the organiser’s decisions are final, and there are no prizes. You play at your own risk.</p>';
       } else if (isOpen) {
         detail = tBracketHtml(t);
       }
@@ -3058,7 +3068,7 @@
         (rows || '<p class="hint" style="padding:8px 0">' + (placeFilter === 'indoor' ? 'No indoor courts listed here yet.' : 'No outdoor courts listed here yet.') + '</p>');
     }).join('');
     box.innerHTML = '<h3 class="places-head">Places to play</h3><div class="place-filters" role="group" aria-label="Indoor or outdoor">' + filters + '</div>' +
-      sections + '<p class="places-foot">Courts change \u2014 hours, fees and nets are the venue\u2019s call. Check before you make the drive.</p>';
+      sections + '<p class="places-foot">Courts change \u2014 hours, fees and nets are the venue\u2019s call. Check before you make the drive. 40/LOVE isn’t affiliated with any venue listed.</p>';
     $all('#places-list .place-filter').forEach(function (b) {
       b.addEventListener('click', function () { placeFilter = b.getAttribute('data-filter'); renderPlaces(userCities()); });
     });
