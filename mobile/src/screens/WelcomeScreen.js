@@ -7,8 +7,8 @@ import { Wordmark, Btn } from '../components/ui';
 import { useApp } from '../state';
 
 const MODES = [
-  { icon: 'heart-outline', name: 'Date Mode', desc: 'Find your perfect match.' },
   { icon: 'tennisball-outline', name: 'Play Mode', desc: 'Find players for your next match.' },
+  { icon: 'heart-outline', name: 'Date Mode', desc: 'Find your perfect match.' },
   { icon: 'people-outline', name: 'Friends Mode', desc: 'Expand your circle on and off the court.' },
 ];
 

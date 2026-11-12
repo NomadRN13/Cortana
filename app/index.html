@@ -1071,20 +1071,6 @@
       </div>
       <div class="scroll ob-body">
         <div class="mode-rows" id="ob-modes" role="group" aria-label="Modes">
-          <button class="mode-row" aria-pressed="true" data-mode="date">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
-            <span><span class="mode-name">Date Mode</span><span class="mode-desc">Find your perfect match</span></span>
-            <span class="mode-check" aria-hidden="true">✓</span>
-          </button>
-          <div class="seeking-box" id="seeking-box">
-            <label>Looking to date</label>
-            <div class="chips" id="ob-seeking" role="group" aria-label="Looking to date">
-              <button class="chip" aria-pressed="false" data-seek="woman">Women</button>
-              <button class="chip" aria-pressed="false" data-seek="man">Men</button>
-              <button class="chip" aria-pressed="false" data-seek="nonbinary">Nonbinary people</button>
-            </div>
-            <p class="hint" style="margin-top:8px">Pick everyone you're open to — you'll only match with people looking for someone like you, too.</p>
-          </div>
           <button class="mode-row" aria-pressed="false" data-mode="play">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>
             <span><span class="mode-name">Play Mode</span><span class="mode-desc">Find players for your next match</span></span>
@@ -1105,6 +1091,20 @@
               <button class="chip" aria-pressed="true" data-pref="everyone">Everyone</button>
             </div>
             <p class="hint" style="margin-top:8px">Mixed doubles is open to everyone by nature.</p>
+          </div>
+          <button class="mode-row" aria-pressed="true" data-mode="date">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
+            <span><span class="mode-name">Date Mode</span><span class="mode-desc">Find your perfect match</span></span>
+            <span class="mode-check" aria-hidden="true">✓</span>
+          </button>
+          <div class="seeking-box" id="seeking-box">
+            <label>Looking to date</label>
+            <div class="chips" id="ob-seeking" role="group" aria-label="Looking to date">
+              <button class="chip" aria-pressed="false" data-seek="woman">Women</button>
+              <button class="chip" aria-pressed="false" data-seek="man">Men</button>
+              <button class="chip" aria-pressed="false" data-seek="nonbinary">Nonbinary people</button>
+            </div>
+            <p class="hint" style="margin-top:8px">Pick everyone you're open to — you'll only match with people looking for someone like you, too.</p>
           </div>
           <button class="mode-row" aria-pressed="false" data-mode="friends">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg>
@@ -1147,13 +1147,13 @@
         <p>Ready to rally?</p>
       </div>
       <div class="mode-pills" role="group" aria-label="Mode" id="mode-pills">
-        <button class="mode-pill on" data-mode="date">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
-          Date Mode
-        </button>
         <button class="mode-pill" data-mode="play">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>
           Play Mode
+        </button>
+        <button class="mode-pill on" data-mode="date">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
+          Date Mode
         </button>
         <button class="mode-pill" data-mode="friends">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg>
@@ -1266,38 +1266,16 @@
         <div class="set-group">
           <h3>Modes</h3>
           <div class="set-row">
-            <div><div class="lab">Date Mode</div><div class="sub">Find your perfect match</div></div>
-            <button class="switch" id="sw-date" role="switch" aria-checked="true" aria-label="Date mode"></button>
-          </div>
-          <div class="set-row">
             <div><div class="lab">Play Mode</div><div class="sub">Find players for your next match</div></div>
             <button class="switch" id="sw-play" role="switch" aria-checked="false" aria-label="Play mode"></button>
           </div>
           <div class="set-row">
+            <div><div class="lab">Date Mode</div><div class="sub">Find your perfect match</div></div>
+            <button class="switch" id="sw-date" role="switch" aria-checked="true" aria-label="Date mode"></button>
+          </div>
+          <div class="set-row">
             <div><div class="lab">Friends Mode</div><div class="sub">Expand your circle</div></div>
             <button class="switch" id="sw-friends" role="switch" aria-checked="false" aria-label="Friends mode"></button>
-          </div>
-        </div>
-        <div class="set-group">
-          <h3>Dating</h3>
-          <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
-            <div>
-              <span class="lab">I am</span>
-              <div class="chips" id="set-gender" style="margin-top:8px">
-                <button class="chip" aria-pressed="false" data-gender="woman">Woman</button>
-                <button class="chip" aria-pressed="false" data-gender="man">Man</button>
-                <button class="chip" aria-pressed="false" data-gender="nonbinary">Nonbinary</button>
-              </div>
-            </div>
-            <div>
-              <span class="lab">Looking to date</span>
-              <div class="chips" id="set-seeking" style="margin-top:8px">
-                <button class="chip" aria-pressed="false" data-seek="woman">Women</button>
-                <button class="chip" aria-pressed="false" data-seek="man">Men</button>
-                <button class="chip" aria-pressed="false" data-seek="nonbinary">Nonbinary people</button>
-              </div>
-            </div>
-            <p class="hint">Date mode only shows people who fit what you're looking for — and who are looking for someone like you.</p>
           </div>
         </div>
         <div class="set-group">
@@ -1321,6 +1299,28 @@
               </div>
             </div>
             <p class="hint">Play mode shows players who want the same game types. Mixed doubles is open to everyone by nature.</p>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Dating</h3>
+          <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div>
+              <span class="lab">I am</span>
+              <div class="chips" id="set-gender" style="margin-top:8px">
+                <button class="chip" aria-pressed="false" data-gender="woman">Woman</button>
+                <button class="chip" aria-pressed="false" data-gender="man">Man</button>
+                <button class="chip" aria-pressed="false" data-gender="nonbinary">Nonbinary</button>
+              </div>
+            </div>
+            <div>
+              <span class="lab">Looking to date</span>
+              <div class="chips" id="set-seeking" style="margin-top:8px">
+                <button class="chip" aria-pressed="false" data-seek="woman">Women</button>
+                <button class="chip" aria-pressed="false" data-seek="man">Men</button>
+                <button class="chip" aria-pressed="false" data-seek="nonbinary">Nonbinary people</button>
+              </div>
+            </div>
+            <p class="hint">Date mode only shows people who fit what you're looking for — and who are looking for someone like you.</p>
           </div>
         </div>
         <div class="set-group">
@@ -1509,12 +1509,12 @@
     <div class="promo-rule"></div>
     <div class="promo-rows">
       <div class="promo-row">
-        <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg></span>
-        <div><h3>Date Mode</h3><p>Find your perfect match.</p></div>
-      </div>
-      <div class="promo-row">
         <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg></span>
         <div><h3>Play Mode</h3><p>Find players for your next match.</p></div>
+      </div>
+      <div class="promo-row">
+        <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg></span>
+        <div><h3>Date Mode</h3><p>Find your perfect match.</p></div>
       </div>
       <div class="promo-row">
         <span class="promo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg></span>

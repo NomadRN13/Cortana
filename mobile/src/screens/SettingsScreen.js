@@ -219,15 +219,49 @@ export default function SettingsScreen({ navigation }) {
 
       <ScrollView contentContainerStyle={{ padding: 18, gap: 20 }}>
         <Group title="Modes">
-          <Row label="Date Mode" sub="Find your perfect match">
-            <Switch value={modeOn('date')} onValueChange={() => toggleMode('date')} trackColor={{ true: colors.opticDim }} thumbColor={modeOn('date') ? colors.optic : colors.dim} />
-          </Row>
           <Row label="Play Mode" sub="Find players for your next match">
             <Switch value={modeOn('play')} onValueChange={() => toggleMode('play')} trackColor={{ true: colors.opticDim }} thumbColor={modeOn('play') ? colors.optic : colors.dim} />
+          </Row>
+          <Row label="Date Mode" sub="Find your perfect match">
+            <Switch value={modeOn('date')} onValueChange={() => toggleMode('date')} trackColor={{ true: colors.opticDim }} thumbColor={modeOn('date') ? colors.optic : colors.dim} />
           </Row>
           <Row label="Friends Mode" sub="Expand your circle">
             <Switch value={modeOn('friends')} onValueChange={() => toggleMode('friends')} trackColor={{ true: colors.opticDim }} thumbColor={modeOn('friends') ? colors.optic : colors.dim} />
           </Row>
+        </Group>
+
+        <Group title="Play">
+          <View style={styles.datingBox}>
+            <Text style={styles.datingLabel}>Game types</Text>
+            <View style={styles.chipRow}>
+              {GAMES.map((g) => {
+                const cur = (u && u.playGames) || ['singles', 'doubles', 'mixed_doubles'];
+                const on = cur.includes(g.key);
+                return (
+                  <Chip
+                    key={g.key}
+                    label={g.label}
+                    active={on}
+                    onPress={() => app.updatePlay(on ? cur.filter((x) => x !== g.key) : [...cur, g.key], (u && u.playPref) || 'everyone')}
+                  />
+                );
+              })}
+            </View>
+            <Text style={[styles.datingLabel, { marginTop: 14 }]}>Play singles/doubles with</Text>
+            <View style={styles.chipRow}>
+              {PARTNER_PREFS.map((p) => (
+                <Chip
+                  key={p.key}
+                  label={p.label}
+                  active={((u && u.playPref) || 'everyone') === p.key}
+                  onPress={() => app.updatePlay((u && u.playGames) || ['singles', 'doubles', 'mixed_doubles'], p.key)}
+                />
+              ))}
+            </View>
+            <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
+              Play mode shows players who want the same game types. Mixed doubles is open to everyone by nature.
+            </Text>
+          </View>
         </Group>
 
         <Group title="Dating">
@@ -266,40 +300,6 @@ export default function SettingsScreen({ navigation }) {
             </View>
             <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
               Date mode only shows people who fit what you're looking for — and who are looking for someone like you.
-            </Text>
-          </View>
-        </Group>
-
-        <Group title="Play">
-          <View style={styles.datingBox}>
-            <Text style={styles.datingLabel}>Game types</Text>
-            <View style={styles.chipRow}>
-              {GAMES.map((g) => {
-                const cur = (u && u.playGames) || ['singles', 'doubles', 'mixed_doubles'];
-                const on = cur.includes(g.key);
-                return (
-                  <Chip
-                    key={g.key}
-                    label={g.label}
-                    active={on}
-                    onPress={() => app.updatePlay(on ? cur.filter((x) => x !== g.key) : [...cur, g.key], (u && u.playPref) || 'everyone')}
-                  />
-                );
-              })}
-            </View>
-            <Text style={[styles.datingLabel, { marginTop: 14 }]}>Play singles/doubles with</Text>
-            <View style={styles.chipRow}>
-              {PARTNER_PREFS.map((p) => (
-                <Chip
-                  key={p.key}
-                  label={p.label}
-                  active={((u && u.playPref) || 'everyone') === p.key}
-                  onPress={() => app.updatePlay((u && u.playGames) || ['singles', 'doubles', 'mixed_doubles'], p.key)}
-                />
-              ))}
-            </View>
-            <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
-              Play mode shows players who want the same game types. Mixed doubles is open to everyone by nature.
             </Text>
           </View>
         </Group>

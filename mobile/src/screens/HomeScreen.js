@@ -23,8 +23,8 @@ function genderText(p) {
 }
 
 const MODE_META = {
-  date: { label: 'Date Mode', icon: 'heart-outline', likeVerb: 'Like' },
   play: { label: 'Play Mode', icon: 'tennisball-outline', likeVerb: 'Request to hit' },
+  date: { label: 'Date Mode', icon: 'heart-outline', likeVerb: 'Like' },
   friends: { label: 'Friends Mode', icon: 'people-outline', likeVerb: 'Wave' },
 };
 

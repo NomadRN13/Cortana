@@ -212,7 +212,7 @@ function phoneError(e, fallback) {
 }
 
 const NOTIF_ICONS = { match: 'heart', message: 'chatbubble', court_time: 'tennisball', event_reminder: 'calendar', system: 'notifications' };
-const ALL_MODES = ['date', 'play', 'friends'];
+const ALL_MODES = ['play', 'date', 'friends'];
 const ALL_GAMES = ['singles', 'doubles', 'mixed_doubles'];
 
 const prefOk = (pref, g) =>

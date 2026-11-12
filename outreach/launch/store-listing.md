@@ -345,7 +345,7 @@ For both stores' "What's new" field:
 
 > Our first serve. 40/LOVE v0.1 brings:
 >
-> • Three modes — Date, Play, and Friends
+> • Three modes — Play, Date, and Friends
 > • Matching by sport, skill (NTRP / DUPR), and distance
 > • Chat with court-time proposals: venue, day, time, one tap to accept
 > • Local events and RSVPs

@@ -12,8 +12,8 @@ import { parseBirthdate, formatBirthdateInput } from '../lib/birthdate';
 import { LINKS, openLink } from '../lib/links';
 
 const MODES = [
-  { key: 'date', icon: 'heart-outline', name: 'Date Mode', desc: 'Find your perfect match' },
   { key: 'play', icon: 'tennisball-outline', name: 'Play Mode', desc: 'Find players for your next match' },
+  { key: 'date', icon: 'heart-outline', name: 'Date Mode', desc: 'Find your perfect match' },
   { key: 'friends', icon: 'people-outline', name: 'Friends Mode', desc: 'Expand your circle on and off the court' },
 ];
 

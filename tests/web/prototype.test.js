@@ -221,7 +221,15 @@ const out = (n) => require('path').join(OUT, n);
     await page.click('#psheet-close');
     await page.waitForFunction(() => !document.querySelector('#psheet-overlay.open'), { timeout: 2000 });
   });
+  await step('home opens on the first mode chosen, in Play-Date-Friends order', async () => {
+    const pills = await page.$$eval('.mode-pill', (els) => els.map((e) => e.getAttribute('data-mode')).join());
+    if (pills !== 'play,date,friends') throw new Error('mode pills out of order: ' + pills);
+    const on = await page.getAttribute('.mode-pill.on', 'data-mode');
+    if (on !== 'play') throw new Error('expected Play selected after signing up for Date + Play, got ' + on);
+  });
   await step('date deck hides men + non-mutual seekers (pass -> Priya, not Diego)', async () => {
+    await page.click('.mode-pill[data-mode="date"]');
+    await page.waitForFunction(() => document.querySelector('#deck-card .card-name').textContent.includes('Maya'), { timeout: 3000 });
     await page.click('#act-pass');
     await page.waitForFunction(() => document.querySelector('#deck-card .card-name').textContent.includes('Priya'), { timeout: 3000 });
     await page.click('#act-rewind');
