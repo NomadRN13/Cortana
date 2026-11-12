@@ -7,7 +7,11 @@ import { Tag, Avatar } from '../components/ui';
 import { useApp } from '../state';
 import { cityLabel } from '../data/cities';
 import { ACCESS_LABELS } from '../data/courts';
-import { bracketRoundName } from '../lib/bracket';
+import { bracketRoundName, bracketSide, bracketByeLine } from '../lib/bracket';
+
+// What an empty side of a match says: a player who has left the tournament
+// isn't a place still to be decided.
+const EMPTY_SIDE = { bye: '— bye —', withdrawn: 'Withdrawn', pending: 'To be decided' };
 
 // Each city runs its own meetups. You see the calendar for the cities on your
 // profile — one or several — and nothing else. So this is a label, not a
@@ -27,14 +31,17 @@ function CityBadge({ cities }) {
 
 // One line of a match: a player, highlighted if they won, with a button to
 // record them as the winner when this member is allowed to.
-function BracketPlayer({ app, t, m, id }) {
+function BracketPlayer({ app, t, m, side }) {
+  const id = side === 'a' ? m.a : m.b;
   const won = !!m.winner && m.winner === id;
   const lost = !!m.winner && m.winner !== id;
-  const name = id ? app.playerName(id) : (m.bye ? '— bye —' : 'To be decided');
+  const name = id ? app.playerName(id) : (EMPTY_SIDE[bracketSide(t.matches, m, side)] || 'To be decided');
+  const isFinal = m.round >= t.rounds;
   const record = () => {
     Alert.alert(
       `${app.playerName(id)} won?`,
-      'This goes straight into the bracket and moves them to the next round. Only record a match that has been played.',
+      `This goes straight into the bracket and ${isFinal ? 'makes them the champion' : 'moves them to the next round'}. `
+        + 'It can’t be changed afterwards except by the organiser, so only record a match that has been played.',
       [{ text: 'Cancel', style: 'cancel' }, { text: 'Record result', onPress: () => app.reportMatch(t.id, m.id, id, '') }]
     );
   };
@@ -62,16 +69,22 @@ function BracketPlayer({ app, t, m, id }) {
 function Bracket({ app, t }) {
   const rounds = [];
   for (let r = 1; r <= t.rounds; r += 1) rounds.push(r);
+  // A bye isn't a match anyone plays — with 72 entries in a bracket of 128
+  // there are 56 of them — so they are counted in one line, not listed.
+  const byes = t.matches.filter((m) => m.round === 1 && m.bye).length;
   return (
     <View style={{ marginTop: 8, gap: 6 }}>
       {rounds.map((r) => (
         <View key={r}>
           <Text style={[type.eyebrow, { marginTop: 8, marginBottom: 6 }]}>{bracketRoundName(r, t.rounds)}</Text>
-          {t.matches.filter((m) => m.round === r).map((m) => (
+          {r === 1 && byes > 0 && (
+            <Text style={[type.hint, { fontSize: 12, marginBottom: 6 }]}>{bracketByeLine(byes, t.rounds)}</Text>
+          )}
+          {t.matches.filter((m) => m.round === r && !m.bye).map((m) => (
             <View key={m.id} style={[styles.brMatch, (app.isMe(m.a) || app.isMe(m.b)) && { borderColor: colors.optic }]}>
-              <BracketPlayer app={app} t={t} m={m} id={m.a} />
+              <BracketPlayer app={app} t={t} m={m} side="a" />
               <View style={styles.brRule} />
-              <BracketPlayer app={app} t={t} m={m} id={m.b} />
+              <BracketPlayer app={app} t={t} m={m} side="b" />
               {!!m.score && <Text style={[type.hint, { fontSize: 11.5, marginTop: 4 }]}>{m.score}</Text>}
             </View>
           ))}
@@ -93,12 +106,15 @@ function Tournaments({ app }) {
       <Text style={[type.display, { fontSize: 18 }]}>Tournaments</Text>
       {list.map((t) => {
         const isOpen = !!open[t.id];
-        const full = t.entries.length >= t.max;
+        // entryCount, not the entry list: the list leaves out anyone you have a
+        // block with, and would show a full tournament as having room.
+        const full = t.entryCount >= t.max;
         const status = t.status === 'registration'
-          ? `${t.entries.length} of ${t.max} entered`
+          ? `${t.entryCount} of ${t.max} entered`
           : t.status === 'completed'
-            ? `Champion: ${app.playerName(t.championId)}`
-            : `In progress · ${t.entries.length} players`;
+            // A champion who has since deleted their account leaves no name.
+            ? (t.championId ? `Champion: ${app.playerName(t.championId)}` : 'Completed')
+            : `In progress · ${t.entryCount} players`;
         return (
           <View key={t.id} style={[styles.tourney, isOpen && { borderColor: colors.optic }]}>
             <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{t.title}</Text>
@@ -128,7 +144,7 @@ function Tournaments({ app }) {
                   {t.status === 'registration' ? (isOpen ? 'Hide entries' : 'See who’s in') : (isOpen ? 'Hide bracket' : 'See the bracket')}
                 </Text>
               </Pressable>
-              {!app.live && t.status === 'registration' && t.entries.length >= 2 && (
+              {!app.live && t.status === 'registration' && t.entryCount >= 2 && (
                 <Pressable onPress={() => { app.drawTournament(t.id); setOpen((o) => ({ ...o, [t.id]: true })); }} accessibilityRole="button">
                   <Text style={{ color: colors.dim, fontWeight: '700', fontSize: 12.5 }}>Make the draw (demo)</Text>
                 </Pressable>
@@ -137,7 +153,9 @@ function Tournaments({ app }) {
             {isOpen && t.status === 'registration' && (
               <View style={{ marginTop: 8 }}>
                 <Text style={[type.hint, { fontSize: 12.5 }]}>
-                  {t.entries.length ? t.entries.map((e) => app.playerName(e.id)).join(' · ') : 'Nobody yet — be the first.'}
+                  {t.entries.length
+                    ? t.entries.map((e) => app.playerName(e.id)).join(' · ')
+                    : t.entryCount ? `${t.entryCount} entered.` : 'Nobody yet — be the first.'}
                 </Text>
                 <Text style={[type.hint, { fontSize: 11.5, marginTop: 6 }]}>
                   When entries close the organiser makes the draw: the bracket is built for however many have entered, up to {t.max}, and everyone is placed in it automatically.

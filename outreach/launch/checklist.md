@@ -732,8 +732,8 @@ neither is fixed yet.
 - **Tournaments** (migration 27): single-elimination brackets for 2 to 24
   entries, per city. Members enter from Events; the desk makes the draw at
   `/admin` → **Tournaments**; the bracket is sized for the field, seeded by a
-  random draw, and everyone is placed automatically, with byes to the top of
-  the draw. Players record their own results; the desk can record or correct
+  random draw, and everyone is placed automatically, with byes to the top
+  seeds (who those are is the luck of the draw). Players record their own results; the desk can record or correct
   any. The final names the champion.
 - **Checked for every field size from 2 to 24**, in the database suite and
   again in the app's own copy of the rules: right bracket size, everyone placed
@@ -751,3 +751,17 @@ neither is fixed yet.
   bracket can be seen without an organiser. The live app never shows it — only
   the desk can draw.
 - Still not run on a device.
+
+## Update — 2026-11-12 (tournaments take up to 72 entries)
+
+- The ceiling went from 24 to **72** (migration 28). 72 entries play in a
+  bracket of 128 over seven rounds; nothing about how a bracket is built
+  changed, only the limits on the columns.
+- **Byes are counted, not listed.** 72 entries in a bracket of 128 means 56
+  byes; the app, the desk and the prototype now say "56 players have a bye" in
+  one line and show only the matches that are actually played.
+- Every field size from **2 to 72** is checked in the database suite and in the
+  app's copy of the rules, and the prototype and the desk are played through a
+  full 72-entry tournament to a champion in the browser suite.
+- A 72-entry bracket is a long scroll on a phone (71 matches, round by round).
+  It works; whether it is pleasant has not been judged on a device.

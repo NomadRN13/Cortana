@@ -1276,13 +1276,13 @@ begin
 end $$;
 reset role;
 
--- ---- 9j-iii. Tournaments: brackets build themselves for every size, 2 to 24 ----
--- Twenty-four players of our own, so the draw has a full field to work with.
+-- ---- 9j-iii. Tournaments: brackets build themselves for every size, 2 to 72 ----
+-- Seventy-two players of our own, so the draw has a full field to work with.
 reset role;
 do $$
 declare i int; uid uuid;
 begin
-  for i in 1..24 loop
+  for i in 1..72 loop
     uid := ('00000000-0000-4000-8000-0000000003' || lpad(i::text, 2, '0'))::uuid;
     insert into auth.users (id, email) values (uid, format('player%s@example.com', i));
     insert into profiles (id, first_name, birthdate, city) values (uid, 'Player' || i, '1990-01-01', 'bakersfield');
@@ -1300,9 +1300,9 @@ begin
   assert bracket_seed_order(8) = array[1,8,4,5,2,7,3,6], format('seed order for 8 is %s', bracket_seed_order(8));
   assert bracket_seed_order(2) = array[1,2], 'seed order for 2';
 
-  for n in 2..24 loop
+  for n in 2..72 loop
     insert into tournaments (city, title, starts_at, max_entries)
-    values ('bakersfield', format('Draw of %s', n), now() + interval '2 days', 24)
+    values ('bakersfield', format('Draw of %s', n), now() + interval '2 days', 72)
     returning id into t;
     insert into tournament_entries (tournament_id, user_id)
     select t, ('00000000-0000-4000-8000-0000000003' || lpad(i::text, 2, '0'))::uuid
@@ -1363,6 +1363,21 @@ begin
   end loop;
 end $$;
 reset role;
+
+-- The ceiling is 72, and the database holds it whatever the desk sends.
+do $$
+begin
+  begin
+    insert into tournaments (city, title, starts_at, max_entries) values ('bakersfield', 'Too Big', now() + interval '2 days', 73);
+    assert false, 'a 73-entry tournament was accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into tournaments (city, title, starts_at, max_entries) values ('bakersfield', 'Too Small', now() + interval '2 days', 1);
+    assert false, 'a 1-entry tournament was accepted';
+  exception when check_violation then null;
+  end;
+end $$;
 
 -- The rules, from the members' side.
 do $$
@@ -1510,6 +1525,219 @@ end $$;
 reset role;
 delete from blocks where blocker_id = '00000000-0000-4000-8000-000000000310';
 delete from tournaments where id = '00000000-0000-4000-8000-0000000004ab';
+
+-- ---- 9j-iv. Tournaments: what the independent review found ----
+-- Five players of our own for this section; one of them deletes their account.
+reset role;
+do $$
+declare i int; uid uuid;
+begin
+  for i in 1..6 loop
+    uid := ('00000000-0000-4000-8000-0000000005' || lpad(i::text, 2, '0'))::uuid;
+    insert into auth.users (id, email) values (uid, format('rev%s@example.com', i));
+    insert into profiles (id, first_name, birthdate, city) values (uid, 'Rev' || i, '1990-01-01', 'bakersfield');
+  end loop;
+end $$;
+
+-- entry_count follows joins and leaves; completed_at waits for the final.
+insert into tournaments (id, city, title, starts_at, max_entries) values
+  ('00000000-0000-4000-8000-0000000005aa', 'bakersfield', 'Review Cup', now() + interval '2 days', 6);
+set role authenticated;
+do $$
+declare t uuid := '00000000-0000-4000-8000-0000000005aa'; i int;
+begin
+  for i in 1..5 loop
+    perform set_config('request.jwt.claim.sub', ('00000000-0000-4000-8000-0000000005' || lpad(i::text, 2, '0')), false);
+    perform join_tournament(t);
+  end loop;
+  assert (select entry_count from tournaments where id = t) = 5, 'entry_count did not follow five joins';
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000505', false);
+  perform leave_tournament(t);
+  assert (select entry_count from tournaments where id = t) = 4, 'entry_count did not follow a leave';
+  -- leaving a tournament that no longer exists is a no-op, not "the draw has been made"
+  perform leave_tournament('00000000-0000-4000-8000-0000000005ff');
+  -- the seed order is internal: not callable through the API
+  begin
+    perform bracket_seed_order(8);
+    assert false, 'a member could call bracket_seed_order';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+
+-- A suspended member can't join, is left out of the draw, and can't report.
+update profiles set suspended_at = now() where id = '00000000-0000-4000-8000-000000000506';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000506';
+do $$
+begin
+  begin
+    perform join_tournament('00000000-0000-4000-8000-0000000005aa');
+    assert false, 'a suspended member joined a tournament';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+update profiles set suspended_at = null where id = '00000000-0000-4000-8000-000000000506';
+insert into tournament_entries (tournament_id, user_id)
+values ('00000000-0000-4000-8000-0000000005aa', '00000000-0000-4000-8000-000000000506');
+update profiles set suspended_at = now() where id = '00000000-0000-4000-8000-000000000506';
+-- a member doesn't see a suspended entrant; the desk does
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000501';
+do $$
+begin
+  assert not exists (select 1 from tournament_entries where tournament_id = '00000000-0000-4000-8000-0000000005aa'
+                      and user_id = '00000000-0000-4000-8000-000000000506'), 'a member can see a suspended entrant';
+end $$;
+-- the desk sees every entrant, even one its own account has a block with
+reset role;
+insert into blocks (blocker_id, blocked_id) values
+  ('00000000-0000-4000-8000-000000000502', '00000000-0000-4000-8000-00000000000a');
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
+do $$
+declare names int;
+begin
+  assert (select count(*) from tournament_entries where tournament_id = '00000000-0000-4000-8000-0000000005aa') = 5,
+    'the desk does not see every entrant';
+  select count(*) into names from admin_player_names(array['00000000-0000-4000-8000-000000000502']::uuid[]);
+  assert names = 1, 'the desk cannot name an entrant who blocked its account';
+  perform start_tournament('00000000-0000-4000-8000-0000000005aa');
+  assert not exists (select 1 from tournament_entries where tournament_id = '00000000-0000-4000-8000-0000000005aa'
+                      and user_id = '00000000-0000-4000-8000-000000000506'), 'a suspended entrant was drawn';
+  assert (select entry_count from tournaments where id = '00000000-0000-4000-8000-0000000005aa') = 4,
+    'entry_count did not follow the suspended entrant''s removal';
+  assert (select bracket_size from tournaments where id = '00000000-0000-4000-8000-0000000005aa') = 4, 'four players, bracket of four';
+end $$;
+reset role;
+delete from blocks where blocker_id = '00000000-0000-4000-8000-000000000502';
+-- members can't name players through the desk's lookup
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000501';
+do $$
+begin
+  begin
+    perform admin_player_names(array['00000000-0000-4000-8000-000000000502']::uuid[]);
+    assert false, 'a member used the desk''s name lookup';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+
+-- With rows in all three tables, a signed-out visitor still reads nothing.
+set role anon;
+do $$
+declare c int; t text;
+begin
+  foreach t in array array['tournaments', 'tournament_entries', 'tournament_matches'] loop
+    begin
+      execute format('select count(*) from public.%I', t) into c;
+      assert c = 0, format('anon can read public.%s (%s rows)', t, c);
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+end $$;
+reset role;
+
+-- Play it: the second player confirming the same result is fine; a suspended
+-- player can't report; and a player who deletes their account mid-bracket
+-- leaves a place the desk can settle — but only once it is really vacated.
+set role authenticated;
+do $$
+declare
+  t uuid := '00000000-0000-4000-8000-0000000005aa';
+  m1 record; m2 record; fin record; quitter uuid; survivor uuid;
+begin
+  select * into m1 from tournament_matches where tournament_id = t and round = 1 and slot = 0;
+  select * into m2 from tournament_matches where tournament_id = t and round = 1 and slot = 1;
+  assert m1.player_a is not null and m1.player_b is not null and m2.player_a is not null and m2.player_b is not null,
+    'test setup: four players should fill both first-round matches';
+
+  perform set_config('request.jwt.claim.sub', m1.player_a::text, false);
+  perform report_match_result(m1.id, m1.player_a, '11-4, 11-6');
+  perform set_config('request.jwt.claim.sub', m1.player_b::text, false);
+  perform report_match_result(m1.id, m1.player_a, 'my version');   -- same winner: accepted, changes nothing
+  assert (select score from tournament_matches where id = m1.id) = '11-4, 11-6', 'a confirming report overwrote the score';
+  begin
+    perform report_match_result(m1.id, m1.player_b, '');
+    assert false, 'the loser changed a recorded result';
+  exception when raise_exception then null;
+  end;
+
+  -- the final now has m1's winner against nobody yet: that empty side is still
+  -- to be decided, so even the desk can't settle it
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000a', false);
+  select * into fin from tournament_matches where tournament_id = t and round = 2;
+  begin
+    perform report_match_result(fin.id, m1.player_a, 'walkover');
+    assert false, 'the desk settled a final whose other semifinal has not been played';
+  exception when raise_exception then null;
+  end;
+
+  -- a suspended player can't report their own match
+  perform set_config('request.jwt.claim.sub', m2.player_a::text, false);
+  update profiles set suspended_at = now() where id = m2.player_a;
+  begin
+    perform report_match_result(m2.id, m2.player_a, '');
+    assert false, 'a suspended player recorded a result';
+  exception when insufficient_privilege then null;
+  end;
+  update profiles set suspended_at = null where id = m2.player_a;
+end $$;
+reset role;
+-- m1's winner deletes their account.
+do $$
+declare m1 record;
+begin
+  select * into m1 from tournament_matches where tournament_id = '00000000-0000-4000-8000-0000000005aa' and round = 1 and slot = 0;
+  perform set_config('test.quitter', m1.player_a::text, false);
+  delete from auth.users where id = m1.player_a;   -- cascades to the profile; matches are set null, not blocked
+  assert (select reported_at from tournament_matches where id = m1.id) is not null, 'the played match lost its record';
+  assert (select winner from tournament_matches where id = m1.id) is null, 'test setup: the winner should be gone';
+end $$;
+set role authenticated;
+do $$
+declare
+  t uuid := '00000000-0000-4000-8000-0000000005aa';
+  m1 record; m2 record; fin record;
+begin
+  select * into m1 from tournament_matches where tournament_id = t and round = 1 and slot = 0;
+  select * into m2 from tournament_matches where tournament_id = t and round = 1 and slot = 1;
+  -- m1 was played: its loser still can't claim it now the winner has gone
+  perform set_config('request.jwt.claim.sub', m1.player_b::text, false);
+  begin
+    perform report_match_result(m1.id, m1.player_b, '');
+    assert false, 'a played match was re-recorded after its winner left';
+  exception when raise_exception then null;
+  end;
+  -- the other semifinal is played; its winner meets an empty place in the final
+  perform set_config('request.jwt.claim.sub', m2.player_b::text, false);
+  perform report_match_result(m2.id, m2.player_b, '11-9');
+  select * into fin from tournament_matches where tournament_id = t and round = 2;
+  assert fin.player_a is null and fin.player_b = m2.player_b, 'the final should be empty v m2''s winner';
+  -- the finalist can't take it on their own...
+  begin
+    perform report_match_result(fin.id, m2.player_b, '');
+    assert false, 'a player claimed a walkover without the desk';
+  exception when raise_exception then null;
+  end;
+  -- ...but the desk can, because that place was vacated, not undecided
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-00000000000a', false);
+  perform report_match_result(fin.id, m2.player_b, 'walkover');
+  assert (select status from tournaments where id = t) = 'completed', 'the walkover did not finish the tournament';
+  assert (select champion_id from tournaments where id = t) = m2.player_b, 'the wrong champion after a walkover';
+  assert (select completed_at from tournaments where id = t) is not null, 'completed_at not set';
+  -- correcting a match whose next match has been played is refused even though
+  -- that match's winner column is empty (deleted account)
+  begin
+    perform report_match_result(m1.id, m1.player_b, 'too late');
+    assert false, 'a result was changed after the next round was played (winner deleted)';
+  exception when raise_exception then null;
+  end;
+end $$;
+reset role;
+delete from tournaments where id = '00000000-0000-4000-8000-0000000005aa';
 
 -- ---- 9k. Meetups in a city other than your home one are readable ----
 -- The app shows a member the meetups for every city they have selected, and a

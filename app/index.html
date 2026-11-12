@@ -606,6 +606,7 @@
   .br-player.lost, .br-player.tbd { color: var(--dim); }
   .br-won { background: var(--optic); color: var(--ink); border: 0; border-radius: 999px; padding: 4px 10px; font-size: 11.5px; font-weight: 800; }
   .br-score { font-size: 11.5px; color: var(--dim); margin-top: 4px; }
+  .br-byes { font-size: 12px; color: var(--dim); margin: 0 0 8px; }
   .event-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 8px; }
   .spots { font-size: 11px; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .join-btn { font-size: 13px; font-weight: 800; padding: 8px 14px; border-radius: 999px; background: var(--optic); color: var(--ink); white-space: nowrap; }
@@ -2749,7 +2750,7 @@
     var r, s;
     for (r = 1; r <= rounds; r++) {
       for (s = 0; s < size / Math.pow(2, r); s++) {
-        bracket.matches.push({ id: 'r' + r + 's' + s, round: r, slot: s, a: null, b: null, winner: null, score: '', bye: false });
+        bracket.matches.push({ id: 'r' + r + 's' + s, round: r, slot: s, a: null, b: null, winner: null, score: '', bye: false, reported: false });
       }
     }
     var order = bracketSeedOrder(size);
@@ -2788,6 +2789,7 @@
     }
     m.winner = winner;
     m.score = String(score || '').slice(0, 40);
+    m.reported = true;
     bracketAdvance(bracket, m);
     return null;
   }
@@ -2800,25 +2802,88 @@
     if (left === 2) return 'Quarterfinals';
     return 'Round of ' + Math.pow(2, left + 1);
   }
+  // A uniform random order (Fisher-Yates). The order is the seeding, so it has to
+  // be fair: sorting with a random comparator is not, and favours some places.
+  function bracketShuffle(list) {
+    var a = list.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function bracketMatchAt(matches, round, slot) {
+    for (var i = 0; i < matches.length; i++) {
+      if (matches[i].round === round && matches[i].slot === slot) return matches[i];
+    }
+    return null;
+  }
+
+  // What one side ('a' or 'b') of a match holds, for drawing and for deciding
+  // whether the organiser may settle it:
+  //   'player'    someone is there
+  //   'bye'       a first-round bye
+  //   'withdrawn' someone was, and left (deleted their account) — the desk can
+  //               give the match to the other player
+  //   'pending'   an earlier match that fills it hasn't been played yet
+  // The same rule as report_match_result in the database.
+  function bracketSide(matches, m, side) {
+    if (side === 'a' ? m.a : m.b) return 'player';
+    if (m.bye) return 'bye';
+    if (m.round === 1) return 'withdrawn';
+    var f = bracketMatchAt(matches, m.round - 1, m.slot * 2 + (side === 'a' ? 0 : 1));
+    if (f && (f.reported || f.bye || (f.round === 1 && !f.a && !f.b))) return 'withdrawn';
+    return 'pending';
+  }
+
+  // A match whose result is settled for good: the next match in its line has a
+  // result of its own, so changing this one would show someone advancing from a
+  // match they lost.
+  function bracketLocked(matches, m) {
+    var next = bracketMatchAt(matches, m.round + 1, Math.floor(m.slot / 2));
+    return !!(next && next.reported);
+  }
+
+  // Whether the organiser may record (or correct) this match now: not a bye, not
+  // locked, and either both players are there or the empty side was vacated.
+  function bracketDeskCanRecord(matches, m) {
+    if (m.bye || bracketLocked(matches, m)) return false;
+    if (m.a && m.b) return true;
+    if (!m.a && !m.b) return false;
+    return bracketSide(matches, m, m.a ? 'b' : 'a') === 'withdrawn';
+  }
+
+  // "56 players have a bye and start in the Round of 64."
+  function bracketByeLine(byes, rounds) {
+    if (!byes) return '';
+    return byes + (byes === 1 ? ' player has a bye and starts' : ' players have a bye and start') +
+      ' in the ' + bracketRoundName(2, rounds) + '.';
+  }
   // BRACKET-LIB:END
 
-  var T_PLAYERS = ['Maya', 'Diego', 'Priya', 'Sam', 'Elena', 'Marcus', 'Jordan', 'Grace', 'Theo', 'Nadia', 'Chris', 'Lena', 'Omar', 'Tessa', 'Ravi', 'Bianca', 'Hugo', 'Imani', 'Wes', 'Carmen', 'Felix', 'Noor', 'Dale', 'Yuki'].map(function (n, i) { return { id: 'tp' + (i + 1), name: n }; });
+  var T_PLAYERS = ['Maya', 'Diego', 'Priya', 'Sam', 'Elena', 'Marcus', 'Jordan', 'Grace', 'Theo', 'Nadia', 'Chris', 'Lena', 'Omar', 'Tessa', 'Ravi', 'Bianca', 'Hugo', 'Imani', 'Wes', 'Carmen', 'Felix', 'Noor', 'Dale', 'Yuki', 'Anton', 'Brooke', 'Cyrus', 'Delia', 'Emil', 'Farah', 'Gus', 'Hana', 'Ivan', 'Jules', 'Kofi', 'Lucia', 'Milo', 'Nell', 'Otis', 'Paloma', 'Quinn', 'Rosa', 'Soren', 'Talia', 'Uma', 'Vince', 'Willa', 'Xavi', 'Yara', 'Zane', 'Abel', 'Bea', 'Cal', 'Dara', 'Enzo', 'Fern', 'Gabe', 'Hope', 'Idris', 'Joan', 'Kai', 'Lior', 'Mina', 'Nico', 'Opal', 'Pax', 'Reid', 'Sage', 'Tate', 'Vera', 'Wyatt', 'Zora'].map(function (n, i) { return { id: 'tp' + (i + 1), name: n }; });
   function tEntries(n) { return T_PLAYERS.slice(0, n).map(function (pl) { return pl.id; }); }
-  // Mirrors TOURNAMENTS in mobile/src/data/seed.js.
-  var TOURNEYS = [
-    { id: 't1', city: 'bakersfield', title: 'Bakersfield Fall Classic', venue: 'Jastro Park', sport: 'Pickleball', level: 'All levels', when: 'Sat \u00B7 9:00 AM', max: 24, status: 'registration', entries: tEntries(23), bracket: null },
+  // Mirrors TOURNAMENTS in mobile/src/data/seed.js. Built fresh by a function so
+  // signing out can put them back — otherwise the next person to sign up on this
+  // page inherits the last one's entries and any bracket they drew.
+  function buildTourneys() {
+    var list = [
+    { id: 't1', city: 'bakersfield', title: 'Bakersfield Fall Classic', venue: 'Jastro Park', sport: 'Pickleball', level: 'All levels', when: 'Sat \u00B7 9:00 AM', max: 72, status: 'registration', entries: tEntries(71), bracket: null },
     { id: 't2', city: 'indianapolis', title: 'Broad Ripple Open', venue: 'Broad Ripple Park', sport: 'Pickleball', level: 'DUPR 3.0+', when: 'Sun \u00B7 1:00 PM', max: 16, status: 'in_progress', entries: tEntries(12), bracket: null },
     { id: 't3', city: 'seattle', title: 'Green Lake Doubles Cup', venue: 'Green Lake Courts', sport: 'Tennis', level: 'NTRP 3.5+', when: 'Next Sat \u00B7 10:00 AM', max: 8, status: 'registration', entries: tEntries(5), bracket: null }
-  ];
-  // One is already under way, with its first five results in.
-  (function () {
-    var t = TOURNEYS[1];
+    ];
+    // One is already under way, with its first round played (12 entrants in a
+    // bracket of 16 is 4 byes and 4 real matches).
+    var t = list[1];
     t.bracket = buildBracket(t.entries);
-    var left = 5;
+    var left = 4;
     t.bracket.matches.forEach(function (m) {
       if (left > 0 && !m.bye && m.round === 1) { bracketRecord(t.bracket, m.id, m.a, '11-8, 11-6'); left--; }
     });
-  })();
+    return list;
+  }
+  var TOURNEYS = buildTourneys();
   var tourneyOpen = {};
 
   function tName(id) {
@@ -2835,18 +2900,29 @@
     var br = t.bracket, html = '';
     for (var r = 1; r <= br.rounds; r++) {
       html += '<div class="br-head">' + esc(bracketRoundName(r, br.rounds)) + '</div>';
+      if (r === 1) {
+        // Byes aren't matches anyone plays (72 entries in a bracket of 128 has
+        // 56), so they are counted in one line, not listed.
+        var byes = br.matches.filter(function (m) { return m.round === 1 && m.bye; }).length;
+        if (byes) html += '<p class="br-byes" data-byes="' + byes + '">' + esc(bracketByeLine(byes, br.rounds)) + '</p>';
+      }
       br.matches.forEach(function (m) {
-        if (m.round !== r) return;
+        if (m.round !== r || m.bye) return;
         var open = !m.bye && !m.winner && m.a && m.b;
-        var line = function (id) {
-          if (!id) return '<div class="br-player tbd"><span class="nm">' + (m.bye ? '\u2014 bye \u2014' : 'To be decided') + '</span></div>';
+        var line = function (id, side) {
+          if (!id) {
+            // An empty side is a bye, a player who left, or a match still to be played.
+            var kind = bracketSide(br.matches, m, side);
+            return '<div class="br-player tbd" data-side="' + kind + '"><span class="nm">' +
+              (kind === 'bye' ? '\u2014 bye \u2014' : kind === 'withdrawn' ? 'Withdrawn' : 'To be decided') + '</span></div>';
+          }
           var cls = 'br-player' + (m.winner ? (m.winner === id ? ' won' : ' lost') : '');
           return '<div class="' + cls + '"><span class="nm">' + esc(tName(id)) + (id === 'me' ? '  (you)' : '') + (m.winner === id ? ' \u2713' : '') + '</span>' +
             (open ? '<button class="br-won" type="button" data-t="' + t.id + '" data-match="' + m.id + '" data-winner="' + esc(id) + '" aria-label="Record ' + esc(tName(id)) + ' as the winner">Won</button>' : '') +
             '</div>';
         };
         html += '<div class="br-match' + (m.a === 'me' || m.b === 'me' ? ' mine' : '') + '" data-round="' + m.round + '" data-slot="' + m.slot + '">' +
-          line(m.a) + line(m.b) + (m.score ? '<div class="br-score">' + esc(m.score) + '</div>' : '') + '</div>';
+          line(m.a, 'a') + line(m.b, 'b') + (m.score ? '<div class="br-score">' + esc(m.score) + '</div>' : '') + '</div>';
       });
     }
     return html;
@@ -2861,7 +2937,7 @@
       var full = t.entries.length >= t.max;
       var isOpen = !!tourneyOpen[t.id];
       var status = t.status === 'registration' ? t.entries.length + ' of ' + t.max + ' entered'
-        : t.status === 'completed' ? 'Champion: ' + tName(t.bracket.champion)
+        : t.status === 'completed' ? (t.bracket && t.bracket.champion ? 'Champion: ' + tName(t.bracket.champion) : 'Completed')
         : 'In progress \u00B7 ' + t.entries.length + ' players';
       var actions = '';
       if (t.status === 'registration') {
@@ -2918,7 +2994,7 @@
     if (act === 'draw' && t.entries.length >= 2) {
       // The draw: a random order is the seeding; the bracket is sized for the
       // field and everyone is placed in it.
-      var order = t.entries.slice().sort(function () { return Math.random() - 0.5; });
+      var order = bracketShuffle(t.entries);
       t.entries = order;
       t.bracket = buildBracket(order);
       t.status = 'in_progress';
@@ -3427,6 +3503,9 @@
     state.seen = {};
     state.prefs = { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false };
     try { localStorage.removeItem(PREFS_KEY); } catch (e) { /* nothing to clear */ }
+    // The tournaments hold the last user's entries ('me') and any bracket they drew.
+    TOURNEYS = buildTourneys();
+    tourneyOpen = {};
     draftPhoto = null;
     phoneE164 = null;
     phoneOk = false;

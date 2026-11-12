@@ -181,11 +181,13 @@ async function main() {
   check('a failed refresh keeps the last good list rather than the bundled one', app.courtsFor('bakersfield').map((c) => c.name).join() === 'Fresh From The Desk', app.courtsFor('bakersfield').length);
 
   // ---- tournaments: the server builds the bracket, the app draws it and says no when told no ----
+  // entry_count follows the entry list unless a test says otherwise — the server
+  // keeps the true count, which a block-filtered list can fall short of.
   const tRow = (o) => Object.assign({
     id: 't-1', city: 'bakersfield', title: 'Fall Classic', venue: 'Jastro Park', sport: 'pickleball', level_range: 'All levels',
-    starts_at: soon, max_entries: 24, status: 'registration', bracket_size: null, champion_id: null,
+    starts_at: soon, max_entries: 72, status: 'registration', bracket_size: null, champion_id: null, completed_at: null,
     tournament_entries: [], tournament_matches: [],
-  }, o);
+  }, o, { entry_count: o && typeof o.entry_count === 'number' ? o.entry_count : ((o && o.tournament_entries) || []).length });
   let serverT = tRow({ tournament_entries: [{ user_id: 'them-uuid', seed: null }] });
   impl.listTournaments = () => [serverT];
   impl.joinTournament = () => { serverT = tRow({ tournament_entries: [{ user_id: 'them-uuid', seed: null }, { user_id: 'me-uuid', seed: null }] }); return { ok: true }; };
@@ -205,9 +207,9 @@ async function main() {
     status: 'in_progress', bracket_size: 4,
     tournament_entries: [{ user_id: 'me-uuid', seed: 1 }, { user_id: 'them-uuid', seed: 2 }, { user_id: 'third-uuid', seed: 3 }],
     tournament_matches: [
-      { id: 'm-bye', round: 1, slot: 0, player_a: 'me-uuid', player_b: null, winner: 'me-uuid', score: '', is_bye: true },
-      { id: 'm-other', round: 1, slot: 1, player_a: 'them-uuid', player_b: 'third-uuid', winner: null, score: '', is_bye: false },
-      { id: 'm-final', round: 2, slot: 0, player_a: 'me-uuid', player_b: null, winner: null, score: '', is_bye: false },
+      { id: 'm-bye', round: 1, slot: 0, player_a: 'me-uuid', player_b: null, winner: 'me-uuid', score: '', is_bye: true, reported_at: null },
+      { id: 'm-other', round: 1, slot: 1, player_a: 'them-uuid', player_b: 'third-uuid', winner: null, score: '', is_bye: false, reported_at: null },
+      { id: 'm-final', round: 2, slot: 0, player_a: 'me-uuid', player_b: null, winner: null, score: '', is_bye: false, reported_at: null },
     ],
   });
   await act(async () => { app.reloadCourts(); await tick(60); });
@@ -224,6 +226,47 @@ async function main() {
   await act(async () => { app.reportMatch('t-1', 'm-final', 'me-uuid', ''); await tick(60); });
   check('recording sends the match and the winner', sent.length === 1 && sent[0].join() === 'm-final,me-uuid', sent);
   check('a refused result says why and changes nothing', alerts.length === 1 && /already in/.test(alerts[0].message || '') && !mt('m-final').winner, alerts);
+
+  // The entry list leaves out anyone the member has a block with; the count
+  // and "Full" come from the server's own entry_count.
+  serverT = tRow({ max_entries: 3, entry_count: 3, tournament_entries: [{ user_id: 'third-uuid', seed: null }] });
+  await act(async () => { app.reloadCourts(); await tick(60); });
+  check('the entry count is the server’s, not the length of the list I can see', T().entryCount === 3 && T().entries.length === 1, [T().entryCount, T().entries && T().entries.length]);
+  check('a tournament at its limit is full even when some entrants are hidden', T().entryCount >= T().max, [T().entryCount, T().max]);
+
+  // An older refresh that answers last must not put back what a newer one replaced.
+  const pendingLists = [];
+  impl.listTournaments = () => new Promise((r) => { pendingLists.push(r); });
+  await act(async () => { app.reloadCourts(); app.reloadCourts(); await tick(20); });
+  await act(async () => { pendingLists[1]([tRow({ title: 'Newer' })]); await tick(40); });
+  await act(async () => { pendingLists[0]([tRow({ title: 'Older' })]); await tick(40); });
+  check('an older tournament refresh arriving late does not overwrite a newer one', pendingLists.length === 2 && T().title === 'Newer', [pendingLists.length, T().title]);
+  impl.listTournaments = () => [serverT];
+
+  // A champion who deleted their account leaves champion_id empty: the
+  // tournament is still finished, just without a name to show.
+  serverT = tRow({
+    status: 'completed', bracket_size: 2, champion_id: null, completed_at: new Date().toISOString(),
+    tournament_entries: [{ user_id: 'third-uuid', seed: 2 }],
+    tournament_matches: [
+      { id: 'm-done', round: 1, slot: 0, player_a: null, player_b: 'third-uuid', winner: null, score: '11-9', is_bye: false, reported_at: new Date().toISOString() },
+    ],
+  });
+  await act(async () => { app.reloadCourts(); await tick(60); });
+  check('a finished tournament whose champion left is completed, with no champion', T().status === 'completed' && T().championId === null && !!T().completedAt, [T().status, T().championId, T().completedAt]);
+  check('a match is played once reported, even with its winner gone', mt('m-done').reported === true && !mt('m-done').winner && app.canReportMatch(mt('m-done')) === false, mt('m-done'));
+
+  // Bracket names come from a fresh lookup, and a blocked member is never named.
+  const realCards = impl.getProfilesByIds;
+  impl.getProfilesByIds = () => [{ id: 'them-uuid', first_name: 'Maya' }, { id: 'third-uuid', first_name: 'Lena' }];
+  serverT = tRow({ tournament_entries: [{ user_id: 'them-uuid', seed: null }, { user_id: 'third-uuid', seed: null }] });
+  await act(async () => { app.reloadCourts(); await tick(60); });
+  check('a bracket name comes from the tournament lookup', app.playerName('third-uuid') === 'Lena', app.playerName('third-uuid'));
+  check('a member I have blocked shows as an unnamed player', app.blocked['them-uuid'] === true && app.playerName('them-uuid') === 'Player', [app.blocked['them-uuid'], app.playerName('them-uuid')]);
+  impl.getProfilesByIds = () => [{ id: 'them-uuid', first_name: 'Maya' }];
+  await act(async () => { app.reloadCourts(); await tick(60); });
+  check('someone the server stops naming (they blocked me) goes unnamed on the next refresh', app.playerName('third-uuid') === 'Player', app.playerName('third-uuid'));
+  impl.getProfilesByIds = realCards;
 
   await act(async () => { renderer.unmount(); });
   console.log(failures ? `\n${failures} failing` : '\nall green');

@@ -430,23 +430,50 @@ export async function listCourts(cities) {
 
 // ---------- Tournaments ----------
 
-// Tournaments in the given cities, each with its entry list and — once the
-// draw has been made — every match of its bracket. Finished ones stay listed
-// for two weeks so the result can be seen. The bracket is built and advanced
-// by the database; the app only draws it.
+const TOURNAMENT_SELECT =
+  '*, tournament_entries(user_id, seed), tournament_matches(id, round, slot, player_a, player_b, winner, score, is_bye, reported_at)';
+
+// Tournaments in the given cities, plus any the member has entered wherever
+// they are — dropping a city in Settings mustn't strand them mid-bracket with
+// no way to record a result. Each comes with its entry list and, once the draw
+// has been made, every match of its bracket. Open and in-play tournaments are
+// listed however long ago they started (a long one is still being played);
+// finished ones stay for two weeks after the final so the result can be seen.
+// The bracket is built and advanced by the database; the app only draws it.
 export async function listTournaments(cities) {
   const list = (Array.isArray(cities) ? cities : [cities]).filter(Boolean);
-  if (!list.length) return [];
   const since = new Date(Date.now() - 14 * 86400000).toISOString();
-  const { data, error } = await supabase
+  // Quoted: the timestamp's colons and dots are filter syntax to PostgREST.
+  const live = `status.in.(registration,in_progress),completed_at.gte."${since}"`;
+  const query = () => supabase
     .from('tournaments')
-    .select('*, tournament_entries(user_id, seed), tournament_matches(id, round, slot, player_a, player_b, winner, score, is_bye)')
-    .in('city', list)
+    .select(TOURNAMENT_SELECT)
     .neq('status', 'cancelled')
-    .gte('starts_at', since)
+    .or(live)
     .order('starts_at', { ascending: true });
-  if (error) throw error;
-  return data;
+
+  const byCity = list.length
+    ? query().in('city', list)
+    : Promise.resolve({ data: [], error: null });
+  const mine = (async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { data: [], error: null };
+    const { data: entries, error } = await supabase
+      .from('tournament_entries')
+      .select('tournament_id')
+      .eq('user_id', user.id);
+    if (error) return { data: null, error };
+    const ids = [...new Set((entries || []).map((e) => e.tournament_id))];
+    if (!ids.length) return { data: [], error: null };
+    return query().in('id', ids);
+  })();
+
+  const [cityRes, mineRes] = await Promise.all([byCity, mine]);
+  if (cityRes.error) throw cityRes.error;
+  if (mineRes.error) throw mineRes.error;
+  const merged = new Map();
+  for (const t of [...(cityRes.data || []), ...(mineRes.data || [])]) merged.set(t.id, t);
+  return [...merged.values()].sort((a, b) => String(a.starts_at).localeCompare(String(b.starts_at)));
 }
 
 export async function joinTournament(tournamentId) {

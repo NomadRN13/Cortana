@@ -94,7 +94,7 @@ const { launch, step, fail, watch, finish, serve, REPO } = require('./lib/harnes
     await page.waitForSelector('#pane-events:not([hidden])', { timeout: 3000 });
   });
 
-  await step('tournaments tab: create one, fill it to 24, and the draw builds the bracket', async () => {
+  await step('tournaments tab: create one, fill it to 72, and the draw builds the bracket', async () => {
     await page.click('#tab-tournaments');
     await page.waitForSelector('#pane-tournaments:not([hidden])', { timeout: 3000 });
     await page.click('#tn-create');
@@ -103,30 +103,41 @@ const { launch, step, fail, watch, finish, serve, REPO } = require('./lib/harnes
     const d = new Date(Date.now() + 4 * 86400000);
     await page.fill('#tn-date', d.toISOString().slice(0, 10));
     await page.selectOption('#tn-city', 'bakersfield');
-    await page.fill('#tn-max', '25');
+    await page.fill('#tn-max', '73');
     await page.click('#tn-create');
-    if (!/from 2 to 24/.test(await page.textContent('#tn-msg'))) throw new Error('a 25-entry tournament was accepted');
-    await page.fill('#tn-max', '24');
+    if (!/from 2 to 72/.test(await page.textContent('#tn-msg'))) throw new Error('a 73-entry tournament was accepted');
+    await page.fill('#tn-max', '72');
     await page.click('#tn-create');
     const card = '#tournament-list .item >> nth=0';
     if (!(await page.textContent(card)).includes('Test Cup')) throw new Error('tournament not created');
     if (!(await page.isDisabled(card + ' >> button[data-act="draw"]'))) throw new Error('a draw was offered with no entries');
     await page.click(card + ' >> button[data-act="fill"]');
-    if (!/24 of 24 entered/.test(await page.textContent(card))) throw new Error('not filled to 24');
+    if (!/72 of 72 entered/.test(await page.textContent(card))) throw new Error('not filled to 72');
     await page.click(card + ' >> button[data-act="draw"]');
     const info = await page.evaluate(() => {
       const c = document.querySelector('#tournament-list .item');
       const rounds = [...c.querySelectorAll('.br-round')];
-      const r1 = [...rounds[0].querySelectorAll('.br-match')];
-      const names = r1.flatMap((m) => [...m.querySelectorAll('.br-p:not(.empty-slot)')].map((e) => e.textContent.replace(' ✓', '').trim()));
-      return { heads: rounds.map((r) => r.querySelector('h3').textContent).join('|'), matches: c.querySelectorAll('.br-match').length, placed: names.length, unique: new Set(names).size, byes: r1.filter((m) => /bye/.test(m.textContent)).length };
+      const names = (round) => [...round.querySelectorAll('.br-p:not(.empty-slot)')].map((e) => e.textContent.replace(' ✓', '').trim());
+      const r1 = names(rounds[0]), r2 = names(rounds[1]);
+      return {
+        heads: rounds.map((r) => r.querySelector('h3').textContent).join('|'),
+        shown: c.querySelectorAll('.br-match').length, r1players: r1.length, byePlayers: r2.length,
+        unique: new Set(r1.concat(r2)).size,
+        byes: (rounds[0].querySelector('.br-byes') || { getAttribute: () => null }).getAttribute('data-byes'),
+        byeLine: (rounds[0].querySelector('.br-byes') || { textContent: '' }).textContent,
+        r1buttons: rounds[0].querySelectorAll('button.br-p[data-act="win"]').length,
+      };
     });
-    if (info.heads.toLowerCase() !== 'round of 32|round of 16|quarterfinals|semifinals|final') throw new Error('rounds: ' + info.heads);
-    if (info.matches !== 31 || info.placed !== 24 || info.unique !== 24 || info.byes !== 8) throw new Error(JSON.stringify(info));
+    if (!/^56 players have a bye and start in the Round of 64\.$/.test(info.byeLine.trim())) throw new Error('byes line: ' + info.byeLine);
+    // every round-1 player is waiting on a result the desk can record
+    if (info.r1buttons !== 16) throw new Error('round-1 players not clickable: ' + info.r1buttons);
+    if (info.heads.toLowerCase() !== 'round of 128|round of 64|round of 32|round of 16|quarterfinals|semifinals|final') throw new Error('rounds: ' + info.heads);
+    // 127 matches in a bracket of 128, less the 56 byes that are counted, not listed
+    if (info.shown !== 71 || info.r1players !== 16 || info.byePlayers !== 56 || info.unique !== 72 || info.byes !== '56') throw new Error(JSON.stringify(info));
   });
 
   await step('tournaments tab: the desk records results through to a champion, and can correct one', async () => {
-    for (let guard = 0; guard < 40; guard++) {
+    for (let guard = 0; guard < 200; guard++) {
       // first match that has both players and no winner yet
       const next = await page.evaluate(() => {
         const c = document.querySelector('#tournament-list .item');
@@ -150,6 +161,23 @@ const { launch, step, fail, watch, finish, serve, REPO } = require('./lib/harnes
     await page.click('#tournament-list .item >> nth=0 >> button[data-match="' + fin.match + '"][data-winner="' + fin.winner + '"]');
     const after = await page.textContent('#tournament-list .item >> nth=0');
     if (!after.includes('Champion: ' + fin.name)) throw new Error('correcting the final did not change the champion');
+    // Every earlier match now has its next match played, so it is locked: no
+    // clickable players (the desk never asks for a score and then refuses), and
+    // the winner says why.
+    const locked = await page.evaluate(() => {
+      const c = document.querySelector('#tournament-list .item');
+      const rounds = [...c.querySelectorAll('.br-round')];
+      const early = rounds.slice(0, -1);
+      const won = rounds[0].querySelector('.br-match .br-p.won');
+      return {
+        buttons: early.reduce((n, r) => n + r.querySelectorAll('button.br-p').length, 0),
+        finalButtons: rounds[rounds.length - 1].querySelectorAll('button.br-p').length,
+        title: won ? won.getAttribute('title') || '' : null,
+      };
+    });
+    if (locked.buttons !== 0) throw new Error('locked matches still clickable: ' + locked.buttons);
+    if (locked.finalButtons !== 2) throw new Error('the final should stay correctable: ' + locked.finalButtons);
+    if (!/next round has been played/.test(locked.title || '')) throw new Error('locked winner has no explanation: ' + locked.title);
     await page.click('#tab-events');
     await page.waitForSelector('#pane-events:not([hidden])', { timeout: 3000 });
   });

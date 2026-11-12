@@ -77,15 +77,21 @@ export const NOTIFICATIONS = [
 ];
 
 // Demo tournaments. `entrants` of the sample players below are entered;
-// `played` first-come results are filled in so a bracket is under way.
+// `played` first-come results are filled in so a bracket is under way. Only
+// real first-round matches count: 12 entrants in a bracket of 16 means 4 byes
+// and 4 matches, so t2 can't have more than 4 played.
 export const TOURNAMENT_PLAYERS = [
   'Maya', 'Diego', 'Priya', 'Sam', 'Elena', 'Marcus', 'Jordan', 'Grace', 'Theo', 'Nadia', 'Chris', 'Lena',
   'Omar', 'Tessa', 'Ravi', 'Bianca', 'Hugo', 'Imani', 'Wes', 'Carmen', 'Felix', 'Noor', 'Dale', 'Yuki',
+  'Anton', 'Brooke', 'Cyrus', 'Delia', 'Emil', 'Farah', 'Gus', 'Hana', 'Ivan', 'Jules', 'Kofi', 'Lucia',
+  'Milo', 'Nell', 'Otis', 'Paloma', 'Quinn', 'Rosa', 'Soren', 'Talia', 'Uma', 'Vince', 'Willa', 'Xavi',
+  'Yara', 'Zane', 'Abel', 'Bea', 'Cal', 'Dara', 'Enzo', 'Fern', 'Gabe', 'Hope', 'Idris', 'Joan',
+  'Kai', 'Lior', 'Mina', 'Nico', 'Opal', 'Pax', 'Reid', 'Sage', 'Tate', 'Vera', 'Wyatt', 'Zora',
 ].map((name, i) => ({ id: `tp${i + 1}`, name }));
 
 export const TOURNAMENTS = [
-  { id: 't1', city: 'bakersfield', title: 'Bakersfield Fall Classic', venue: 'Jastro Park', sport: 'Pickleball', level: 'All levels', when: 'Sat · 9:00 AM', max: 24, status: 'registration', entrants: 23, played: 0 },
-  { id: 't2', city: 'indianapolis', title: 'Broad Ripple Open', venue: 'Broad Ripple Park', sport: 'Pickleball', level: 'DUPR 3.0+', when: 'Sun · 1:00 PM', max: 16, status: 'in_progress', entrants: 12, played: 5 },
+  { id: 't1', city: 'bakersfield', title: 'Bakersfield Fall Classic', venue: 'Jastro Park', sport: 'Pickleball', level: 'All levels', when: 'Sat · 9:00 AM', max: 72, status: 'registration', entrants: 71, played: 0 },
+  { id: 't2', city: 'indianapolis', title: 'Broad Ripple Open', venue: 'Broad Ripple Park', sport: 'Pickleball', level: 'DUPR 3.0+', when: 'Sun · 1:00 PM', max: 16, status: 'in_progress', entrants: 12, played: 4 },
   { id: 't3', city: 'seattle', title: 'Green Lake Doubles Cup', venue: 'Green Lake Courts', sport: 'Tennis', level: 'NTRP 3.5+', when: 'Next Sat · 10:00 AM', max: 8, status: 'registration', entrants: 5, played: 0 },
 ];
 

@@ -277,15 +277,17 @@ volume; the desk records the decision (report → "mark actioned").
 ### Tournaments — brackets that build and fill themselves
 
 `/admin` → **Tournaments**. A tournament is a single-elimination bracket for 2
-to 24 entries in one city (a doubles team's shared profile is one entry).
+to 72 entries in one city (a doubles team's shared profile is one entry).
 
-1. **Create it** — title, city, date, and how many entries it takes (2–24).
+1. **Create it** — title, city, date, and how many entries it takes (2–72).
    Members in that city see it under Events and tap **Enter**.
 2. **Make the draw** when entries are in. This closes entries and builds the
    whole bracket in one step: a random draw is the seeding; the bracket is the
-   next power of two up from the field (24 entries play in a bracket of 32);
-   the spare places are byes, which go to the top of the draw and advance at
-   once; and everyone is placed automatically. It can't be undone.
+   next power of two up from the field (24 entries play in a bracket of 32, 72
+   in a bracket of 128);
+   the spare places are byes, which go to the top seeds and advance at once —
+   and since the seeding is the random draw, who gets a bye is luck, and the
+   byes are spread through the bracket; everyone is placed automatically. It can't be undone.
 3. **Results.** Either player in a match records who won, from the bracket in
    the app, and the winner moves into the next round. On the desk, click a
    player to record a result yourself — or to correct one, which works until
@@ -293,7 +295,11 @@ to 24 entries in one city (a doubles team's shared profile is one entry).
    champion.
 
 A member can withdraw until the draw is made. After it, record their opponent
-as the winner (a walkover). Everything is enforced by the database
+as the winner (a walkover). If a player deletes their account mid-tournament,
+their place shows as **Withdrawn** and the desk can give that match to the
+player who is left — but only once the place is really vacated, never while an
+earlier match that fills it is still to be played. Start times you type are
+read as local time **in the tournament's city**, whichever timezone you're in. Everything is enforced by the database
 (`20260806000027_tournaments.sql`): members can't start a tournament, write
 entries for someone else, or touch a match they aren't in.
 

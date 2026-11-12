@@ -7,18 +7,21 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto(fileUrl('app/index.html'));
-  // straight into the app
-  await p.click('#btn-create');
-  await p.fill('#ob-name','Sam'); await p.fill('#ob-age','32');
-  await p.click('#ob-gender [data-gender="woman"]');
-  await p.selectOption('#ob-city','indianapolis');
-  await p.click('#ob1-next');
-  await p.fill('#ob-phone','3175550142'); await p.click('#phone-send');
-  await p.fill('#ob-phone-code','123456'); await p.click('#phone-verify'); await p.click('#obphone-next');
-  await p.click('[data-sport="Pickleball"]'); await p.click('#ob2-next');
-  await p.click('[data-skill="Intermediate"]'); await p.click('#ob3-next');
-  await p.click('#ob-seeking [data-seek="man"]'); await p.click('#ob4-done');
-  await p.waitForSelector('#screen-home.active');
+  // straight into the app (and again later, as someone new, after signing out)
+  const signUp = async (name, city) => {
+    await p.click('#btn-create');
+    await p.fill('#ob-name', name); await p.fill('#ob-age','32');
+    await p.click('#ob-gender [data-gender="woman"]');
+    await p.selectOption('#ob-city', city);
+    await p.click('#ob1-next');
+    await p.fill('#ob-phone','3175550142'); await p.click('#phone-send');
+    await p.fill('#ob-phone-code','123456'); await p.click('#phone-verify'); await p.click('#obphone-next');
+    await p.click('[data-sport="Pickleball"]'); await p.click('#ob2-next');
+    await p.click('[data-skill="Intermediate"]'); await p.click('#ob3-next');
+    await p.click('#ob-seeking [data-seek="man"]'); await p.click('#ob4-done');
+    await p.waitForSelector('#screen-home.active');
+  };
+  await signUp('Sam', 'indianapolis');
 
   const openEvents = async () => {
     await p.click('.tab[data-screen="screen-events"]');
@@ -151,49 +154,83 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     await p.click(tcard('t2') + ' [data-t-act="toggle"]');
     const heads = await p.$$eval(tcard('t2') + ' .br-head', els => els.map(e => e.textContent));
     if (heads.join('|') !== 'Round of 16|Quarterfinals|Semifinals|Final') throw new Error('rounds: ' + heads.join('|'));
+    // 12 players in a bracket of 16: 4 byes, counted in one line rather than
+    // listed, leaving 15 - 4 = 11 matches that are actually played
     const n = (await p.$$(tcard('t2') + ' .br-match')).length;
-    if (n !== 15) throw new Error(n + ' matches in a bracket of 16');
+    if (n !== 11) throw new Error(n + ' matches shown for 12 players in a bracket of 16');
+    const byes = await p.getAttribute(tcard('t2') + ' .br-byes', 'data-byes');
+    if (byes !== '4') throw new Error(byes + ' byes reported');
+    const line = (await p.textContent(tcard('t2') + ' .br-byes')).trim();
+    if (line !== '4 players have a bye and start in the Quarterfinals.') throw new Error('byes line: ' + line);
+    // its first round is played: all 4 real matches have a result
+    const r1 = await p.$$eval(tcard('t2') + ' .br-match[data-round="1"]', els => els.map(e => !!e.querySelector('.br-score')));
+    if (r1.length !== 4 || r1.some((x) => !x)) throw new Error('first round results: ' + JSON.stringify(r1));
   });
   on = await tapCities('bakersfield');
-  await step('entering fills the last place: 24 of 24', async () => {
+  await step('entering fills the last place: 72 of 72', async () => {
     const before = (await p.textContent(tcard('t1') + ' .t-status')).trim();
-    if (!/23 of 24/.test(before)) throw new Error('before: ' + before);
+    if (!/71 of 72/.test(before)) throw new Error('before: ' + before);
     await p.click(tcard('t1') + ' [data-t-act="join"]');
     const after = (await p.textContent(tcard('t1') + ' .t-status')).trim();
-    if (!/24 of 24/.test(after)) throw new Error('after: ' + after);
+    if (!/72 of 72/.test(after)) throw new Error('after: ' + after);
     if (await p.$(tcard('t1') + ' [data-t-act="join"]')) throw new Error('still offering Enter when entered');
   });
-  await step('the draw builds a bracket of 32 with everyone placed once and 8 byes', async () => {
+  await step('the draw builds a bracket of 128: all 72 placed once, 56 byes, 8 first-round matches', async () => {
     await p.click(tcard('t1') + ' [data-t-act="draw"]');
     const info = await p.evaluate((sel) => {
       const card = document.querySelector(sel);
-      const r1 = [...card.querySelectorAll('.br-match[data-round="1"]')];
-      const names = r1.flatMap((m) => [...m.querySelectorAll('.br-player:not(.tbd) .nm')].map((e) => e.textContent.replace(/\s*✓/g, '').trim()));   // "(you)" stays, so a member who shares a sample player's name still counts once
+      const names = (round) => [...card.querySelectorAll('.br-match[data-round="' + round + '"] .br-player:not(.tbd) .nm')]
+        .map((e) => e.textContent.replace(/\s*✓/g, '').trim());   // "(you)" stays, so sharing a sample player's name still counts once
+      const r1 = names(1), r2 = names(2);
       return {
         heads: [...card.querySelectorAll('.br-head')].map((e) => e.textContent).join('|'),
-        matches: card.querySelectorAll('.br-match').length,
-        r1: r1.length, placed: names.length, unique: new Set(names).size,
-        byes: r1.filter((m) => /bye/.test(m.textContent)).length,
+        shown: card.querySelectorAll('.br-match').length,
+        r1matches: card.querySelectorAll('.br-match[data-round="1"]').length,
+        r1players: r1.length, byePlayers: r2.length, unique: new Set(r1.concat(r2)).size,
+        byes: (card.querySelector('.br-byes') || { getAttribute: () => null }).getAttribute('data-byes'),
+        listedByes: [...card.querySelectorAll('.br-match')].filter((m) => /bye/.test(m.textContent)).length,
         me: !!card.querySelector('.br-match.mine'),
       };
     }, tcard('t1'));
-    if (info.heads !== 'Round of 32|Round of 16|Quarterfinals|Semifinals|Final') throw new Error('rounds: ' + info.heads);
-    if (info.matches !== 31 || info.r1 !== 16) throw new Error(JSON.stringify(info));
-    if (info.placed !== 24 || info.unique !== 24) throw new Error('placed ' + info.placed + ', unique ' + info.unique);
-    if (info.byes !== 8) throw new Error(info.byes + ' byes');
+    if (info.heads !== 'Round of 128|Round of 64|Round of 32|Round of 16|Quarterfinals|Semifinals|Final') throw new Error('rounds: ' + info.heads);
+    // 127 matches in a bracket of 128, less the 56 byes that are not listed
+    if (info.shown !== 71 || info.r1matches !== 8) throw new Error(JSON.stringify(info));
+    if (info.r1players !== 16 || info.byePlayers !== 56 || info.unique !== 72) throw new Error('placed: ' + JSON.stringify(info));
+    if (info.byes !== '56' || info.listedByes !== 0) throw new Error('byes: ' + JSON.stringify(info));
     if (!info.me) throw new Error('my own match is not marked');
   });
-  await step('recording results fills the next round until there is a champion', async () => {
-    for (let guard = 0; guard < 40; guard++) {
+  await step('recording results fills each next round until there is a champion', async () => {
+    let played = 0;
+    for (let guard = 0; guard < 200; guard++) {
       const btn = await p.$(tcard('t1') + ' .br-won');
       if (!btn) break;
       await btn.click();
+      played++;
     }
+    if (played !== 71) throw new Error(played + ' matches played, expected 71');
     const status = (await p.textContent(tcard('t1') + ' .t-status')).trim();
     if (!/^Champion: \S/.test(status)) throw new Error('status: ' + status);
-    if (await p.$(tcard('t1') + ' .br-player.tbd .nm:text("To be decided")')) throw new Error('an unfilled slot remains');
+    const open = await p.$$eval(tcard('t1') + ' .br-player.tbd', els => els.length);
+    if (open !== 0) throw new Error(open + ' unfilled places remain');
   });
   on = await tapCities('bakersfield');
+
+  // ---- signing out puts the tournaments back for whoever signs up next ----
+  await step('after signing out, a new member finds Bakersfield at 71 of 72 and not drawn', async () => {
+    await p.evaluate(() => document.getElementById('open-settings').click());
+    await p.waitForSelector('#screen-settings.active');
+    await p.click('#sign-out');
+    await p.waitForSelector('#screen-welcome.active');
+    await signUp('Robin', 'bakersfield');
+    await openEvents();
+    const card = await p.$(tcard('t1'));
+    if (!card) throw new Error('the Bakersfield tournament is not shown');
+    if ((await card.getAttribute('data-status')) !== 'registration') throw new Error('status: ' + (await card.getAttribute('data-status')));
+    const status = (await p.textContent(tcard('t1') + ' .t-status')).trim();
+    if (!/71 of 72/.test(status)) throw new Error('status: ' + status);
+    if (!(await p.$(tcard('t1') + ' [data-t-act="join"]'))) throw new Error('not offering Enter: the last member is still entered');
+    if (await p.$(tcard('t1') + ' .br-match')) throw new Error('the last member’s bracket is still shown');
+  });
 
   await finish(b, errs);
 })();
