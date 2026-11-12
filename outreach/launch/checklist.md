@@ -871,7 +871,7 @@ it copies — `birthdate` had been unreadable since then. The app now inserts an
 if the profile already exists, updates. The database suite checks both that
 path and that the upsert form is refused.
 
-### Follow-ups logged, not fixed
+### Follow-ups logged — both fixed the same day (migration 31, below)
 
 - `is_blocked()` and `is_suspended()` can still be called by any signed-in
   member with any two ids, which tells them whether two members have blocked
@@ -886,3 +886,62 @@ path and that the upsert form is refused.
 - Migration 30 has not been run on a real Supabase project, and the app has
   not been run on a device against it; it is covered by the local test suites
   only.
+
+## Update — 2026-11-12 (the two privacy follow-ups closed)
+
+Migration `20260806000031_privacy_followups.sql`:
+
+- **Block and suspension checks answer only about you.** `is_blocked(a, b)`
+  and `is_suspended(user)` had to be executable by members because row
+  policies call them, so any member could ask whether two *other* members had
+  blocked each other, or whether anyone was suspended. Members can no longer
+  execute either. They get `i_am_suspended()` and `hidden_from_me(other)` —
+  "is this person missing from my profile list?" — which is true alike for a
+  block either way, a suspension, or an id with no profile, so asking reveals
+  nothing the profile list doesn't. (The first draft had a separate
+  `blocked_with_me` and a `hidden_from_me` that was false for unknown ids; the
+  independent review showed the pair still singled out suspended accounts and
+  told a blocked member who had blocked them, so both were replaced.)
+- **Rows that outlived a hidden profile.** Sports, event sign-ups, tournament
+  entries and approved photos of someone missing from your profile list are
+  no longer shown, so they can't be matched against the list to find
+  suspended members. Approved photos were in fact readable for *everyone* —
+  blocked and suspended members included — and now follow the list too (the
+  photo files follow, through the storage policy). Swipes and messages to
+  someone hidden from you are refused; the review showed the message rule had
+  no test, and it now has one on each side of a block.
+- **A final adversarial check found more of the same, all fixed here:**
+  - **Critical, older than today:** the `matches_close` policy let a member
+    update *any* column of a match they were in — including swapping the
+    other person for someone else, who would then receive messages without
+    ever having liked them and could read the earlier conversation. Members
+    can no longer update matches at all (the app never did; suspension closes
+    matches from the server).
+  - Your own matches told a block from a suspension (a blocker's match stayed
+    open, a suspended member's was closed). Matches and their messages with
+    someone hidden from you are no longer shown, and undo on a hidden person
+    always just takes your swipe back.
+  - Blocking and reporting now go through `block_member()` and
+    `report_member()`. A direct insert used to fail for a deleted account
+    but succeed for a hidden one; the functions quietly do nothing for an id
+    with no profile. Your own swipes on hidden people are hidden too.
+  - Members can no longer read back reports they filed — "actioned" gave away
+    a suspension. The app never read them.
+- **Accepted, not fixed:** in a tournament, the entry count includes entrants
+  hidden from you, the bracket keeps every place (a hidden player shows
+  unnamed), and the draw leaves out suspended entrants. Together these can
+  hint at whether a hidden entrant blocked you or was suspended. Hiding
+  players inside a bracket both people still have to play and report on is a
+  bigger product change; tournaments are opt-in and public. Revisit if it
+  matters.
+- **Doubles partner limit.** Adding a partner, or changing their gender, is
+  free in the first hour after signup and then once every 30 days, so a
+  partner can't be switched on and off to probe someone's Play/Friends
+  partner preference. Removing a partner is always allowed (they may have
+  asked to come off); their name and birthdate can be edited freely. The app
+  shows the database's explanation if a change is refused.
+- Gender can no longer be stepped through empty to get a second change in a
+  month. The Settings wording about removing and re-adding a partner now
+  matches the rule.
+- Database suite section 9n; app settings test for the refusal message.
+- Still not run on a real Supabase project or a device.

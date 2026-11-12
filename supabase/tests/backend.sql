@@ -577,8 +577,9 @@ reset role;
 
 -- ---- 6. RLS: blocked users become invisible both ways ----
 set role authenticated;
-insert into blocks (blocker_id, blocked_id)
-values ('00000000-0000-4000-8000-00000000000a', '00000000-0000-4000-8000-000000000003');
+-- (members block through block_member() since migration 31)
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
+select block_member('00000000-0000-4000-8000-000000000003');
 do $$
 declare c int;
 begin
@@ -635,8 +636,7 @@ insert into profile_photos (user_id, storage_path, position, moderation_status)
 values ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000001/0.jpg', 0, 'pending');
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
-insert into reports (reporter_id, target_id, reason, context)
-values ('00000000-0000-4000-8000-00000000000a', '00000000-0000-4000-8000-000000000002', 'Test report for admin triage', 'deck');
+select report_member('00000000-0000-4000-8000-000000000002', 'Test report for admin triage', 'deck');
 do $$
 declare c int; ok boolean;
 begin
@@ -935,7 +935,7 @@ begin
                            'play_games', 'last_active_at', 'created_at', 'verified_at',
                            'phone_verified_at', 'gender', 'bio', 'availability_note',
                            'is_team', 'partner_name', 'partner_gender',
-                           'location_updated_at', 'gender_updated_at'] loop
+                           'location_updated_at', 'gender_updated_at', 'team_updated_at'] loop
     begin
       execute format('select %I::text from profiles where id = $1', v)
         using '00000000-0000-4000-8000-000000000003'::uuid;
@@ -1009,8 +1009,7 @@ begin
   assert jsonb_array_length(
     get_profile_cards(array['00000000-0000-4000-8000-000000000004']::uuid[])) = 1,
     'test setup: Sam should be visible before the block';
-  insert into blocks (blocker_id, blocked_id)
-  values (auth.uid(), '00000000-0000-4000-8000-000000000004');
+  perform block_member('00000000-0000-4000-8000-000000000004');
   assert jsonb_array_length(
     get_profile_cards(array['00000000-0000-4000-8000-000000000004']::uuid[])) = 0,
     'a blocked member still comes back as a card';
@@ -1076,8 +1075,7 @@ begin
    where event_id = ev and user_id = '00000000-0000-4000-8000-000000000003';
   assert seen = 1, 'test setup: Priya should be on the guest list to start with';
 
-  insert into blocks (blocker_id, blocked_id)
-  values (auth.uid(), '00000000-0000-4000-8000-000000000003');
+  perform block_member('00000000-0000-4000-8000-000000000003');
 
   select count(*) into seen from event_rsvps
    where event_id = ev and user_id = '00000000-0000-4000-8000-000000000003';
@@ -2058,7 +2056,8 @@ begin
   foreach col in array array['suspended_at = null', 'suspended_reason = null', 'verified_at = now()',
                              'phone_verified_at = now()', 'created_at = now() - interval ''1 year''',
                              'approx_lat = 40.00', 'approx_lng = -80.00',
-                             'location_updated_at = now()', 'gender_updated_at = now()'] loop
+                             'location_updated_at = now()', 'gender_updated_at = now()',
+                             'team_updated_at = now()'] loop
     begin
       execute format('update profiles set %s where id = auth.uid()', col);
       assert false, format('a member could set %s on their own profile', col);
@@ -2373,5 +2372,337 @@ end $$;
 reset role;
 delete from auth.users where id in ('00000000-0000-4000-8000-000000000601', '00000000-0000-4000-8000-000000000602',
                                     '00000000-0000-4000-8000-000000000603', '00000000-0000-4000-8000-000000000604');
+
+-- ---- 9n. The privacy follow-ups (migration 20260806000031) ----
+-- is_blocked() and is_suspended() answered for any ids; members now only get
+-- helpers that answer about themselves. And a doubles partner can't be added
+-- and removed at will to probe someone's play-partner preference.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-4000-8000-000000000701', 'fu-a@example.com'),
+  ('00000000-0000-4000-8000-000000000702', 'fu-b@example.com'),
+  ('00000000-0000-4000-8000-000000000703', 'fu-c@example.com'),
+  ('00000000-0000-4000-8000-000000000704', 'fu-team-old@example.com'),
+  ('00000000-0000-4000-8000-000000000705', 'fu-team-new@example.com');
+insert into profiles (id, first_name, birthdate, city, gender) values
+  ('00000000-0000-4000-8000-000000000701', 'Ava',   '1990-01-01', 'phoenix', 'woman'),
+  ('00000000-0000-4000-8000-000000000702', 'Ben',   '1990-01-01', 'phoenix', 'man'),
+  ('00000000-0000-4000-8000-000000000703', 'Cal',   '1990-01-01', 'phoenix', 'man'),
+  ('00000000-0000-4000-8000-000000000704', 'Dee',   '1990-01-01', 'phoenix', 'woman'),
+  ('00000000-0000-4000-8000-000000000705', 'Eve',   '1990-01-01', 'phoenix', 'woman');
+-- Ben and Cal have a block between them; Ava has nothing to do with it.
+insert into blocks (blocker_id, blocked_id) values
+  ('00000000-0000-4000-8000-000000000702', '00000000-0000-4000-8000-000000000703');
+update profiles set created_at = now() - interval '2 days' where id = '00000000-0000-4000-8000-000000000704';
+
+-- Things of Cal's that other members could see before: sports, an event
+-- sign-up, an approved photo. And open matches on each side of the block
+-- (blocking never closes a match), plus one between Ava and Ben as a control.
+insert into user_sports (user_id, sport, level) values
+  ('00000000-0000-4000-8000-000000000703', 'tennis', 'advanced');
+insert into events (id, title, venue, starts_at, sport, capacity, city) values
+  ('00000000-0000-4000-8000-0000000007ee', 'Follow-up Social', 'Court 1', now() + interval '3 days', 'tennis', 10, 'phoenix');
+insert into event_rsvps (event_id, user_id) values
+  ('00000000-0000-4000-8000-0000000007ee', '00000000-0000-4000-8000-000000000703');
+-- (new photos always start pending unless the desk approves them; skip that
+-- step here rather than set up an admin session)
+alter table profile_photos disable trigger photo_moderation_guard;
+insert into profile_photos (user_id, storage_path, position, moderation_status) values
+  ('00000000-0000-4000-8000-000000000703', '00000000-0000-4000-8000-000000000703/a.jpg', 0, 'approved');
+alter table profile_photos enable trigger photo_moderation_guard;
+insert into matches (id, user_a, user_b, mode) values
+  ('00000000-0000-4000-8000-0000000007a1', '00000000-0000-4000-8000-000000000702', '00000000-0000-4000-8000-000000000703', 'play'),
+  ('00000000-0000-4000-8000-0000000007a2', '00000000-0000-4000-8000-000000000701', '00000000-0000-4000-8000-000000000702', 'play'),
+  ('00000000-0000-4000-8000-0000000007a3', '00000000-0000-4000-8000-000000000701', '00000000-0000-4000-8000-000000000703', 'friends');
+insert into swipes (actor_id, target_id, mode, action) values
+  ('00000000-0000-4000-8000-000000000701', '00000000-0000-4000-8000-000000000703', 'date', 'like');
+insert into messages (match_id, sender_id, body) values
+  ('00000000-0000-4000-8000-0000000007a1', '00000000-0000-4000-8000-000000000702', 'before the block');
+
+-- Nobody can call the originals any more, signed in or not.
+set role anon;
+do $$
+begin
+  begin
+    perform is_blocked('00000000-0000-4000-8000-000000000702', '00000000-0000-4000-8000-000000000703');
+    assert false, 'a signed-out visitor called is_blocked';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform hidden_from_me('00000000-0000-4000-8000-000000000703');
+    assert false, 'a signed-out visitor called hidden_from_me';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000701';  -- Ava
+do $$
+begin
+  begin
+    perform is_blocked('00000000-0000-4000-8000-000000000702', '00000000-0000-4000-8000-000000000703');
+    assert false, 'a member asked whether two other members have blocked each other';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform is_suspended('00000000-0000-4000-8000-000000000703');
+    assert false, 'a member asked whether someone else is suspended';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform blocked_with_me('00000000-0000-4000-8000-000000000703');
+    assert false, 'blocked_with_me should not exist: it would tell a blocked member who blocked them';
+  exception when undefined_function then null;
+  end;
+  -- the helper only answers about Ava, so Ben and Cal's block is invisible to her
+  assert not hidden_from_me('00000000-0000-4000-8000-000000000702'), 'Ava sees a block she is not part of';
+  assert not hidden_from_me('00000000-0000-4000-8000-000000000703'), 'Ava sees a block she is not part of';
+  assert not i_am_suspended(), 'Ava is not suspended';
+  assert not hidden_from_me(auth.uid()), 'you are never hidden from yourself';
+  -- and she still sees Cal's sports, sign-up and photo while he is in her list
+  assert exists (select 1 from user_sports where user_id = '00000000-0000-4000-8000-000000000703'), 'test premise: Ava sees Cal''s sports';
+  assert exists (select 1 from event_rsvps where user_id = '00000000-0000-4000-8000-000000000703'), 'test premise: Ava sees Cal''s sign-up';
+  assert exists (select 1 from profile_photos where user_id = '00000000-0000-4000-8000-000000000703'), 'test premise: Ava sees Cal''s photo';
+  -- a message in an unblocked open match still goes through
+  insert into messages (match_id, sender_id, body)
+  values ('00000000-0000-4000-8000-0000000007a2', auth.uid(), 'hi Ben');
+  assert exists (select 1 from matches where id = '00000000-0000-4000-8000-0000000007a3'), 'test premise: Ava sees her match with Cal';
+  assert exists (select 1 from swipes where target_id = '00000000-0000-4000-8000-000000000703'), 'test premise: Ava sees her swipe on Cal';
+
+  -- matches can't be edited by members: swapping the other person in a match
+  -- used to let a member message (and show the conversation to) anyone
+  begin
+    update matches set user_b = '00000000-0000-4000-8000-000000000703'
+     where id = '00000000-0000-4000-8000-0000000007a2';
+    assert false, 'a member swapped the other person in a match';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update matches set closed_at = now() where id = '00000000-0000-4000-8000-0000000007a2';
+    assert false, 'a member edited a match directly';
+  exception when insufficient_privilege then null;
+  end;
+
+  -- blocking and reporting go through functions that treat an id with no
+  -- profile exactly like a real one: no error either way
+  perform block_member('00000000-0000-4000-8000-0000000007ff');
+  perform report_member('00000000-0000-4000-8000-0000000007ff', 'made-up id', 'deck');
+  perform report_member('00000000-0000-4000-8000-000000000702', 'a real report', 'chat');
+  begin
+    perform block_member(auth.uid());
+    assert false, 'a member blocked themselves';
+  exception when invalid_parameter_value then null;
+  end;
+  begin
+    perform report_member('00000000-0000-4000-8000-000000000702', '', 'deck');
+    assert false, 'an empty report was accepted';
+  exception when invalid_parameter_value then null;
+  end;
+  begin
+    insert into blocks (blocker_id, blocked_id) values (auth.uid(), '00000000-0000-4000-8000-000000000702');
+    assert false, 'a member inserted a block directly';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into reports (reporter_id, target_id, reason) values (auth.uid(), '00000000-0000-4000-8000-000000000702', 'x');
+    assert false, 'a member inserted a report directly';
+  exception when insufficient_privilege then null;
+  end;
+  -- and a member can't read reports back ("actioned" gave away a suspension)
+  assert not exists (select 1 from reports), 'a member can read reports they filed';
+end $$;
+reset role;
+do $$
+begin
+  assert (select count(*) from reports where reporter_id = '00000000-0000-4000-8000-000000000701'
+            and target_id = '00000000-0000-4000-8000-000000000702') = 1,
+    'report_member did not file the report';
+  assert not exists (select 1 from reports where target_id = '00000000-0000-4000-8000-0000000007ff'),
+    'a report about a made-up id was stored';
+end $$;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000702';  -- Ben
+do $$
+begin
+  assert hidden_from_me('00000000-0000-4000-8000-000000000703'), 'a blocked member is not hidden from Ben';
+  -- everything of Cal's is gone for Ben: profile, sports, sign-up, photo
+  assert not exists (select 1 from profiles where id = '00000000-0000-4000-8000-000000000703'),
+    'Ben can see the profile of someone he blocked';
+  assert not exists (select 1 from user_sports where user_id = '00000000-0000-4000-8000-000000000703'),
+    'Ben can see the sports of someone he blocked';
+  assert not exists (select 1 from event_rsvps where user_id = '00000000-0000-4000-8000-000000000703'),
+    'Ben can see the event sign-ups of someone he blocked';
+  assert not exists (select 1 from profile_photos where user_id = '00000000-0000-4000-8000-000000000703'),
+    'Ben can see the photos of someone he blocked';
+  begin
+    insert into swipes (actor_id, target_id, mode, action)
+    values (auth.uid(), '00000000-0000-4000-8000-000000000703', 'date', 'like');
+    assert false, 'Ben swiped on someone he blocked';
+  exception when insufficient_privilege then null;
+  end;
+  -- the block stops messages in a match that is still open
+  begin
+    insert into messages (match_id, sender_id, body)
+    values ('00000000-0000-4000-8000-0000000007a1', auth.uid(), 'hello?');
+    assert false, 'Ben messaged someone he blocked';
+  exception when insufficient_privilege then null;
+  end;
+  -- and Ben still messages Ava, who he hasn't blocked
+  insert into messages (match_id, sender_id, body)
+  values ('00000000-0000-4000-8000-0000000007a2', auth.uid(), 'hi Ava');
+  -- the match with Cal, and its messages, are gone from Ben's view
+  assert not exists (select 1 from matches where id = '00000000-0000-4000-8000-0000000007a1'),
+    'Ben still sees his match with someone he blocked';
+  assert not exists (select 1 from messages where match_id = '00000000-0000-4000-8000-0000000007a1'),
+    'Ben still sees messages with someone he blocked';
+  -- undo on a hidden person always says yes (a match with messages would
+  -- otherwise say no, which a suspension's closed match would not)
+  assert undo_swipe('00000000-0000-4000-8000-000000000703', 'play'),
+    'undo_swipe on a hidden person should take the swipe back without a word';
+end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000703';  -- Cal, on the other end of the block
+do $$
+begin
+  -- the blocked side: the helper says only "hidden", never "blocked you"
+  assert hidden_from_me('00000000-0000-4000-8000-000000000702'), 'Ben is not hidden from Cal';
+  begin
+    insert into messages (match_id, sender_id, body)
+    values ('00000000-0000-4000-8000-0000000007a1', auth.uid(), 'why?');
+    assert false, 'Cal messaged someone who blocked him';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+-- Suspension: a suspended account looks exactly like one that doesn't exist.
+reset role;
+update profiles set suspended_at = now() where id = '00000000-0000-4000-8000-000000000703';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000701';  -- Ava
+do $$
+begin
+  assert hidden_from_me('00000000-0000-4000-8000-000000000703'), 'a suspended member is not hidden';
+  assert hidden_from_me('00000000-0000-4000-8000-0000000007ff'), 'an id with no profile should look the same as a suspended one';
+  assert not exists (select 1 from profiles where id = '00000000-0000-4000-8000-000000000703'),
+    'a suspended profile is in the list';
+  -- and nothing else of his gives it away
+  assert not exists (select 1 from user_sports where user_id = '00000000-0000-4000-8000-000000000703'),
+    'a suspended member''s sports are still visible';
+  assert not exists (select 1 from event_rsvps where user_id = '00000000-0000-4000-8000-000000000703'),
+    'a suspended member''s event sign-ups are still visible';
+  assert not exists (select 1 from profile_photos where user_id = '00000000-0000-4000-8000-000000000703'),
+    'a suspended member''s photos are still visible';
+  assert not exists (
+    select user_id from user_sports
+    except select id from profiles
+  ), 'some user_sports rows belong to people missing from the profile list';
+  assert not exists (
+    select user_id from event_rsvps
+    except select id from profiles
+  ), 'some event sign-ups belong to people missing from the profile list';
+  -- her match with Cal, and her own swipe on him, look as if he had left
+  assert not exists (select 1 from matches where id = '00000000-0000-4000-8000-0000000007a3'),
+    'a match with a suspended member is still visible';
+  assert not exists (select 1 from swipes where target_id = '00000000-0000-4000-8000-000000000703'),
+    'a swipe on a suspended member is still visible';
+end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000703';  -- Cal, suspended
+do $$
+begin
+  assert i_am_suspended(), 'a suspended member cannot see their own suspension';
+  -- his own things stay his to see
+  assert exists (select 1 from user_sports where user_id = auth.uid()), 'a suspended member lost sight of their own sports';
+  begin
+    insert into swipes (actor_id, target_id, mode, action)
+    values (auth.uid(), '00000000-0000-4000-8000-000000000701', 'date', 'like');
+    assert false, 'a suspended member swiped';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    delete from event_rsvps where user_id = auth.uid();   -- leaving is fine...
+    insert into event_rsvps (event_id, user_id)            -- ...signing up again is not
+    values ('00000000-0000-4000-8000-0000000007ee', auth.uid());
+    assert false, 'a suspended member signed up for an event';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+delete from events where id = '00000000-0000-4000-8000-0000000007ee';
+set role authenticated;
+
+-- Gender can't be stepped through empty to get a second change in a month.
+reset role;
+update profiles set created_at = now() - interval '2 days', gender_updated_at = null
+ where id = '00000000-0000-4000-8000-000000000702';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000702';  -- Ben
+do $$
+begin
+  update profiles set gender = null where id = auth.uid();          -- a change: uses up the month
+  begin
+    update profiles set gender = 'woman' where id = auth.uid();     -- and back to a value: no
+    assert false, 'gender was stepped through empty for a second change';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+-- A doubles partner: added freely in the first hour, then once every 30
+-- days; removing is always allowed; their name is not limited.
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000704';  -- Dee, signed up 2 days ago
+do $$
+begin
+  update profiles set is_team = true, partner_name = 'Fay', partner_birthdate = '1991-01-01',
+                      partner_gender = 'woman', modes = '{play}'
+   where id = auth.uid();                                             -- first add: fine
+  update profiles set partner_name = 'Faye' where id = auth.uid();    -- a typo fix: fine
+  begin
+    update profiles set partner_gender = 'man' where id = auth.uid(); -- partner's gender again: no
+    assert false, 'a partner''s gender changed twice in a month';
+  exception when insufficient_privilege then null;
+  end;
+  update profiles set is_team = false, partner_name = '', partner_birthdate = null, partner_gender = null
+   where id = auth.uid();                                             -- removing: always fine
+  begin
+    update profiles set is_team = true, partner_name = 'Gus', partner_birthdate = '1991-01-01',
+                        partner_gender = 'man'
+     where id = auth.uid();                                           -- re-adding straight away: no
+    assert false, 'a partner was added, removed and added again within a month';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+update profiles set team_updated_at = now() - interval '31 days' where id = '00000000-0000-4000-8000-000000000704';
+set role authenticated;
+do $$
+begin
+  update profiles set is_team = true, partner_name = 'Gus', partner_birthdate = '1991-01-01',
+                      partner_gender = 'man'
+   where id = auth.uid();                                             -- a month on: fine
+end $$;
+-- a brand-new profile can set up its partner as many times as it needs to
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000705';  -- Eve, just signed up
+do $$
+begin
+  update profiles set is_team = true, partner_name = 'Hal', partner_birthdate = '1991-01-01',
+                      partner_gender = 'man', modes = '{play}' where id = auth.uid();
+  update profiles set partner_gender = 'woman' where id = auth.uid();
+  update profiles set is_team = false, partner_name = '', partner_birthdate = null, partner_gender = null
+   where id = auth.uid();
+  update profiles set is_team = true, partner_name = 'Ivy', partner_birthdate = '1991-01-01',
+                      partner_gender = 'woman' where id = auth.uid();
+end $$;
+reset role;
+do $$
+begin
+  assert (select partner_name from profiles where id = '00000000-0000-4000-8000-000000000704') = 'Gus',
+    'the partner added after 30 days did not save';
+  assert (select team_updated_at from profiles where id = '00000000-0000-4000-8000-000000000704') > now() - interval '1 minute',
+    'adding a partner did not restart the 30-day clock';
+  assert (select partner_name from profiles where id = '00000000-0000-4000-8000-000000000705') = 'Ivy',
+    'a new profile could not set up its partner';
+  assert (select team_updated_at from profiles where id = '00000000-0000-4000-8000-000000000705') is null,
+    'changes in the first hour should not start the 30-day clock';
+end $$;
+delete from auth.users where id in ('00000000-0000-4000-8000-000000000701', '00000000-0000-4000-8000-000000000702',
+                                    '00000000-0000-4000-8000-000000000703', '00000000-0000-4000-8000-000000000704',
+                                    '00000000-0000-4000-8000-000000000705');
 
 select 'ALL BACKEND TESTS PASSED' as result;

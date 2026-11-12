@@ -274,7 +274,8 @@ export async function listMyPhotos() {
 }
 
 // Approved photos for a set of users → { userId: [url, …] } in position order.
-// RLS already filters to approved-or-own, but we filter explicitly anyway.
+// RLS already filters to your own, or approved ones of people in your profile
+// list (not blocked either way, not suspended), but we filter explicitly anyway.
 export async function getApprovedPhotoMap(userIds) {
   if (!userIds.length) return {};
   const { data, error } = await supabase
@@ -528,15 +529,17 @@ export async function rsvp(eventId, going) {
 
 // ---------- Safety ----------
 
+// Blocking and reporting go through functions (migration 31), not straight
+// into the tables: a direct insert failed for a deleted account but worked
+// for one hidden from you, which told the two apart. Both functions quietly do
+// nothing for an id with no profile.
 export async function blockUser(targetId) {
-  const { data: { user } } = await supabase.auth.getUser();
-  const { error } = await supabase.from('blocks').insert({ blocker_id: user.id, blocked_id: targetId });
+  const { error } = await supabase.rpc('block_member', { p_target: targetId });
   if (error) throw error;
 }
 
 export async function reportUser(targetId, reason, context = 'deck') {
-  const { data: { user } } = await supabase.auth.getUser();
-  const { error } = await supabase.from('reports').insert({ reporter_id: user.id, target_id: targetId, reason, context });
+  const { error } = await supabase.rpc('report_member', { p_target: targetId, p_reason: reason, p_context: context });
   if (error) throw error;
 }
 

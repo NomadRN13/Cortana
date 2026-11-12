@@ -122,6 +122,24 @@ async function main() {
   // Turning Date off must not leave you looking at the Date deck either.
   check('the active mode follows the modes you kept', app.mode !== 'date', app.mode);
 
+  // When the database refuses a change on purpose (42501: a second partner
+  // change within 30 days, a birthdate, a second gender change), the member
+  // sees its explanation, not "check your connection".
+  {
+    const why = 'You can add or change a doubles partner once every 30 days. Removing one is always fine.';
+    const before = app.user.partnerGender;
+    impl.updateMyProfile = () => { const e = new Error(why); e.code = '42501'; throw e; };
+    alerts.length = 0;
+    await act(async () => {
+      app.updateTeam({ isTeam: true, partnerName: 'Jo', partnerBirthdate: '1993-02-02', partnerGender: 'man' });
+      await tick(40);
+    });
+    check('a refused partner change reverts', app.user.partnerGender === before, app.user.partnerGender);
+    check('a refused partner change shows the database’s reason',
+      alerts.length === 1 && alerts[0].message === why, alerts.map((a) => a.message));
+    impl.updateMyProfile = () => ({ ok: true });
+  }
+
   await act(async () => { renderer.unmount(); });
   console.log(failures ? `\n${failures} failing` : '\nall green');
   process.exit(failures ? 1 : 0);

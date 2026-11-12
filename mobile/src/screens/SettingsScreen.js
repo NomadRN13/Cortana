@@ -118,7 +118,7 @@ export default function SettingsScreen({ navigation }) {
   const removePartner = () => {
     Alert.alert(
       `Remove ${(u && u.partnerName) || 'your partner'}?`,
-      'Your profile goes back to being just you. You can add a partner again any time.',
+      'Your profile goes back to being just you. After your first hour, a partner can only be added once every 30 days, so only remove them if you mean to.',
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Remove', style: 'destructive', onPress: () => { app.updateTeam({ isTeam: false }); setPartnerOpen(false); } },
@@ -422,7 +422,7 @@ export default function SettingsScreen({ navigation }) {
                   ))}
                 </View>
                 <Text style={[type.hint, { fontSize: 12, marginTop: 8 }]}>
-                  By adding a partner you confirm they're 18 or older and agreed to be on your profile. Their first name, age and gender appear on your shared card.
+                  By adding a partner you confirm they're 18 or older and agreed to be on your profile. Their first name, age and gender appear on your shared card. After your first hour, a partner can be added, or their gender changed, once every 30 days.
                 </Text>
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
                   <Pressable style={styles.partnerSave} onPress={savePartner} accessibilityRole="button">
