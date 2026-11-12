@@ -60,10 +60,12 @@
 
 ## Known gaps outside the documents
 
-These aren't legal-text problems, but counsel should know about them. Both are logged in `outreach/launch/checklist.md`.
+These aren't legal-text problems, but counsel should know about them. Both are logged in `outreach/launch/checklist.md`, and **both were fixed on 2026-11-12** (migration 30). The privacy policy has been updated to match.
 
-- **Some profile settings are readable by any signed-in member** through the API. These are cities, modes, who they're seeking, age and distance range, and last active. The privacy policy discloses this, but it is a product gap.
-- **The distance shown to members could be used to work out where someone is**, by checking it from several places. This is a safety risk in a dating app. A fix is recommended before launch.
+- **Some profile settings were readable by any signed-in member** through the API (cities, modes, who they're seeking, age and distance range, last active). Fixed: other members can now read only a member's first name directly; everything else they see comes from the card, which carries only what the card shows.
+- **The distance shown to members could have been used to work out where someone is**, by checking it from several places. Fixed: distance is now given in whole miles between map squares about 2½ miles across, and a member's position can move to a new square at most once every six hours.
+
+The fix has not yet been tried on the live backend or a real device.
 
 ## Still to do (owner)
 

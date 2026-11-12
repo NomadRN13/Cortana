@@ -56,6 +56,7 @@ ${names.map((n) => (SUBSCRIPTIONS.includes(n)
 const entry = `
 export { AppStateProvider, useApp } from ${JSON.stringify(path.join(src, 'state.js'))};
 export { impl, calls } from './api/backend.js';
+export { nativeImpl } from ${JSON.stringify(path.join(stubs, 'native.js'))};
 export { alerts } from 'react-native';
 export { reset as resetStorage } from '@react-native-async-storage/async-storage';
 `;

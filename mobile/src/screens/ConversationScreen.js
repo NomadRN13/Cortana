@@ -6,6 +6,7 @@ import { colors, type } from '../theme';
 import { Avatar } from '../components/ui';
 import { TypingDots } from '../components/motion';
 import { useApp } from '../state';
+import { distanceShort } from '../lib/distance';
 import { COURTS } from '../data/seed';
 import { DEFAULT_CITY } from '../data/cities';
 
@@ -84,7 +85,7 @@ export default function ConversationScreen({ route, navigation }) {
   };
 
   const more = () => {
-    Alert.alert(p.name, `${p.sports.join(' & ')}${p.dist != null ? ` · ${p.dist.toFixed(1)} mi` : ''}`, [
+    Alert.alert(p.name, `${p.sports.join(' & ')}${distanceShort(p.dist) ? ` · ${distanceShort(p.dist)}` : ''}`, [
       {
         text: `Report ${p.name}`,
         onPress: () => {
@@ -113,7 +114,7 @@ export default function ConversationScreen({ route, navigation }) {
         <Avatar id={p.id} name={p.name} photo={p.photo} size={40} />
         <View style={{ flex: 1 }}>
           <Text style={{ color: colors.text, fontWeight: '800' }}>{p.name}</Text>
-          <Text style={[type.hint, { fontSize: 12 }]}>{p.sports.join(' & ')}{p.dist != null ? ` · ${p.dist.toFixed(1)} mi` : ''}</Text>
+          <Text style={[type.hint, { fontSize: 12 }]}>{p.sports.join(' & ')}{distanceShort(p.dist) ? ` · ${distanceShort(p.dist)}` : ''}</Text>
         </View>
         <Pressable onPress={more} hitSlop={8} accessibilityLabel="More options">
           <Ionicons name="ellipsis-horizontal" size={22} color={colors.text} />

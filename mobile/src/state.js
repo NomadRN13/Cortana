@@ -18,6 +18,7 @@ import { COURTS_BY_CITY } from './data/courts';
 import { getDeviceKey, getDeviceName, getPlatform } from './lib/device';
 import { registerForPush } from './lib/push';
 import { getCoarseLocation } from './lib/location';
+import { distanceReason } from './lib/distance';
 
 const STORE_KEY = '40love.profile';
 const SAVED_KEY = '40love.saved';
@@ -76,6 +77,8 @@ function mapDeckRow(row) {
     partnerAge: row.partner_age != null ? row.partner_age : null,
     gender: row.gender || null,
     partnerGender: row.is_team ? (row.partner_gender || null) : null,
+    // Absent → undefined, which the card reads as "plays every format".
+    playGames: Array.isArray(row.play_games) && row.play_games.length ? row.play_games : undefined,
   };
 }
 
@@ -94,7 +97,8 @@ function mapProfileRow(p) {
     skill: sports[0] ? cap(sports[0].level) : 'Intermediate',
     rating: sports[0] ? sports[0].rating_label : '',
     isNew: false,
-    verified: !!p.verified_at,
+    // Cards carry a verified flag; your own row still has the timestamp.
+    verified: !!(p.verified || p.verified_at),
     avail: p.availability_note || '',
     bio: p.bio || '',
     gender: p.gender || null,
@@ -102,6 +106,7 @@ function mapProfileRow(p) {
     partnerName: p.partner_name || '',
     partnerGender: p.is_team ? (p.partner_gender || null) : null,
     partnerAge: p.is_team ? (p.partner_age != null ? p.partner_age : ageFromBirthdate(p.partner_birthdate)) : null,
+    playGames: Array.isArray(p.play_games) && p.play_games.length ? p.play_games : undefined,
   };
 }
 
@@ -580,14 +585,17 @@ export function AppStateProvider({ children }) {
     api.updateMyProfile({ last_active_at: new Date().toISOString() }).catch(() => {});
     getDeviceKey().then((key) => registerForPush((t, p) => api.registerPushToken(t, p, key))).catch(() => {});
     // Refresh coarse (~1 km) location so distances and the radius filter work;
-    // refetch the deck once it lands.
+    // refetch the deck once it lands. Position can only be set through
+    // set_my_location, which allows a move to a new ~2.5-mile square once every
+    // 6 hours — a refusal (accepted: false) or a failure just leaves the old
+    // position standing, so neither is surfaced.
     getCoarseLocation().then((loc) => {
       if (loc) {
-        api.updateMyProfile({ approx_lat: loc.lat, approx_lng: loc.lng })
+        api.setMyLocation(loc.lat, loc.lng)
           .then(() => refreshDeck(mode))
           .catch(() => {});
       }
-    });
+    }).catch(() => {});
     refreshMatchesAndThreads().then(refreshNotifs);
     refreshEvents();
     refreshDeck(mode);
@@ -668,8 +676,14 @@ export function AppStateProvider({ children }) {
   // keeps showing them to people on the old terms. Put it back and say so.
   const saveSetting = (patch, revert, what) => {
     if (!live) return;
-    api.updateMyProfile(patch).catch(() => {
+    api.updateMyProfile(patch).catch((e) => {
       revert();
+      // 42501: the database refused the change on purpose (a birthdate, or a
+      // second gender change within 30 days) and says why in plain words.
+      if (e && e.code === '42501' && e.message) {
+        Alert.alert('Couldn\u2019t save that', e.message);
+        return;
+      }
       Alert.alert('Couldn\u2019t save that', `${what} didn\u2019t save, so nothing changed. Check your connection and try again.`);
     });
   };
@@ -1074,8 +1088,6 @@ export function AppStateProvider({ children }) {
         sameSportsOnly: prefs.mySportsOnly,
         city: draft.city || DEFAULT_CITY,
         extraCities: citiesOf(draft).filter((c) => c !== (draft.city || DEFAULT_CITY)),
-        approxLat: loc ? loc.lat : null,
-        approxLng: loc ? loc.lng : null,
         gender: draft.gender,
         seeking: draft.seeking,
         playGames: draft.playGames,
@@ -1086,6 +1098,11 @@ export function AppStateProvider({ children }) {
         partnerBirthdate: draft.partnerBirthdate,
         partnerGender: draft.partnerGender,
       });
+      // A new profile starts with no position; set it now the row exists.
+      // Signup never fails over this — the next launch tries again.
+      if (loc) {
+        try { await api.setMyLocation(loc.lat, loc.lng); } catch (e) { /* retried at next launch */ }
+      }
       await api.setMySports(
         draft.sports.map((s) => ({ sport: s.toLowerCase(), level: draft.skill.toLowerCase(), ratingLabel: draft.rating || '' }))
       );
@@ -1678,7 +1695,8 @@ export function AppStateProvider({ children }) {
     }
     if (shared.length > 1) return `Plays ${shared.slice(0, 2).join(' and ')} like you`;
     if (shared.length) return `Also plays ${shared[0]}`;
-    if (p.dist != null && p.dist <= 3) return `Just ${p.dist.toFixed(1)} miles away`;
+    const near = distanceReason(p.dist);
+    if (near) return near;
     if (p.isNew) return 'New to 40/LOVE this week';
     if (p.verified) return 'Verified player nearby';
     return 'Worth a look';

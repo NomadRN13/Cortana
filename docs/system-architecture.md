@@ -55,7 +55,8 @@ Core tables (Postgres):
 ```
 users            id · phone/email · created_at · last_active_at
 profiles         user_id · first_name · birthdate · bio · verified_at
-                 location (geohash, ~1km precision — never exact)
+                 approx_lat/approx_lng (2 decimals, ~1km — never exact;
+                 written only via set_my_location) · location_updated_at
                  gender [woman|man|nonbinary] · seeking (gender[], Date mode)
                  play_games [singles|doubles|mixed_doubles] · play_pref
                  [women|men|everyone] · friends_pref [women|men|everyone]
@@ -83,9 +84,13 @@ cities           id · name · status [waitlist|active] · launch_at
 
 Rules that matter:
 
-- **Location is fuzzy by design.** Store a coarse geohash, display distance
-  rounded to 0.1 mi. Exact coordinates never exist in the system — you can't
-  leak what you don't store.
+- **Location is fuzzy by design.** The device rounds its position to about
+  1 km and the server stores it to 2 decimals, set only through
+  `set_my_location`, which lets a member move to a different grid square at
+  most once every 6 hours. Distance shown to others is whole miles between the
+  centres of ~2.5-mile grid squares ("Nearby" for the same square), never
+  between stored points. Exact coordinates never exist in the system — you
+  can't leak what you don't store.
 - **A swipe is append-only; a match is derived.** Mutual `like` (or one `ace`)
   in a compatible mode creates the match row. This keeps history auditable.
 - **Blocks are bidirectional and absolute** — filtered at query level in

@@ -715,10 +715,14 @@ Checking the new "What other members see" paragraph against the code turned up
 two things that predate this update. The policy now describes them honestly;
 neither is fixed yet.
 
+> **Both FIXED on 2026-11-12** by migration `20260806000030_privacy_gaps.sql`
+> — see "Update — 2026-11-12 (both privacy gaps closed)" at the end of this
+> file. The table below is kept as it was written, for the history.
+
 | Gap | What it means | Fix |
 |---|---|---|
-| **Profile settings are readable beyond the card.** The column grants on `profiles` (migration 18) let any signed-in member read every non-blocked profile's cities, modes, who they are looking for (`seeking`), age and distance range and last-active time through the API, though the app never displays them. | Someone with an account and a script can list who is in Date mode and what they are looking for, city by city. | Narrow the grants to the card's columns and serve everything else through the existing security-definer RPCs, the way migration 18 already did for birthdate and coordinates. |
-| **Distance can be used to locate someone.** The deck returns distance to 0.1 mile, and a member can write any coordinates to their own profile, so three readings from chosen points trilaterate another member's rounded (~1 km) home position. | A stalking vector in a dating app. | Coarsen the distance shown (whole miles or bands) **and** stop members moving their own stored position freely (rate-limit or only accept device-reported updates). Either alone can still be probed. |
+| **FIXED (migration 20260806000030).** **Profile settings are readable beyond the card.** The column grants on `profiles` (migration 18) let any signed-in member read every non-blocked profile's cities, modes, who they are looking for (`seeking`), age and distance range and last-active time through the API, though the app never displays them. | Someone with an account and a script can list who is in Date mode and what they are looking for, city by city. | Narrow the grants to the card's columns and serve everything else through the existing security-definer RPCs, the way migration 18 already did for birthdate and coordinates. |
+| **FIXED (migration 20260806000030).** **Distance can be used to locate someone.** The deck returns distance to 0.1 mile, and a member can write any coordinates to their own profile, so three readings from chosen points trilaterate another member's rounded (~1 km) home position. | A stalking vector in a dating app. | Coarsen the distance shown (whole miles or bands) **and** stop members moving their own stored position freely (rate-limit or only accept device-reported updates). Either alone can still be probed. |
 
 ### Still not verified
 
@@ -797,3 +801,88 @@ neither is fixed yet.
       promise before launch, or change the wording.
 - [ ] Refile the Apple App Privacy and Play Data safety forms.
 - [ ] After sign-off: set effective dates, remove the "Founder note" boxes.
+
+## Update — 2026-11-12 (both privacy gaps closed)
+
+Migration `20260806000030_privacy_gaps.sql` closes the two gaps logged on
+2026-11-11 under "Two older privacy gaps found while writing the policy".
+
+- **Reads narrowed.** Members can now read only `id` and `first_name` of
+  other profiles directly (the admin desk joins first names onto reports and
+  photos). Cities, modes, `seeking`, age and distance range, last-active time
+  and the rest are no longer readable by other members; everything a member is
+  shown about someone else comes through the deck, `get_profile_cards` and the
+  tournament lookups. Your own row still comes from `get_my_profile`.
+- **Cards tightened.** `get_profile_cards` can no longer be called signed out
+  (it never revoked the default grant, so the public anon key and an id were
+  enough), no longer returns a suspended member's card, and stops sending
+  city, `last_active_at` and `verified_at`. It returns `verified` as a yes/no
+  instead, and gains `partner_gender` (only for teams) and `play_games`, which
+  cards show — the app used to read `partner_gender` straight from the table.
+- **Member write guard.** The update policy only checked that the row was
+  yours, so a member could set any column on it — including **clearing their
+  own suspension**, marking themselves verified, or backdating `created_at`.
+  A trigger now refuses member changes to `verified_at`, `phone_verified_at`,
+  `suspended_at`, `suspended_reason`, `created_at`, the stored position and
+  `id` ("That part of your profile can't be changed from the app."); on a new
+  profile those are reset instead, and the position starts empty.
+  `last_active_at` is always set to the current time, whatever the app sends.
+- **Position only through `set_my_location`.** The app sends the ~1 km
+  rounded position to `set_my_location(lat, lng)`, which checks it is a real
+  place, stores it to 2 decimals, and allows moving to a different grid
+  square **at most once every 6 hours**. Inside that window the new position
+  is ignored (not an error — the old one stands and the app carries on).
+  Moving around inside your own square is always allowed.
+- **Grid-square distance in whole miles.** Distance is worked out between the
+  centres of squares about 2½ miles on a side, never between stored points,
+  and returned in whole miles; two members in the same square read as 1 mile,
+  shown as "Nearby". The radius filter, the "close by" score and the metro test
+  use the same squares. The app and the prototype now show "Nearby" or "About
+  N miles away" (short form "nearby" / "~N mi") instead of tenths of a mile.
+- **Deck capped** at 100 cards per call.
+- **Privacy Policy** updated to match: whole-mile distance between squares,
+  the six-hour move limit, and settings described as used for suggestions but
+  not available to other members.
+
+### Found and fixed in the independent review
+
+Three reviewers (security, correctness, tests) went over the change, and a
+separate skeptic tried to refute each finding. Three were confirmed and fixed
+in the same migration:
+
+- **The deck could still reveal settings.** It only shows people whose
+  preferences fit you, so a member who rewrote their own birthdate and gender
+  over and over could read another member's exact age range and "looking for"
+  off it. **Your birthdate is now fixed once your profile exists** (email
+  support to correct it), and **gender can change freely in the first hour,
+  then once every 30 days**. The app shows the database's own message when
+  either is refused.
+- **The deck's score leaked.** Subtracting the visible parts revealed who had
+  already aced you and who was active this week, and ties were broken by
+  last-active time. The score is no longer returned; ties are broken by an
+  order fixed per viewer.
+- **Small radii were at the mercy of square edges.** A radius under 4 miles now
+  always covers your own square and the eight around it.
+
+The tests also turned up an older bug: **the app's signup save could not have
+worked on a real database since migration 18** (August). It used PostgREST's
+upsert, and `INSERT … ON CONFLICT DO UPDATE` needs read access to every column
+it copies — `birthdate` had been unreadable since then. The app now inserts and,
+if the profile already exists, updates. The database suite checks both that
+path and that the upsert form is refused.
+
+### Follow-ups logged, not fixed
+
+- `is_blocked()` and `is_suspended()` can still be called by any signed-in
+  member with any two ids, which tells them whether two members have blocked
+  each other or whether a member is suspended. Not fixed in this migration.
+- Switching a doubles partner on and off (and their gender) can still hint at
+  another member's Play/Friends partner preference ("women", "men",
+  "everyone") through the deck. Lower stakes than dating preferences; not rate
+  limited yet.
+
+### Still not verified
+
+- Migration 30 has not been run on a real Supabase project, and the app has
+  not been run on a device against it; it is covered by the local test suites
+  only.

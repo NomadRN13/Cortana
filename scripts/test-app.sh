@@ -32,6 +32,10 @@ echo
 node photos.test.js
 echo
 node bracket.test.js
+echo
+node distance.test.js
+echo
+node location.test.js
 
 echo
 echo "✅ App suites passed."

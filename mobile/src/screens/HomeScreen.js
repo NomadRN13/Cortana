@@ -7,6 +7,7 @@ import { colors, type, gradientFor, initials } from '../theme';
 import { Wordmark, Avatar, Btn, Tag } from '../components/ui';
 import { SwipeableCard, Confetti, useReduceMotion } from '../components/motion';
 import { useApp } from '../state';
+import { distanceLabel, distanceShort } from '../lib/distance';
 
 const GAME_LABELS = { singles: 'Singles', doubles: 'Doubles', mixed_doubles: 'Mixed doubles' };
 const GENDER_LABELS = { woman: 'Woman', man: 'Man', nonbinary: 'Nonbinary' };
@@ -74,7 +75,7 @@ export default function HomeScreen({ navigation }) {
 
   const onMore = () => {
     if (!p) return;
-    Alert.alert(p.name, `${p.sports.join(' & ')}${p.dist != null ? ` · ${p.dist.toFixed(1)} mi` : ''}`, [
+    Alert.alert(p.name, `${p.sports.join(' & ')}${distanceShort(p.dist) ? ` · ${distanceShort(p.dist)}` : ''}`, [
       {
         text: `Report ${p.name}`,
         onPress: () => {
@@ -315,7 +316,7 @@ export default function HomeScreen({ navigation }) {
                   </View>
                   {!!genderText(sheetP) && <InfoRow icon="person-outline" text={genderText(sheetP)} />}
                   <InfoRow icon="tennisball-outline" text={`${sheetP.sports.join(' & ')} · ${sheetP.rating ? `${sheetP.rating} Skill Level` : sheetP.skill}`} />
-                  {sheetP.dist != null && <InfoRow icon="location-outline" text={`${sheetP.dist.toFixed(1)} miles away`} />}
+                  {!!distanceLabel(sheetP.dist) && <InfoRow icon="location-outline" text={distanceLabel(sheetP.dist)} />}
                   {!!sheetP.avail && <InfoRow icon="time-outline" text={sheetP.avail} />}
                   <InfoRow
                     icon="stats-chart"
@@ -460,7 +461,7 @@ function DeckCard({ p, app, onLike, onMore }) {
         </View>
         {!!genderText(p) && <InfoRow icon="person-outline" text={genderText(p)} />}
         <InfoRow icon="tennisball-outline" text={p.sports.join(' & ')} />
-        {p.dist != null && <InfoRow icon="location-outline" text={`${p.dist.toFixed(1)} miles away`} />}
+        {!!distanceLabel(p.dist) && <InfoRow icon="location-outline" text={distanceLabel(p.dist)} />}
         <InfoRow icon="stats-chart" text={p.rating ? `${p.rating} Skill Level` : p.skill} />
         <Text style={[type.hint, { marginTop: 3 }]}>{p.bio}</Text>
       </View>

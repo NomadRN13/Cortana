@@ -179,13 +179,17 @@ const out = (n) => require('path').join(OUT, n);
     await page.dispatchEvent('#age-max', 'change');
     await page.click('#settings-back');
   });
-  await step('radius filter hides Maya (1.2mi), shows Priya (0.8mi)', async () => {
+  await step('radius filter hides Maya (2mi), shows Priya (1mi, nearby)', async () => {
     await page.click('#menu-btn');
     await page.waitForSelector('#screen-settings.active', { timeout: 2000 });
     await page.$eval('#radius', (el) => { el.value = 1; el.dispatchEvent(new Event('input')); });
     await page.click('#settings-back');
     await page.waitForSelector('#deck-card', { timeout: 2000 });
     if (!(await cardName()).includes('Priya')) throw new Error('expected Priya, got ' + await cardName());
+    // same grid square reads as "Nearby", never a decimal distance
+    const line = await page.textContent('#deck-card');
+    if (!line.includes('Nearby')) throw new Error('Priya card should say Nearby');
+    if (/\d\.\d+ mi/.test(line)) throw new Error('card shows a decimal distance: ' + line);
   });
   await step('widening radius brings Maya back (non-destructive)', async () => {
     await page.click('#menu-btn');
@@ -217,7 +221,10 @@ const out = (n) => require('path').join(OUT, n);
     await page.waitForSelector('#psheet-overlay.open', { timeout: 2000 });
     const name = await page.textContent('#psheet-name');
     if (!name.includes('Maya')) throw new Error('sheet shows wrong profile: ' + name);
-    if (!(await page.textContent('#psheet-rows')).includes('miles away')) throw new Error('sheet missing detail rows');
+    const rows = await page.textContent('#psheet-rows');
+    // Maya is 2 miles away: whole miles, "About N miles away"
+    if (!/About \d+ miles away|Nearby/.test(rows)) throw new Error('sheet missing detail rows');
+    if (!rows.includes('About 2 miles away')) throw new Error('expected whole-mile distance for Maya: ' + rows);
     await page.click('#psheet-close');
     await page.waitForFunction(() => !document.querySelector('#psheet-overlay.open'), { timeout: 2000 });
   });

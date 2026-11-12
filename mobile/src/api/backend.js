@@ -92,48 +92,62 @@ export async function getMyProfile() {
   return data || null;
 }
 
-// Match cards for other members: an age instead of a birthdate, and no
-// coordinates at all — distance comes from the deck, which works it out
-// without handing over anyone's position.
+// Match cards for other members, entirely from get_profile_cards: an age
+// instead of a birthdate, a verified flag instead of a timestamp, and no
+// coordinates, city or last-active time at all — distance comes from the deck,
+// which works it out without handing over anyone's position. Members can read
+// only id and first_name of other profiles directly (migration
+// 20260806000030), so everything a card shows, partner_gender and play_games
+// included, comes back from the function. Suspended members' cards are left out.
 export async function getProfilesByIds(ids) {
   if (!ids.length) return [];
   const { data, error } = await supabase.rpc('get_profile_cards', { p_ids: ids });
   if (error) throw error;
-  const cards = data || [];
-  // The card carries the account holder's gender but not their doubles
-  // partner's, and a team card that names one person's gender reads as if it
-  // described both. partner_gender is one of the columns members may read
-  // directly (migration 20260806000018), so fetch it for the teams. If this
-  // fails the cards still work — a team just shows no gender line.
-  const teamIds = cards.filter((c) => c.is_team).map((c) => c.id);
-  if (teamIds.length) {
-    try {
-      const { data: rows } = await supabase.from('profiles').select('id, partner_gender').in('id', teamIds);
-      const byId = {};
-      (rows || []).forEach((r) => { byId[r.id] = r.partner_gender; });
-      cards.forEach((c) => { if (c.is_team) c.partner_gender = byId[c.id] || null; });
-    } catch (e) { /* leave partner_gender unset */ }
-  }
-  return cards;
+  return data || [];
 }
 
 // Partial profile update (prefs, bio, activity ping) — only the given fields.
+// Position, verification, suspension and created_at can't be written this way:
+// the database refuses them from a member's session (migration 20260806000030).
+// Position goes through setMyLocation below.
 export async function updateMyProfile(fields) {
   const { data: { user } } = await supabase.auth.getUser();
   const { error } = await supabase.from('profiles').update(fields).eq('id', user.id);
   if (error) throw error;
 }
 
-export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, approxLng, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly, city, extraCities, gender, seeking, playGames, playPref, friendsPref, isTeam, partnerName, partnerBirthdate, partnerGender }) {
+// Coarse position, the only way to set it. The server rounds to 2 decimals
+// (about 1 km), refuses something that isn't a place, and lets you move to a
+// different ~2.5-mile grid square at most once every 6 hours — sooner than
+// that it answers { accepted: false, retry_after } and the old position stands.
+// That isn't an error; the app carries on and tries again next launch. It
+// raises (P0002) if the profile row doesn't exist yet, so call it after signup.
+//   → { accepted: boolean, moved: boolean, retry_after?: timestamp }
+export async function setMyLocation(lat, lng) {
+  const { data, error } = await supabase.rpc('set_my_location', {
+    // Rounded here too, so exact coordinates never leave the phone.
+    p_lat: Math.round(lat * 100) / 100,
+    p_lng: Math.round(lng * 100) / 100,
+  });
+  if (error) throw error;
+  return data || null;
+}
+
+// A new profile starts with no position (the database clears one if sent);
+// the app sets it afterwards with setMyLocation.
+//
+// Insert, and if the profile is already there (signing up again on a second
+// phone, or retrying after a dropped connection), update it. Not PostgREST's
+// upsert: INSERT ... ON CONFLICT DO UPDATE needs read access to every column it
+// copies over, and members can only read id and first_name of the profiles
+// table (migration 20260806000030; birthdate was already hidden since 18), so
+// the database refuses it. Plain insert and update need no read access.
+export async function upsertMyProfile({ firstName, birthdate, bio, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly, city, extraCities, gender, seeking, playGames, playPref, friendsPref, isTeam, partnerName, partnerBirthdate, partnerGender }) {
   const { data: { user } } = await supabase.auth.getUser();
-  const { error } = await supabase.from('profiles').upsert({
-    id: user.id,
+  const fields = {
     first_name: firstName,
     birthdate,
     bio: bio ?? '',
-    // Privacy: round before sending — exact coordinates never leave the phone.
-    approx_lat: approxLat != null ? Math.round(approxLat * 100) / 100 : null,
-    approx_lng: approxLng != null ? Math.round(approxLng * 100) / 100 : null,
     availability_note: availabilityNote ?? '',
     modes,
     radius_mi: radiusMi,
@@ -155,8 +169,13 @@ export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, ap
     partner_birthdate: isTeam ? (partnerBirthdate || null) : null,
     partner_gender: isTeam ? (partnerGender || null) : null,
     last_active_at: new Date().toISOString(),
-  });
-  if (error) throw error;
+  };
+  const { error } = await supabase.from('profiles').insert({ id: user.id, ...fields });
+  if (!error) return;
+  // 23505: unique_violation — the row exists, so save over it instead.
+  if (error.code !== '23505') throw error;
+  const { error: updErr } = await supabase.from('profiles').update(fields).eq('id', user.id);
+  if (updErr) throw updErr;
 }
 
 export async function setMySports(sports) {
@@ -290,9 +309,12 @@ export async function makePhotoPrimary(position) {
 export async function fetchDeck(mode, limit = 20) {
   const { data, error } = await supabase.rpc('get_discovery_deck', { p_mode: mode, p_limit: limit });
   if (error) throw error;
-  // [{ user_id, first_name, age, distance_mi, sports, verified, availability_note, bio, is_new, score,
-  //    is_team, partner_name, partner_age, gender, partner_gender }]
-  // distance_mi is null for someone in another metro (a second city of yours), not a huge number.
+  // [{ user_id, first_name, age, distance_mi, sports, verified, availability_note, bio, is_new,
+  //    is_team, partner_name, partner_age, gender, partner_gender, play_games }]
+  // Already in ranked order; the score itself stays on the server.
+  // distance_mi is whole miles between ~2.5-mile grid squares (1 = same square,
+  // i.e. nearby), and null for someone in another metro (a second city of
+  // yours) or over 100 miles away, not a huge number. At most 100 rows.
   return data;
 }
 

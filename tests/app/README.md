@@ -36,6 +36,11 @@ regression in `state.js` fails here rather than on someone's phone.
   unconfigured SMS provider is never blamed on the tester's number.
 - `photos.test.js` — the first photo either reaches the server or the member is
   told, and their own profile never shows a file they alone can see.
+- `location.test.js` — position goes through `set_my_location`, never the
+  profile row; a refused or failed move is silent and never fails a signup.
+  (`nativeImpl.coarseLocation` in `stubs/native.js` sets the phone's location.)
+- `distance.test.js` — distances read in whole miles, 1 as "nearby", and null
+  shows nothing (`mobile/src/lib/distance.js`).
 
 The backend stub is generated at build time from whatever `state.js` actually
 calls, so adding an `api.something()` doesn't break the build.

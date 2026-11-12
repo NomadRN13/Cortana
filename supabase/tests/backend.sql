@@ -927,7 +927,15 @@ set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000002'; -- Diego
 do $$
 declare v text;
 begin
-  foreach v in array array['birthdate', 'partner_birthdate', 'approx_lat', 'approx_lng'] loop
+  -- Since 20260806000030 that is every column but id and first_name: settings
+  -- such as who someone is looking for were readable the same way.
+  foreach v in array array['birthdate', 'partner_birthdate', 'approx_lat', 'approx_lng',
+                           'city', 'extra_cities', 'modes', 'seeking', 'radius_mi', 'age_min',
+                           'age_max', 'same_sports_only', 'play_pref', 'friends_pref',
+                           'play_games', 'last_active_at', 'created_at', 'verified_at',
+                           'phone_verified_at', 'gender', 'bio', 'availability_note',
+                           'is_team', 'partner_name', 'partner_gender',
+                           'location_updated_at', 'gender_updated_at'] loop
     begin
       execute format('select %I::text from profiles where id = $1', v)
         using '00000000-0000-4000-8000-000000000003'::uuid;
@@ -943,25 +951,26 @@ begin
   end;
 end $$;
 
--- Every column of profiles must be deliberately classified: readable by
--- members, or withheld. A new column that is in neither list fails here rather
--- than silently becoming readable (a leak) or silently not (a broken screen).
+-- Exactly two columns of profiles are readable column by column: id (a row
+-- filter needs it) and first_name (the desk joins it onto reports and photos).
+-- Everything else a member sees about someone comes from a function that
+-- decides what to hand over. A new column is withheld by default; this fails
+-- if one is ever granted, rather than letting it quietly become readable.
 do $$
-declare unclassified text;
+declare readable text;
 begin
-  select string_agg(c.column_name, ', ') into unclassified
+  select string_agg(c.column_name, ', ' order by c.column_name) into readable
   from information_schema.columns c
   where c.table_schema = 'public' and c.table_name = 'profiles'
-    and c.column_name not in (
-      'birthdate', 'partner_birthdate', 'approx_lat', 'approx_lng',
-      -- Whether an account is suspended, and why, is between the member and
-      -- the desk. A suspended profile is hidden from other members anyway;
-      -- the member's own row comes back whole through get_my_profile().
-      'suspended_at', 'suspended_reason')
-    and not has_column_privilege('authenticated', 'public.profiles', c.column_name, 'select');
-  assert unclassified is null,
-    format('profiles column(s) neither readable nor deliberately withheld: %s '
-           '— classify them in migration 20260806000018', unclassified);
+    and has_column_privilege('authenticated', 'public.profiles', c.column_name, 'select');
+  assert readable = 'first_name, id',
+    format('profiles columns readable by members should be just id and first_name, got: %s '
+           '— see migration 20260806000030', readable);
+  assert not exists (
+    select 1 from information_schema.columns c
+    where c.table_schema = 'public' and c.table_name = 'profiles'
+      and has_column_privilege('anon', 'public.profiles', c.column_name, 'select')
+  ), 'a signed-out visitor can read a profiles column';
 end $$;
 
 -- What the app uses instead. Your own profile still comes back whole...
@@ -1675,17 +1684,30 @@ begin
   exception when raise_exception then null;
   end;
 
-  -- a suspended player can't report their own match
+end $$;
+-- a suspended player can't report their own match (suspended from outside the
+-- member's session: since migration 30 a member can't touch suspended_at)
+reset role;
+update profiles set suspended_at = now()
+ where id = (select player_a from tournament_matches
+              where tournament_id = '00000000-0000-4000-8000-0000000005aa' and round = 1 and slot = 1);
+set role authenticated;
+do $$
+declare m2 record;
+begin
+  select * into m2 from tournament_matches
+   where tournament_id = '00000000-0000-4000-8000-0000000005aa' and round = 1 and slot = 1;
   perform set_config('request.jwt.claim.sub', m2.player_a::text, false);
-  update profiles set suspended_at = now() where id = m2.player_a;
   begin
     perform report_match_result(m2.id, m2.player_a, '');
     assert false, 'a suspended player recorded a result';
   exception when insufficient_privilege then null;
   end;
-  update profiles set suspended_at = null where id = m2.player_a;
 end $$;
 reset role;
+update profiles set suspended_at = null
+ where id = (select player_a from tournament_matches
+              where tournament_id = '00000000-0000-4000-8000-0000000005aa' and round = 1 and slot = 1);
 -- m1's winner deletes their account.
 do $$
 declare m1 record;
@@ -1752,7 +1774,7 @@ set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000002'; -- Diego, in
 do $$
 declare c int;
 begin
-  assert (select city from profiles where id = auth.uid()) <> 'seattle',
+  assert (get_my_profile() ->> 'city') <> 'seattle',
          'test setup: this member should not be in Seattle';
   select count(*) into c from events where city = 'seattle';
   assert c >= 1, 'a member cannot see meetups outside their own city';
@@ -2001,5 +2023,355 @@ begin
     assert c = 0, format('account deletion left %s row(s) in %s.%s', c, r.table_name, r.column_name);
   end loop;
 end $$;
+
+-- ---- 9m. The two privacy gaps (migration 20260806000030) ----
+-- Gap 1: other members' settings were readable column by column (9g now checks
+-- that only id and first_name are), and a member could write any column of
+-- their own row — including lifting their own suspension. Gap 2: the deck gave
+-- distance to a tenth of a mile and a member could put themselves anywhere, as
+-- often as they liked, so three readings found another member's home square.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-4000-8000-000000000601', 'gap-prober@example.com'),
+  ('00000000-0000-4000-8000-000000000602', 'gap-target@example.com'),
+  ('00000000-0000-4000-8000-000000000603', 'gap-suspended@example.com'),
+  ('00000000-0000-4000-8000-000000000604', 'gap-newcomer@example.com');
+insert into profiles (id, first_name, birthdate, city, modes, gender, seeking, age_min, age_max, radius_mi,
+                      approx_lat, approx_lng, is_team, partner_name, partner_gender, partner_birthdate, play_games)
+values
+  ('00000000-0000-4000-8000-000000000601', 'Prober', '1990-01-01', 'phoenix', '{date}', 'man', '{woman}', 18, 99, 50,
+   33.53, -112.07, false, '', null, null, '{singles,doubles,mixed_doubles}'),
+  ('00000000-0000-4000-8000-000000000602', 'Target', '1991-01-01', 'phoenix', '{date}', 'woman', '{man}', 18, 99, 50,
+   33.41, -112.09, false, '', null, null, '{singles}'),
+  ('00000000-0000-4000-8000-000000000603', 'Paused', '1992-01-01', 'phoenix', '{play}', 'woman', '{}', 18, 99, 50,
+   33.45, -112.07, true, 'Pat', 'woman', '1993-01-01', '{doubles}');
+update profiles set suspended_at = now(), suspended_reason = 'test'
+ where id = '00000000-0000-4000-8000-000000000603';
+
+-- Writing: a member's own session can't touch what the desk, the phone check
+-- or set_my_location own.
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000603';
+do $$
+declare col text; v text; la timestamptz;
+begin
+  foreach col in array array['suspended_at = null', 'suspended_reason = null', 'verified_at = now()',
+                             'phone_verified_at = now()', 'created_at = now() - interval ''1 year''',
+                             'approx_lat = 40.00', 'approx_lng = -80.00',
+                             'location_updated_at = now()', 'gender_updated_at = now()'] loop
+    begin
+      execute format('update profiles set %s where id = auth.uid()', col);
+      assert false, format('a member could set %s on their own profile', col);
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+  -- the ordinary parts of a profile still save
+  update profiles set bio = 'still here' where id = auth.uid();
+  -- and "last active" means now, whatever the app sends
+  update profiles set last_active_at = '2099-01-01' where id = auth.uid();
+end $$;
+reset role;
+do $$
+declare r record;
+begin
+  select bio, suspended_at, last_active_at into r from profiles where id = '00000000-0000-4000-8000-000000000603';
+  assert r.bio = 'still here', 'an ordinary profile edit did not save';
+  assert r.suspended_at is not null, 'a suspended member lifted their own suspension';
+  assert r.last_active_at <= now() + interval '1 minute', format('last_active_at accepted a future date: %s', r.last_active_at);
+end $$;
+
+-- Saving a profile the way the app does it: insert, and if the row is already
+-- there, update. (An INSERT ... ON CONFLICT DO UPDATE — PostgREST's upsert —
+-- needs read access to every column it copies from EXCLUDED, so with only id
+-- and first_name readable it is refused; it already was for birthdate since
+-- migration 18, which is why the app no longer uses it.) A new row can't
+-- arrive verified or with a position, and last_active_at means now.
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000604';
+do $$
+begin
+  insert into profiles (id, first_name, birthdate, city, approx_lat, approx_lng, verified_at, last_active_at)
+  values (auth.uid(), 'Newcomer', '1994-05-05', 'phoenix', 33.45, -112.07, now(), '2099-01-01');
+  begin
+    insert into profiles (id, first_name, birthdate, city)
+    values (auth.uid(), 'Newcomer Two', '1994-05-05', 'phoenix');
+    assert false, 'a second insert of the same profile should hit the unique key';
+  exception when unique_violation then
+    update profiles set first_name = 'Newcomer Two', birthdate = '1994-05-05', city = 'phoenix',
+                        last_active_at = now()
+     where id = auth.uid();
+  end;
+  -- and the upsert form really is refused, so nobody reintroduces it
+  begin
+    insert into profiles (id, first_name, birthdate) values (auth.uid(), 'X', '1994-05-05')
+    on conflict (id) do update set first_name = excluded.first_name, birthdate = excluded.birthdate;
+    assert false, 'an upsert copying unreadable columns from EXCLUDED was allowed';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+do $$
+declare r record;
+begin
+  select * into r from profiles where id = '00000000-0000-4000-8000-000000000604';
+  assert r.first_name = 'Newcomer Two', 'the update after a duplicate insert did not save';
+  assert r.verified_at is null, 'a new profile arrived already verified';
+  assert r.approx_lat is null and r.approx_lng is null, 'a new profile set its own position';
+  assert r.last_active_at <= now() + interval '1 minute', 'a new profile set a future last_active_at';
+end $$;
+
+-- Moving: only through set_my_location — a real place, and a new square at
+-- most once every six hours.
+set role anon;
+do $$
+begin
+  begin
+    perform set_my_location(33.45, -112.07);
+    assert false, 'a signed-out visitor called set_my_location';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000604';
+do $$
+declare res jsonb; r record;
+begin
+  foreach res in array array['[95, 0]', '[0, 200]', '[null, 1]']::jsonb[] loop
+    begin
+      perform set_my_location((res ->> 0)::numeric, (res ->> 1)::numeric);
+      assert false, format('set_my_location accepted %s', res);
+    exception when invalid_parameter_value then null;
+    end;
+  end loop;
+
+  res := set_my_location(33.454, -112.071);                    -- first position: always fine
+  assert (res ->> 'accepted')::boolean and (res ->> 'moved')::boolean, format('first position refused: %s', res);
+  assert (get_my_profile() ->> 'approx_lat')::numeric = 33.45, 'position not rounded to 2 decimals';
+
+  res := set_my_location(33.47, -112.06);                       -- same square: fine, not a move
+  assert (res ->> 'accepted')::boolean and not (res ->> 'moved')::boolean, format('a move inside the square was refused: %s', res);
+  assert (get_my_profile() ->> 'approx_lat')::numeric = 33.47, 'a move inside the square was not stored';
+
+  res := set_my_location(33.70, -112.07);                       -- a new square, straight away: no
+  assert not (res ->> 'accepted')::boolean, format('a second square within six hours was accepted: %s', res);
+  assert res ? 'retry_after', 'a refused move should say when it can happen';
+  assert (get_my_profile() ->> 'approx_lat')::numeric = 33.47, 'a refused move still changed the position';
+end $$;
+reset role;
+update profiles set location_updated_at = now() - interval '7 hours'
+ where id = '00000000-0000-4000-8000-000000000604';
+set role authenticated;
+do $$
+declare res jsonb;
+begin
+  res := set_my_location(33.70, -112.07);
+  assert (res ->> 'accepted')::boolean and (res ->> 'moved')::boolean, format('a move after six hours was refused: %s', res);
+  assert (get_my_profile() ->> 'approx_lat')::numeric = 33.70, 'the accepted move was not stored';
+end $$;
+reset role;
+
+-- Cards: signed in only; no suspended members; what a card shows and no more.
+set role anon;
+do $$
+begin
+  begin
+    perform get_profile_cards(array['00000000-0000-4000-8000-000000000602']::uuid[]);
+    assert false, 'a signed-out visitor got a profile card';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform * from get_discovery_deck('date', 20);
+    assert false, 'a signed-out visitor called the deck';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000601';
+do $$
+declare cards jsonb; card jsonb; k text;
+begin
+  cards := get_profile_cards(array['00000000-0000-4000-8000-000000000602',
+                                   '00000000-0000-4000-8000-000000000603']::uuid[]);
+  assert jsonb_array_length(cards) = 1, format('expected only the unsuspended card, got %s', cards);
+  card := cards -> 0;
+  assert card ->> 'id' = '00000000-0000-4000-8000-000000000602', 'wrong card came back';
+  assert (card -> 'verified') = 'false'::jsonb, format('card should carry verified as a yes/no: %s', card -> 'verified');
+  assert card -> 'play_games' = '["singles"]'::jsonb, format('card is missing play_games: %s', card -> 'play_games');
+  assert card ? 'partner_gender', 'card is missing partner_gender';
+  foreach k in array array['city', 'last_active_at', 'verified_at', 'seeking', 'modes',
+                           'age_min', 'age_max', 'radius_mi', 'extra_cities', 'birthdate',
+                           'approx_lat', 'approx_lng', 'suspended_at'] loop
+    assert not (card ? k), format('profile card still carries %s', k);
+  end loop;
+end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000603';
+do $$
+declare cards jsonb;
+begin
+  cards := get_profile_cards(array['00000000-0000-4000-8000-000000000603']::uuid[]);
+  assert jsonb_array_length(cards) = 1, 'a suspended member cannot get their own card';
+  assert cards -> 0 ->> 'partner_gender' = 'woman', 'a team card lost the partner''s gender';
+end $$;
+
+-- Distance: whole miles between grid squares. Moving around inside your own
+-- square, or the other member moving inside theirs, changes nothing — so no
+-- number of readings can place someone more precisely than their square.
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000601';
+do $$
+declare d1 numeric; d2 numeric; d3 numeric;
+begin
+  select distance_mi into d1 from get_discovery_deck('date', 100)
+   where user_id = '00000000-0000-4000-8000-000000000602';
+  assert d1 is not null, 'test setup: the target should be in the prober''s deck with a distance';
+  assert d1 = round(d1), format('distance is not in whole miles: %s', d1);
+  -- 33.53 and 33.41 sit in squares centred 33.54 and 33.42: 0.12° of latitude
+  assert d1 = 8, format('expected 8 miles between the two squares, got %s', d1);
+end $$;
+reset role;
+-- the prober moves around inside their own square (as many times as they like)
+update profiles set approx_lat = 33.55, approx_lng = -112.09 where id = '00000000-0000-4000-8000-000000000601';
+set role authenticated;
+do $$
+declare d numeric;
+begin
+  select distance_mi into d from get_discovery_deck('date', 100)
+   where user_id = '00000000-0000-4000-8000-000000000602';
+  assert d = 8, format('moving inside your own square changed the distance shown: %s', d);
+end $$;
+reset role;
+-- the target moves inside theirs
+update profiles set approx_lat = 33.43, approx_lng = -112.06 where id = '00000000-0000-4000-8000-000000000602';
+set role authenticated;
+do $$
+declare d numeric; n int;
+begin
+  select distance_mi into d from get_discovery_deck('date', 100)
+   where user_id = '00000000-0000-4000-8000-000000000602';
+  assert d = 8, format('the target moving inside their square changed the distance shown: %s', d);
+
+  -- the radius filter sees squares too
+  update profiles set radius_mi = 7 where id = auth.uid();
+  assert not exists (select 1 from get_discovery_deck('date', 100)
+                      where user_id = '00000000-0000-4000-8000-000000000602'),
+    'an 8-mile member showed up inside a 7-mile radius';
+  update profiles set radius_mi = 8 where id = auth.uid();
+  assert exists (select 1 from get_discovery_deck('date', 100)
+                  where user_id = '00000000-0000-4000-8000-000000000602'),
+    'an 8-mile member was missing from an 8-mile radius';
+  update profiles set radius_mi = 50 where id = auth.uid();
+
+  -- p_limit is capped, and a silly value still returns something sensible
+  select count(*) into n from get_discovery_deck('date', 0);
+  assert n = 1, format('a deck asked for 0 cards should return 1, got %s', n);
+end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000602';
+do $$
+declare d numeric;
+begin
+  update profiles set seeking = '{man,woman}' where id = auth.uid();
+  -- the same 8 miles, from the other end
+  select distance_mi into d from get_discovery_deck('date', 100)
+   where user_id = '00000000-0000-4000-8000-000000000601';
+  assert d = 8, format('distance should read the same from either end, got %s', d);
+end $$;
+reset role;
+do $$
+begin
+  -- 33.42 and 33.43 share the square centred 33.42, as do -112.08 and -112.06;
+  -- two members there are 0 miles apart, which the deck shows as 1
+  assert grid_lat(33.42) = grid_lat(33.43) and grid_lng(-112.08) = grid_lng(-112.06),
+    'test setup: these two points should share a square';
+  assert miles_between(grid_lat(33.42), grid_lng(-112.08), grid_lat(33.43), grid_lng(-112.06)) = 0,
+    'two points in one square should be 0 miles apart before the 1-mile floor';
+end $$;
+-- From the independent review: the deck only shows people whose preferences
+-- fit you, so a member who could rewrite their own birthdate and gender at will
+-- could read other members' age ranges and "looking for" off it. Birthdate is
+-- fixed once the profile exists; gender changes freely in the first hour, then
+-- once every 30 days.
+reset role;
+update profiles set created_at = now() - interval '2 days'
+ where id = '00000000-0000-4000-8000-000000000603';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000603';
+do $$
+begin
+  begin
+    update profiles set birthdate = '1980-01-01' where id = auth.uid();
+    assert false, 'a member changed their own birthdate';
+  exception when insufficient_privilege then null;
+  end;
+  -- re-saving the same birthdate (the app's save sends it) is not a change
+  update profiles set birthdate = '1992-01-01' where id = auth.uid();
+  update profiles set gender = 'man' where id = auth.uid();          -- first change: fine
+  begin
+    update profiles set gender = 'nonbinary' where id = auth.uid();  -- second, same month: no
+    assert false, 'a member changed gender twice in a month';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+update profiles set gender_updated_at = now() - interval '31 days'
+ where id = '00000000-0000-4000-8000-000000000603';
+set role authenticated;
+do $$
+begin
+  update profiles set gender = 'woman' where id = auth.uid();        -- a month on: fine again
+end $$;
+-- a brand-new profile can fix a mis-tap straight away, more than once
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000604';
+do $$
+begin
+  update profiles set gender = 'woman' where id = auth.uid();
+  update profiles set gender = 'man' where id = auth.uid();
+  update profiles set gender = 'nonbinary' where id = auth.uid();
+end $$;
+reset role;
+do $$
+begin
+  assert (select gender from profiles where id = '00000000-0000-4000-8000-000000000603') = 'woman',
+    'the gender change after 30 days did not save';
+  assert (select gender from profiles where id = '00000000-0000-4000-8000-000000000604') = 'nonbinary',
+    'a new profile could not correct its gender';
+  assert (select gender_updated_at from profiles where id = '00000000-0000-4000-8000-000000000604') is null,
+    'changes in the first hour should not start the 30-day clock';
+end $$;
+
+-- The deck ranks by its score but no longer hands it out: subtracting the
+-- visible parts from it said who had aced you and who was active this week.
+do $$
+begin
+  assert pg_get_function_result('public.get_discovery_deck(public.app_mode, int)'::regprocedure) not like '%score%',
+    'the deck still returns its matching score';
+  assert pg_get_function_result('public.get_discovery_deck(public.app_mode, int)'::regprocedure) not like '%last_active%',
+    'the deck returns a last-active time';
+end $$;
+
+-- A small radius still covers your own square and the eight around it: the
+-- target, moved into the square next to the prober's (about 3 miles between
+-- centres), is in a 1-mile radius; at 8 miles out they are not.
+update profiles set approx_lat = 33.50, approx_lng = -112.07 where id = '00000000-0000-4000-8000-000000000602';
+update profiles set radius_mi = 1 where id = '00000000-0000-4000-8000-000000000601';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000601';
+do $$
+declare d numeric;
+begin
+  select distance_mi into d from get_discovery_deck('date', 100)
+   where user_id = '00000000-0000-4000-8000-000000000602';
+  assert d = 3, format('a member in the next square should be in a 1-mile radius, 3 miles away; got %s', d);
+end $$;
+reset role;
+update profiles set approx_lat = 33.41, approx_lng = -112.09 where id = '00000000-0000-4000-8000-000000000602';
+set role authenticated;
+do $$
+begin
+  assert not exists (select 1 from get_discovery_deck('date', 100)
+                      where user_id = '00000000-0000-4000-8000-000000000602'),
+    'an 8-mile member showed up in a 1-mile radius';
+end $$;
+reset role;
+delete from auth.users where id in ('00000000-0000-4000-8000-000000000601', '00000000-0000-4000-8000-000000000602',
+                                    '00000000-0000-4000-8000-000000000603', '00000000-0000-4000-8000-000000000604');
 
 select 'ALL BACKEND TESTS PASSED' as result;

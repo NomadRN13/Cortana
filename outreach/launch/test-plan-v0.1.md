@@ -249,9 +249,11 @@ correct behavior, don't report it.*
 
 **You should see:** cards with real tester names, pass moves to the next
 card, and the bookmark fills in when you save someone. If you allowed
-location when the app asked, cards show a distance like "0.3 miles away" —
-testers in the same room should see small numbers (location is rounded to
-about a kilometer on purpose, so it won't be exact). If you denied
+location when the app asked, cards show a distance in whole miles —
+"Nearby" for someone in the same ~2½-mile map square, otherwise something
+like "About 4 miles away". Testers in the same room should see "Nearby"
+(distance is worked out between map squares on purpose, so it is never
+exact, and you'll never see a decimal like "0.3 miles"). If you denied
 location, cards simply show no distance line — that's expected, not a bug.
 
 - [ ] PASS  - [ ] FAIL
@@ -262,8 +264,9 @@ location, cards simply show no distance line — that's expected, not a bug.
 
 Both testers do this. You'll use the **Age range** filter. (If both of you
 allowed location, also try the **Distance** filter afterward: set it to
-**1 mile** — your partner in the same room should stay visible; a tester
-across town should disappear until you widen it again.)
+**1 mile** — your partner in the same room ("Nearby") should stay visible;
+a tester across town ("About N miles away", N of 2 or more) should
+disappear until you widen it again.)
 
 1. First, both of you: open **Settings** (menu icon, top left of Home) and
    set **Age range** to **18 – 99**. This guarantees you and your partner
@@ -605,8 +608,13 @@ Real, known, and accepted for round 1. Reporting them costs triage time:
    wait in a moderation queue and this round nobody else's photo displays.
    Your own photo on your own Profile tab is the only photo you'll see.
 4. **Distances are approximate on purpose.** Location is rounded to about a
-   kilometer before it ever leaves your phone, so "0.3 miles" between two
-   people in the same room is normal. If someone denied location, their
+   kilometer before it ever leaves your phone, and distance is shown in whole
+   miles between map squares about 2½ miles across — so two people in the
+   same room see "Nearby", and everyone else "About N miles away". (Rarely,
+   two people close together sit either side of a square's edge and see
+   "About 2 miles away" or so; that's expected.) Your position can also move
+   to a new area at most once every six hours, so if you've just travelled,
+   distances may still reflect where you were. If someone denied location, their
    cards show no distance and the Distance filter can't exclude them. Use the Age
    filter for Test 7.
 5. **The first liker gets no live pop-up.** Only the *second* liker sees
