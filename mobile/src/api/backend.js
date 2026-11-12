@@ -412,6 +412,22 @@ export async function listEvents(cities) {
   return data;
 }
 
+// Places to play for the given cities. The table is the source of truth — the
+// founder edits it from the moderation desk — so a new court shows up without
+// an app release. Ordered the way the desk filed them: free public parks first.
+export async function listCourts(cities) {
+  const list = (Array.isArray(cities) ? cities : [cities]).filter(Boolean);
+  if (!list.length) return [];
+  const { data, error } = await supabase
+    .from('courts')
+    .select('id, city, name, address, sport, setting, access, courts, lights, note, sort_order')
+    .in('city', list)
+    .order('sort_order', { ascending: true })
+    .order('name', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
 export async function rsvp(eventId, going) {
   const { data: { user } } = await supabase.auth.getUser();
   if (going) {

@@ -1,8 +1,15 @@
-// Places to play, city by city. Shown on the Events screen under the meetups
-// for each city a member has selected, and used to fill in a real local court
-// when someone suggests a court time in chat.
+// Places to play, city by city — the copy BUNDLED with the app.
 //
-// Mirrored in the COURTS_BY_CITY block of app/index.html — keep the two in step.
+// This is not the source of truth. The live list is the public.courts table
+// (supabase/migrations/20260806000026_courts.sql), which the founder edits from
+// the moderation desk at /admin → Places, so a new court reaches members
+// without an app release. This file is what the demo build shows, and what a
+// live build falls back to when it can't reach the database.
+//
+// It starts out identical to the rows that migration inserts, and to the
+// COURTS_BY_CITY block of app/index.html. When a venue is added on the desk,
+// nothing here has to change; refresh this file at the next release so the
+// offline fallback doesn't drift too far.
 //
 // Every entry here was checked against at least one source that says pickleball
 // is playable there today (researched November 2026). What the sources did NOT

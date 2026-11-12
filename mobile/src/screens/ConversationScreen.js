@@ -7,7 +7,6 @@ import { Avatar } from '../components/ui';
 import { TypingDots } from '../components/motion';
 import { useApp } from '../state';
 import { COURTS } from '../data/seed';
-import { suggestedCourt } from '../data/courts';
 import { DEFAULT_CITY } from '../data/cities';
 
 export default function ConversationScreen({ route, navigation }) {
@@ -63,14 +62,23 @@ export default function ConversationScreen({ route, navigation }) {
   };
 
   const suggestCourt = () => {
+    // A real public court in your home city, for one of the sports they play —
+    // the first of their sports that has such a court listed. The court and the
+    // sport on the card always agree.
+    const home = (app.user && app.user.city) || DEFAULT_CITY;
+    let court = null;
+    let sport = p.sports[0] || 'Tennis';
+    for (const s of p.sports) {
+      const c = app.suggestedCourt(home, s);
+      if (c) { court = c; sport = s; break; }
+    }
     app.sendMessage(id, {
       who: 'me',
       kind: 'court',
-      // A real court in their home city when we have a list for it.
-      court: suggestedCourt((app.user && app.user.city) || DEFAULT_CITY) || COURTS[0],
+      court: court || COURTS[0],
       day: 'Sat',
       time: '10:00 AM',
-      sport: p.sports[0] || 'Tennis',
+      sport,
       when: 'Just now',
     });
   };

@@ -57,6 +57,43 @@ const { launch, step, fail, watch, finish, serve, REPO } = require('./lib/harnes
     if (!(await page.textContent('#event-list')).includes('Test Rally Night')) throw new Error('new event missing');
   });
 
+  await step('places tab: lists venues, validates, adds one, refuses a duplicate', async () => {
+    await page.click('#tab-places');
+    await page.waitForSelector('#pane-places:not([hidden])', { timeout: 3000 });
+    const before = await page.locator('#place-list .item').count();
+    if (before < 1) throw new Error('no demo places listed');
+    const cities = await page.$$eval('#pl-city option', (o) => o.map((x) => x.value));
+    if (cities.indexOf('bakersfield') === -1) throw new Error('Bakersfield missing from the city list');
+    await page.click('#pl-create');
+    if (!(await page.textContent('#pl-msg')).includes('required')) throw new Error('missing-name validation absent');
+    await page.fill('#pl-name', 'Test Park Courts');
+    await page.click('#pl-create');
+    if (!/Choose the city/.test(await page.textContent('#pl-msg'))) throw new Error('a place could be filed without choosing a city');
+    await page.selectOption('#pl-city', 'bakersfield');
+    await page.fill('#pl-courts', '500');
+    await page.click('#pl-create');
+    if (!/from 1 to 99/.test(await page.textContent('#pl-msg'))) throw new Error('court-count validation absent');
+    await page.fill('#pl-courts', '');
+    await page.click('#pl-create');
+    if ((await page.locator('#place-list .item').count()) !== before + 1) throw new Error('place not added');
+    const row = await page.textContent('#place-list');
+    if (!row.includes('Test Park Courts')) throw new Error('new place missing');
+    const added = row.split('Test Park Courts')[1].split('Remove')[0];
+    if (/\d+ courts?\b|null|NaN|undefined/.test(added)) throw new Error('a blank court count was shown as something: ' + added);
+    await page.fill('#pl-name', 'test park courts');
+    await page.selectOption('#pl-city', 'bakersfield');
+    await page.click('#pl-create');
+    if (!/already listed/.test(await page.textContent('#pl-msg'))) throw new Error('duplicate was accepted');
+  });
+
+  await step('place remove works (confirm auto-accepted)', async () => {
+    const before = await page.locator('#place-list .item').count();
+    await page.click('#place-list .item >> nth=0 >> button[data-act="delete"]');
+    if ((await page.locator('#place-list .item').count()) !== before - 1) throw new Error('remove did not remove');
+    await page.click('#tab-events');
+    await page.waitForSelector('#pane-events:not([hidden])', { timeout: 3000 });
+  });
+
   await step('event delete works (confirm auto-accepted)', async () => {
     await page.click('#event-list .item >> nth=0 >> button[data-act="delete"]');
     if ((await page.locator('#event-list .item').count()) !== 1) throw new Error('delete did not remove');

@@ -858,7 +858,7 @@ begin
   foreach t in array array[
     'profiles', 'swipes', 'matches', 'messages', 'notifications',
     'profile_photos', 'reports', 'blocks', 'push_tokens', 'devices',
-    'admins', 'apple_identities', 'waitlist', 'event_rsvps'
+    'admins', 'apple_identities', 'waitlist', 'event_rsvps', 'courts'
   ] loop
     -- Two acceptable outcomes: the grant is withdrawn outright (stronger), or
     -- row-level security filters everything away. Anything returned is a leak.
@@ -1193,6 +1193,85 @@ begin
   -- three distinct visits landed; one of them reloaded, which must not count twice
   assert (f ->> 'landed')::int = 3, format('funnel counted events not visits: %s', f ->> 'landed');
   assert (f ->> 'start_signup')::int = 1, format('wrong start_signup count: %s', f ->> 'start_signup');
+end $$;
+reset role;
+
+-- ---- 9j-ii. Places to play: members read, only the desk writes ----
+reset role;
+do $$
+declare c int;
+begin
+  select count(*) into c from courts where city = 'bakersfield';
+  assert c = 13, format('expected the 13 Bakersfield venues, got %s', c);
+  select count(*) into c from courts where city = 'bakersfield' and setting = 'indoor';
+  assert c >= 1, 'no indoor venue listed for Bakersfield';
+  select count(*) into c from courts where city = 'bakersfield' and access = 'public';
+  assert c >= 1, 'no free public court listed for Bakersfield';
+end $$;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000002'; -- Diego, an ordinary member
+do $$
+declare c int;
+begin
+  assert not is_admin(), 'test setup: Diego should not be an admin';
+  select count(*) into c from courts where city = 'bakersfield';
+  assert c = 13, format('a member sees %s of the 13 Bakersfield places', c);
+  begin
+    insert into courts (city, name, setting, access) values ('bakersfield', 'My Driveway', 'outdoor', 'public');
+    assert false, 'a member added a place';
+  exception when insufficient_privilege then null;
+  end;
+  -- RLS filters an update or delete to zero rows rather than raising; either
+  -- way nothing may change.
+  update courts set name = 'Hacked' where city = 'bakersfield';
+  delete from courts where city = 'bakersfield';
+end $$;
+reset role;
+do $$
+declare c int;
+begin
+  select count(*) into c from courts where city = 'bakersfield' and name <> 'Hacked';
+  assert c = 13, 'a member changed or removed a place';
+end $$;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a'; -- Aaron, on the admins list
+do $$
+declare c int; new_id uuid;
+begin
+  assert is_admin(), 'test setup: Aaron should be an admin by this point';
+  insert into courts (city, name, setting, access) values ('seattle', 'Green Lake Courts', 'outdoor', 'public')
+  returning id into new_id;
+  select count(*) into c from courts where id = new_id and courts is null and lights is null;
+  assert c = 1, 'unknown court count / lights did not stay unknown';
+  begin
+    insert into courts (city, name, setting, access) values ('seattle', 'Green Lake Courts', 'outdoor', 'public');
+    assert false, 'the same place was listed twice in one city';
+  exception when unique_violation then null;
+  end;
+  begin
+    insert into courts (city, name, setting, access) values ('seattle', 'green lake COURTS', 'outdoor', 'public');
+    assert false, 'the same place was listed twice under a different capitalisation';
+  exception when unique_violation then null;
+  end;
+  begin
+    insert into courts (city, name, setting, access) values ('seattle', ' Padded Name ', 'outdoor', 'public');
+    assert false, 'a name with surrounding spaces was stored';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into courts (city, name, setting, access) values ('atlantis', 'Lost Courts', 'outdoor', 'public');
+    assert false, 'a place was filed under a city that does not exist';
+  exception when foreign_key_violation then null;
+  end;
+  begin
+    insert into courts (city, name, setting, access, courts) values ('seattle', 'Zero Courts', 'outdoor', 'public', 0);
+    assert false, 'a court count of zero was accepted';
+  exception when check_violation then null;
+  end;
+  update courts set note = 'Rotating doubles by the lake.' where id = new_id;
+  delete from courts where id = new_id;
+  select count(*) into c from courts where id = new_id;
+  assert c = 0, 'the desk could not remove a place';
 end $$;
 reset role;
 

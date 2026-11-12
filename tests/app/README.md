@@ -4,6 +4,19 @@
 ./scripts/test-app.sh
 ```
 
+No Node on this machine (or on Windows, where these bash scripts won't run as
+they are)? Run the same suite in a throwaway Docker container instead — nothing
+is installed and nothing is written into the checkout:
+
+```bash
+./scripts/test-in-docker.sh app          # macOS / Linux
+.\scripts\test-in-docker.ps1 -Only app   # Windows PowerShell
+```
+
+Leave the suite name off to run all three (backend, app, web). The images are
+downloaded once (about 2.5 GB, mostly the browser) and kept; `-Clean` /
+`--clean` removes them.
+
 These run the real `mobile/src/state.js` — the file the app ships — in Node,
 with the native modules (React Native, AsyncStorage, Supabase, push, location)
 swapped for the stubs in `stubs/`. Nothing here reimplements app logic, so a

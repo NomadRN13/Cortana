@@ -2716,7 +2716,7 @@
           '<div class="event-meta">' + esc(c.address) + '</div>' +
           '<div class="event-tags"><span class="tag tag-sport">' + setting + '</span>' +
             '<span class="tag">' + esc(ACCESS_LABELS[c.access]) + '</span>' +
-            (c.courts != null ? '<span class="tag">' + c.courts + ' courts</span>' : '') +
+            (c.courts != null ? '<span class="tag">' + c.courts + (c.courts === 1 ? ' court' : ' courts') + '</span>' : '') +
             (c.lights === true && c.setting !== 'indoor' ? '<span class="tag">Lights</span>' : '') + '</div>' +
           (c.note ? '<p class="place-note">' + esc(c.note) + '</p>' : '') +
         '</div>';

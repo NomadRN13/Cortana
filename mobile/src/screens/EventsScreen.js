@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,7 +6,7 @@ import { colors, type } from '../theme';
 import { Tag, Avatar } from '../components/ui';
 import { useApp } from '../state';
 import { cityLabel } from '../data/cities';
-import { courtsFor, ACCESS_LABELS } from '../data/courts';
+import { ACCESS_LABELS } from '../data/courts';
 
 // Each city runs its own meetups. You see the calendar for the cities on your
 // profile — one or several — and nothing else. So this is a label, not a
@@ -30,9 +30,12 @@ const SETTING_FILTERS = [
   { key: 'indoor', label: 'Indoor' },
 ];
 
-// Places to play in the member's cities, under the meetups. Only cities we
-// have a list for appear; a city with none simply has no section.
-function PlacesToPlay({ cities }) {
+// Places to play in the member's cities, under the meetups. The list comes
+// from the database (app.courtsFor), so the desk can add a court without an app
+// release, and is fetched again whenever this tab is opened. Only cities with a
+// list appear; a city with none has no section. Pickleball is the default, so
+// only other sports get a sport tag.
+function PlacesToPlay({ cities, courtsFor }) {
   const [filter, setFilter] = useState('all');
   const withCourts = cities.filter((c) => courtsFor(c).length > 0);
   if (!withCourts.length) return null;
@@ -69,13 +72,14 @@ function PlacesToPlay({ cities }) {
               </Text>
             )}
             {list.map((c) => (
-              <View key={c.name} style={styles.place}>
+              <View key={c.id || c.name} style={styles.place}>
                 <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{c.name}</Text>
                 <Text style={[type.hint, { fontSize: 12.5 }]}>{c.address}</Text>
                 <View style={{ flexDirection: 'row', gap: 5, flexWrap: 'wrap', marginTop: 2 }}>
                   <Tag label={c.setting === 'indoor' ? 'Indoor' : c.setting === 'both' ? 'Indoor + outdoor' : 'Outdoor'} accent />
                   <Tag label={ACCESS_LABELS[c.access]} />
-                  {c.courts != null && <Tag label={`${c.courts} courts`} />}
+                  {!!c.sport && c.sport !== 'pickleball' && <Tag label={c.sport.charAt(0).toUpperCase() + c.sport.slice(1)} />}
+                  {c.courts != null && <Tag label={`${c.courts} ${c.courts === 1 ? 'court' : 'courts'}`} />}
                   {c.lights === true && c.setting !== 'indoor' && <Tag label="Lights" />}
                 </View>
                 {!!c.note && <Text style={[type.hint, { fontSize: 12.5, marginTop: 4 }]}>{c.note}</Text>}
@@ -91,8 +95,17 @@ function PlacesToPlay({ cities }) {
   );
 }
 
-export default function EventsScreen() {
+export default function EventsScreen({ navigation }) {
   const app = useApp();
+  // Places are edited on the desk at any time; fetch them again each time the
+  // Events tab is opened, so a court added this morning is there this evening
+  // without restarting the app.
+  const reloadRef = useRef(app.reloadCourts);
+  reloadRef.current = app.reloadCourts;
+  useEffect(() => {
+    if (!navigation || !navigation.addListener) return undefined;
+    return navigation.addListener('focus', () => reloadRef.current && reloadRef.current());
+  }, [navigation]);
   const [expanded, setExpanded] = useState({});
   const weeks = [...new Set(app.events.map((e) => e.week))];
 
@@ -179,7 +192,7 @@ export default function EventsScreen() {
             })}
           </View>
         ))}
-        <PlacesToPlay cities={app.eventCities} />
+        <PlacesToPlay cities={app.eventCities} courtsFor={app.courtsFor} />
       </ScrollView>
     </SafeAreaView>
   );

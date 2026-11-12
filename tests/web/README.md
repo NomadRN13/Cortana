@@ -5,6 +5,19 @@
 ./scripts/test-web.sh admin      # one suite
 ```
 
+No Node on this machine (or on Windows, where these bash scripts won't run as
+they are)? Run the same suite in a throwaway Docker container instead — nothing
+is installed and nothing is written into the checkout:
+
+```bash
+./scripts/test-in-docker.sh web          # macOS / Linux
+.\scripts\test-in-docker.ps1 -Only web   # Windows PowerShell
+```
+
+Leave the suite name off to run all three (backend, app, web). The images are
+downloaded once (about 2.5 GB, mostly the browser) and kept; `-Clean` /
+`--clean` removes them.
+
 These drive the real pages in headless Chromium — the same files the site build
 copies to Netlify, served over http from a local static server so that
 root-absolute paths like `/favicon.png` resolve the way they do in production.

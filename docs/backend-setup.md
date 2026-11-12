@@ -274,6 +274,37 @@ deploying — until then the page runs in demo mode with sample data.
 Warnings, suspensions, and bans still happen in the dashboard at alpha
 volume; the desk records the decision (report → "mark actioned").
 
+### Places to play — add a court without an app update
+
+Under Events, members see a **Places to play** list for each city they have
+selected. That list is the `courts` table, and you edit it from the desk:
+`/admin` → **Places** → fill in the name, city, indoor/outdoor and who can play
+→ **Add place**. Members see it the next time they open the Events tab (the
+app fetches the list again each time it is opened). **Remove** takes one off
+just as fast. No app release, no store review.
+
+- Leave **Courts** blank and **Lights** on "Not sure" when you don't know. The
+  app shows nothing for a blank, which is honest; a guessed number is what
+  someone drives across town on.
+- The list is ordered by `sort_order`, then name. The desk sets it from **Who
+  can play** — 100 for free public parks, 150 for pay-to-play, 250 for
+  members-only — so public courts come first. Set it yourself if you insert by
+  SQL.
+- Duplicates are refused regardless of capitalisation ("Jastro park" is
+  "Jastro Park"). There is no edit yet: to correct a place, remove it and add
+  it again.
+- Bakersfield ships with 13 venues already in the table
+  (`20260806000026_courts.sql`), each checked against a source in November 2026.
+  The other cities start empty — a city with no places simply has no section.
+- The copy in `mobile/src/data/courts.js` (and the prototype) is only what the
+  demo shows and what the app falls back to if it can't reach the database.
+  Refresh it at the next release; nothing breaks if you don't.
+
+Prefer SQL? `insert into courts (city, name, address, setting, access, courts,
+lights, note, sort_order) values ('seattle', 'Green Lake Courts', '7201 E Green
+Lake Dr N', 'outdoor', 'public', null, null, '', 100);` — `setting` is `outdoor`, `indoor` or
+`both`; `access` is `public`, `paid` or `members`.
+
 ## Text-message (SMS) phone verification (one-time, ~15 minutes)
 
 Onboarding asks every new member to verify a phone number by text — that's

@@ -13,6 +13,7 @@ import { supabase, isBackendConfigured } from './lib/supabase';
 import * as api from './api/backend';
 import * as social from './lib/socialAuth';
 import { CITIES, DEFAULT_CITY, cityBySlug, cityLabel, nearestCity } from './data/cities';
+import { COURTS_BY_CITY } from './data/courts';
 import { getDeviceKey, getDeviceName, getPlatform } from './lib/device';
 import { registerForPush } from './lib/push';
 import { getCoarseLocation } from './lib/location';
@@ -103,6 +104,23 @@ function mapProfileRow(p) {
   };
 }
 
+// A row of public.courts, in the shape the bundled list in data/courts.js uses,
+// so the screen draws either without knowing which it was given.
+function mapCourtRow(row) {
+  return {
+    id: row.id,
+    city: row.city,
+    name: row.name,
+    address: row.address || '',
+    sport: row.sport || 'pickleball',
+    setting: row.setting,
+    access: row.access,
+    courts: row.courts != null ? row.courts : null,
+    lights: row.lights === true ? true : row.lights === false ? false : null,
+    note: row.note || '',
+  };
+}
+
 function mapMsgRow(row, myId) {
   const cp = row.court_payload || {};
   const base = { id: row.id, who: row.sender_id === myId ? 'me' : 'them', when: fmtWhen(row.sent_at), read: !!row.read_at };
@@ -179,6 +197,12 @@ export function AppStateProvider({ children }) {
   // screen must not say a city has no meetups while it is still asking, or
   // after the question failed.
   const [eventsError, setEventsError] = useState(false);
+  // Places to play, from the database, stamped with the city selection they
+  // were fetched for: { key, rows }. A list is trusted only for that selection,
+  // so after a city change the bundled list stands in until the new answer
+  // arrives, never the old cities' rows. null means nothing has loaded. An
+  // empty rows array is a real answer: the desk has listed nothing there.
+  const [liveCourts, setLiveCourts] = useState(null);
   // Meetups belong to one city each, and a member sees the meetups for the
   // cities on their profile — one city or several — and no others. There is no
   // nationwide list; choosing cities in Settings is what changes it. Kept in a
@@ -384,6 +408,22 @@ export function AppStateProvider({ children }) {
     }
   };
 
+  const refreshCourts = async () => {
+    const asked = eventCityRef.current;
+    try {
+      const rows = await api.listCourts(asked.list);
+      if (asked.key !== eventCityRef.current.key) return; // they changed cities meanwhile
+      if (!Array.isArray(rows)) throw new Error('no list');
+      setLiveCourts({ key: asked.key, rows: rows.map(mapCourtRow) });
+    } catch (e) {
+      // Couldn't reach the list. Keep the last good one for these same cities
+      // (a refresh that fails shouldn't swap real data for the bundled copy);
+      // otherwise fall back to the bundled list rather than telling a member
+      // their city has nowhere to play.
+      setLiveCourts((cur) => (cur && cur.key === asked.key ? cur : null));
+    }
+  };
+
   // Changing cities swaps the whole list: the old selection's meetups are
   // cleared at once rather than left on screen until the new ones arrive, so
   // nothing from a city you dropped is ever shown — or joinable — afterwards.
@@ -391,6 +431,7 @@ export function AppStateProvider({ children }) {
     if (!live) return;
     setLiveEvents(null);
     refreshEvents();
+    refreshCourts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventCityKey, live]);
 
@@ -419,6 +460,7 @@ export function AppStateProvider({ children }) {
     setThreads([]);
     setNotifs([]);
     setLiveEvents(null);
+    setLiveCourts(null);
     api.updateMyProfile({ last_active_at: new Date().toISOString() }).catch(() => {});
     getDeviceKey().then((key) => registerForPush((t, p) => api.registerPushToken(t, p, key))).catch(() => {});
     // Refresh coarse (~1 km) location so distances and the radius filter work;
@@ -786,6 +828,7 @@ export function AppStateProvider({ children }) {
     setPrefs(DEFAULT_PREFS);
     AsyncStorage.removeItem(PREFS_KEY).catch(() => {});
     setLiveEvents(null);
+    setLiveCourts(null);
     cacheRef.current = {};
     matchIdsRef.current = {};
   };
@@ -1340,6 +1383,25 @@ export function AppStateProvider({ children }) {
 
   // ---------- events ----------
 
+  // ---------- places to play ----------
+
+  // The database list when it has loaded for the cities selected now;
+  // otherwise the list bundled with the app (always, in the demo build).
+  // Returned per city so the screen can group.
+  const courtsFor = (citySlug) => (
+    live && liveCourts && liveCourts.key === eventCityKey
+      ? liveCourts.rows.filter((c) => c.city === citySlug)
+      : (COURTS_BY_CITY[citySlug] || []).map((c) => ({ sport: 'pickleball', ...c }))
+  );
+  // A court worth proposing to someone you've just matched with: a free public
+  // court for the sport you're proposing, so nobody turns up with a tennis
+  // racquet at a pickleball-only park. Null when the city has none listed.
+  const suggestedCourt = (citySlug, sport) => {
+    const want = sport ? String(sport).toLowerCase() : null;
+    const open = courtsFor(citySlug).filter((c) => c.access === 'public' && (!want || c.sport === want));
+    return open.length ? open[0].name : null;
+  };
+
   // Demo meetups are scoped the same way as live ones: your cities' only.
   const demoEvents = EVENTS.map((e, idx) => ({ e, idx })).filter(({ e }) => eventCities.includes(e.city || DEFAULT_CITY)).map(({ e, idx }) => ({
     id: e.id, week: e.week, dow: e.dow, dom: e.dom, title: e.title, venue: e.venue,
@@ -1476,7 +1538,7 @@ export function AppStateProvider({ children }) {
     matches, threads: visibleThreads, profileById, ensureThread,
     sendMessage, retryMessage, discardMessage, subscribeThread, respondCourt, markRead,
     pendingMatch, clearPendingMatch: () => setPendingMatch(null),
-    events, toggleJoin, joined, eventAttendees, eventCities,
+    events, toggleJoin, joined, eventAttendees, eventCities, courtsFor, suggestedCourt, reloadCourts: () => { if (live) refreshCourts(); },
     eventsLoading: live && liveEvents === null && !eventsError, eventsError: live && eventsError, retryEvents: () => refreshEvents(),
     notifs, clearNotifs, prefs,
   };

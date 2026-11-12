@@ -4,7 +4,7 @@ Maintained by the Release Manager agent. Source of truth for "what's blocking
 launch?". Every item from `docs/app-store-launch.md` §7, statused against the
 repo — nothing is marked done on assumption; evidence is cited.
 
-Last updated: 2026-08-09 · App version: 0.1.0 (`mobile/app.json`)
+Last updated: 2026-11-11 · App version: 0.1.0 (`mobile/app.json`)
 
 **Status legend:** `done` (evidence in repo) · `in progress` · `not started` ·
 `blocked-on <thing>`. **Owner:** founder · dev · agent.
@@ -660,3 +660,69 @@ a device or a card:
   demo event's slug against the city list.
 - Backend suite asserts a member can read an event in a city they're not in,
   which nothing exercised while the client filtered it away.
+
+## Update — 2026-11-11 (tester feedback: five fixes, several cities, Bakersfield, places to play)
+
+This supersedes the 2026-08-13 "meetups go nationwide, with a city picker"
+entry above: that picker and the "All cities" list are gone.
+
+- **Five things testers hit, fixed in the app and the prototype:**
+  - the birthday field puts its own slashes in (the number pad has no "/" on an
+    iPhone, so a valid date could not be typed at all);
+  - sex is shown on profile cards, the detail sheet and top picks — a doubles
+    team shows both or neither;
+  - a doubles partner can be added, edited or removed in Settings (it was
+    signup-only, and Settings said "contact support");
+  - "Only my sports" moved from the last row of Settings to Home, above the
+    deck it filters;
+  - meetups are per city.
+- **A member can play in several cities** (migration 24). `profiles.city` is the
+  home city; `extra_cities` holds the rest. Matching is any city in common;
+  meetups show for every selected city, tagged by city. Distance now counts only
+  between people local to each other, so a second city isn't silently emptied
+  by the 50-mile radius.
+- **Bakersfield, CA is city #12** (migration 25) — app, prototype, admin desk,
+  landing page and database. No outreach pack or mixer playbook exists for it
+  yet; the Indianapolis ones are the template. The density note above applies
+  with more force at twelve cities than it did at eleven.
+- **Places to play** (migration 26): a list under Events for each selected city,
+  with indoor/outdoor filters and who can play there. It is a database table the
+  founder edits at `/admin` → **Places** — adding a court needs no app update.
+  Bakersfield ships with 13 venues, each checked against a source in November
+  2026; **only one indoor venue could be confirmed** (Dignity Health Sports
+  Complex). Announced-but-unopened (PickleRage) and unconfirmed parks are left
+  out and named in `mobile/src/data/courts.js`.
+- **Privacy policy updated** (`landing/privacy.html`): it now says what other
+  members see on a card (including gender), that the cities a member plays in
+  are stored, and what is kept about a doubles partner — a second person's
+  first name, birthdate and gender, which the policy had never mentioned.
+- **One command runs every suite** on a machine with nothing installed:
+  `scripts/test-in-docker.ps1` (Windows) / `scripts/test-in-docker.sh`. All
+  three pass: backend (27 migrations), app, web.
+
+### Founder actions this adds
+
+| Action | Why |
+|---|---|
+| Re-read the two store privacy forms before filing | No new data *type* is collected (gender, city and the partner fields were already in the schema), but gender is now **shown to other members** on browse cards, and the partner fields are a third party's data. `store-listing.md` should say so where the forms ask what is visible to other users. |
+| Legal review of the new "What other members see" and doubles-partner wording | The policy's own founder note already asks for a review before public launch; these two paragraphs are new since the last time anyone read it. |
+| Check the Bakersfield venue list in person or by phone before promoting it | Court counts and lights for several parks rest on directory listings only, and private clubs change guest policy without notice. Fix anything wrong at `/admin` → Places. |
+| Decide whether Bakersfield gets real recruiting | A city in the picker with nobody in it is the "open the app, see three people, never come back" case described above. |
+
+### Two older privacy gaps found while writing the policy
+
+Checking the new "What other members see" paragraph against the code turned up
+two things that predate this update. The policy now describes them honestly;
+neither is fixed yet.
+
+| Gap | What it means | Fix |
+|---|---|---|
+| **Profile settings are readable beyond the card.** The column grants on `profiles` (migration 18) let any signed-in member read every non-blocked profile's cities, modes, who they are looking for (`seeking`), age and distance range and last-active time through the API, though the app never displays them. | Someone with an account and a script can list who is in Date mode and what they are looking for, city by city. | Narrow the grants to the card's columns and serve everything else through the existing security-definer RPCs, the way migration 18 already did for birthdate and coordinates. |
+| **Distance can be used to locate someone.** The deck returns distance to 0.1 mile, and a member can write any coordinates to their own profile, so three readings from chosen points trilaterate another member's rounded (~1 km) home position. | A stalking vector in a dating app. | Coarsen the distance shown (whole miles or bands) **and** stop members moving their own stored position freely (rate-limit or only accept device-reported updates). Either alone can still be probed. |
+
+### Still not verified
+
+- The mobile app has not been run on a device since these changes; they are
+  covered by the state tests and a syntax check of the changed screens, not by
+  anyone tapping through them.
+- Everything that needs a live Supabase project (see "Where launch stands").

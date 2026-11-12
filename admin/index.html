@@ -206,6 +206,7 @@
       <button id="tab-photos" class="on" type="button">Photos <span class="n" id="n-photos"></span></button>
       <button id="tab-reports" type="button">Reports <span class="n" id="n-reports"></span></button>
       <button id="tab-events" type="button">Events</button>
+      <button id="tab-places" type="button">Places</button>
       <button id="tab-numbers" type="button">Numbers</button>
     </div>
 
@@ -262,6 +263,61 @@
       <p class="msg" id="ev-msg"></p>
       <h1 style="margin-top:22px; font-size:17px">Upcoming</h1>
       <div id="event-list"></div>
+    </div>
+    <div class="card" id="pane-places" hidden>
+      <h1>Places to play</h1>
+      <p class="hint">The courts members see under Events for their cities. Add one here and it
+      is in the app the next time someone opens Events — no app update. Leave <b>Courts</b> blank
+      and <b>Lights</b> on “Not sure” when you don't know: a blank is honest, a guess sends
+      someone on a drive.</p>
+      <div class="grid2">
+        <div><label for="pl-name">Name</label><input id="pl-name" maxlength="80" placeholder="Jastro Park"></div>
+        <div><label for="pl-address">Address</label><input id="pl-address" maxlength="120" placeholder="2900 Truxtun Ave"></div>
+        <div>
+          <label for="pl-city">City</label>
+          <select id="pl-city"></select>
+        </div>
+        <div>
+          <label for="pl-setting">Indoor or outdoor</label>
+          <select id="pl-setting">
+            <option value="outdoor">Outdoor</option>
+            <option value="indoor">Indoor</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div>
+          <label for="pl-access">Who can play</label>
+          <select id="pl-access">
+            <option value="public">Free · public</option>
+            <option value="paid">Pay to play</option>
+            <option value="members">Members only</option>
+          </select>
+        </div>
+        <div>
+          <label for="pl-sport">Sport</label>
+          <select id="pl-sport">
+            <option value="pickleball">Pickleball</option>
+            <option value="tennis">Tennis</option>
+            <option value="padel">Padel</option>
+            <option value="racquetball">Racquetball</option>
+            <option value="squash">Squash</option>
+          </select>
+        </div>
+        <div><label for="pl-courts">Courts (blank if unsure)</label><input id="pl-courts" type="number" min="1" max="99" placeholder=""></div>
+        <div>
+          <label for="pl-lights">Lights</label>
+          <select id="pl-lights">
+            <option value="">Not sure</option>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1"><label for="pl-note">Note for players</label><input id="pl-note" maxlength="280" placeholder="First come, first served. Lights on a timer."></div>
+      </div>
+      <div class="row-btns"><button class="btn btn-primary" id="pl-create" type="button">Add place</button></div>
+      <p class="msg" id="pl-msg"></p>
+      <h1 style="margin-top:22px; font-size:17px">Listed</h1>
+      <div id="place-list"></div>
     </div>
     <div class="card" id="pane-numbers" hidden>
       <h1>Numbers</h1>
@@ -376,6 +432,10 @@
       { id: 'r1', reporter: 'Sam', target: 'Alex', target_id: 'demo-alex', reason: 'Profile photo is a stock image, not a real person.', context: 'deck', created_at: new Date(Date.now() - 2 * 3600000).toISOString() },
       { id: 'r2', reporter: 'Elena', target: 'Jordan', target_id: 'demo-jordan', reason: 'Kept pushing to move the chat off the app after I said no.', context: 'chat', created_at: new Date(Date.now() - 20 * 3600000).toISOString() }
     ],
+    places: [
+      { id: 'p1', city: 'bakersfield', name: 'Greenacres Park PicklePlex', address: '2014 Calloway Dr', sport: 'pickleball', setting: 'outdoor', access: 'public', courts: 8, lights: true, note: 'Eight dedicated courts. Open 6am–10pm.', sort_order: 10 },
+      { id: 'p2', city: 'bakersfield', name: 'Dignity Health Sports Complex — GSA Pickleball', address: '3101 Gilmore Ave, Suite 100', sport: 'pickleball', setting: 'indoor', access: 'paid', courts: null, lights: true, note: 'Indoor open play three days a week.', sort_order: 110 }
+    ],
     events: [
       { id: 'e1', title: '40/LOVE Social Mixer', venue: 'Broad Ripple Courts', starts_at: new Date(Date.now() + 6 * 86400000).toISOString(), sport: 'pickleball', level_range: 'All levels', capacity: 24, city: 'indianapolis' }
     ]
@@ -391,7 +451,7 @@
     $('#who-email').textContent = LIVE ? (session ? session.email : '') : 'demo admin';
   }
 
-  var PANES = ['photos', 'reports', 'events', 'numbers'];
+  var PANES = ['photos', 'reports', 'events', 'places', 'numbers'];
   PANES.forEach(function (p) {
     $('#tab-' + p).addEventListener('click', function () {
       PANES.forEach(function (q) {
@@ -399,6 +459,7 @@
         $('#pane-' + q).hidden = q !== p;
       });
       if (p === 'numbers') loadNumbers();
+      if (p === 'places') loadPlaces();
     });
   });
 
@@ -661,6 +722,111 @@
       .catch(function (e) { alert('Could not delete: ' + e.message); });
   });
 
+  /* ---------- places to play ---------- */
+  var SETTING_NAMES = { outdoor: 'Outdoor', indoor: 'Indoor', both: 'Indoor + outdoor' };
+  var ACCESS_NAMES = { public: 'Free · public', paid: 'Pay to play', members: 'Members only' };
+
+  // The city list is copied from the event form, so there is one list to keep.
+  // A leading blank choice so a venue is never filed under whichever city
+  // happens to be first in the list.
+  $('#pl-city').innerHTML = '<option value="">Choose a city…</option>' + $('#ev-city').innerHTML;
+  $('#pl-city').value = '';
+
+  function renderPlaces(items) {
+    var cityName = {};
+    Array.prototype.forEach.call($('#pl-city').options, function (o) { cityName[o.value] = o.textContent; });
+    $('#place-list').innerHTML = items.length ? items.map(function (c) {
+      var facts = [SETTING_NAMES[c.setting] || c.setting, ACCESS_NAMES[c.access] || c.access];
+      if (c.courts != null) facts.push(c.courts + (c.courts === 1 ? ' court' : ' courts'));
+      if (c.lights === true) facts.push('lights');
+      if (c.lights === false) facts.push('no lights');
+      return '<div class="item" data-id="' + esc(c.id) + '">' +
+        '<div class="body">' +
+          '<div class="name">' + esc(c.name) + '<span class="pill">' + esc(c.sport || 'pickleball') + '</span></div>' +
+          '<div class="meta">' + esc(cityName[c.city] || c.city) + (c.address ? ' · ' + esc(c.address) : '') + ' · ' + esc(facts.join(' · ')) + '</div>' +
+          (c.note ? '<div class="meta">' + esc(c.note) + '</div>' : '') +
+          '<div class="row-btns"><button class="btn btn-danger btn-sm" data-act="delete">Remove</button></div>' +
+        '</div></div>';
+    }).join('') : '<div class="empty">No places listed yet — add the first one above.</div>';
+  }
+
+  function sortPlaces(list) {
+    return list.sort(function (a, b) {
+      return a.city < b.city ? -1 : a.city > b.city ? 1
+        : (a.sort_order - b.sort_order) || (a.name < b.name ? -1 : 1);
+    });
+  }
+
+  function loadPlaces() {
+    if (!LIVE) { renderPlaces(sortPlaces(demo.places)); return; }
+    rest('GET', '/rest/v1/courts?select=*&order=city.asc,sort_order.asc,name.asc')
+      .then(renderPlaces)
+      .catch(function (e) { $('#place-list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  }
+
+  $('#pl-create').addEventListener('click', function () {
+    var msg = $('#pl-msg');
+    msg.className = 'msg';
+    var name = $('#pl-name').value.trim();
+    var courtsEl = $('#pl-courts');
+    var courtsRaw = courtsEl.value.trim();
+    var courtsMsg = 'Courts must be a whole number from 1 to 99 — or leave it blank if you aren’t sure.';
+    if (name.length < 2) { msg.textContent = 'A name is required.'; msg.className = 'msg err'; return; }
+    if (!$('#pl-city').value) { msg.textContent = 'Choose the city this place is in.'; msg.className = 'msg err'; return; }
+    // A number box reports "" for text it can't read ("-", "e"), which would
+    // otherwise be saved as "not sure" — say so instead of guessing.
+    if ((courtsEl.validity && courtsEl.validity.badInput) || (courtsRaw !== '' && !/^\d{1,2}$/.test(courtsRaw))) { msg.textContent = courtsMsg; msg.className = 'msg err'; return; }
+    var courts = courtsRaw === '' ? null : parseInt(courtsRaw, 10);
+    if (courts !== null && (courts < 1 || courts > 99)) { msg.textContent = courtsMsg; msg.className = 'msg err'; return; }
+    var lightsRaw = $('#pl-lights').value;
+    var access = $('#pl-access').value;
+    var body = {
+      city: $('#pl-city').value, name: name, address: $('#pl-address').value.trim(),
+      sport: $('#pl-sport').value, setting: $('#pl-setting').value, access: access,
+      courts: courts, lights: lightsRaw === '' ? null : lightsRaw === 'true',
+      note: $('#pl-note').value.trim(),
+      // public parks list first, then pay-to-play, then private — the order members see
+      sort_order: access === 'public' ? 100 : access === 'paid' ? 150 : 250
+    };
+    var clear = function () { $('#pl-name').value = ''; $('#pl-address').value = ''; $('#pl-courts').value = ''; $('#pl-note').value = ''; $('#pl-lights').value = ''; };
+    if (!LIVE) {
+      if (demo.places.some(function (c) { return c.city === body.city && c.name.toLowerCase() === name.toLowerCase(); })) {
+        msg.textContent = 'That place is already listed for this city.'; msg.className = 'msg err'; return;
+      }
+      body.id = 'p' + Date.now();
+      demo.places.push(body);
+      renderPlaces(sortPlaces(demo.places));
+      msg.textContent = 'Place added (demo).'; msg.className = 'msg ok';
+      clear();
+      return;
+    }
+    rest('POST', '/rest/v1/courts', body, { 'Prefer': 'return=minimal' })
+      .then(function () {
+        msg.textContent = 'Place added — members see it the next time they open Events.'; msg.className = 'msg ok';
+        clear();
+        loadPlaces();
+      })
+      .catch(function (e) {
+        msg.textContent = /23505|duplicate/i.test(e.message) ? 'That place is already listed for this city.' : 'Could not add: ' + e.message;
+        msg.className = 'msg err';
+      });
+  });
+
+  $('#place-list').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[data-act="delete"]');
+    if (!btn) return;
+    var id = btn.closest('.item').getAttribute('data-id');
+    if (!confirm('Remove this place? Members will stop seeing it the next time they open Events.')) return;
+    if (!LIVE) {
+      demo.places = demo.places.filter(function (c) { return c.id !== id; });
+      renderPlaces(sortPlaces(demo.places));
+      return;
+    }
+    rest('DELETE', '/rest/v1/courts?id=eq.' + encodeURIComponent(id), undefined, { 'Prefer': 'return=minimal' })
+      .then(loadPlaces)
+      .catch(function (e) { alert('Could not remove: ' + e.message); });
+  });
+
   /* ---------- auth ---------- */
   $('#si-send').addEventListener('click', function () {
     var email = $('#si-email').value.trim().toLowerCase();
@@ -730,6 +896,10 @@
         if (isAdmin === true) {
           show('desk');
           loadPhotos(); loadReports(); loadEvents();
+          // Places and Numbers load when their tab is opened; if one is the tab
+          // on screen (say, after signing back in), load it now too.
+          if (!$('#pane-places').hidden) loadPlaces();
+          if (!$('#pane-numbers').hidden) loadNumbers();
         } else {
           show('noadmin');
           showMyUid();

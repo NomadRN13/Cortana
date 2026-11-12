@@ -138,6 +138,48 @@ async function main() {
   check('the last city cannot be dropped', ok === false && app.eventCities.join(',') === 'indianapolis', [ok, app.eventCities]);
   check('the list is never fetched without a city', seen.length > 0 && seen.every((c) => [].concat(c || []).length > 0 && ![].concat(c).includes('all')), seen);
 
+  // ---- places to play come from the database, with the bundled list as a net ----
+  const court = (o) => Object.assign({ id: 'c-' + o.name, address: '', sport: 'pickleball', setting: 'outdoor', access: 'public', courts: null, lights: null, note: '', sort_order: 10 }, o);
+  const askedCourts = [];
+  impl.listCourts = (cities) => {
+    askedCourts.push([].concat(cities || []).join(','));
+    return [
+      court({ city: 'bakersfield', name: 'A Court The Desk Just Added', access: 'members' }),
+      court({ city: 'bakersfield', name: 'New Public Park', courts: 6, lights: true, sort_order: 20 }),
+      court({ city: 'seattle', name: 'Green Lake', sort_order: 10 }),
+    ].filter((c) => [].concat(cities || []).includes(c.city));
+  };
+  await act(async () => { app.updateCity('bakersfield'); await tick(60); });
+  check('places are fetched for the selected cities', askedCourts[askedCourts.length - 1] === 'bakersfield', askedCourts);
+  const fromDb = app.courtsFor('bakersfield').map((c) => c.name);
+  check('the database list is what members see, not the bundled one', fromDb.join('|') === 'A Court The Desk Just Added|New Public Park', fromDb);
+  check('a city that is not selected lists nothing', app.courtsFor('seattle').length === 0, app.courtsFor('seattle'));
+  check('a suggested court is one anyone can walk onto', app.suggestedCourt('bakersfield') === 'New Public Park', app.suggestedCourt('bakersfield'));
+  check('unknown lights and court counts stay unknown', app.courtsFor('bakersfield')[0].lights === null && app.courtsFor('bakersfield')[0].courts === null, app.courtsFor('bakersfield')[0]);
+
+  impl.listCourts = () => { throw new Error('network'); };
+  await act(async () => { app.toggleCity('seattle'); await tick(60); });
+  const fallback = app.courtsFor('bakersfield');
+  check('if the list cannot be reached, the bundled list stands in', fallback.length === 13 && fallback[0].name === 'Greenacres Park PicklePlex', fallback.length);
+
+  impl.listCourts = () => [];
+  await act(async () => { app.toggleCity('seattle'); await tick(60); });
+  check('an empty answer from the database is believed, not papered over', app.courtsFor('bakersfield').length === 0, app.courtsFor('bakersfield').length);
+
+  // While a new selection's list is on its way, the old selection's rows are
+  // not reused for it — the bundled list stands in.
+  let answer;
+  impl.listCourts = () => new Promise((r) => { answer = r; });
+  await act(async () => { app.toggleCity('seattle'); await tick(20); });
+  check('a list loaded for other cities is not used for the new selection', app.courtsFor('bakersfield').length === 13, app.courtsFor('bakersfield').length);
+  await act(async () => { answer([court({ city: 'bakersfield', name: 'Fresh From The Desk', sport: 'tennis' })]); await tick(20); });
+  check('the new answer replaces it when it arrives', app.courtsFor('bakersfield').map((c) => c.name).join() === 'Fresh From The Desk', app.courtsFor('bakersfield'));
+  check('a tennis court is not proposed for pickleball', app.suggestedCourt('bakersfield', 'Pickleball') === null && app.suggestedCourt('bakersfield', 'Tennis') === 'Fresh From The Desk', [app.suggestedCourt('bakersfield', 'Pickleball'), app.suggestedCourt('bakersfield', 'Tennis')]);
+
+  impl.listCourts = () => { throw new Error('network'); };
+  await act(async () => { app.reloadCourts(); await tick(40); });
+  check('a failed refresh keeps the last good list rather than the bundled one', app.courtsFor('bakersfield').map((c) => c.name).join() === 'Fresh From The Desk', app.courtsFor('bakersfield').length);
+
   await act(async () => { renderer.unmount(); });
   console.log(failures ? `\n${failures} failing` : '\nall green');
   process.exit(failures ? 1 : 0);
