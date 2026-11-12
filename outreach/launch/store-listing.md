@@ -24,7 +24,7 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 
 ### Promotional text (170 char limit — editable without review)
 
-> Now live in 11 cities. Meet tennis, pickleball, and padel players who'd
+> Now live in 12 cities. Meet tennis, pickleball, and padel players who'd
 > rather rally than sit through another coffee date. Love at first serve.
 
 142 characters.
@@ -67,9 +67,9 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 > • Delete your account any time, right in Settings
 >
 > **City by city.** 40/LOVE is open in Indianapolis, Los Angeles, San Diego,
-> Phoenix, Seattle, Spokane, Dallas, Houston, Orlando, Miami, and
-> Washington, DC — and you're matched with players in your own city, because
-> a dating app is only as good as who's actually near you.
+> Bakersfield, Phoenix, Seattle, Spokane, Dallas, Houston, Orlando, Miami, and
+> Washington, DC — and you're matched with players in the cities you play
+> in, because a dating app is only as good as who's actually near you.
 >
 > Questions? hello@40love.app
 
@@ -77,7 +77,7 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 
 > `pickleball,tennis,padel,squash,racquetball,hitting,partner,singles,court,doubles,social,meet`
 
-93 characters. Dropped the city name now that 40/LOVE spans 11 metros —
+93 characters. Dropped the city name now that 40/LOVE spans 12 metros —
 per-city keywords belong in localized listings, not the base one. Deliberately excludes words Apple already indexes from the
 name/subtitle (racquet, sports, dating, date, game).
 
@@ -290,14 +290,16 @@ review notes fields. Same substance for both.
 >
 > **City-by-city launch:** community quality in a dating app depends on
 > local density, so 40/LOVE operates city by city. It is currently open in
-> 11 US metros: Indianapolis, Los Angeles, San Diego, Phoenix, Seattle,
-> Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC. Members
-> choose their city at signup (pre-selected from an approximate location)
-> and are matched only within it. The store listing is US-only. The review
+> 12 US metros: Indianapolis, Los Angeles, San Diego, Bakersfield, Phoenix,
+> Seattle, Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC.
+> Members choose one or more cities at signup (the first is pre-selected
+> from an approximate location) and are matched only with players who share
+> a city with them. The store listing is US-only. The review
 > account below is set to Indianapolis and has multiple profiles in range,
 > so every feature (discovery, matching, chat, court-time proposals, events)
-> is fully exercisable from anywhere — switch cities in Settings to see the
-> scoping work.
+> is fully exercisable from anywhere — in Settings > Cities, tap another
+> city to add it, then tap Indianapolis to drop it, to see the scoping work
+> (the app keeps at least one city selected, so add before you drop).
 >
 > **Review account:** [FILL IN — email + fixed one-time code, once the
 > review account is seeded]
@@ -349,7 +351,7 @@ For both stores' "What's new" field:
 > • Local events and RSVPs
 > • Block, report, and full account deletion in Settings
 >
-> Open in 11 cities. See you on the court.
+> Open in 12 cities. See you on the court.
 
 ---
 

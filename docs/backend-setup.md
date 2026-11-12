@@ -208,11 +208,14 @@ fingerprints there.
 
 ## Opening a city
 
-40/LOVE is open in 11 metros: Indianapolis, Los Angeles, San Diego, Phoenix,
+40/LOVE is open in 12 metros: Indianapolis, Los Angeles, San Diego, Bakersfield, Phoenix,
 Seattle, Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC.
-Members pick their city at signup (pre-selected from their approximate
-location) and only ever match with players in it — a dating app is only as
-good as who's actually nearby.
+Members pick one or more cities at signup (the first is their home city,
+pre-selected from their approximate location; any others are stored in
+`profiles.extra_cities` and can be changed in Settings) and only ever match
+with players who share at least one city with them — a dating app is only as
+good as who's actually nearby. Meetups follow the same rule: a member sees the
+events for the cities they have selected, and no others.
 
 The city list lives in the `cities` table. To open another one, add a row
 (Dashboard → SQL Editor):
@@ -224,8 +227,12 @@ values ('austin', 'Austin', 'TX', 30.267, -97.743, 40, true, 120);
 
 Then add the same entry to `mobile/src/data/cities.js` and the city lists in
 `app/index.html`, `admin/index.html`, and `landing/index.html`, and ship an
-app update. The database is the authority — its foreign key rejects any city
-the app invents.
+app update. The database is the authority — it rejects any city the app
+invents (a foreign key on `profiles.city`; the `clean_extra_cities` trigger on
+`profiles.extra_cities`, since an array can't carry a foreign key). Bakersfield
+was opened exactly this way — see `20260806000025_bakersfield.sql`. If the city
+should have a places-to-play list, add it to `mobile/src/data/courts.js` and the
+`COURTS_BY_CITY` block in `app/index.html` too.
 
 **A word of caution about opening eleven at once.** Density, not coverage, is
 what makes a dating app work: 200 players in one city beats 2,000 spread

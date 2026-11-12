@@ -327,6 +327,40 @@
   .mode-pill svg { width: 16px; height: 16px; }
   .mode-pill.on { background: var(--optic); border-color: var(--optic); color: var(--ink); }
 
+  /* Same-sport filter: sits under the mode pills, above the deck it changes. */
+  .deck-filter { display: flex; align-items: center; gap: 10px; padding: 10px 18px 0; }
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto;
+    padding: 7px 12px; border: 2px solid var(--line); border-radius: 999px;
+    background: var(--card); font-size: 13px; font-weight: 700; color: var(--text);
+    white-space: nowrap;
+  }
+  .filter-chip .dot {
+    width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--dim);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; line-height: 1; color: transparent;
+  }
+  .filter-chip[aria-checked="true"] { border-color: var(--optic); color: var(--optic); }
+  .filter-chip[aria-checked="true"] .dot { background: var(--optic); border-color: var(--optic); color: var(--ink); }
+  .deck-filter .filter-note { font-size: 12px; color: var(--dim); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Events: which city's meetups these are. A label, not a control. */
+  .city-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 12px; border: 2px solid var(--line); border-radius: 999px;
+    background: var(--card); font-size: 13.5px; font-weight: 700; color: var(--text);
+  }
+  .city-badge svg { width: 15px; height: 15px; color: var(--optic); }
+
+  /* Settings: add / edit a doubles partner */
+  .partner-form { display: grid; gap: 8px; }
+  .partner-form input[type="text"] { width: 100%; }
+  .partner-actions { display: flex; gap: 10px; margin-top: 6px; }
+  .partner-actions .btn { padding: 12px 16px; font-size: 14px; }
+  .partner-actions .btn-ghost { width: auto; }
+  .link-btn { background: none; border: 0; padding: 4px 0; color: var(--optic); font-weight: 800; font-size: 13.5px; text-align: left; }
+  .pick .pg { font-size: 11px; font-weight: 700; color: var(--dim); }
+
   .home-scroll { flex: 1; overflow-y: auto; min-height: 0; padding: 10px 18px 16px; display: flex; flex-direction: column; gap: 14px; }
 
   .topmatch {
@@ -537,6 +571,22 @@
     font-variant-numeric: tabular-nums; color: var(--dim);
   }
   .tag-sport { border-color: var(--optic); color: var(--optic); }
+
+  /* Places to play, under the meetups */
+  .places-head { font-size: 18px; font-weight: 800; margin: 22px 0 10px; }
+  .place-filters { display: flex; gap: 8px; }
+  .place-filter {
+    padding: 7px 14px; border: 2px solid var(--line); border-radius: 999px;
+    background: var(--card); font-size: 13px; font-weight: 800; color: var(--text);
+  }
+  .place-filter[aria-pressed="true"] { background: var(--optic); border-color: var(--optic); color: var(--ink); }
+  .place {
+    display: flex; flex-direction: column; gap: 4px; padding: 13px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 16px; margin-bottom: 10px;
+  }
+  .place-name { font-size: 15px; font-weight: 800; }
+  .place-note { font-size: 12.5px; color: var(--dim); margin: 2px 0 0; }
+  .places-foot { font-size: 11.5px; color: var(--dim); margin: 6px 0 4px; }
   .event-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 8px; }
   .spots { font-size: 11px; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .join-btn { font-size: 13px; font-weight: 800; padding: 8px 14px; border-radius: 999px; background: var(--optic); color: var(--ink); white-space: nowrap; }
@@ -892,7 +942,7 @@
         <div>
           <label for="ob-city">Where do you play?</label>
           <select id="ob-city" aria-label="Your city"></select>
-          <p class="hint" style="margin-top:8px">You'll meet players in this city. You can change it any time in Settings.</p>
+          <p class="hint" style="margin-top:8px">You'll meet players and see meetups in this city. Play in more than one? Add the others any time in Settings.</p>
         </div>
         <div>
           <label for="photo-input">Profile photo <span style="font-weight:400">(optional)</span></label>
@@ -902,7 +952,7 @@
             <input type="file" id="photo-input" accept="image/*" style="display:none" aria-label="Choose profile photo">
           </div>
         </div>
-        <p class="hint">Your name, age, and photo appear on your player card. Photos stay on this device in the prototype. You must be 18 or older.</p>
+        <p class="hint">Your name, age, gender, and photo appear on your player card. Photos stay on this device in the prototype. You must be 18 or older.</p>
       </div>
       <div class="ob-foot">
         <button class="btn btn-primary" id="ob1-next">Next</button>
@@ -1086,6 +1136,12 @@
           Friends Mode
         </button>
       </div>
+      <div class="deck-filter">
+        <button class="filter-chip" id="sw-mysports" role="switch" aria-checked="false" aria-label="Only show players who share my sports" type="button">
+          <span class="dot" aria-hidden="true">✓</span>Only my sports
+        </button>
+        <span class="filter-note" id="mysports-note">Showing players of every sport</span>
+      </div>
       <div class="home-scroll" id="home-scroll">
         <div class="picks" id="picks-panel" hidden>
           <div class="picks-head">
@@ -1154,9 +1210,12 @@
     <section class="screen" id="screen-events" aria-label="Events">
       <div class="appbar">
         <h2 class="appbar-title">Events</h2>
-        <select id="event-city" aria-label="Show meetups in"></select>
+        <span class="city-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 21s-6.5-5.4-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.6 12 21 12 21z"></path><circle cx="12" cy="10.2" r="2.4"></circle></svg><span id="event-city-label"></span></span>
       </div>
-      <div class="scroll" id="event-list"></div>
+      <div class="scroll" id="events-scroll">
+        <div id="event-list"></div>
+        <div id="places-list"></div>
+      </div>
     </section>
 
     <!-- PROFILE -->
@@ -1240,11 +1299,40 @@
           </div>
         </div>
         <div class="set-group">
-          <h3>City</h3>
+          <h3>Cities</h3>
           <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
             <div>
-              <div class="chips" id="set-city"></div>
-              <p class="hint" style="margin-top:8px">You match with players in your city. Moving, or splitting time between two? Switch any time — your matches and messages come with you.</p>
+              <div class="chips" id="set-city" role="group" aria-label="Cities you play in"></div>
+              <p class="hint" style="margin-top:8px" id="set-city-hint"></p>
+            </div>
+          </div>
+        </div>
+        <div class="set-group">
+          <h3>Doubles team</h3>
+          <div class="set-row">
+            <div><div class="lab">We're a doubles team</div><div class="sub">Two of you, one profile</div></div>
+            <button class="switch" id="sw-team" role="switch" aria-checked="false" aria-label="We're a doubles team"></button>
+          </div>
+          <div class="set-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div id="team-summary">
+              <p class="hint" id="team-summary-text"></p>
+              <button class="link-btn" id="team-edit" type="button">Add a partner</button>
+            </div>
+            <div class="partner-form" id="team-form" hidden>
+              <label for="set-partner-name" class="lab">Your partner</label>
+              <input type="text" id="set-partner-name" placeholder="Their first name" maxlength="40">
+              <input type="text" id="set-partner-age" inputmode="numeric" placeholder="Their age" maxlength="2">
+              <span class="lab" style="margin-top:6px">They are</span>
+              <div class="chips" id="set-partner-gender" role="group" aria-label="Partner gender">
+                <button class="chip" aria-pressed="false" data-gender="woman" type="button">Woman</button>
+                <button class="chip" aria-pressed="false" data-gender="man" type="button">Man</button>
+                <button class="chip" aria-pressed="false" data-gender="nonbinary" type="button">Nonbinary</button>
+              </div>
+              <div class="partner-actions">
+                <button class="btn btn-primary" id="team-save" type="button">Add partner</button>
+                <button class="btn btn-ghost" id="team-cancel" type="button">Cancel</button>
+              </div>
+              <p class="hint">Both of you must be 18+. Ask before you add someone — their name and age go on a public profile. You stay responsible for the account. A shared profile is for Play and Friends, so adding a partner turns Date mode off.</p>
             </div>
           </div>
         </div>
@@ -1279,10 +1367,7 @@
               <input type="number" id="age-max" value="55" min="18" max="99" aria-label="Maximum age">
             </div>
           </div>
-          <div class="set-row">
-            <div><div class="lab">Only my sports</div><div class="sub">Show only players who share a sport with you</div></div>
-            <button class="switch" id="sw-mysports" role="switch" aria-checked="false" aria-label="Only show players who share my sports"></button>
-          </div>
+          <p class="hint">Looking for “Only my sports”? It's on the Home screen now, right above the players it filters.</p>
         </div>
         <div class="set-group">
           <h3>Notifications</h3>
@@ -1524,6 +1609,22 @@
   }
   var REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var GAME_LABELS = { singles: 'Singles', doubles: 'Doubles', mixed_doubles: 'Mixed doubles' };
+  var GENDER_LABELS = { woman: 'Woman', man: 'Man', nonbinary: 'Nonbinary' };
+  var PERSON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"></circle><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"></path></svg>';
+  // What to print for sex on a card. A doubles team is two people, so it names
+  // both or says nothing — one person's gender on a shared card would read as
+  // if it described the pair.
+  function genderText(p) {
+    var mine = GENDER_LABELS[p.gender];
+    if (!mine) return '';
+    if (!p.isTeam) return mine;
+    var theirs = GENDER_LABELS[p.partnerGender];
+    return theirs ? mine + ' & ' + theirs : '';
+  }
+  function genderLine(p) {
+    var g = genderText(p);
+    return g ? '<div class="card-line card-gender">' + PERSON_ICON + esc(g) + '</div>' : '';
+  }
 
   /* ---------- State ---------- */
   var STORE_KEY = '40love.profile';
@@ -1699,6 +1800,7 @@
     { slug: 'indianapolis',  name: 'Indianapolis', state: 'IN' },
     { slug: 'los-angeles',   name: 'Los Angeles',  state: 'CA' },
     { slug: 'san-diego',     name: 'San Diego',    state: 'CA' },
+    { slug: 'bakersfield',   name: 'Bakersfield',  state: 'CA' },
     { slug: 'phoenix',       name: 'Phoenix',      state: 'AZ' },
     { slug: 'seattle',       name: 'Seattle',      state: 'WA' },
     { slug: 'spokane',       name: 'Spokane',      state: 'WA' },
@@ -1709,6 +1811,20 @@
     { slug: 'washington-dc', name: 'Washington',   state: 'DC' }
   ];
   var DEFAULT_CITY = 'indianapolis';
+  // Every city a member plays in, home city first. `city` is the home city;
+  // `cities` is the full list once they have picked more than one. Unknown
+  // slugs and repeats are dropped, and it is never empty.
+  function userCities() {
+    var u = state.user || {};
+    var raw = u.cities && u.cities.length ? u.cities : [u.city || DEFAULT_CITY];
+    var known = CITIES.map(function (c) { return c.slug; });
+    var list = raw.filter(function (c, i) { return known.indexOf(c) !== -1 && raw.indexOf(c) === i; });
+    return list.length ? list : [DEFAULT_CITY];
+  }
+  function citiesSummary(list) {
+    return list.length === 1 ? cityLabel(list[0]) : list.length + ' cities';
+  }
+
   function cityLabel(slug) {
     for (var ci = 0; ci < CITIES.length; ci++) {
       if (CITIES[ci].slug === slug) return CITIES[ci].name + ', ' + CITIES[ci].state;
@@ -1941,6 +2057,7 @@
           (p.photo ? '; background-image:url(' + p.photo + '); background-size:cover; background-position:center' : '') + '">' +
           esc(initials(p.name)) + '</span>' +
         '<span class="pn">' + esc(nm) + '</span>' +
+        (genderText(p) ? '<span class="pg">' + esc(genderText(p)) + '</span>' : '') +
         '<span class="pr">' + esc(pickReason(p)) + '</span>' +
       '</button>';
     }).join('');
@@ -2080,7 +2197,24 @@
     return p.rating ? p.rating + ' Skill Level' : p.skill;
   }
 
+  // The same-sport filter lives on Home, above the deck it changes. Drawn from
+  // state every time the deck is, so it can never disagree with the filter.
+  function syncMySports() {
+    var on = !!state.prefs.mySportsOnly;
+    $('#sw-mysports').setAttribute('aria-checked', String(on));
+    var sports = (state.user && state.user.sports) || [];
+    $('#mysports-note').textContent = on && sports.length
+      ? 'Showing ' + sports.join(' & ') + ' players'
+      : 'Showing players of every sport';
+  }
+  $('#sw-mysports').addEventListener('click', function () {
+    state.prefs.mySportsOnly = !state.prefs.mySportsOnly;
+    savePrefs();
+    renderDeck();
+  });
+
   function renderDeck() {
+    syncMySports();
     renderPicks();
     var deck = $('#deck');
     var p = currentProfile();
@@ -2090,7 +2224,9 @@
         '<div class="deck-empty">' +
         '<div class="big" aria-hidden="true">🎾</div>' +
         '<h2>That’s everyone nearby</h2>' +
-        '<p class="hint">You’ve seen all the players in range. Check back soon, or widen your radius in Settings.</p>' +
+        '<p class="hint">' + (state.prefs.mySportsOnly
+          ? 'You’ve seen everyone who shares a sport with you. Turn off “Only my sports” above to see more players, or widen your radius in Settings.'
+          : 'You’ve seen all the players in range. Check back soon, or widen your radius in Settings.') + '</p>' +
         '<button class="btn btn-ghost" id="reset-deck" style="width:auto; padding:12px 20px;">New balls — reset the deck</button>' +
         '</div>';
       $('#reset-deck').addEventListener('click', function () {
@@ -2135,6 +2271,7 @@
             (p.isTeam ? '<span class="tag tag-sport" style="margin-left:8px">Doubles team</span>' : '') +
             (p.verified ? '<span class="verified" aria-label="Verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>' : '') +
           '</div>' +
+          genderLine(p) +
           '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>' + esc(p.sports.join(' & ')) + '</div>' +
           '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s-6.5-5.4-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.6 12 21 12 21z"></path><circle cx="12" cy="10.2" r="2.4"></circle></svg>' + p.dist.toFixed(1) + ' miles away</div>' +
           '<div class="card-line"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="14" width="3.4" height="6" rx="1"></rect><rect x="10.3" y="10" width="3.4" height="10" rx="1"></rect><rect x="16.6" y="5" width="3.4" height="15" rx="1"></rect></svg>' + esc(skillLabel(p)) + '</div>' +
@@ -2221,6 +2358,7 @@
       (p.verified ? '<span class="verified" aria-label="Verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>' : '');
     var games = (p.playGames && p.playGames.length ? p.playGames : ALL_GAMES).map(function (g) { return GAME_LABELS[g]; }).join(' · ');
     $('#psheet-rows').innerHTML =
+      genderLine(p) +
       '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>' + esc(p.sports.join(' & ')) + ' · ' + esc(p.rating ? p.rating + ' Skill Level' : p.skill) + '</div>' +
       '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s-6.5-5.4-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.6 12 21 12 21z"></path><circle cx="12" cy="10.2" r="2.4"></circle></svg>' + p.dist.toFixed(1) + ' miles away</div>' +
       '<div class="card-line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>' + esc(p.avail) + '</div>' +
@@ -2524,7 +2662,8 @@
     var t = ensureThread(chatId);
     t.msgs.push({
       who: 'me', type: 'court',
-      court: 'Riverside Park Tennis Complex', day: 'Sat', time: '10:00 AM',
+      // a real court in their home city when we have a list for it
+      court: suggestedCourt(userCities()[0]) || 'Riverside Park Tennis Complex', day: 'Sat', time: '10:00 AM',
       sport: (p && p.sports[0]) || 'Tennis', when: 'Just now'
     });
     t.yourServe = false;
@@ -2532,36 +2671,88 @@
     deliverReply(chatId);
   });
 
-  /* ---------- Events ---------- */
-  // Meetups are nationwide by default; the picker narrows to one city. Showing
-  // everything first matters early on — an empty local list reads as "nothing
-  // is happening" rather than "not here yet".
-  var eventCity = 'all';
-
-  function visibleEvents() {
-    return eventCity === 'all' ? EVENTS : EVENTS.filter(function (e) { return e.city === eventCity; });
+  /* ---------- Places to play ---------- */
+  // City by city. Mirrors mobile/src/data/courts.js — keep the two in step;
+  // that file says what each field means and what was deliberately left out.
+  var COURTS_BY_CITY = {
+    bakersfield: [
+      { name: 'Greenacres Park PicklePlex', address: '2014 Calloway Dr', setting: 'outdoor', courts: 8, lights: true, access: 'public', note: 'Bakersfield’s biggest public complex — eight dedicated courts at Greenacres Community Center & Park. Open 6am–10pm.' },
+      { name: 'Jastro Park', address: '2900 Truxtun Ave', setting: 'outdoor', courts: 6, lights: true, access: 'public', note: 'Six dedicated courts downtown, beside the tennis courts. First come, first served.' },
+      { name: 'Stockdale River Ranch Community Park', address: '16303 Stockdale Ranch Dr', setting: 'outdoor', courts: 4, lights: null, access: 'public', note: 'The newest park in town (opened November 2025), far southwest.' },
+      { name: 'Haggin Oaks Park', address: '9200 McInnes Blvd', setting: 'outdoor', courts: 3, lights: true, access: 'public', note: 'Three courts in southwest Bakersfield; lights run on a timer.' },
+      { name: 'Campus Park South', address: '4445 Pin Oak Park Blvd', setting: 'outdoor', courts: 3, lights: true, access: 'public', note: 'Three dedicated courts in the southwest.' },
+      { name: 'Beale Park', address: '500 Oleander Ave', setting: 'outdoor', courts: null, lights: null, access: 'public', note: 'Free play in the Oleander neighborhood. Go in daylight — reports on the lights disagree.' },
+      { name: 'Farm Park (Gossamer Grove)', address: 'Parkdale Way, Shafter', setting: 'outdoor', courts: null, lights: null, access: 'public', note: 'Small neighborhood park in Shafter, northwest of town.' },
+      { name: 'Dignity Health Sports Complex — GSA Pickleball', address: '3101 Gilmore Ave, Suite 100', setting: 'indoor', courts: null, lights: true, access: 'paid', note: 'Indoor, air-conditioned play on multi-sport courts. Open play three days a week, plus memberships, punch cards and court rentals — call ahead for the schedule.' },
+      { name: 'Sportsplex Bakersfield', address: '6825 Ming Ave', setting: 'outdoor', courts: 4, lights: null, access: 'paid', note: 'Pay-to-play complex with weekly drop-in open play, leagues, clinics and court rentals you book online.' },
+      { name: 'Bakersfield Racquet Club', address: '1660 Pine St', setting: 'outdoor', courts: 4, lights: true, access: 'members', note: 'Private member-owned club downtown. Membership required; guests come with a member.' },
+      { name: 'Seven Oaks Country Club', address: '2000 Grand Lakes Ave', setting: 'outdoor', courts: 4, lights: true, access: 'members', note: 'Private country club — four dedicated courts with LED lights. Members and their guests.' },
+      { name: 'Stockdale Country Club', address: '7001 Stockdale Hwy', setting: 'outdoor', courts: 4, lights: null, access: 'members', note: 'Private country club. Members and their guests.' },
+      { name: 'Highgate at Seven Oaks', address: '2200 Highbury St', setting: 'outdoor', courts: 2, lights: true, access: 'members', note: 'Courts inside a gated community — residents and their guests only.' }
+    ]
+  };
+  var ACCESS_LABELS = { public: 'Free \u00B7 public', paid: 'Pay to play', members: 'Members only' };
+  var placeFilter = 'all';
+  function courtsFor(slug) { return COURTS_BY_CITY[slug] || []; }
+  // Somewhere both people can simply turn up; null when the city has no list.
+  function suggestedCourt(slug) {
+    var open = courtsFor(slug).filter(function (c) { return c.access === 'public'; });
+    return open.length ? open[0].name : null;
+  }
+  function renderPlaces(cities) {
+    var box = $('#places-list');
+    var withCourts = cities.filter(function (c) { return courtsFor(c).length > 0; });
+    if (!withCourts.length) { box.innerHTML = ''; return; }
+    var fits = function (c) { return placeFilter === 'all' || c.setting === placeFilter || c.setting === 'both'; };
+    var filters = [['all', 'All'], ['outdoor', 'Outdoor'], ['indoor', 'Indoor']].map(function (f) {
+      return '<button class="place-filter" type="button" data-filter="' + f[0] + '" aria-pressed="' + (placeFilter === f[0]) + '">' + f[1] + '</button>';
+    }).join('');
+    var sections = withCourts.map(function (city) {
+      var list = courtsFor(city).filter(fits);
+      var rows = list.map(function (c) {
+        var setting = c.setting === 'indoor' ? 'Indoor' : (c.setting === 'both' ? 'Indoor + outdoor' : 'Outdoor');
+        return '<div class="place" data-setting="' + c.setting + '" data-access="' + c.access + '">' +
+          '<div class="place-name">' + esc(c.name) + '</div>' +
+          '<div class="event-meta">' + esc(c.address) + '</div>' +
+          '<div class="event-tags"><span class="tag tag-sport">' + setting + '</span>' +
+            '<span class="tag">' + esc(ACCESS_LABELS[c.access]) + '</span>' +
+            (c.courts != null ? '<span class="tag">' + c.courts + ' courts</span>' : '') +
+            (c.lights === true && c.setting !== 'indoor' ? '<span class="tag">Lights</span>' : '') + '</div>' +
+          (c.note ? '<p class="place-note">' + esc(c.note) + '</p>' : '') +
+        '</div>';
+      }).join('');
+      return '<div class="week-head" data-places-city="' + city + '">' + esc(cityLabel(city)) + ' \u00B7 ' + list.length + (list.length === 1 ? ' place' : ' places') + '</div>' +
+        (rows || '<p class="hint" style="padding:8px 0">' + (placeFilter === 'indoor' ? 'No indoor courts listed here yet.' : 'No outdoor courts listed here yet.') + '</p>');
+    }).join('');
+    box.innerHTML = '<h3 class="places-head">Places to play</h3><div class="place-filters" role="group" aria-label="Indoor or outdoor">' + filters + '</div>' +
+      sections + '<p class="places-foot">Courts change \u2014 hours, fees and nets are the venue\u2019s call. Check before you make the drive.</p>';
+    $all('#places-list .place-filter').forEach(function (b) {
+      b.addEventListener('click', function () { placeFilter = b.getAttribute('data-filter'); renderPlaces(userCities()); });
+    });
   }
 
-  function renderEventCityPicker() {
-    var sel = $('#event-city');
-    if (!sel || sel.dataset.ready) return;
-    sel.innerHTML = '<option value="all">All cities</option>' + CITIES.map(function (c) {
-      return '<option value="' + c.slug + '">' + c.name + ', ' + c.state + '</option>';
-    }).join('');
-    sel.value = eventCity;
-    sel.addEventListener('change', function () { eventCity = sel.value; renderEvents(); });
-    sel.dataset.ready = '1';
+  /* ---------- Events ---------- */
+  // Each city runs its own meetups. You see the calendar for the cities on your
+  // profile, one or several, and nothing else. There is no nationwide list
+  // and no picker here: choosing cities in Settings is what changes it.
+  function visibleEvents() {
+    var cities = userCities();
+    return EVENTS.filter(function (e) { return cities.indexOf(e.city) !== -1; });
   }
 
   function renderEvents() {
-    renderEventCityPicker();
+    var cities = userCities();
+    var badge = $('#event-city-label');
+    badge.textContent = citiesSummary(cities);
+    badge.parentNode.setAttribute('title', cities.map(cityLabel).join(', '));
+    renderPlaces(cities);
     var list = $('#event-list');
     var shown = visibleEvents();
     if (!shown.length) {
       list.innerHTML = '<p class="hint" style="text-align:center;padding:40px 20px">'
-        + (eventCity === 'all'
-            ? 'No upcoming meetups anywhere yet \u2014 check back soon. \uD83C\uDFBE'
-            : 'Nothing on in ' + esc(cityLabel(eventCity)) + ' yet. Choose <b>All cities</b> to see what\u2019s happening elsewhere. \uD83C\uDFBE')
+        + (cities.length === 1
+            ? 'Nothing on in ' + esc(cityLabel(cities[0])) + ' yet — check back soon. 🎾'
+            : 'Nothing on in any of your ' + cities.length + ' cities yet — check back soon. 🎾')
         + '</p>';
       return;
     }
@@ -2583,8 +2774,8 @@
             '<div class="event-title">' + esc(e.title) + '</div>' +
             '<div class="event-meta">' + esc(e.venue) + ' · ' + esc(e.time) + '</div>' +
             '<div class="event-tags"><span class="tag tag-sport">' + esc(e.sport) + '</span><span class="tag">' + esc(e.level) + '</span>' +
-              // only worth showing when the list spans more than one city
-              (eventCity === 'all' && e.city ? '<span class="tag">' + esc(cityLabel(e.city)) + '</span>' : '') + '</div>' +
+              // which city, once the list spans more than one
+              (cities.length > 1 && e.city ? '<span class="tag tag-city">' + esc(cityLabel(e.city)) + '</span>' : '') + '</div>' +
             '<div class="event-extra">' +
               '<p class="hint" style="margin:0">' + esc(e.desc || '') + '</p>' +
               '<div class="going-row">' + avas + '<span class="going-label">+' + goingCount + ' going' + (going ? ' · including you' : '') + '</span></div>' +
@@ -2742,28 +2933,123 @@
     $all('#set-friendspref .chip').forEach(function (c) {
       c.setAttribute('aria-pressed', String(c.getAttribute('data-pref') === fpref));
     });
-    var curCity = (state.user && state.user.city) || DEFAULT_CITY;
-    $('#set-city').innerHTML = CITIES.map(function (c) {
-      return '<button class="chip" aria-pressed="' + (c.slug === curCity ? 'true' : 'false') +
-        '" data-city="' + c.slug + '">' + esc(c.name + ', ' + c.state) + '</button>';
-    }).join('');
-    $('#settings-footer').textContent = '40/LOVE prototype · ' + cityLabel(curCity) + ' · not a real account';
+    syncCities();
     // Draw the discovery prefs from state, so the controls always show what
     // is actually saved rather than whatever the DOM happens to be holding.
     $('#radius').value = state.prefs.radius;
     $('#radius-val').textContent = state.prefs.radius;
     $('#age-min').value = state.prefs.ageMin;
     $('#age-max').value = state.prefs.ageMax;
-    $('#sw-mysports').setAttribute('aria-checked', String(!!state.prefs.mySportsOnly));
+    syncTeam();
+  }
+
+  /* ---------- Settings: add, edit or remove a doubles partner ---------- */
+  var teamFormOpen = false;
+  function syncTeam() {
+    var u = state.user || {};
+    var isTeam = !!u.isTeam;
+    $('#sw-team').setAttribute('aria-checked', String(isTeam || teamFormOpen));
+    $('#team-form').hidden = !teamFormOpen;
+    $('#team-summary').hidden = teamFormOpen;
+    $('#team-summary-text').textContent = isTeam
+      ? 'Playing as ' + u.name + ' & ' + u.partnerName + '. Team profiles are for Play and Friends — Date mode is off, because a shared profile can’t date.'
+      : 'Found a doubles partner since you signed up? Add them here and the two of you share one profile for Play and Friends.';
+    $('#team-edit').textContent = isTeam ? 'Edit partner’s details' : 'Add a partner';
+    $('#team-save').textContent = isTeam ? 'Save partner' : 'Add partner';
+  }
+  function openTeamForm() {
+    var u = state.user || {};
+    $('#set-partner-name').value = u.partnerName || '';
+    $('#set-partner-age').value = u.partnerAge || '';
+    $all('#set-partner-gender .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(c.getAttribute('data-gender') === u.partnerGender));
+    });
+    teamFormOpen = true;
+    syncTeam();
+  }
+  function closeTeamForm() { teamFormOpen = false; syncTeam(); }
+  // After the profile changes shape: Date may have gone, so the mode pills,
+  // the mode switches and the deck all need redrawing.
+  function afterTeamChange() {
+    saveUser();
+    if (state.user.modes.indexOf(state.mode) === -1 && state.user.modes.length) state.mode = state.user.modes[0];
+    teamFormOpen = false;
+    syncSettings();
+    syncModeUI();
+  }
+  $('#set-partner-gender').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('.chip');
+    if (!btn) return;
+    $all('#set-partner-gender .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
+  });
+  $('#set-partner-age').addEventListener('input', function () {
+    $('#set-partner-age').value = $('#set-partner-age').value.replace(/\D/g, '').slice(0, 2);
+  });
+  $('#team-edit').addEventListener('click', openTeamForm);
+  $('#team-cancel').addEventListener('click', closeTeamForm);
+  $('#sw-team').addEventListener('click', function () {
+    if (!state.user) return;
+    if (teamFormOpen) { closeTeamForm(); return; }
+    if (!state.user.isTeam) { openTeamForm(); return; }
+    // Switching it off removes the partner and gives the profile back to one person.
+    var gone = state.user.partnerName;
+    state.user.isTeam = false;
+    state.user.partnerName = '';
+    state.user.partnerAge = null;
+    state.user.partnerGender = null;
+    afterTeamChange();
+    toast('Removed ' + gone + ' — your profile is just you again');
+  });
+  $('#team-save').addEventListener('click', function () {
+    if (!state.user) return;
+    var nm = $('#set-partner-name').value.trim();
+    var age = parseInt($('#set-partner-age').value, 10);
+    var gSel = $('#set-partner-gender .chip[aria-pressed="true"]');
+    if (!nm) { toast('Add your partner’s first name'); return; }
+    if (!age || age < 18 || age > 99) { toast('Both people on a team must be 18 or older'); return; }
+    if (!gSel) { toast('Tell us your partner’s gender so matching works'); return; }
+    var wasTeam = !!state.user.isTeam;
+    var hadDate = state.user.modes.indexOf('date') !== -1;
+    state.user.isTeam = true;
+    state.user.partnerName = nm;
+    state.user.partnerAge = age;
+    state.user.partnerGender = gSel.getAttribute('data-gender');
+    // A shared profile is never a dating profile.
+    state.user.modes = state.user.modes.filter(function (m) { return m !== 'date'; });
+    if (!state.user.modes.length) state.user.modes = ['play'];
+    afterTeamChange();
+    toast(wasTeam ? 'Partner updated' : (hadDate
+      ? 'Now playing as ' + state.user.name + ' & ' + nm + ' — Date mode is off for team profiles'
+      : 'Now playing as ' + state.user.name + ' & ' + nm));
+  });
+  // Cities are a multi-select: tap to add one, tap again to drop it. The first
+  // one picked is the home city; matching and meetups use all of them.
+  function syncCities() {
+    var mine = userCities();
+    $('#set-city').innerHTML = CITIES.map(function (c) {
+      return '<button class="chip" type="button" aria-pressed="' + (mine.indexOf(c.slug) !== -1 ? 'true' : 'false') +
+        '" data-city="' + c.slug + '">' + esc(c.name + ', ' + c.state) + '</button>';
+    }).join('');
+    $('#set-city-hint').textContent = mine.length > 1
+      ? 'You match with players and see meetups in all ' + mine.length + ' of your cities. Tap a city to add or drop it — your matches and messages stay either way.'
+      : 'You match with players and see meetups in your city. Split your time between two or more? Tap every city you play in.';
+    $('#settings-footer').textContent = '40/LOVE prototype · ' + citiesSummary(mine) + ' · not a real account';
   }
   $('#set-city').addEventListener('click', function (ev) {
     var btn = ev.target.closest('.chip');
     if (!btn || !state.user) return;
-    $all('#set-city .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === btn)); });
-    state.user.city = btn.getAttribute('data-city');
+    var slug = btn.getAttribute('data-city');
+    var mine = userCities();
+    var had = mine.indexOf(slug) !== -1;
+    if (had && mine.length === 1) { toast('Keep at least one city — pick another first'); return; }
+    var next = had ? mine.filter(function (c) { return c !== slug; }) : mine.concat([slug]);
+    state.user.cities = next;
+    state.user.city = next[0];
     saveUser();
-    $('#settings-footer').textContent = '40/LOVE prototype · ' + cityLabel(state.user.city) + ' · not a real account';
-    toast('Now playing in ' + cityLabel(state.user.city));
+    syncCities();
+    toast(had ? 'Dropped ' + cityLabel(slug)
+              : (next.length > 1 ? 'Added ' + cityLabel(slug) + ' — now playing in ' + next.length + ' cities'
+                                 : 'Now playing in ' + cityLabel(slug)));
   });
 
   $('#set-playgames').addEventListener('click', function (ev) {
@@ -2866,13 +3152,6 @@
   }
   $('#age-min').addEventListener('change', commitAge);
   $('#age-max').addEventListener('change', commitAge);
-  $('#sw-mysports').addEventListener('click', function () {
-    var el = $('#sw-mysports');
-    var on = el.getAttribute('aria-checked') === 'true';
-    el.setAttribute('aria-checked', String(!on));
-    state.prefs.mySportsOnly = !on;
-    savePrefs();
-  });
 
   $('#open-settings').addEventListener('click', function () { syncSettings(); show('screen-settings'); });
   $('#settings-back').addEventListener('click', function () {
@@ -2907,6 +3186,12 @@
     $('#team-box').hidden = true;
     $('#ob-partner-name').value = '';
     $('#ob-partner-age').value = '';
+    // ...and the Settings add-a-partner form, which is on the same screen as
+    // this button and may have been left open half-filled.
+    teamFormOpen = false;
+    $('#set-partner-name').value = '';
+    $('#set-partner-age').value = '';
+    $all('#set-partner-gender .chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
     $all('#ob-partner-gender .chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
     $('#ob-city').value = DEFAULT_CITY;
     $('#ob-modes .mode-row[data-mode="date"]').hidden = false;

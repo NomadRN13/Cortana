@@ -246,6 +246,12 @@ begin
   assert v = 'spokane', format('Spokane coords placed in %s', v);
   v := nearest_city(34.05, -118.24);
   assert v = 'los-angeles', format('LA coords placed in %s', v);
+  -- Bakersfield is its own city: downtown lands there, and neither it nor LA
+  -- swallows the other (they are ~110 miles apart)
+  v := nearest_city(35.37, -119.02);
+  assert v = 'bakersfield', format('Bakersfield coords placed in %s', v);
+  select count(*) into c from cities where launched;
+  assert c >= 12, format('expected 12+ launched cities, got %s', c);
   -- middle of the Pacific belongs to no city — the app must ask, not guess
   v := nearest_city(35.0, -150.0);
   assert v is null, format('open ocean placed in %s', v);
@@ -275,9 +281,119 @@ begin
   assert array_length(ids, 1) > 0, 'city scoping emptied the deck entirely';
 end $$;
 reset role;
+
+-- ---- 2f-ii. A member can play in more than one city ----
+-- Maya is still in Los Angeles with no coordinates. Aaron adds Los Angeles as
+-- a second city: now they have a city in common and she must be in his deck.
+update profiles set extra_cities = array['los-angeles']
+where id = '00000000-0000-4000-8000-00000000000a';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a'; -- Aaron, Indianapolis + Los Angeles
+do $$
+declare ids uuid[] := '{}'; r record;
+begin
+  for r in select * from get_discovery_deck('play', 50) loop ids := ids || r.user_id; end loop;
+  assert '00000000-0000-4000-8000-000000000001' = any(ids),
+    'adding a second city did not bring that city''s players into the deck';
+end $$;
+reset role;
+-- The case that matters in real life: she HAS a location, and it is in Los
+-- Angeles, 1,800 miles from Aaron's phone and far outside any radius. The
+-- radius must not be what decides this — the shared city is. Her distance comes
+-- back unknown rather than as a four-digit number of miles.
+update profiles set approx_lat = 34.05, approx_lng = -118.24
+where id = '00000000-0000-4000-8000-000000000001';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
+do $$
+declare r record; found boolean := false;
+begin
+  assert (get_my_profile() ->> 'approx_lat') is not null,
+    'test setup: Aaron needs a location for this to prove anything';
+  for r in select * from get_discovery_deck('play', 50) loop
+    if r.user_id = '00000000-0000-4000-8000-000000000001' then
+      found := true;
+      assert r.distance_mi is null,
+        format('a player in another metro came back %s miles away instead of unknown', r.distance_mi);
+      assert r.gender is not null, 'the deck row carries no gender';
+    end if;
+  end loop;
+  assert found, 'a player in my second city was dropped by the distance filter';
+end $$;
+reset role;
+-- ...while inside one metro the radius still does its job: someone in my own
+-- city but beyond my radius stays out.
+update profiles set city = 'indianapolis', extra_cities = '{}', approx_lat = 40.60, approx_lng = -86.16
+where id = '00000000-0000-4000-8000-000000000001';   -- ~57 miles north of downtown Indianapolis
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
+do $$
+declare ids uuid[] := '{}'; r record; rad int;
+begin
+  rad := (get_my_profile() ->> 'radius_mi')::int;
+  for r in select * from get_discovery_deck('play', 50) loop ids := ids || r.user_id; end loop;
+  if rad < 57 then
+    assert not ('00000000-0000-4000-8000-000000000001' = any(ids)),
+      'the radius stopped applying inside a single metro';
+  end if;
+end $$;
+reset role;
+update profiles set city = 'los-angeles', approx_lat = null, approx_lng = null
+where id = '00000000-0000-4000-8000-000000000001';
+
+-- ...and it works from the other side: Aaron back to one city, Maya (home LA)
+-- adds Indianapolis as her extra. A city in common is a city in common,
+-- whichever of the two lists it sits in.
+update profiles set extra_cities = '{}' where id = '00000000-0000-4000-8000-00000000000a';
+update profiles set extra_cities = array['indianapolis'] where id = '00000000-0000-4000-8000-000000000001';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
+do $$
+declare ids uuid[] := '{}'; r record;
+begin
+  for r in select * from get_discovery_deck('play', 50) loop ids := ids || r.user_id; end loop;
+  assert '00000000-0000-4000-8000-000000000001' = any(ids),
+    'a member whose EXTRA city is mine is missing from my deck';
+end $$;
+reset role;
+-- The list is kept honest by the database, not by the app.
+do $$
+declare got text[];
+begin
+  begin
+    update profiles set extra_cities = array['atlantis'] where id = '00000000-0000-4000-8000-000000000001';
+    assert false, 'unknown slug accepted in extra_cities';
+  exception when foreign_key_violation then null;
+  end;
+  -- duplicates collapse, the home city is never listed twice, order is kept
+  update profiles set extra_cities = array['seattle', 'los-angeles', 'seattle', 'indianapolis']
+  where id = '00000000-0000-4000-8000-000000000001';
+  select extra_cities into got from profiles where id = '00000000-0000-4000-8000-000000000001';
+  assert got = array['seattle', 'indianapolis'],
+    format('extra_cities not cleaned: %s', got);
+  -- moving home to a city already in the list takes it out of the list
+  update profiles set city = 'seattle' where id = '00000000-0000-4000-8000-000000000001';
+  select extra_cities into got from profiles where id = '00000000-0000-4000-8000-000000000001';
+  assert got = array['indianapolis'],
+    format('home city left in extra_cities after a move: %s', got);
+end $$;
+-- A member with no city in common still sees nobody from elsewhere.
+update profiles set city = 'los-angeles', extra_cities = array['seattle']
+where id = '00000000-0000-4000-8000-000000000001';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
+do $$
+declare ids uuid[] := '{}'; r record;
+begin
+  for r in select * from get_discovery_deck('play', 50) loop ids := ids || r.user_id; end loop;
+  assert not ('00000000-0000-4000-8000-000000000001' = any(ids)),
+    'a member with no city in common leaked into the deck';
+end $$;
+reset role;
+
 -- put Maya back so later tests are unaffected
 update profiles
-set city = 'indianapolis', approx_lat = 39.78, approx_lng = -86.16
+set city = 'indianapolis', extra_cities = '{}', approx_lat = 39.78, approx_lng = -86.16
 where id = '00000000-0000-4000-8000-000000000001';
 
 -- ---- 2g. Devices: remembered, listable, and revocable for real ----
@@ -1080,10 +1196,11 @@ begin
 end $$;
 reset role;
 
--- ---- 9k. Meetups are nationwide ----
--- The app used to filter events to the member's own city, so this was never
--- exercised: a member must be able to read an event in a city they are not in,
--- or the "All cities" picker returns their own city and nothing else.
+-- ---- 9k. Meetups in a city other than your home one are readable ----
+-- The app shows a member the meetups for every city they have selected, and a
+-- member can select cities beyond their home one — so the database must let
+-- them read an event in a city that is not profiles.city. (Which cities' events
+-- appear is the app's choice of query; the app asks only for selected cities.)
 reset role;
 insert into events (title, venue, starts_at, sport, capacity, city)
 values ('Green Lake Social', 'Green Lake Courts', now() + interval '5 days', 'pickleball', 12, 'seattle');
@@ -1097,7 +1214,7 @@ begin
   select count(*) into c from events where city = 'seattle';
   assert c >= 1, 'a member cannot see meetups outside their own city';
   select count(*) into c from events;
-  assert c >= 2, 'the nationwide list should span more than one city';
+  assert c >= 2, 'events from more than one city should be readable';
 end $$;
 reset role;
 delete from events where title = 'Green Lake Social';

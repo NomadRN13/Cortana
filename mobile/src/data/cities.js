@@ -1,5 +1,6 @@
 // The cities 40/LOVE is open in. Mirrors public.cities in
-// supabase/migrations/20260806000014_cities.sql — keep the two in step; the
+// supabase/migrations/20260806000014_cities.sql (plus later city migrations,
+// e.g. 20260806000025_bakersfield.sql) — keep the two in step; the
 // database is the authority and its foreign key will reject anything here
 // that doesn't exist there.
 //
@@ -9,6 +10,7 @@ export const CITIES = [
   { slug: 'indianapolis',  name: 'Indianapolis', state: 'IN', lat: 39.768, lng: -86.158, metroRadius: 40 },
   { slug: 'los-angeles',   name: 'Los Angeles',  state: 'CA', lat: 34.052, lng: -118.244, metroRadius: 60 },
   { slug: 'san-diego',     name: 'San Diego',    state: 'CA', lat: 32.716, lng: -117.161, metroRadius: 40 },
+  { slug: 'bakersfield',   name: 'Bakersfield',  state: 'CA', lat: 35.373, lng: -119.019, metroRadius: 30 },
   { slug: 'phoenix',       name: 'Phoenix',      state: 'AZ', lat: 33.448, lng: -112.074, metroRadius: 50 },
   { slug: 'seattle',       name: 'Seattle',      state: 'WA', lat: 47.606, lng: -122.332, metroRadius: 40 },
   { slug: 'spokane',       name: 'Spokane',      state: 'WA', lat: 47.659, lng: -117.426, metroRadius: 35 },

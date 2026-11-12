@@ -12,7 +12,8 @@ regression in `state.js` fails here rather than on someone's phone.
 - `chat.test.js` — a message the server refuses must never sit in the thread
   looking sent, must survive a thread refresh, and must be retryable.
 - `safety.test.js` — block, report, and RSVP either happen or say they didn't,
-  and meetups list nationwide until a city is picked.
+  and meetups follow the member's selected cities (one or several) and are
+  never fetched without a city.
 - `settings.test.js` — every setting that decides who can see you or who you
   see reverts and says so if the server refuses the write.
 - `boot.test.js` — opening the app signed in with no cached profile always

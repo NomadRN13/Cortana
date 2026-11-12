@@ -8,17 +8,7 @@ import { Btn, Chip, Avatar } from '../components/ui';
 import { useApp, ageFromBirthdate } from '../state';
 import { SPORTS, SKILLS } from '../data/seed';
 import { CITIES, DEFAULT_CITY } from '../data/cities';
-
-// "MM/DD/YYYY" → "YYYY-MM-DD", or null if not a real calendar date
-function parseBirthdate(text) {
-  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(text.trim());
-  if (!m) return null;
-  const [, mm, dd, yyyy] = m;
-  const iso = `${yyyy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
-  const d = new Date(`${iso}T12:00:00Z`);
-  if (Number.isNaN(d.getTime()) || d.getUTCMonth() + 1 !== Number(mm) || d.getUTCDate() !== Number(dd)) return null;
-  return iso;
-}
+import { parseBirthdate, formatBirthdateInput } from '../lib/birthdate';
 
 const MODES = [
   { key: 'date', icon: 'heart-outline', name: 'Date Mode', desc: 'Find your perfect match' },
@@ -80,7 +70,9 @@ export default function OnboardingScreen({ navigation, route }) {
   const [partnerName, setPartnerName] = useState('');
   const [partnerBirthdateText, setPartnerBirthdateText] = useState('');
   const [partnerGender, setPartnerGender] = useState(null);
-  const [city, setCity] = useState(null);       // null until we've looked
+  // Every city they play in; the first one picked is their home city. Empty
+  // until we've looked at where they are.
+  const [cities, setCities] = useState([]);
   const [cityDetected, setCityDetected] = useState(false);
 
   // Ask location once, up front, purely to preselect their city. If we're
@@ -89,7 +81,7 @@ export default function OnboardingScreen({ navigation, route }) {
     let alive = true;
     app.detectCity().then((slug) => {
       if (!alive) return;
-      if (slug) setCity(slug);
+      if (slug) setCities((cur) => (cur.length ? cur : [slug]));
       setCityDetected(true);
     });
     return () => { alive = false; };
@@ -144,7 +136,7 @@ export default function OnboardingScreen({ navigation, route }) {
       if (a < 18) return Alert.alert('40/LOVE is 18+', 'You must be 18 or older to join.');
       if (a > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
       if (!gender) return Alert.alert('Almost there', 'Tell us who you are so matching works.');
-      if (!city) return Alert.alert('Almost there', 'Pick the city you play in.');
+      if (!cities.length) return Alert.alert('Almost there', 'Pick at least one city you play in.');
       if (isTeam) {
         if (!partnerName.trim()) return Alert.alert('Almost there', 'Add your partner’s first name.');
         const piso = parseBirthdate(partnerBirthdateText);
@@ -184,7 +176,8 @@ export default function OnboardingScreen({ navigation, route }) {
         friendsPref,
         phone: phoneE164,
         phoneVerified,
-        city: city || DEFAULT_CITY,
+        city: cities[0] || DEFAULT_CITY,
+        cities: cities.length ? cities : [DEFAULT_CITY],
         isTeam,
         partnerName: isTeam ? partnerName.trim() : '',
         partnerBirthdate: isTeam ? parseBirthdate(partnerBirthdateText) : null,
@@ -230,7 +223,7 @@ export default function OnboardingScreen({ navigation, route }) {
               <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="e.g. Aaron" placeholderTextColor="rgba(244,246,240,0.35)" />
             </Field>
             <Field label="Birthdate">
-              <TextInput style={styles.input} value={birthdateText} onChangeText={setBirthdateText} keyboardType="number-pad" placeholder="MM/DD/YYYY" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={10} />
+              <TextInput style={styles.input} value={birthdateText} onChangeText={(t) => setBirthdateText(formatBirthdateInput(t))} keyboardType="number-pad" placeholder="MM/DD/YYYY" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={10} />
             </Field>
             <Field label="I am">
               <View style={styles.chips}>
@@ -279,7 +272,7 @@ export default function OnboardingScreen({ navigation, route }) {
               <View style={styles.seekingBox}>
                 <Text style={styles.boxLabel}>Your partner</Text>
                 <TextInput style={styles.input} value={partnerName} onChangeText={setPartnerName} placeholder="Their first name" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={40} />
-                <TextInput style={[styles.input, { marginTop: 8 }]} value={partnerBirthdateText} onChangeText={setPartnerBirthdateText} keyboardType="number-pad" placeholder="Their birthdate — MM/DD/YYYY" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={10} />
+                <TextInput style={[styles.input, { marginTop: 8 }]} value={partnerBirthdateText} onChangeText={(t) => setPartnerBirthdateText(formatBirthdateInput(t))} keyboardType="number-pad" placeholder="Their birthdate — MM/DD/YYYY" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={10} />
                 <Text style={[styles.boxLabel, { marginTop: 12 }]}>They are</Text>
                 <View style={styles.chips}>
                   {GENDERS.map((g) => (
@@ -294,22 +287,24 @@ export default function OnboardingScreen({ navigation, route }) {
             <Field label="Where do you play?">
               <View style={styles.chips}>
                 {CITIES.map((c) => (
-                  <Chip key={c.slug} label={`${c.name}, ${c.state}`} active={city === c.slug} onPress={() => setCity(c.slug)} />
+                  <Chip key={c.slug} label={`${c.name}, ${c.state}`} active={cities.includes(c.slug)} onPress={() => toggle(cities, setCities, c.slug)} />
                 ))}
               </View>
-              {cityDetected && !city && (
+              {cityDetected && !cities.length && (
                 <Text style={[type.hint, { marginTop: 8 }]}>
-                  We're not open where you are yet — pick the closest city you'd travel to, or join the waitlist at 40love.app and we'll tell you when yours opens.
+                  We're not open where you are yet — pick any cities you'd travel to, or join the waitlist at 40love.app and we'll tell you when yours opens.
                 </Text>
               )}
-              {cityDetected && !!city && (
+              {cityDetected && cities.length > 0 && (
                 <Text style={[type.hint, { marginTop: 8 }]}>
-                  You'll meet players in this city. You can change it any time in Settings.
+                  {cities.length > 1
+                    ? `You'll meet players and see meetups in all ${cities.length} cities. You can change them any time in Settings.`
+                    : 'You’ll meet players and see meetups in this city. Play in more than one? Pick them all — and you can change them any time in Settings.'}
                 </Text>
               )}
             </Field>
 
-            <Text style={type.hint}>Your name, age, and photo appear on your player card — your exact birthdate never does. You must be 18 or older.</Text>
+            <Text style={type.hint}>Your name, age, gender, and photo appear on your player card — your exact birthdate never does. You must be 18 or older.</Text>
           </>
         )}
 

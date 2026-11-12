@@ -297,13 +297,16 @@ const out = (n) => require('path').join(OUT, n);
     const dot = await page.$eval('#bell-btn .bell-dot', (el) => getComputedStyle(el).display);
     if (dot !== 'none') throw new Error('bell dot still visible');
   });
-  await step('my-sports filter toggle', async () => {
-    await page.click('#menu-btn');
+  await step('my-sports filter toggle is on Home, above the deck', async () => {
+    // It used to be the last row of Settings; it now sits where it is used.
+    if (!(await page.isVisible('#screen-home #sw-mysports'))) throw new Error('filter is not visible on Home');
     await page.click('#sw-mysports');
     const v = await page.getAttribute('#sw-mysports', 'aria-checked');
     if (v !== 'true') throw new Error('toggle did not flip');
+    const note = (await page.textContent('#mysports-note')).trim();
+    if (!/^Showing .+ players$/.test(note) || /every sport/.test(note)) throw new Error('note did not change: ' + note);
     await page.click('#sw-mysports');
-    await page.click('#settings-back');
+    if ((await page.getAttribute('#sw-mysports', 'aria-checked')) !== 'false') throw new Error('toggle did not flip back');
   });
   await step('settings dating prefs: gender preselected, seeking editable', async () => {
     await page.click('#menu-btn');

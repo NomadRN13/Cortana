@@ -86,22 +86,57 @@ async function main() {
   check('an accepted RSVP sticks', ev().going === true, ev().going);
   check('an accepted RSVP is silent', alerts.length === 0, alerts);
 
-  // ---- nationwide meetups + city picker ----
+  // ---- meetups follow the cities on the profile: those, and no others ----
   const seen = [];
-  impl.listEvents = (city) => {
-    seen.push(city);
+  impl.listEvents = (cities) => {
+    seen.push(cities);
     const all = [
       { id: 'e-indy', title: 'Indy Mixer', venue: 'Broad Ripple', sport: 'tennis', city: 'indianapolis', capacity: 12, starts_at: soon, event_rsvps: [] },
       { id: 'e-sea', title: 'Seattle Mixer', venue: 'Green Lake', sport: 'pickleball', city: 'seattle', capacity: 12, starts_at: soon, event_rsvps: [] },
+      { id: 'e-mia', title: 'Miami Mixer', venue: 'Flamingo Park', sport: 'tennis', city: 'miami', capacity: 12, starts_at: soon, event_rsvps: [] },
     ];
-    return !city || city === 'all' ? all : all.filter((e) => e.city === city);
+    // Answers the way the old nationwide API did when asked without a city, so
+    // a regression that drops the cities shows up as every event, not none.
+    const list = Array.isArray(cities) ? cities : (cities ? [cities] : []);
+    return !list.length || list.includes('all') ? all : all.filter((e) => list.includes(e.city));
   };
-  check('the list starts nationwide', app.eventCity === 'all', app.eventCity);
-  await act(async () => { app.setEventCity('seattle'); await tick(40); });
-  check('picking a city refetches rather than filtering what was already loaded', seen[seen.length - 1] === 'seattle', seen);
-  check('picking a city narrows the list', app.events.length === 1 && app.events[0].city === 'seattle', app.events.map((e) => e.city));
-  await act(async () => { app.setEventCity('all'); await tick(40); });
-  check('going back to nationwide shows every city', app.events.length === 2, app.events.map((e) => e.city));
+  const shown = () => app.events.map((e) => e.city).sort().join(',');
+  const last = () => [].concat(seen[seen.length - 1] || []).join(',');
+
+  // The provider only carries a local user once one has been saved; seed one
+  // the way onboarding does, so there is a city to belong to and to move from.
+  await act(async () => {
+    await app.finishOnboarding({
+      name: 'Sam', birthdate: '1994-01-01', city: 'indianapolis', modes: ['play'],
+      gender: 'man', seeking: [], playGames: ['singles'], playPref: 'everyone',
+      friendsPref: 'everyone', sports: ['Tennis'], skill: 'Intermediate', rating: '', bio: '',
+    });
+    await tick(60);
+  });
+  check('the meetup list starts as the member’s own city', app.eventCities.join(',') === 'indianapolis', app.eventCities);
+  check('there is no separate city picker for meetups', typeof app.setEventCity === 'undefined', typeof app.setEventCity);
+
+  await act(async () => { app.updateCity('seattle'); await tick(60); });
+  check('moving city refetches for the new city', last() === 'seattle', seen);
+  check('only the new city’s meetups are shown', shown() === 'seattle', shown());
+
+  // ---- more than one city at a time ----
+  let ok;
+  await act(async () => { ok = app.toggleCity('indianapolis'); await tick(60); });
+  check('a second city can be added', ok === true && app.eventCities.join(',') === 'seattle,indianapolis', app.eventCities);
+  check('the first city picked stays the home city', app.user.city === 'seattle', app.user.city);
+  check('meetups are fetched for every selected city', last() === 'seattle,indianapolis', seen);
+  check('meetups from all selected cities are shown, and no others', shown() === 'indianapolis,seattle', shown());
+  const saved = calls.filter((c) => c.name === 'updateMyProfile').map((c) => c.args[0]).filter((a) => a && 'extra_cities' in a).pop();
+  check('the server is told the home city and the extras', !!saved && saved.city === 'seattle' && (saved.extra_cities || []).join(',') === 'indianapolis', saved);
+
+  await act(async () => { ok = app.toggleCity('seattle'); await tick(60); });
+  check('dropping the home city promotes the next one', ok === true && app.user.city === 'indianapolis' && app.eventCities.join(',') === 'indianapolis', [app.user.city, app.eventCities]);
+  check('a dropped city’s meetups go with it', shown() === 'indianapolis', shown());
+
+  await act(async () => { ok = app.toggleCity('indianapolis'); await tick(60); });
+  check('the last city cannot be dropped', ok === false && app.eventCities.join(',') === 'indianapolis', [ok, app.eventCities]);
+  check('the list is never fetched without a city', seen.length > 0 && seen.every((c) => [].concat(c || []).length > 0 && ![].concat(c).includes('all')), seen);
 
   await act(async () => { renderer.unmount(); });
   console.log(failures ? `\n${failures} failing` : '\nall green');

@@ -99,7 +99,22 @@ export async function getProfilesByIds(ids) {
   if (!ids.length) return [];
   const { data, error } = await supabase.rpc('get_profile_cards', { p_ids: ids });
   if (error) throw error;
-  return data || [];
+  const cards = data || [];
+  // The card carries the account holder's gender but not their doubles
+  // partner's, and a team card that names one person's gender reads as if it
+  // described both. partner_gender is one of the columns members may read
+  // directly (migration 20260806000018), so fetch it for the teams. If this
+  // fails the cards still work — a team just shows no gender line.
+  const teamIds = cards.filter((c) => c.is_team).map((c) => c.id);
+  if (teamIds.length) {
+    try {
+      const { data: rows } = await supabase.from('profiles').select('id, partner_gender').in('id', teamIds);
+      const byId = {};
+      (rows || []).forEach((r) => { byId[r.id] = r.partner_gender; });
+      cards.forEach((c) => { if (c.is_team) c.partner_gender = byId[c.id] || null; });
+    } catch (e) { /* leave partner_gender unset */ }
+  }
+  return cards;
 }
 
 // Partial profile update (prefs, bio, activity ping) — only the given fields.
@@ -109,7 +124,7 @@ export async function updateMyProfile(fields) {
   if (error) throw error;
 }
 
-export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, approxLng, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly, city, gender, seeking, playGames, playPref, friendsPref, isTeam, partnerName, partnerBirthdate, partnerGender }) {
+export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, approxLng, availabilityNote, modes, radiusMi, ageMin, ageMax, sameSportsOnly, city, extraCities, gender, seeking, playGames, playPref, friendsPref, isTeam, partnerName, partnerBirthdate, partnerGender }) {
   const { data: { user } } = await supabase.auth.getUser();
   const { error } = await supabase.from('profiles').upsert({
     id: user.id,
@@ -126,6 +141,9 @@ export async function upsertMyProfile({ firstName, birthdate, bio, approxLat, ap
     age_max: ageMax,
     same_sports_only: sameSportsOnly,
     city,
+    // Any cities beyond the home one. The database drops repeats and the home
+    // city itself, and refuses a slug it doesn't know.
+    extra_cities: extraCities || [],
     gender: gender || null,
     seeking: seeking || [],
     play_games: playGames && playGames.length ? playGames : ['singles', 'doubles', 'mixed_doubles'],
@@ -272,7 +290,10 @@ export async function makePhotoPrimary(position) {
 export async function fetchDeck(mode, limit = 20) {
   const { data, error } = await supabase.rpc('get_discovery_deck', { p_mode: mode, p_limit: limit });
   if (error) throw error;
-  return data; // [{ user_id, first_name, age, distance_mi, sports, verified, availability_note, bio, is_new, score }]
+  // [{ user_id, first_name, age, distance_mi, sports, verified, availability_note, bio, is_new, score,
+  //    is_team, partner_name, partner_age, gender, partner_gender }]
+  // distance_mi is null for someone in another metro (a second city of yours), not a huge number.
+  return data;
 }
 
 export async function swipe(targetId, mode, action) {
@@ -375,17 +396,18 @@ export function subscribeToMessages(matchId, onEvent) {
 
 // ---------- Events ----------
 
-// Pass a city slug to narrow, or nothing at all for every city. Events are
-// readable everywhere by design — a mixer three states away is still worth
-// seeing when you're travelling, and in a young app the local list is often
-// empty, which reads as "nothing is happening" rather than "not here yet".
-export async function listEvents(city) {
-  let q = supabase
+// Meetups for the given cities — the ones on the member's profile. Each city
+// runs its own calendar, so cities are required: asking without any returns
+// nothing rather than quietly falling back to every city in the country.
+export async function listEvents(cities) {
+  const list = (Array.isArray(cities) ? cities : [cities]).filter(Boolean);
+  if (!list.length) return [];
+  const { data, error } = await supabase
     .from('events')
     .select('*, event_rsvps(user_id, status)')
-    .gte('starts_at', new Date().toISOString());
-  if (city && city !== 'all') q = q.eq('city', city);
-  const { data, error } = await q.order('starts_at', { ascending: true });
+    .gte('starts_at', new Date().toISOString())
+    .in('city', list)
+    .order('starts_at', { ascending: true });
   if (error) throw error;
   return data;
 }

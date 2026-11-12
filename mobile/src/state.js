@@ -25,6 +25,15 @@ const PREFS_KEY = '40love.prefs';
 const DEFAULT_PREFS = { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false };
 const AppState = createContext(null);
 
+// Every city a member plays in, home city first. A profile always has a home
+// city (`city`); `cities` is the full list when they have picked more than
+// one. Unknown slugs and repeats are dropped, and it is never empty.
+export function citiesOf(u) {
+  const raw = u && Array.isArray(u.cities) && u.cities.length ? u.cities : [(u && u.city) || DEFAULT_CITY];
+  const list = raw.filter((c, i) => !!cityBySlug(c) && raw.indexOf(c) === i);
+  return list.length ? list : [DEFAULT_CITY];
+}
+
 // B-10: compare calendar parts directly — no UTC/local drift.
 export function ageFromBirthdate(birthdate) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(birthdate));
@@ -63,6 +72,8 @@ function mapDeckRow(row) {
     isTeam: !!row.is_team,
     partnerName: row.partner_name || '',
     partnerAge: row.partner_age != null ? row.partner_age : null,
+    gender: row.gender || null,
+    partnerGender: row.is_team ? (row.partner_gender || null) : null,
   };
 }
 
@@ -84,8 +95,10 @@ function mapProfileRow(p) {
     verified: !!p.verified_at,
     avail: p.availability_note || '',
     bio: p.bio || '',
+    gender: p.gender || null,
     isTeam: !!p.is_team,
     partnerName: p.partner_name || '',
+    partnerGender: p.is_team ? (p.partner_gender || null) : null,
     partnerAge: p.is_team ? (p.partner_age != null ? p.partner_age : ageFromBirthdate(p.partner_birthdate)) : null,
   };
 }
@@ -162,9 +175,21 @@ export function AppStateProvider({ children }) {
   const [notifs, setNotifs] = useState(NOTIFICATIONS.map((n) => ({ ...n })));
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
   const [liveEvents, setLiveEvents] = useState(null);
-  // Which city's meetups to show. 'all' is the default: nationwide, so a new
-  // member in a quiet city sees a calendar rather than an empty screen.
-  const [eventCity, setEventCity] = useState('all');
+  // null liveEvents means "not loaded", which is not the same as "none": the
+  // screen must not say a city has no meetups while it is still asking, or
+  // after the question failed.
+  const [eventsError, setEventsError] = useState(false);
+  // Meetups belong to one city each, and a member sees the meetups for the
+  // cities on their profile — one city or several — and no others. There is no
+  // nationwide list; choosing cities in Settings is what changes it. Kept in a
+  // ref as well, because the fetch outlives the render that started it.
+  const eventCities = citiesOf(user);
+  const eventCityKey = eventCities.join(',');
+  const eventCityRef = useRef({ key: eventCityKey, list: eventCities });
+  const cityWriteSeqRef = useRef(0);                     // latest city selection sent
+  const cityWriteChainRef = useRef(Promise.resolve());   // city writes go one at a time, in order
+  const cityConfirmedRef = useRef(null);                 // the selection the server last accepted
+  eventCityRef.current = { key: eventCityKey, list: eventCities };
   const [myPhotos, setMyPhotos] = useState(null); // live: [{position, url, status}]
   const [pendingMatch, setPendingMatch] = useState(null); // B-21: match made by THEIR like, waiting to celebrate
   const [devices, setDevices] = useState([]);
@@ -320,8 +345,13 @@ export function AppStateProvider({ children }) {
   };
 
   const refreshEvents = async () => {
+    const asked = eventCityRef.current;
+    setEventsError(false);
     try {
-      const rows = await api.listEvents(eventCity);
+      const rows = await api.listEvents(asked.list);
+      // The member changed cities while this was in flight: a newer fetch is
+      // on its way, and this answer is for a selection they no longer have.
+      if (asked.key !== eventCityRef.current.key) return;
       const week = (ts) => {
         const days = (new Date(ts) - new Date()) / 86400000;
         return days <= 7 ? 'This week' : days <= 14 ? 'Next week' : 'Coming up';
@@ -347,16 +377,22 @@ export function AppStateProvider({ children }) {
           desc: '',
         };
       }));
-    } catch (e) { /* keep current state */ }
+    } catch (e) {
+      // Only if this is still the question being asked — a failure for a
+      // selection they have since changed is not worth reporting.
+      if (asked.key === eventCityRef.current.key) setEventsError(true);
+    }
   };
 
-  // Changing the city refetches rather than filtering what's already loaded:
-  // the list is capped by the query, so filtering locally would quietly hide
-  // events in the chosen city that never came down in the first place.
+  // Changing cities swaps the whole list: the old selection's meetups are
+  // cleared at once rather than left on screen until the new ones arrive, so
+  // nothing from a city you dropped is ever shown — or joinable — afterwards.
   useEffect(() => {
-    if (live) refreshEvents();
+    if (!live) return;
+    setLiveEvents(null);
+    refreshEvents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventCity, live]);
+  }, [eventCityKey, live]);
 
   const refreshNotifs = async () => {
     try {
@@ -577,16 +613,67 @@ export function AppStateProvider({ children }) {
     return ok;
   };
 
-  const updateCity = (citySlug) => {
-    if (!cityBySlug(citySlug) || !user) return;
-    const prev = user;
-    saveUser({ ...user, city: citySlug });
+  // The first city in the list is the home city — the one a profile card
+  // names and the one the database keys on; the rest ride along as extras.
+  // Matching and meetups use all of them.
+  const updateCities = (list) => {
+    if (!user) return;
+    const clean = (list || []).filter((c, i) => !!cityBySlug(c) && list.indexOf(c) === i);
+    if (!clean.length) return; // a profile always plays somewhere
+    saveUser({ ...user, city: clean[0], cities: clean });
     if (live) {
-      saveSetting({ city: citySlug }, () => saveUser(prev), 'Your city');
+      // Cities are tapped one after another, so several writes can be in the
+      // air at once. Sent bare, they could land out of order, and a failed
+      // early one would "revert" to a snapshot older than a later one that
+      // succeeded — leaving the app showing one selection and the server
+      // holding another. So: one at a time, in order; a write that has been
+      // overtaken is skipped; and a failure puts back the last selection the
+      // server is known to hold, not whatever this tap happened to start from.
+      if (!cityConfirmedRef.current) cityConfirmedRef.current = citiesOf(user);
+      const seq = ++cityWriteSeqRef.current;
+      cityWriteChainRef.current = cityWriteChainRef.current.then(() => {
+        if (seq !== cityWriteSeqRef.current) return null; // a newer selection is queued behind this one
+        return api.updateMyProfile({ city: clean[0], extra_cities: clean.slice(1) }).then(
+          () => { cityConfirmedRef.current = clean; },
+          () => {
+            if (seq !== cityWriteSeqRef.current) return; // a newer write will settle it
+            const back = cityConfirmedRef.current || clean;
+            setUser((u) => {
+              if (!u) return u;
+              const next = { ...u, city: back[0], cities: back };
+              AsyncStorage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
+              return next;
+            });
+            Alert.alert('Couldn\u2019t save that', `${back.length > 1 ? 'Your cities' : 'Your city'} didn\u2019t save, so nothing changed. Check your connection and try again.`);
+          },
+        );
+      });
       if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
-      prefsTimerRef.current = setTimeout(() => { refreshDeck(mode); refreshEvents(); }, 700);
+      // Events refetch on their own when the city changes — see the effect
+      // beside refreshEvents.
+      prefsTimerRef.current = setTimeout(() => refreshDeck(mode), 700);
     }
   };
+
+  // Add a city if it isn't selected, drop it if it is. Returns false when that
+  // would leave no city at all, so the screen can say why nothing happened.
+  const toggleCity = (citySlug) => {
+    if (!user || !cityBySlug(citySlug)) return false;
+    // A city opened on the server after this build shipped is a slug this app
+    // can't name. citiesOf() leaves it out, so writing the list back would
+    // quietly delete it — or replace a home city with the default. Refuse, and
+    // let the screen say the app needs updating.
+    const stored = Array.isArray(user.cities) && user.cities.length ? user.cities : [user.city];
+    if (stored.some((c) => c && !cityBySlug(c))) return 'unknown-city';
+    const cur = citiesOf(user);
+    const next = cur.includes(citySlug) ? cur.filter((c) => c !== citySlug) : [...cur, citySlug];
+    if (!next.length) return false;
+    updateCities(next);
+    return true;
+  };
+
+  // Replace the whole selection with one city.
+  const updateCity = (citySlug) => updateCities([citySlug]);
 
   // Best guess at the member's city from their coarse location; null when
   // we're not open where they are, so the app can say so instead of
@@ -755,6 +842,8 @@ export function AppStateProvider({ children }) {
     // Only carry a cached photo forward for the SAME account — otherwise
     // signing in as someone else inherits the previous person's photo.
     const sameAccount = user && authUser && user.authId === authUser.id;
+    // What the server holds right now — the selection a failed city save goes back to.
+    cityConfirmedRef.current = [remote.city || DEFAULT_CITY].concat(remote.extra_cities || []).filter((c) => !!cityBySlug(c));
     const localUser = {
       authId: authUser ? authUser.id : null,
       name: remote.first_name,
@@ -769,6 +858,7 @@ export function AppStateProvider({ children }) {
       suspendedAt: remote.suspended_at || null,
       suspendedReason: remote.suspended_reason || '',
       city: remote.city || DEFAULT_CITY,
+      cities: [remote.city || DEFAULT_CITY].concat(remote.extra_cities || []),
       isTeam: !!remote.is_team,
       partnerName: remote.partner_name || '',
       partnerBirthdate: remote.partner_birthdate || null,
@@ -821,6 +911,7 @@ export function AppStateProvider({ children }) {
         ageMax: prefs.ageMax,
         sameSportsOnly: prefs.mySportsOnly,
         city: draft.city || DEFAULT_CITY,
+        extraCities: citiesOf(draft).filter((c) => c !== (draft.city || DEFAULT_CITY)),
         approxLat: loc ? loc.lat : null,
         approxLng: loc ? loc.lng : null,
         gender: draft.gender,
@@ -1249,9 +1340,10 @@ export function AppStateProvider({ children }) {
 
   // ---------- events ----------
 
-  const demoEvents = EVENTS.map((e, idx) => ({
+  // Demo meetups are scoped the same way as live ones: your cities' only.
+  const demoEvents = EVENTS.map((e, idx) => ({ e, idx })).filter(({ e }) => eventCities.includes(e.city || DEFAULT_CITY)).map(({ e, idx }) => ({
     id: e.id, week: e.week, dow: e.dow, dom: e.dom, title: e.title, venue: e.venue,
-    time: e.time, sport: e.sport, level: e.level,
+    time: e.time, sport: e.sport, level: e.level, city: e.city || DEFAULT_CITY,
     spotsLeft: joined[e.id] ? e.spots - 1 : e.spots,
     going: !!joined[e.id],
     goingCount: 3 + ((idx * 5) % 7) + (joined[e.id] ? 1 : 0),
@@ -1367,7 +1459,7 @@ export function AppStateProvider({ children }) {
     updateBio, updatePrefs, updateModes, updateDating, updatePlay, updateFriendsPref, updateTeam,
     photos, addPhoto, removePhoto, makePrimary,
     topPicks,
-    cities: CITIES, cityLabel, updateCity, detectCity,
+    cities: CITIES, cityLabel, updateCity, updateCities, toggleCity, detectCity,
     devices, deviceKey, refreshDevices, signOutDevice, revokedHere,
     // A profile that arrives after the deadline still counts: showing the
     // error over a loaded profile would be its own kind of lie.
@@ -1384,7 +1476,8 @@ export function AppStateProvider({ children }) {
     matches, threads: visibleThreads, profileById, ensureThread,
     sendMessage, retryMessage, discardMessage, subscribeThread, respondCourt, markRead,
     pendingMatch, clearPendingMatch: () => setPendingMatch(null),
-    events, toggleJoin, joined, eventAttendees, eventCity, setEventCity,
+    events, toggleJoin, joined, eventAttendees, eventCities,
+    eventsLoading: live && liveEvents === null && !eventsError, eventsError: live && eventsError, retryEvents: () => refreshEvents(),
     notifs, clearNotifs, prefs,
   };
 

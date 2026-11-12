@@ -9,6 +9,18 @@ import { SwipeableCard, Confetti, useReduceMotion } from '../components/motion';
 import { useApp } from '../state';
 
 const GAME_LABELS = { singles: 'Singles', doubles: 'Doubles', mixed_doubles: 'Mixed doubles' };
+const GENDER_LABELS = { woman: 'Woman', man: 'Man', nonbinary: 'Nonbinary' };
+
+// What to print for sex on a card. A doubles team is two people, so it names
+// both or says nothing — one person's gender on a shared card would read as if
+// it described the pair.
+function genderText(p) {
+  const mine = GENDER_LABELS[p.gender];
+  if (!mine) return '';
+  if (!p.isTeam) return mine;
+  const theirs = GENDER_LABELS[p.partnerGender];
+  return theirs ? `${mine} & ${theirs}` : '';
+}
 
 const MODE_META = {
   date: { label: 'Date Mode', icon: 'heart-outline', likeVerb: 'Like' },
@@ -109,6 +121,30 @@ export default function HomeScreen({ navigation }) {
         })}
       </ScrollView>
 
+      {/* The same-sport filter lives here, above the deck it changes, rather
+          than at the bottom of Settings where nobody found it. */}
+      <View style={styles.filterRow}>
+        <Pressable
+          onPress={() => app.updatePrefs({ ...app.prefs, mySportsOnly: !app.prefs.mySportsOnly })}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: !!app.prefs.mySportsOnly }}
+          accessibilityLabel="Only show players who share my sports"
+          style={[styles.filterChip, app.prefs.mySportsOnly && styles.filterChipOn]}
+        >
+          <Ionicons
+            name={app.prefs.mySportsOnly ? 'checkmark-circle' : 'ellipse-outline'}
+            size={17}
+            color={app.prefs.mySportsOnly ? colors.optic : colors.dim}
+          />
+          <Text style={[styles.filterLabel, app.prefs.mySportsOnly && { color: colors.optic }]}>Only my sports</Text>
+        </Pressable>
+        <Text style={[type.hint, { fontSize: 12, flex: 1 }]} numberOfLines={1}>
+          {app.prefs.mySportsOnly && app.user && app.user.sports && app.user.sports.length
+            ? `Showing ${app.user.sports.join(' & ')} players`
+            : 'Showing players of every sport'}
+        </Text>
+      </View>
+
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 18, gap: 14 }}>
         {app.topPicks.length > 0 ? (
           <View style={styles.picks}>
@@ -127,6 +163,9 @@ export default function HomeScreen({ navigation }) {
                     <Text style={{ color: colors.text, fontWeight: '800', fontSize: 13.5 }} numberOfLines={1}>
                       {pick.isTeam && pick.partnerName ? `${pick.name} & ${pick.partnerName}` : pick.name}
                     </Text>
+                    {!!genderText(pick) && (
+                      <Text style={{ color: colors.dim, fontWeight: '700', fontSize: 11 }} numberOfLines={1}>{genderText(pick)}</Text>
+                    )}
                     <Text style={[type.hint, { fontSize: 11, textAlign: 'center' }]} numberOfLines={2}>{pick.reason}</Text>
                   </Pressable>
                 ))}
@@ -187,7 +226,9 @@ export default function HomeScreen({ navigation }) {
             <Text style={{ fontSize: 40 }}>🎾</Text>
             <Text style={[type.display, { fontSize: 20 }]}>That's everyone nearby</Text>
             <Text style={[type.hint, { textAlign: 'center' }]}>
-              You've seen all the players in range. Check back soon, or widen your radius in Settings.
+              {app.prefs.mySportsOnly
+                ? 'You’ve seen everyone who shares a sport with you. Turn off “Only my sports” above to see more players, or widen your radius in Settings.'
+                : 'You’ve seen all the players in range. Check back soon, or widen your radius in Settings.'}
             </Text>
             <Pressable style={styles.retryBtn} onPress={() => app.resetDeck()}>
               <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 13.5 }}>
@@ -272,6 +313,7 @@ export default function HomeScreen({ navigation }) {
                       </View>
                     )}
                   </View>
+                  {!!genderText(sheetP) && <InfoRow icon="person-outline" text={genderText(sheetP)} />}
                   <InfoRow icon="tennisball-outline" text={`${sheetP.sports.join(' & ')} · ${sheetP.rating ? `${sheetP.rating} Skill Level` : sheetP.skill}`} />
                   {sheetP.dist != null && <InfoRow icon="location-outline" text={`${sheetP.dist.toFixed(1)} miles away`} />}
                   {!!sheetP.avail && <InfoRow icon="time-outline" text={sheetP.avail} />}
@@ -416,6 +458,7 @@ function DeckCard({ p, app, onLike, onMore }) {
           )}
           {p.isTeam && <Tag label="Doubles team" accent />}
         </View>
+        {!!genderText(p) && <InfoRow icon="person-outline" text={genderText(p)} />}
         <InfoRow icon="tennisball-outline" text={p.sports.join(' & ')} />
         {p.dist != null && <InfoRow icon="location-outline" text={`${p.dist.toFixed(1)} miles away`} />}
         <InfoRow icon="stats-chart" text={p.rating ? `${p.rating} Skill Level` : p.skill} />
@@ -457,6 +500,14 @@ const styles = StyleSheet.create({
   },
   pillOn: { backgroundColor: colors.optic, borderColor: colors.optic },
   pillLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
+  filterRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 18, paddingTop: 10 },
+  filterChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 7, paddingHorizontal: 12,
+    borderRadius: 999, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.card,
+  },
+  filterChipOn: { borderColor: colors.optic, backgroundColor: colors.opticDim },
+  filterLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
   topmatch: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line,

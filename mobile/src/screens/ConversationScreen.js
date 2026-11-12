@@ -7,6 +7,8 @@ import { Avatar } from '../components/ui';
 import { TypingDots } from '../components/motion';
 import { useApp } from '../state';
 import { COURTS } from '../data/seed';
+import { suggestedCourt } from '../data/courts';
+import { DEFAULT_CITY } from '../data/cities';
 
 export default function ConversationScreen({ route, navigation }) {
   const { id } = route.params;
@@ -64,7 +66,8 @@ export default function ConversationScreen({ route, navigation }) {
     app.sendMessage(id, {
       who: 'me',
       kind: 'court',
-      court: COURTS[0],
+      // A real court in their home city when we have a list for it.
+      court: suggestedCourt((app.user && app.user.city) || DEFAULT_CITY) || COURTS[0],
       day: 'Sat',
       time: '10:00 AM',
       sport: p.sports[0] || 'Tennis',

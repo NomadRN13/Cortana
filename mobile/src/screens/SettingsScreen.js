@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
 import { Chip } from '../components/ui';
-import { useApp } from '../state';
+import { useApp, ageFromBirthdate, citiesOf } from '../state';
+import { parseBirthdate, formatBirthdateInput, birthdateToText } from '../lib/birthdate';
 import { CITIES, DEFAULT_CITY } from '../data/cities';
 import { isBackendConfigured } from '../lib/supabase';
 import * as api from '../api/backend';
@@ -71,6 +72,57 @@ export default function SettingsScreen({ navigation }) {
     setMinText(String(lo));
     setMaxText(String(hi));
     app.updatePrefs({ ...app.prefs, ageMin: lo, ageMax: hi });
+  };
+
+  // Adding (or editing) a doubles partner after signup. The fields are local
+  // until Save, so a half-typed partner never reaches the profile.
+  const [partnerOpen, setPartnerOpen] = useState(false);
+  const [pName, setPName] = useState('');
+  const [pBirth, setPBirth] = useState('');
+  const [pGender, setPGender] = useState(null);
+
+  const openPartnerForm = () => {
+    setPName((u && u.partnerName) || '');
+    setPBirth(birthdateToText(u && u.partnerBirthdate));
+    setPGender((u && u.partnerGender) || null);
+    setPartnerOpen(true);
+  };
+
+  const savePartner = () => {
+    if (!u) return;
+    const nm = pName.trim();
+    if (!nm) return Alert.alert('Almost there', 'Add your partner’s first name.');
+    const iso = parseBirthdate(pBirth);
+    if (!iso) return Alert.alert('Almost there', 'Enter your partner’s birthdate as MM/DD/YYYY.');
+    const age = ageFromBirthdate(iso);
+    if (age < 18) return Alert.alert('40/LOVE is 18+', 'Both people on a team must be 18 or older.');
+    if (age > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
+    if (!pGender) return Alert.alert('Almost there', 'Tell us your partner’s gender so matching works.');
+    const apply = () => {
+      app.updateTeam({ isTeam: true, partnerName: nm, partnerBirthdate: iso, partnerGender: pGender });
+      setPartnerOpen(false);
+    };
+    // Becoming a team takes the profile out of Date mode. Say so before it
+    // happens rather than letting someone find their dating deck gone.
+    if (!u.isTeam && (u.modes || []).includes('date')) {
+      return Alert.alert(
+        'This turns Date mode off',
+        'A shared profile is for Play and Friends — it can’t date. Adding a partner takes you out of Date mode. You can remove your partner later to get it back.',
+        [{ text: 'Cancel', style: 'cancel' }, { text: 'Add partner', onPress: apply }]
+      );
+    }
+    apply();
+  };
+
+  const removePartner = () => {
+    Alert.alert(
+      `Remove ${(u && u.partnerName) || 'your partner'}?`,
+      'Your profile goes back to being just you. You can add a partner again any time.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: () => { app.updateTeam({ isTeam: false }); setPartnerOpen(false); } },
+      ]
+    );
   };
 
   const modeOn = (m) => u && u.modes.includes(m);
@@ -298,20 +350,29 @@ export default function SettingsScreen({ navigation }) {
           </Group>
         )}
 
-        <Group title="City">
+        <Group title="Cities">
           <View style={styles.datingBox}>
             <View style={styles.chipRow}>
               {CITIES.map((c) => (
                 <Chip
                   key={c.slug}
                   label={`${c.name}, ${c.state}`}
-                  active={((u && u.city) || DEFAULT_CITY) === c.slug}
-                  onPress={() => app.updateCity(c.slug)}
+                  active={citiesOf(u).includes(c.slug)}
+                  onPress={() => {
+                    const res = app.toggleCity(c.slug);
+                    if (res === 'unknown-city') {
+                      Alert.alert('Update 40/LOVE to change cities', 'One of your cities is newer than this version of the app. Update the app and you can change them here.');
+                    } else if (!res) {
+                      Alert.alert('Keep at least one city', 'Pick another city first, then you can drop this one.');
+                    }
+                  }}
                 />
               ))}
             </View>
             <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
-              You match with players in your city. Moving, or splitting time between two? Switch any time — your matches and messages come with you.
+              {citiesOf(u).length > 1
+                ? `You match with players and see meetups in all ${citiesOf(u).length} of your cities. Tap a city to add or drop it — your matches and messages stay either way.`
+                : 'You match with players and see meetups in your city. Split your time between two or more? Tap every city you play in.'}
             </Text>
           </View>
         </Group>
@@ -320,30 +381,77 @@ export default function SettingsScreen({ navigation }) {
           <View style={styles.datingBox}>
             <Row label="We're a doubles team" sub="Two of you, one profile">
               <Switch
-                value={!!(u && u.isTeam)}
+                value={!!(u && u.isTeam) || partnerOpen}
                 onValueChange={(on) => {
-                  if (!on) return app.updateTeam({ isTeam: false });
-                  if (!u || !u.partnerName) {
-                    return Alert.alert(
-                      'Add your partner first',
-                      'A team profile needs your partner’s first name, birthdate, and gender. Tell us those and we’ll switch it on.',
-                      [{ text: 'OK' }]
-                    );
-                  }
-                  app.updateTeam({ isTeam: true, partnerName: u.partnerName, partnerBirthdate: u.partnerBirthdate, partnerGender: u.partnerGender });
+                  if (on) return openPartnerForm();
+                  if (u && u.isTeam) return removePartner();
+                  setPartnerOpen(false);
                 }}
                 trackColor={{ true: colors.opticDim }}
-                thumbColor={u && u.isTeam ? colors.optic : colors.dim}
+                thumbColor={(u && u.isTeam) || partnerOpen ? colors.optic : colors.dim}
               />
             </Row>
-            {u && u.isTeam ? (
-              <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
-                Playing as {u.name} & {u.partnerName}. Team profiles are for Play and Friends — Date mode is off, because a shared profile can't date. To change your partner's details, contact support.
-              </Text>
+
+            {partnerOpen ? (
+              <View style={{ marginTop: 4 }}>
+                <Text style={styles.datingLabel}>Your partner</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={pName}
+                  onChangeText={setPName}
+                  placeholder="Their first name"
+                  placeholderTextColor="rgba(244,246,240,0.35)"
+                  maxLength={40}
+                  accessibilityLabel="Partner's first name"
+                />
+                <TextInput
+                  style={[styles.textInput, { marginTop: 8 }]}
+                  value={pBirth}
+                  onChangeText={(t) => setPBirth(formatBirthdateInput(t))}
+                  keyboardType="number-pad"
+                  placeholder="Their birthdate — MM/DD/YYYY"
+                  placeholderTextColor="rgba(244,246,240,0.35)"
+                  maxLength={10}
+                  accessibilityLabel="Partner's birthdate"
+                />
+                <Text style={[styles.datingLabel, { marginTop: 12 }]}>They are</Text>
+                <View style={styles.chipRow}>
+                  {GENDERS.map((g) => (
+                    <Chip key={g.key} label={g.label} active={pGender === g.key} onPress={() => setPGender(g.key)} />
+                  ))}
+                </View>
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                  <Pressable style={styles.partnerSave} onPress={savePartner} accessibilityRole="button">
+                    <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 14 }}>
+                      {u && u.isTeam ? 'Save partner' : 'Add partner'}
+                    </Text>
+                  </Pressable>
+                  <Pressable style={styles.partnerCancel} onPress={() => setPartnerOpen(false)} accessibilityRole="button">
+                    <Text style={{ color: colors.text, fontWeight: '700', fontSize: 14 }}>Cancel</Text>
+                  </Pressable>
+                </View>
+                <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
+                  Both of you must be 18+. Ask before you add someone — their name and age go on a public profile. You stay responsible for the account.
+                </Text>
+              </View>
+            ) : u && u.isTeam ? (
+              <>
+                <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
+                  Playing as {u.name} & {u.partnerName}. Team profiles are for Play and Friends — Date mode is off, because a shared profile can't date.
+                </Text>
+                <Pressable onPress={openPartnerForm} style={{ paddingTop: 10 }} accessibilityRole="button">
+                  <Text style={{ color: colors.optic, fontWeight: '800', fontSize: 13.5 }}>Edit partner's details</Text>
+                </Pressable>
+              </>
             ) : (
-              <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
-                Set this up when you create your profile. Both people must be 18+, and you stay responsible for the account.
-              </Text>
+              <>
+                <Text style={[type.hint, { fontSize: 12, marginTop: 10 }]}>
+                  Found a doubles partner since you signed up? Add them here and the two of you share one profile for Play and Friends.
+                </Text>
+                <Pressable onPress={openPartnerForm} style={{ paddingTop: 10 }} accessibilityRole="button">
+                  <Text style={{ color: colors.optic, fontWeight: '800', fontSize: 13.5 }}>Add a partner</Text>
+                </Pressable>
+              </>
             )}
           </View>
         </Group>
@@ -383,14 +491,9 @@ export default function SettingsScreen({ navigation }) {
               />
             </View>
           </Row>
-          <Row label="Only my sports" sub="Show only players who share a sport with you">
-            <Switch
-              value={app.prefs.mySportsOnly}
-              onValueChange={(v) => app.updatePrefs({ ...app.prefs, mySportsOnly: v })}
-              trackColor={{ true: colors.opticDim }}
-              thumbColor={app.prefs.mySportsOnly ? colors.optic : colors.dim}
-            />
-          </Row>
+          <Text style={[type.hint, { fontSize: 12 }]}>
+            Looking for “Only my sports”? It's on the Home screen now, right above the players it filters.
+          </Text>
         </Group>
 
         <Pressable style={styles.danger} onPress={signOut}>
@@ -400,7 +503,7 @@ export default function SettingsScreen({ navigation }) {
           <Text style={{ color: colors.dim, fontWeight: '700', fontSize: 13 }}>Delete my account</Text>
         </Pressable>
         <Text style={[type.hint, { textAlign: 'center' }]}>
-          {`40/LOVE · ${app.cityLabel((u && u.city) || DEFAULT_CITY)} · ${app.live ? 'beta' : 'demo build — not a real account'}`}
+          {`40/LOVE · ${citiesOf(u).length > 1 ? `${citiesOf(u).length} cities` : app.cityLabel((u && u.city) || DEFAULT_CITY)} · ${app.live ? 'beta' : 'demo build — not a real account'}`}
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -440,6 +543,12 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: colors.line, backgroundColor: colors.card2, borderRadius: 10,
     paddingVertical: 8, fontSize: 16, color: colors.text,
   },
+  textInput: {
+    borderWidth: 2, borderColor: colors.line, backgroundColor: colors.card2, borderRadius: 12,
+    paddingVertical: 11, paddingHorizontal: 13, fontSize: 16, color: colors.text,
+  },
+  partnerSave: { flex: 1, alignItems: 'center', backgroundColor: colors.optic, borderRadius: 12, paddingVertical: 12 },
+  partnerCancel: { alignItems: 'center', borderWidth: 2, borderColor: colors.line, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 18 },
   danger: {
     alignItems: 'center', padding: 14,
     borderWidth: 2, borderColor: colors.danger, borderRadius: 14,

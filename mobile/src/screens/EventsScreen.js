@@ -1,63 +1,93 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Modal } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
 import { Tag, Avatar } from '../components/ui';
 import { useApp } from '../state';
-import { CITIES, cityLabel } from '../data/cities';
+import { cityLabel } from '../data/cities';
+import { courtsFor, ACCESS_LABELS } from '../data/courts';
 
-// Meetups are nationwide by default. React Native has no <select>, so the
-// picker is a button that opens a sheet — the same thing a dropdown does, and
-// it behaves identically on both platforms without another dependency.
-function CityPicker({ value, onChange }) {
-  const [open, setOpen] = useState(false);
-  const label = value === 'all' ? 'All cities' : cityLabel(value);
-  const options = [{ slug: 'all', label: 'All cities' }]
-    .concat(CITIES.map((c) => ({ slug: c.slug, label: `${c.name}, ${c.state}` })));
+// Each city runs its own meetups. You see the calendar for the cities on your
+// profile — one or several — and nothing else. So this is a label, not a
+// picker: the way to see another city's meetups is to add that city in Settings.
+function citiesText(cities) {
+  return cities.length === 1 ? cityLabel(cities[0]) : `${cities.length} cities`;
+}
 
+function CityBadge({ cities }) {
   return (
-    <>
-      <Pressable
-        onPress={() => setOpen(true)}
-        style={styles.picker}
-        accessibilityRole="button"
-        accessibilityLabel={`Showing meetups in ${label}. Change city.`}
-      >
-        <Ionicons name="location-outline" size={15} color={colors.optic} />
-        <Text style={styles.pickerText} numberOfLines={1}>{label}</Text>
-        <Ionicons name="chevron-down" size={15} color={colors.dim} />
-      </Pressable>
+    <View style={styles.picker} accessibilityLabel={`Meetups in ${cities.map(cityLabel).join(', ')}`}>
+      <Ionicons name="location-outline" size={15} color={colors.optic} />
+      <Text style={styles.pickerText} numberOfLines={1}>{citiesText(cities)}</Text>
+    </View>
+  );
+}
 
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-            <Text style={[type.eyebrow, { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 }]}>
-              Show meetups in
+const SETTING_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'outdoor', label: 'Outdoor' },
+  { key: 'indoor', label: 'Indoor' },
+];
+
+// Places to play in the member's cities, under the meetups. Only cities we
+// have a list for appear; a city with none simply has no section.
+function PlacesToPlay({ cities }) {
+  const [filter, setFilter] = useState('all');
+  const withCourts = cities.filter((c) => courtsFor(c).length > 0);
+  if (!withCourts.length) return null;
+  const fits = (c) => filter === 'all' || c.setting === filter || c.setting === 'both';
+  return (
+    <View style={{ marginTop: 22 }}>
+      <Text style={[type.display, { fontSize: 18 }]}>Places to play</Text>
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+        {SETTING_FILTERS.map((f) => {
+          const on = filter === f.key;
+          return (
+            <Pressable
+              key={f.key}
+              onPress={() => setFilter(f.key)}
+              style={[styles.filter, on && styles.filterOn]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+            >
+              <Text style={{ fontWeight: '800', fontSize: 13, color: on ? colors.ink : colors.text }}>{f.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {withCourts.map((city) => {
+        const list = courtsFor(city).filter(fits);
+        return (
+          <View key={city}>
+            <Text style={[type.eyebrow, { marginTop: 16, marginBottom: 8 }]}>
+              {cityLabel(city)} · {list.length} {list.length === 1 ? 'place' : 'places'}
             </Text>
-            <ScrollView>
-              {options.map((o) => {
-                const on = o.slug === value;
-                return (
-                  <Pressable
-                    key={o.slug}
-                    onPress={() => { onChange(o.slug); setOpen(false); }}
-                    style={[styles.option, on && { backgroundColor: colors.card2 }]}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: on }}
-                  >
-                    <Text style={{ color: on ? colors.optic : colors.text, fontWeight: on ? '800' : '600', fontSize: 15 }}>
-                      {o.label}
-                    </Text>
-                    {on && <Ionicons name="checkmark" size={17} color={colors.optic} />}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
-    </>
+            {list.length === 0 && (
+              <Text style={[type.hint, { paddingVertical: 8 }]}>
+                {filter === 'indoor' ? 'No indoor courts listed here yet.' : 'No outdoor courts listed here yet.'}
+              </Text>
+            )}
+            {list.map((c) => (
+              <View key={c.name} style={styles.place}>
+                <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{c.name}</Text>
+                <Text style={[type.hint, { fontSize: 12.5 }]}>{c.address}</Text>
+                <View style={{ flexDirection: 'row', gap: 5, flexWrap: 'wrap', marginTop: 2 }}>
+                  <Tag label={c.setting === 'indoor' ? 'Indoor' : c.setting === 'both' ? 'Indoor + outdoor' : 'Outdoor'} accent />
+                  <Tag label={ACCESS_LABELS[c.access]} />
+                  {c.courts != null && <Tag label={`${c.courts} courts`} />}
+                  {c.lights === true && c.setting !== 'indoor' && <Tag label="Lights" />}
+                </View>
+                {!!c.note && <Text style={[type.hint, { fontSize: 12.5, marginTop: 4 }]}>{c.note}</Text>}
+              </View>
+            ))}
+          </View>
+        );
+      })}
+      <Text style={[type.hint, { fontSize: 11.5, marginTop: 6 }]}>
+        Courts change — hours, fees and nets are the venue's call. Check before you make the drive.
+      </Text>
+    </View>
   );
 }
 
@@ -70,14 +100,27 @@ export default function EventsScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.night }} edges={['top']}>
       <View style={styles.head}>
         <Text style={[type.display, { fontSize: 18 }]}>Events</Text>
-        <CityPicker value={app.eventCity} onChange={app.setEventCity} />
+        <CityBadge cities={app.eventCities} />
       </View>
       <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 4 }}>
-        {app.events.length === 0 && (
+        {app.events.length === 0 && app.eventsLoading && (
+          <Text style={[type.hint, { textAlign: 'center', paddingVertical: 30 }]}>Loading meetups…</Text>
+        )}
+        {app.events.length === 0 && app.eventsError && (
+          <View style={{ alignItems: 'center', paddingVertical: 30, gap: 12 }}>
+            <Text style={[type.hint, { textAlign: 'center' }]}>
+              Couldn't load meetups — check your connection and try again.
+            </Text>
+            <Pressable style={styles.join} onPress={() => app.retryEvents()} accessibilityRole="button">
+              <Text style={{ fontWeight: '800', fontSize: 13, color: colors.ink }}>Try again</Text>
+            </Pressable>
+          </View>
+        )}
+        {app.events.length === 0 && !app.eventsLoading && !app.eventsError && (
           <Text style={[type.hint, { textAlign: 'center', paddingVertical: 30 }]}>
-            {app.eventCity === 'all'
-              ? 'No upcoming events anywhere yet — check back soon. 🎾'
-              : `Nothing on in ${cityLabel(app.eventCity)} yet. Try All cities to see what's happening elsewhere. 🎾`}
+            {app.eventCities.length === 1
+              ? `Nothing on in ${cityLabel(app.eventCities[0])} yet — check back soon. 🎾`
+              : `Nothing on in any of your ${app.eventCities.length} cities yet — check back soon. 🎾`}
           </Text>
         )}
         {weeks.map((w) => (
@@ -104,7 +147,8 @@ export default function EventsScreen() {
                     <View style={{ flexDirection: 'row', gap: 5, flexWrap: 'wrap' }}>
                       <Tag label={e.sport} accent />
                       <Tag label={e.level} />
-                      {app.eventCity === 'all' && !!e.city && <Tag label={cityLabel(e.city)} />}
+                      {/* which city, once the list spans more than one */}
+                      {app.eventCities.length > 1 && !!e.city && <Tag label={cityLabel(e.city)} />}
                     </View>
                     {open && (
                       <View style={{ gap: 8, marginTop: 6 }}>
@@ -135,6 +179,7 @@ export default function EventsScreen() {
             })}
           </View>
         ))}
+        <PlacesToPlay cities={app.eventCities} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -152,18 +197,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card, maxWidth: 210,
   },
   pickerText: { color: colors.text, fontWeight: '700', fontSize: 13.5, flexShrink: 1 },
-  backdrop: {
-    flex: 1, backgroundColor: 'rgba(4,5,6,0.7)',
-    alignItems: 'center', justifyContent: 'center', padding: 24,
+  filter: {
+    paddingVertical: 7, paddingHorizontal: 14, borderRadius: 999,
+    borderWidth: 2, borderColor: colors.line, backgroundColor: colors.card,
   },
-  sheet: {
-    width: '100%', maxWidth: 340, maxHeight: '70%',
-    backgroundColor: colors.panel, borderRadius: 20,
-    borderWidth: 2, borderColor: colors.line, overflow: 'hidden',
-  },
-  option: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: 13, paddingHorizontal: 16,
+  filterOn: { backgroundColor: colors.optic, borderColor: colors.optic },
+  place: {
+    gap: 3, padding: 13, marginBottom: 10,
+    backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line, borderRadius: 16,
   },
   event: {
     flexDirection: 'row', gap: 12, padding: 13, marginBottom: 10,

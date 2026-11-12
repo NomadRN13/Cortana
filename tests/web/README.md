@@ -21,7 +21,8 @@ root-absolute paths like `/favicon.png` resolve the way they do in production.
 - `waitlist.test.js` — the signup form, including the two that matter: a repeat
   address gives nothing away, and a deployed-but-unconfigured page refuses to
   fake a signup instead of thanking someone into their own browser.
-- `events.test.js` — meetups list nationwide and narrow to a chosen city.
+- `events.test.js` — meetups list only the cities on the member's profile (one
+  or several); no city picker and no nationwide list.
 - `funnel.test.js` — the demo's own analytics: one visit id, no step counted
   twice, nothing personal in the payload, and complete silence when no keys
   are configured.
