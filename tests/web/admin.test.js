@@ -94,6 +94,66 @@ const { launch, step, fail, watch, finish, serve, REPO } = require('./lib/harnes
     await page.waitForSelector('#pane-events:not([hidden])', { timeout: 3000 });
   });
 
+  await step('tournaments tab: create one, fill it to 24, and the draw builds the bracket', async () => {
+    await page.click('#tab-tournaments');
+    await page.waitForSelector('#pane-tournaments:not([hidden])', { timeout: 3000 });
+    await page.click('#tn-create');
+    if (!/required/.test(await page.textContent('#tn-msg'))) throw new Error('missing-title validation absent');
+    await page.fill('#tn-title', 'Test Cup');
+    const d = new Date(Date.now() + 4 * 86400000);
+    await page.fill('#tn-date', d.toISOString().slice(0, 10));
+    await page.selectOption('#tn-city', 'bakersfield');
+    await page.fill('#tn-max', '25');
+    await page.click('#tn-create');
+    if (!/from 2 to 24/.test(await page.textContent('#tn-msg'))) throw new Error('a 25-entry tournament was accepted');
+    await page.fill('#tn-max', '24');
+    await page.click('#tn-create');
+    const card = '#tournament-list .item >> nth=0';
+    if (!(await page.textContent(card)).includes('Test Cup')) throw new Error('tournament not created');
+    if (!(await page.isDisabled(card + ' >> button[data-act="draw"]'))) throw new Error('a draw was offered with no entries');
+    await page.click(card + ' >> button[data-act="fill"]');
+    if (!/24 of 24 entered/.test(await page.textContent(card))) throw new Error('not filled to 24');
+    await page.click(card + ' >> button[data-act="draw"]');
+    const info = await page.evaluate(() => {
+      const c = document.querySelector('#tournament-list .item');
+      const rounds = [...c.querySelectorAll('.br-round')];
+      const r1 = [...rounds[0].querySelectorAll('.br-match')];
+      const names = r1.flatMap((m) => [...m.querySelectorAll('.br-p:not(.empty-slot)')].map((e) => e.textContent.replace(' ✓', '').trim()));
+      return { heads: rounds.map((r) => r.querySelector('h3').textContent).join('|'), matches: c.querySelectorAll('.br-match').length, placed: names.length, unique: new Set(names).size, byes: r1.filter((m) => /bye/.test(m.textContent)).length };
+    });
+    if (info.heads.toLowerCase() !== 'round of 32|round of 16|quarterfinals|semifinals|final') throw new Error('rounds: ' + info.heads);
+    if (info.matches !== 31 || info.placed !== 24 || info.unique !== 24 || info.byes !== 8) throw new Error(JSON.stringify(info));
+  });
+
+  await step('tournaments tab: the desk records results through to a champion, and can correct one', async () => {
+    for (let guard = 0; guard < 40; guard++) {
+      // first match that has both players and no winner yet
+      const next = await page.evaluate(() => {
+        const c = document.querySelector('#tournament-list .item');
+        const m = [...c.querySelectorAll('.br-match')].find((x) => x.querySelectorAll('button.br-p').length === 2 && !x.querySelector('.won'));
+        if (!m) return null;
+        const b = m.querySelector('button.br-p');
+        return { match: b.getAttribute('data-match'), winner: b.getAttribute('data-winner') };
+      });
+      if (!next) break;
+      await page.click('#tournament-list .item >> nth=0 >> button[data-match="' + next.match + '"][data-winner="' + next.winner + '"]');
+    }
+    const text = await page.textContent('#tournament-list .item >> nth=0');
+    if (!/Champion: \S/.test(text)) throw new Error('no champion after playing every match');
+    // correcting the final changes the champion
+    const fin = await page.evaluate(() => {
+      const c = document.querySelector('#tournament-list .item');
+      const rounds = [...c.querySelectorAll('.br-round')];
+      const loser = rounds[rounds.length - 1].querySelector('button.br-p.lost');
+      return { match: loser.getAttribute('data-match'), winner: loser.getAttribute('data-winner'), name: loser.textContent.trim() };
+    });
+    await page.click('#tournament-list .item >> nth=0 >> button[data-match="' + fin.match + '"][data-winner="' + fin.winner + '"]');
+    const after = await page.textContent('#tournament-list .item >> nth=0');
+    if (!after.includes('Champion: ' + fin.name)) throw new Error('correcting the final did not change the champion');
+    await page.click('#tab-events');
+    await page.waitForSelector('#pane-events:not([hidden])', { timeout: 3000 });
+  });
+
   await step('event delete works (confirm auto-accepted)', async () => {
     await page.click('#event-list .item >> nth=0 >> button[data-act="delete"]');
     if ((await page.locator('#event-list .item').count()) !== 1) throw new Error('delete did not remove');

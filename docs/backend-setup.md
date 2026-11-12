@@ -274,6 +274,29 @@ deploying — until then the page runs in demo mode with sample data.
 Warnings, suspensions, and bans still happen in the dashboard at alpha
 volume; the desk records the decision (report → "mark actioned").
 
+### Tournaments — brackets that build and fill themselves
+
+`/admin` → **Tournaments**. A tournament is a single-elimination bracket for 2
+to 24 entries in one city (a doubles team's shared profile is one entry).
+
+1. **Create it** — title, city, date, and how many entries it takes (2–24).
+   Members in that city see it under Events and tap **Enter**.
+2. **Make the draw** when entries are in. This closes entries and builds the
+   whole bracket in one step: a random draw is the seeding; the bracket is the
+   next power of two up from the field (24 entries play in a bracket of 32);
+   the spare places are byes, which go to the top of the draw and advance at
+   once; and everyone is placed automatically. It can't be undone.
+3. **Results.** Either player in a match records who won, from the bracket in
+   the app, and the winner moves into the next round. On the desk, click a
+   player to record a result yourself — or to correct one, which works until
+   the next match in that line has been played. The final's result names the
+   champion.
+
+A member can withdraw until the draw is made. After it, record their opponent
+as the winner (a walkover). Everything is enforced by the database
+(`20260806000027_tournaments.sql`): members can't start a tournament, write
+entries for someone else, or touch a match they aren't in.
+
 ### Places to play — add a court without an app update
 
 Under Events, members see a **Places to play** list for each city they have

@@ -30,6 +30,8 @@ echo
 node signup.test.js
 echo
 node photos.test.js
+echo
+node bracket.test.js
 
 echo
 echo "✅ App suites passed."

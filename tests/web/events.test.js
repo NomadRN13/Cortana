@@ -134,5 +134,66 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     if (await p.$('#places-list .place')) throw new Error('places still listed');
   });
 
+  // ---- tournaments and brackets ----
+  await step('the three copies of the bracket rules are identical', async () => {
+    const fs = require('fs'), path = require('path');
+    const cut = (f) => {
+      const t = fs.readFileSync(path.join(REPO, f), 'utf8').replace(/\r\n/g, '\n');
+      return t.slice(t.indexOf('// BRACKET-LIB:START'), t.indexOf('// BRACKET-LIB:END')).split('\n').map((l) => l.trim()).join('\n');
+    };
+    const lib = cut('mobile/src/lib/bracket.js');
+    if (lib.length < 500) throw new Error('bracket lib markers not found');
+    for (const f of ['app/index.html', 'admin/index.html']) if (cut(f) !== lib) throw new Error(f + ' has drifted from mobile/src/lib/bracket.js');
+  });
+  const tcard = (id) => '#tournament-list [data-tourney="' + id + '"]';
+  await step('a tournament under way shows its bracket, round by round', async () => {
+    if (await p.$(tcard('t1'))) throw new Error('a Bakersfield tournament is shown to an Indianapolis member');
+    await p.click(tcard('t2') + ' [data-t-act="toggle"]');
+    const heads = await p.$$eval(tcard('t2') + ' .br-head', els => els.map(e => e.textContent));
+    if (heads.join('|') !== 'Round of 16|Quarterfinals|Semifinals|Final') throw new Error('rounds: ' + heads.join('|'));
+    const n = (await p.$$(tcard('t2') + ' .br-match')).length;
+    if (n !== 15) throw new Error(n + ' matches in a bracket of 16');
+  });
+  on = await tapCities('bakersfield');
+  await step('entering fills the last place: 24 of 24', async () => {
+    const before = (await p.textContent(tcard('t1') + ' .t-status')).trim();
+    if (!/23 of 24/.test(before)) throw new Error('before: ' + before);
+    await p.click(tcard('t1') + ' [data-t-act="join"]');
+    const after = (await p.textContent(tcard('t1') + ' .t-status')).trim();
+    if (!/24 of 24/.test(after)) throw new Error('after: ' + after);
+    if (await p.$(tcard('t1') + ' [data-t-act="join"]')) throw new Error('still offering Enter when entered');
+  });
+  await step('the draw builds a bracket of 32 with everyone placed once and 8 byes', async () => {
+    await p.click(tcard('t1') + ' [data-t-act="draw"]');
+    const info = await p.evaluate((sel) => {
+      const card = document.querySelector(sel);
+      const r1 = [...card.querySelectorAll('.br-match[data-round="1"]')];
+      const names = r1.flatMap((m) => [...m.querySelectorAll('.br-player:not(.tbd) .nm')].map((e) => e.textContent.replace(/\s*✓/g, '').trim()));   // "(you)" stays, so a member who shares a sample player's name still counts once
+      return {
+        heads: [...card.querySelectorAll('.br-head')].map((e) => e.textContent).join('|'),
+        matches: card.querySelectorAll('.br-match').length,
+        r1: r1.length, placed: names.length, unique: new Set(names).size,
+        byes: r1.filter((m) => /bye/.test(m.textContent)).length,
+        me: !!card.querySelector('.br-match.mine'),
+      };
+    }, tcard('t1'));
+    if (info.heads !== 'Round of 32|Round of 16|Quarterfinals|Semifinals|Final') throw new Error('rounds: ' + info.heads);
+    if (info.matches !== 31 || info.r1 !== 16) throw new Error(JSON.stringify(info));
+    if (info.placed !== 24 || info.unique !== 24) throw new Error('placed ' + info.placed + ', unique ' + info.unique);
+    if (info.byes !== 8) throw new Error(info.byes + ' byes');
+    if (!info.me) throw new Error('my own match is not marked');
+  });
+  await step('recording results fills the next round until there is a champion', async () => {
+    for (let guard = 0; guard < 40; guard++) {
+      const btn = await p.$(tcard('t1') + ' .br-won');
+      if (!btn) break;
+      await btn.click();
+    }
+    const status = (await p.textContent(tcard('t1') + ' .t-status')).trim();
+    if (!/^Champion: \S/.test(status)) throw new Error('status: ' + status);
+    if (await p.$(tcard('t1') + ' .br-player.tbd .nm:text("To be decided")')) throw new Error('an unfilled slot remains');
+  });
+  on = await tapCities('bakersfield');
+
   await finish(b, errs);
 })();

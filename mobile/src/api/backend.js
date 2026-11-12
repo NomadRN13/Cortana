@@ -428,6 +428,44 @@ export async function listCourts(cities) {
   return data;
 }
 
+// ---------- Tournaments ----------
+
+// Tournaments in the given cities, each with its entry list and — once the
+// draw has been made — every match of its bracket. Finished ones stay listed
+// for two weeks so the result can be seen. The bracket is built and advanced
+// by the database; the app only draws it.
+export async function listTournaments(cities) {
+  const list = (Array.isArray(cities) ? cities : [cities]).filter(Boolean);
+  if (!list.length) return [];
+  const since = new Date(Date.now() - 14 * 86400000).toISOString();
+  const { data, error } = await supabase
+    .from('tournaments')
+    .select('*, tournament_entries(user_id, seed), tournament_matches(id, round, slot, player_a, player_b, winner, score, is_bye)')
+    .in('city', list)
+    .neq('status', 'cancelled')
+    .gte('starts_at', since)
+    .order('starts_at', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function joinTournament(tournamentId) {
+  const { error } = await supabase.rpc('join_tournament', { p_tournament: tournamentId });
+  if (error) throw error;
+}
+
+export async function leaveTournament(tournamentId) {
+  const { error } = await supabase.rpc('leave_tournament', { p_tournament: tournamentId });
+  if (error) throw error;
+}
+
+// Either player in a match records who won. The server checks that, and
+// moves the winner into the next round.
+export async function reportMatchResult(matchId, winnerId, score) {
+  const { error } = await supabase.rpc('report_match_result', { p_match: matchId, p_winner: winnerId, p_score: score || '' });
+  if (error) throw error;
+}
+
 export async function rsvp(eventId, going) {
   const { data: { user } } = await supabase.auth.getUser();
   if (going) {

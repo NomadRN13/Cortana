@@ -8,7 +8,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS, EVENTS } from './data/seed';
+import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS, EVENTS, TOURNAMENTS, TOURNAMENT_PLAYERS } from './data/seed';
+import { buildBracket, bracketRecord } from './lib/bracket';
 import { supabase, isBackendConfigured } from './lib/supabase';
 import * as api from './api/backend';
 import * as social from './lib/socialAuth';
@@ -121,6 +122,58 @@ function mapCourtRow(row) {
   };
 }
 
+// A tournament row from the database, in the one shape the screen draws —
+// the same shape the demo tournaments are built in.
+function mapTournamentRow(row, myId) {
+  const d = new Date(row.starts_at);
+  const entries = (row.tournament_entries || []).map((e) => ({ id: e.user_id, seed: e.seed }));
+  entries.sort((x, y) => (x.seed || 99) - (y.seed || 99));
+  const matches = (row.tournament_matches || []).map((m) => ({
+    id: m.id, round: m.round, slot: m.slot, a: m.player_a, b: m.player_b,
+    winner: m.winner, score: m.score || '', bye: !!m.is_bye,
+  }));
+  matches.sort((x, y) => (x.round - y.round) || (x.slot - y.slot));
+  const size = row.bracket_size || 0;
+  let rounds = 0;
+  while (size && (1 << rounds) < size) rounds += 1;
+  return {
+    id: row.id,
+    city: row.city,
+    title: row.title,
+    venue: row.venue || '',
+    sport: cap(row.sport),
+    level: row.level_range,
+    when: `${d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })} · ${d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`,
+    max: row.max_entries,
+    status: row.status,
+    size,
+    rounds,
+    championId: row.champion_id || null,
+    entries,
+    matches,
+    entered: entries.some((e) => e.id === myId),
+  };
+}
+
+// The demo tournaments, built once: sample players entered, and for one that
+// is under way, a real bracket with its first few results played.
+function buildDemoTournaments() {
+  return TOURNAMENTS.map((t) => {
+    const entries = TOURNAMENT_PLAYERS.slice(0, t.entrants).map((pl, i) => ({ id: pl.id, seed: t.status === 'registration' ? null : i + 1 }));
+    const base = {
+      id: t.id, city: t.city, title: t.title, venue: t.venue, sport: t.sport, level: t.level, when: t.when,
+      max: t.max, status: t.status, size: 0, rounds: 0, championId: null, entries, matches: [], entered: false,
+    };
+    if (t.status === 'registration') return base;
+    const br = buildBracket(entries.map((e) => e.id));
+    let left = t.played;
+    br.matches.forEach((m) => {
+      if (left > 0 && !m.bye && m.round === 1) { bracketRecord(br, m.id, m.a, '11-8, 11-6'); left -= 1; }
+    });
+    return { ...base, size: br.size, rounds: br.rounds, matches: br.matches };
+  });
+}
+
 function mapMsgRow(row, myId) {
   const cp = row.court_payload || {};
   const base = { id: row.id, who: row.sender_id === myId ? 'me' : 'them', when: fmtWhen(row.sent_at), read: !!row.read_at };
@@ -203,6 +256,10 @@ export function AppStateProvider({ children }) {
   // arrives, never the old cities' rows. null means nothing has loaded. An
   // empty rows array is a real answer: the desk has listed nothing there.
   const [liveCourts, setLiveCourts] = useState(null);
+  // Tournaments: from the database when live ({ key, rows }, stamped with the
+  // city selection like the places list); built locally in the demo.
+  const [liveTournaments, setLiveTournaments] = useState(null);
+  const [demoTournaments, setDemoTournaments] = useState(buildDemoTournaments);
   // Meetups belong to one city each, and a member sees the meetups for the
   // cities on their profile — one city or several — and no others. There is no
   // nationwide list; choosing cities in Settings is what changes it. Kept in a
@@ -424,6 +481,35 @@ export function AppStateProvider({ children }) {
     }
   };
 
+  const refreshTournaments = async () => {
+    const asked = eventCityRef.current;
+    try {
+      const rows = await api.listTournaments(asked.list);
+      if (asked.key !== eventCityRef.current.key) return;
+      if (!Array.isArray(rows)) throw new Error('no list');
+      const mapped = rows.map((r) => mapTournamentRow(r, myId));
+      // Brackets are drawn from ids; fetch the cards of anyone we don't know
+      // yet so they have names. A blocked member's card is withheld by the
+      // server, and they show as an unnamed player.
+      const ids = {};
+      mapped.forEach((t) => {
+        t.entries.forEach((e) => { ids[e.id] = true; });
+        t.matches.forEach((m) => { if (m.a) ids[m.a] = true; if (m.b) ids[m.b] = true; });
+      });
+      const missing = Object.keys(ids).filter((id) => id !== myId && !cacheRef.current[id]);
+      if (missing.length) {
+        try {
+          const cards = await api.getProfilesByIds(missing);
+          (Array.isArray(cards) ? cards : []).forEach((c) => { cacheRef.current[c.id] = mapProfileRow(c); });
+        } catch (e) { /* names are a nicety; the bracket still draws */ }
+      }
+      if (asked.key !== eventCityRef.current.key) return;
+      setLiveTournaments({ key: asked.key, rows: mapped });
+    } catch (e) {
+      setLiveTournaments((cur) => (cur && cur.key === asked.key ? cur : null));
+    }
+  };
+
   // Changing cities swaps the whole list: the old selection's meetups are
   // cleared at once rather than left on screen until the new ones arrive, so
   // nothing from a city you dropped is ever shown — or joinable — afterwards.
@@ -432,6 +518,7 @@ export function AppStateProvider({ children }) {
     setLiveEvents(null);
     refreshEvents();
     refreshCourts();
+    refreshTournaments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventCityKey, live]);
 
@@ -461,6 +548,7 @@ export function AppStateProvider({ children }) {
     setNotifs([]);
     setLiveEvents(null);
     setLiveCourts(null);
+    setLiveTournaments(null);
     api.updateMyProfile({ last_active_at: new Date().toISOString() }).catch(() => {});
     getDeviceKey().then((key) => registerForPush((t, p) => api.registerPushToken(t, p, key))).catch(() => {});
     // Refresh coarse (~1 km) location so distances and the radius filter work;
@@ -829,6 +917,7 @@ export function AppStateProvider({ children }) {
     AsyncStorage.removeItem(PREFS_KEY).catch(() => {});
     setLiveEvents(null);
     setLiveCourts(null);
+    setLiveTournaments(null);
     cacheRef.current = {};
     matchIdsRef.current = {};
   };
@@ -1402,6 +1491,88 @@ export function AppStateProvider({ children }) {
     return open.length ? open[0].name : null;
   };
 
+  // ---------- tournaments ----------
+
+  const tournaments = live
+    ? (liveTournaments && liveTournaments.key === eventCityKey ? liveTournaments.rows : [])
+    : demoTournaments.filter((t) => eventCities.includes(t.city));
+
+  // A name for a bracket line. Teams show both names, as on their card.
+  const playerName = (id) => {
+    if (!id) return '';
+    if (id === 'me' || (live && id === myId)) return (user && (user.isTeam && user.partnerName ? `${user.name} & ${user.partnerName}` : user.name)) || 'You';
+    if (!live) {
+      const pl = TOURNAMENT_PLAYERS.find((x) => x.id === id);
+      return pl ? pl.name : 'Player';
+    }
+    const c = cacheRef.current[id];
+    if (!c) return 'Player';
+    return c.isTeam && c.partnerName ? `${c.name} & ${c.partnerName}` : c.name;
+  };
+  const isMe = (id) => !!id && (live ? id === myId : id === 'me');
+
+  const tournamentError = (err, fallback) => {
+    const msg = (err && err.message) || '';
+    // The server's own sentences are written to be shown; anything else isn't.
+    Alert.alert(fallback, /full|closed|draw|suspended|organiser|players|winner|already/i.test(msg) ? msg : 'Check your connection and try again.');
+  };
+
+  const joinTournament = (id) => {
+    if (live) {
+      api.joinTournament(id).then(refreshTournaments).catch((e) => { tournamentError(e, 'Couldn\u2019t enter you'); refreshTournaments(); });
+      return;
+    }
+    setDemoTournaments((list) => list.map((t) => {
+      if (t.id !== id || t.entered || t.status !== 'registration' || t.entries.length >= t.max) return t;
+      return { ...t, entered: true, entries: [...t.entries, { id: 'me', seed: null }] };
+    }));
+  };
+
+  const leaveTournament = (id) => {
+    if (live) {
+      api.leaveTournament(id).then(refreshTournaments).catch((e) => { tournamentError(e, 'Couldn\u2019t withdraw you'); refreshTournaments(); });
+      return;
+    }
+    setDemoTournaments((list) => list.map((t) => (
+      t.id === id && t.status === 'registration'
+        ? { ...t, entered: false, entries: t.entries.filter((e) => e.id !== 'me') }
+        : t)));
+  };
+
+  // Demo only: there is no organiser to make the draw, so the member can.
+  // Live, the desk does it (start_tournament) and this does nothing.
+  const drawTournament = (id) => {
+    if (live) return;
+    setDemoTournaments((list) => list.map((t) => {
+      if (t.id !== id || t.status !== 'registration' || t.entries.length < 2) return t;
+      const order = [...t.entries].sort(() => Math.random() - 0.5);
+      const br = buildBracket(order.map((e) => e.id));
+      return {
+        ...t, status: 'in_progress', size: br.size, rounds: br.rounds, matches: br.matches,
+        entries: order.map((e, i) => ({ ...e, seed: i + 1 })),
+      };
+    }));
+  };
+
+  // Who may record a match: live, only its two players (the server enforces
+  // it); in the demo anyone, since the sample players can't.
+  const canReportMatch = (m) => !m.bye && !m.winner && !!m.a && !!m.b && (!live || isMe(m.a) || isMe(m.b));
+
+  const reportMatch = (tournamentId, matchId, winnerId, score) => {
+    if (live) {
+      api.reportMatchResult(matchId, winnerId, score).then(refreshTournaments)
+        .catch((e) => { tournamentError(e, 'Couldn\u2019t record that result'); refreshTournaments(); });
+      return;
+    }
+    setDemoTournaments((list) => list.map((t) => {
+      if (t.id !== tournamentId) return t;
+      const br = { size: t.size, rounds: t.rounds, champion: null, matches: t.matches.map((m) => ({ ...m })) };
+      const problem = bracketRecord(br, matchId, winnerId, score, false);
+      if (problem) { Alert.alert('Couldn\u2019t record that result', problem); return t; }
+      return { ...t, matches: br.matches, championId: br.champion, status: br.champion ? 'completed' : t.status };
+    }));
+  };
+
   // Demo meetups are scoped the same way as live ones: your cities' only.
   const demoEvents = EVENTS.map((e, idx) => ({ e, idx })).filter(({ e }) => eventCities.includes(e.city || DEFAULT_CITY)).map(({ e, idx }) => ({
     id: e.id, week: e.week, dow: e.dow, dom: e.dom, title: e.title, venue: e.venue,
@@ -1538,7 +1709,8 @@ export function AppStateProvider({ children }) {
     matches, threads: visibleThreads, profileById, ensureThread,
     sendMessage, retryMessage, discardMessage, subscribeThread, respondCourt, markRead,
     pendingMatch, clearPendingMatch: () => setPendingMatch(null),
-    events, toggleJoin, joined, eventAttendees, eventCities, courtsFor, suggestedCourt, reloadCourts: () => { if (live) refreshCourts(); },
+    events, toggleJoin, joined, eventAttendees, eventCities, courtsFor, suggestedCourt, reloadCourts: () => { if (live) { refreshCourts(); refreshTournaments(); } },
+    tournaments, playerName, isMe, joinTournament, leaveTournament, drawTournament, canReportMatch, reportMatch,
     eventsLoading: live && liveEvents === null && !eventsError, eventsError: live && eventsError, retryEvents: () => refreshEvents(),
     notifs, clearNotifs, prefs,
   };

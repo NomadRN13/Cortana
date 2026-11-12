@@ -587,6 +587,25 @@
   .place-name { font-size: 15px; font-weight: 800; }
   .place-note { font-size: 12.5px; color: var(--dim); margin: 2px 0 0; }
   .places-foot { font-size: 11.5px; color: var(--dim); margin: 6px 0 4px; }
+
+  /* Tournaments and their brackets, under the meetups */
+  .tourney {
+    display: flex; flex-direction: column; gap: 4px; padding: 13px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 16px; margin-bottom: 10px;
+  }
+  .tourney.open { border-color: var(--optic); }
+  .tourney-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .tourney-actions .link-btn.quiet { color: var(--dim); font-weight: 700; font-size: 12.5px; }
+  .br-head { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: var(--dim); margin: 12px 0 6px; }
+  .br-match { padding: 8px 10px; margin-bottom: 8px; background: var(--card-2, #1B1E24); border: 2px solid var(--line); border-radius: 12px; }
+  .br-match.mine { border-color: var(--optic); }
+  .br-player { display: flex; align-items: center; gap: 8px; min-height: 28px; font-size: 14px; font-weight: 600; }
+  .br-player + .br-player { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px; }
+  .br-player .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .br-player.won { color: var(--optic); font-weight: 800; }
+  .br-player.lost, .br-player.tbd { color: var(--dim); }
+  .br-won { background: var(--optic); color: var(--ink); border: 0; border-radius: 999px; padding: 4px 10px; font-size: 11.5px; font-weight: 800; }
+  .br-score { font-size: 11.5px; color: var(--dim); margin-top: 4px; }
   .event-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 8px; }
   .spots { font-size: 11px; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .join-btn { font-size: 13px; font-weight: 800; padding: 8px 14px; border-radius: 999px; background: var(--optic); color: var(--ink); white-space: nowrap; }
@@ -1214,6 +1233,7 @@
       </div>
       <div class="scroll" id="events-scroll">
         <div id="event-list"></div>
+        <div id="tournament-list"></div>
         <div id="places-list"></div>
       </div>
     </section>
@@ -2671,6 +2691,243 @@
     deliverReply(chatId);
   });
 
+  /* ---------- Tournaments ---------- */
+  // The bracket rules, copied verbatim from mobile/src/lib/bracket.js (which
+  // mirrors the database). The real app's brackets are built by the server;
+  // the prototype has none, so it builds them here.
+  // BRACKET-LIB:START
+  function bracketSizeFor(n) {
+    var size = 2;
+    while (size < n) size *= 2;
+    return size;
+  }
+
+  // The seed in each first-round slot, top to bottom. 8 -> [1,8,4,5,2,7,3,6].
+  // Built by doubling: seed s in a bracket of n becomes the pair (s, 2n+1-s).
+  // Top seeds get the byes, byes never meet, and 1 and 2 can only meet last.
+  function bracketSeedOrder(size) {
+    var cur = [1];
+    var n = 1;
+    while (n < size) {
+      var next = [];
+      for (var i = 0; i < cur.length; i++) { next.push(cur[i]); next.push(2 * n + 1 - cur[i]); }
+      cur = next;
+      n *= 2;
+    }
+    return cur;
+  }
+
+  function bracketRounds(size) {
+    var r = 0;
+    while ((1 << r) < size) r++;
+    return r;
+  }
+
+  function bracketFind(bracket, round, slot) {
+    for (var i = 0; i < bracket.matches.length; i++) {
+      var m = bracket.matches[i];
+      if (m.round === round && m.slot === slot) return m;
+    }
+    return null;
+  }
+
+  // Put a match's winner into the next round (slot s feeds slot s/2: top when s
+  // is even, bottom when odd). The final's winner is the champion.
+  function bracketAdvance(bracket, m) {
+    if (m.round >= bracket.rounds) { bracket.champion = m.winner; return; }
+    var next = bracketFind(bracket, m.round + 1, Math.floor(m.slot / 2));
+    if (m.slot % 2 === 0) next.a = m.winner; else next.b = m.winner;
+  }
+
+  // players: ids in seed order (index 0 is seed 1). Returns the whole bracket,
+  // every round present, byes already advanced.
+  function buildBracket(players) {
+    var n = players.length;
+    var size = bracketSizeFor(n);
+    var rounds = bracketRounds(size);
+    var bracket = { size: size, rounds: rounds, matches: [], champion: null };
+    var r, s;
+    for (r = 1; r <= rounds; r++) {
+      for (s = 0; s < size / Math.pow(2, r); s++) {
+        bracket.matches.push({ id: 'r' + r + 's' + s, round: r, slot: s, a: null, b: null, winner: null, score: '', bye: false });
+      }
+    }
+    var order = bracketSeedOrder(size);
+    for (s = 0; s < size / 2; s++) {
+      var m = bracketFind(bracket, 1, s);
+      var sa = order[2 * s];
+      var sb = order[2 * s + 1];
+      m.a = sa <= n ? players[sa - 1] : null;
+      m.b = sb <= n ? players[sb - 1] : null;
+      if (m.a === null || m.b === null) {
+        m.bye = true;
+        m.winner = m.a === null ? m.b : m.a;
+        bracketAdvance(bracket, m);
+      }
+    }
+    return bracket;
+  }
+
+  // Record (or, with force, correct) a result. Returns null on success or a
+  // sentence saying why not. A correction is refused once the next match has
+  // been played, so nobody is shown advancing from a match they lost.
+  function bracketRecord(bracket, matchId, winner, score, force) {
+    var m = null;
+    for (var i = 0; i < bracket.matches.length; i++) if (bracket.matches[i].id === matchId) m = bracket.matches[i];
+    if (!m) return 'That match doesn’t exist.';
+    if (m.bye) return 'A bye has no result to record.';
+    if (m.a === null || m.b === null) return 'This match is still waiting for its players.';
+    if (winner !== m.a && winner !== m.b) return 'The winner has to be one of the two players in the match.';
+    if (m.winner !== null) {
+      if (!force) return 'This result is already in — ask the organiser to correct it.';
+      if (m.round < bracket.rounds) {
+        var next = bracketFind(bracket, m.round + 1, Math.floor(m.slot / 2));
+        if (next.winner !== null) return 'The next round has already been played — correct that result first.';
+      }
+      bracket.champion = null;
+    }
+    m.winner = winner;
+    m.score = String(score || '').slice(0, 40);
+    bracketAdvance(bracket, m);
+    return null;
+  }
+
+  // "Final", "Semifinals", "Quarterfinals", "Round of 16", "Round 1" …
+  function bracketRoundName(round, rounds) {
+    var left = rounds - round;
+    if (left === 0) return 'Final';
+    if (left === 1) return 'Semifinals';
+    if (left === 2) return 'Quarterfinals';
+    return 'Round of ' + Math.pow(2, left + 1);
+  }
+  // BRACKET-LIB:END
+
+  var T_PLAYERS = ['Maya', 'Diego', 'Priya', 'Sam', 'Elena', 'Marcus', 'Jordan', 'Grace', 'Theo', 'Nadia', 'Chris', 'Lena', 'Omar', 'Tessa', 'Ravi', 'Bianca', 'Hugo', 'Imani', 'Wes', 'Carmen', 'Felix', 'Noor', 'Dale', 'Yuki'].map(function (n, i) { return { id: 'tp' + (i + 1), name: n }; });
+  function tEntries(n) { return T_PLAYERS.slice(0, n).map(function (pl) { return pl.id; }); }
+  // Mirrors TOURNAMENTS in mobile/src/data/seed.js.
+  var TOURNEYS = [
+    { id: 't1', city: 'bakersfield', title: 'Bakersfield Fall Classic', venue: 'Jastro Park', sport: 'Pickleball', level: 'All levels', when: 'Sat \u00B7 9:00 AM', max: 24, status: 'registration', entries: tEntries(23), bracket: null },
+    { id: 't2', city: 'indianapolis', title: 'Broad Ripple Open', venue: 'Broad Ripple Park', sport: 'Pickleball', level: 'DUPR 3.0+', when: 'Sun \u00B7 1:00 PM', max: 16, status: 'in_progress', entries: tEntries(12), bracket: null },
+    { id: 't3', city: 'seattle', title: 'Green Lake Doubles Cup', venue: 'Green Lake Courts', sport: 'Tennis', level: 'NTRP 3.5+', when: 'Next Sat \u00B7 10:00 AM', max: 8, status: 'registration', entries: tEntries(5), bracket: null }
+  ];
+  // One is already under way, with its first five results in.
+  (function () {
+    var t = TOURNEYS[1];
+    t.bracket = buildBracket(t.entries);
+    var left = 5;
+    t.bracket.matches.forEach(function (m) {
+      if (left > 0 && !m.bye && m.round === 1) { bracketRecord(t.bracket, m.id, m.a, '11-8, 11-6'); left--; }
+    });
+  })();
+  var tourneyOpen = {};
+
+  function tName(id) {
+    if (!id) return '';
+    if (id === 'me') {
+      var u = state.user || {};
+      return u.isTeam && u.partnerName ? u.name + ' & ' + u.partnerName : (u.name || 'You');
+    }
+    for (var i = 0; i < T_PLAYERS.length; i++) if (T_PLAYERS[i].id === id) return T_PLAYERS[i].name;
+    return 'Player';
+  }
+
+  function tBracketHtml(t) {
+    var br = t.bracket, html = '';
+    for (var r = 1; r <= br.rounds; r++) {
+      html += '<div class="br-head">' + esc(bracketRoundName(r, br.rounds)) + '</div>';
+      br.matches.forEach(function (m) {
+        if (m.round !== r) return;
+        var open = !m.bye && !m.winner && m.a && m.b;
+        var line = function (id) {
+          if (!id) return '<div class="br-player tbd"><span class="nm">' + (m.bye ? '\u2014 bye \u2014' : 'To be decided') + '</span></div>';
+          var cls = 'br-player' + (m.winner ? (m.winner === id ? ' won' : ' lost') : '');
+          return '<div class="' + cls + '"><span class="nm">' + esc(tName(id)) + (id === 'me' ? '  (you)' : '') + (m.winner === id ? ' \u2713' : '') + '</span>' +
+            (open ? '<button class="br-won" type="button" data-t="' + t.id + '" data-match="' + m.id + '" data-winner="' + esc(id) + '" aria-label="Record ' + esc(tName(id)) + ' as the winner">Won</button>' : '') +
+            '</div>';
+        };
+        html += '<div class="br-match' + (m.a === 'me' || m.b === 'me' ? ' mine' : '') + '" data-round="' + m.round + '" data-slot="' + m.slot + '">' +
+          line(m.a) + line(m.b) + (m.score ? '<div class="br-score">' + esc(m.score) + '</div>' : '') + '</div>';
+      });
+    }
+    return html;
+  }
+
+  function renderTournaments(cities) {
+    var box = $('#tournament-list');
+    var list = TOURNEYS.filter(function (t) { return cities.indexOf(t.city) !== -1; });
+    if (!list.length) { box.innerHTML = ''; return; }
+    box.innerHTML = '<h3 class="places-head">Tournaments</h3>' + list.map(function (t) {
+      var entered = t.entries.indexOf('me') !== -1;
+      var full = t.entries.length >= t.max;
+      var isOpen = !!tourneyOpen[t.id];
+      var status = t.status === 'registration' ? t.entries.length + ' of ' + t.max + ' entered'
+        : t.status === 'completed' ? 'Champion: ' + tName(t.bracket.champion)
+        : 'In progress \u00B7 ' + t.entries.length + ' players';
+      var actions = '';
+      if (t.status === 'registration') {
+        actions += entered ? '<button class="join-btn going" type="button" data-t-act="leave" data-t="' + t.id + '">Entered \u2713</button>'
+          : full ? '<span class="hint">Full</span>'
+          : '<button class="join-btn" type="button" data-t-act="join" data-t="' + t.id + '">Enter</button>';
+      }
+      actions += '<button class="link-btn" type="button" data-t-act="toggle" data-t="' + t.id + '" aria-expanded="' + isOpen + '">' +
+        (t.status === 'registration' ? (isOpen ? 'Hide entries' : 'See who\u2019s in') : (isOpen ? 'Hide bracket' : 'See the bracket')) + '</button>';
+      if (t.status === 'registration' && t.entries.length >= 2) {
+        actions += '<button class="link-btn quiet" type="button" data-t-act="draw" data-t="' + t.id + '">Make the draw (demo)</button>';
+      }
+      var detail = '';
+      if (isOpen && t.status === 'registration') {
+        detail = '<p class="place-note">' + (t.entries.length ? esc(t.entries.map(tName).join(' \u00B7 ')) : 'Nobody yet \u2014 be the first.') + '</p>' +
+          '<p class="places-foot">When entries close the organiser makes the draw: the bracket is built for however many have entered, up to ' + t.max + ', and everyone is placed in it automatically.</p>';
+      } else if (isOpen) {
+        detail = tBracketHtml(t);
+      }
+      return '<div class="tourney' + (isOpen ? ' open' : '') + '" data-tourney="' + t.id + '" data-status="' + t.status + '">' +
+        '<div class="place-name">' + esc(t.title) + '</div>' +
+        '<div class="event-meta">' + esc(t.venue) + ' \u00B7 ' + esc(t.when) + '</div>' +
+        '<div class="event-tags"><span class="tag tag-sport">' + esc(t.sport) + '</span><span class="tag">' + esc(t.level) + '</span>' +
+          '<span class="tag t-status">' + esc(status) + '</span>' +
+          (cities.length > 1 ? '<span class="tag tag-city">' + esc(cityLabel(t.city)) + '</span>' : '') + '</div>' +
+        '<div class="tourney-actions">' + actions + '</div>' + detail +
+      '</div>';
+    }).join('');
+  }
+
+  $('#tournament-list').addEventListener('click', function (ev) {
+    var won = ev.target.closest('.br-won');
+    var btn = ev.target.closest('[data-t-act]');
+    var id = (won || btn) && (won || btn).getAttribute('data-t');
+    var t = null;
+    TOURNEYS.forEach(function (x) { if (x.id === id) t = x; });
+    if (!t) return;
+    if (won) {
+      // In the real app only the two players in a match (or the organiser) can
+      // record it; the prototype lets you play the whole bracket through.
+      var problem = bracketRecord(t.bracket, won.getAttribute('data-match'), won.getAttribute('data-winner'), '', false);
+      if (problem) { toast(problem); return; }
+      if (t.bracket.champion) { t.status = 'completed'; toast(tName(t.bracket.champion) + ' wins the ' + t.title + '! \uD83C\uDFC6'); }
+      renderTournaments(userCities());
+      return;
+    }
+    var act = btn.getAttribute('data-t-act');
+    if (act === 'toggle') tourneyOpen[id] = !tourneyOpen[id];
+    if (act === 'join' && t.entries.length < t.max && t.entries.indexOf('me') === -1) {
+      t.entries.push('me');
+      toast('You\u2019re in \u2014 ' + t.entries.length + ' of ' + t.max + ' entered');
+    }
+    if (act === 'leave') t.entries = t.entries.filter(function (e) { return e !== 'me'; });
+    if (act === 'draw' && t.entries.length >= 2) {
+      // The draw: a random order is the seeding; the bracket is sized for the
+      // field and everyone is placed in it.
+      var order = t.entries.slice().sort(function () { return Math.random() - 0.5; });
+      t.entries = order;
+      t.bracket = buildBracket(order);
+      t.status = 'in_progress';
+      tourneyOpen[id] = true;
+      toast('Draw made: ' + order.length + ' players in a bracket of ' + t.bracket.size);
+    }
+    renderTournaments(userCities());
+  });
+
   /* ---------- Places to play ---------- */
   // City by city. Mirrors mobile/src/data/courts.js — keep the two in step;
   // that file says what each field means and what was deliberately left out.
@@ -2745,6 +3002,7 @@
     var badge = $('#event-city-label');
     badge.textContent = citiesSummary(cities);
     badge.parentNode.setAttribute('title', cities.map(cityLabel).join(', '));
+    renderTournaments(cities);
     renderPlaces(cities);
     var list = $('#event-list');
     var shown = visibleEvents();

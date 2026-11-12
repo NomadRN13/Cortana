@@ -726,3 +726,28 @@ neither is fixed yet.
   covered by the state tests and a syntax check of the changed screens, not by
   anyone tapping through them.
 - Everything that needs a live Supabase project (see "Where launch stands").
+
+## Update — 2026-11-12 (tournaments and brackets)
+
+- **Tournaments** (migration 27): single-elimination brackets for 2 to 24
+  entries, per city. Members enter from Events; the desk makes the draw at
+  `/admin` → **Tournaments**; the bracket is sized for the field, seeded by a
+  random draw, and everyone is placed automatically, with byes to the top of
+  the draw. Players record their own results; the desk can record or correct
+  any. The final names the champion.
+- **Checked for every field size from 2 to 24**, in the database suite and
+  again in the app's own copy of the rules: right bracket size, everyone placed
+  exactly once, the right number of byes, no bye meeting a bye, every later
+  round filled before it is due, and the top seed winning when the better seed
+  always wins.
+- **Privacy policy updated**: entering a tournament puts a member's name in an
+  entry list and bracket that members who have not matched with them can read.
+- **Not built:** double elimination, round robin or pools; seeding by rating
+  (the draw is random — we hold no rating to trust); a doubles draw where two
+  separate members pair up (a team profile enters as one); push notifications
+  when your next match is ready; and withdrawing after the draw (the desk
+  records a walkover).
+- **The demo and the prototype** have a "Make the draw (demo)" link so the
+  bracket can be seen without an organiser. The live app never shows it — only
+  the desk can draw.
+- Still not run on a device.

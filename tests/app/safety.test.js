@@ -180,6 +180,51 @@ async function main() {
   await act(async () => { app.reloadCourts(); await tick(40); });
   check('a failed refresh keeps the last good list rather than the bundled one', app.courtsFor('bakersfield').map((c) => c.name).join() === 'Fresh From The Desk', app.courtsFor('bakersfield').length);
 
+  // ---- tournaments: the server builds the bracket, the app draws it and says no when told no ----
+  const tRow = (o) => Object.assign({
+    id: 't-1', city: 'bakersfield', title: 'Fall Classic', venue: 'Jastro Park', sport: 'pickleball', level_range: 'All levels',
+    starts_at: soon, max_entries: 24, status: 'registration', bracket_size: null, champion_id: null,
+    tournament_entries: [], tournament_matches: [],
+  }, o);
+  let serverT = tRow({ tournament_entries: [{ user_id: 'them-uuid', seed: null }] });
+  impl.listTournaments = () => [serverT];
+  impl.joinTournament = () => { serverT = tRow({ tournament_entries: [{ user_id: 'them-uuid', seed: null }, { user_id: 'me-uuid', seed: null }] }); return { ok: true }; };
+  await act(async () => { app.reloadCourts(); await tick(60); });
+  const T = () => app.tournaments.find((t) => t.id === 't-1') || {};
+  check('a tournament in a selected city is listed', T().title === 'Fall Classic' && T().entries.length === 1, app.tournaments.map((t) => t.title));
+  await act(async () => { app.joinTournament('t-1'); await tick(60); });
+  check('entering shows up once the server has it', T().entered === true && T().entries.length === 2, [T().entered, T().entries && T().entries.length]);
+
+  impl.joinTournament = () => { throw new Error('This tournament is full.'); };
+  alerts.length = 0;
+  await act(async () => { app.joinTournament('t-1'); await tick(60); });
+  check('a refused entry says why, in the server\u2019s words', alerts.length === 1 && /full/i.test(alerts[0].message || ''), alerts);
+
+  // the draw arrives from the server; only your own match is yours to record
+  serverT = tRow({
+    status: 'in_progress', bracket_size: 4,
+    tournament_entries: [{ user_id: 'me-uuid', seed: 1 }, { user_id: 'them-uuid', seed: 2 }, { user_id: 'third-uuid', seed: 3 }],
+    tournament_matches: [
+      { id: 'm-bye', round: 1, slot: 0, player_a: 'me-uuid', player_b: null, winner: 'me-uuid', score: '', is_bye: true },
+      { id: 'm-other', round: 1, slot: 1, player_a: 'them-uuid', player_b: 'third-uuid', winner: null, score: '', is_bye: false },
+      { id: 'm-final', round: 2, slot: 0, player_a: 'me-uuid', player_b: null, winner: null, score: '', is_bye: false },
+    ],
+  });
+  await act(async () => { app.reloadCourts(); await tick(60); });
+  const mt = (id) => (T().matches || []).find((x) => x.id === id) || {};
+  check('the bracket is drawn as the server built it', T().status === 'in_progress' && T().rounds === 2 && (T().matches || []).length === 3, [T().status, T().rounds]);
+  check('a match between two other players is not mine to record', app.canReportMatch(mt('m-other')) === false);
+  check('a bye, and a match still waiting for a player, cannot be recorded', app.canReportMatch(mt('m-bye')) === false && app.canReportMatch(mt('m-final')) === false);
+  serverT = tRow(Object.assign({}, serverT, { tournament_matches: serverT.tournament_matches.map((x) => (x.id === 'm-final' ? Object.assign({}, x, { player_b: 'them-uuid' }) : x)) }));
+  await act(async () => { app.reloadCourts(); await tick(60); });
+  check('my own match, once both players are in, is mine to record', app.canReportMatch(mt('m-final')) === true);
+  const sent = [];
+  impl.reportMatchResult = (matchId, winner) => { sent.push([matchId, winner]); throw new Error('This result is already in \u2014 ask the organiser to correct it.'); };
+  alerts.length = 0;
+  await act(async () => { app.reportMatch('t-1', 'm-final', 'me-uuid', ''); await tick(60); });
+  check('recording sends the match and the winner', sent.length === 1 && sent[0].join() === 'm-final,me-uuid', sent);
+  check('a refused result says why and changes nothing', alerts.length === 1 && /already in/.test(alerts[0].message || '') && !mt('m-final').winner, alerts);
+
   await act(async () => { renderer.unmount(); });
   console.log(failures ? `\n${failures} failing` : '\nall green');
   process.exit(failures ? 1 : 0);

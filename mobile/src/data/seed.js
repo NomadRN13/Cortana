@@ -76,6 +76,19 @@ export const NOTIFICATIONS = [
   { ico: 'calendar', txt: 'Sunset Doubles Social is this Friday at 6:00 PM — 6 spots left.', sub: 'Mon 9:00 AM' },
 ];
 
+// Demo tournaments. `entrants` of the sample players below are entered;
+// `played` first-come results are filled in so a bracket is under way.
+export const TOURNAMENT_PLAYERS = [
+  'Maya', 'Diego', 'Priya', 'Sam', 'Elena', 'Marcus', 'Jordan', 'Grace', 'Theo', 'Nadia', 'Chris', 'Lena',
+  'Omar', 'Tessa', 'Ravi', 'Bianca', 'Hugo', 'Imani', 'Wes', 'Carmen', 'Felix', 'Noor', 'Dale', 'Yuki',
+].map((name, i) => ({ id: `tp${i + 1}`, name }));
+
+export const TOURNAMENTS = [
+  { id: 't1', city: 'bakersfield', title: 'Bakersfield Fall Classic', venue: 'Jastro Park', sport: 'Pickleball', level: 'All levels', when: 'Sat · 9:00 AM', max: 24, status: 'registration', entrants: 23, played: 0 },
+  { id: 't2', city: 'indianapolis', title: 'Broad Ripple Open', venue: 'Broad Ripple Park', sport: 'Pickleball', level: 'DUPR 3.0+', when: 'Sun · 1:00 PM', max: 16, status: 'in_progress', entrants: 12, played: 5 },
+  { id: 't3', city: 'seattle', title: 'Green Lake Doubles Cup', venue: 'Green Lake Courts', sport: 'Tennis', level: 'NTRP 3.5+', when: 'Next Sat · 10:00 AM', max: 8, status: 'registration', entrants: 5, played: 0 },
+];
+
 export const COURTS = ['Riverside Park Tennis Complex', 'Tarkington Park', 'Broad Ripple Park'];
 export const SPORTS = ['Tennis', 'Pickleball', 'Padel', 'Racquetball', 'Squash'];
 export const SKILLS = ['Beginner', 'Intermediate', 'Advanced', 'Competitive'];

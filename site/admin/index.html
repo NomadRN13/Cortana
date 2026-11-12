@@ -91,6 +91,18 @@
   .empty { padding: 26px 0 14px; text-align: center; color: var(--dim); font-size: 14px; }
   .pill { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--dim); margin-left: 8px; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  /* tournament brackets */
+  .bracket { display: flex; gap: 14px; overflow-x: auto; padding: 10px 0 6px; }
+  .br-round { flex: 0 0 190px; display: flex; flex-direction: column; justify-content: space-around; gap: 8px; }
+  .br-round h3 { margin: 0 0 2px; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+  .br-match { border: 1px solid var(--line); border-radius: 10px; background: var(--card2); overflow: hidden; }
+  .br-p { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; padding: 7px 9px; background: none; border: 0; border-bottom: 1px solid var(--line); color: var(--text); font: inherit; font-size: 13px; text-align: left; }
+  .br-p:last-of-type { border-bottom: 0; }
+  button.br-p { cursor: pointer; }
+  button.br-p:hover { background: rgba(214, 244, 79, 0.10); }
+  .br-p.won { color: var(--optic); font-weight: 800; }
+  .br-p.lost, .br-p.empty-slot { color: var(--dim); }
+  .br-score { padding: 3px 9px 6px; font-size: 11.5px; color: var(--dim); }
   @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
   footer { margin-top: 26px; text-align: center; font-size: 12px; color: var(--dim); line-height: 1.6; }
   code { background: var(--card2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 12px; }
@@ -207,6 +219,7 @@
       <button id="tab-reports" type="button">Reports <span class="n" id="n-reports"></span></button>
       <button id="tab-events" type="button">Events</button>
       <button id="tab-places" type="button">Places</button>
+      <button id="tab-tournaments" type="button">Tournaments</button>
       <button id="tab-numbers" type="button">Numbers</button>
     </div>
 
@@ -318,6 +331,39 @@
       <p class="msg" id="pl-msg"></p>
       <h1 style="margin-top:22px; font-size:17px">Listed</h1>
       <div id="place-list"></div>
+    </div>
+    <div class="card" id="pane-tournaments" hidden>
+      <h1>Tournaments</h1>
+      <p class="hint">Single-elimination brackets for 2 to 24 entries. Create one and members enter
+      from Events. When entries are in, <b>Make the draw</b>: the bracket is built for however many
+      entered, everyone is placed in it automatically, and byes go to the top of the draw. Players
+      record their own results; click a player here to record or correct one.</p>
+      <div class="grid2">
+        <div><label for="tn-title">Title</label><input id="tn-title" maxlength="80" placeholder="Bakersfield Fall Classic"></div>
+        <div><label for="tn-venue">Venue</label><input id="tn-venue" maxlength="80" placeholder="Jastro Park"></div>
+        <div><label for="tn-date">Date</label><input id="tn-date" type="date"></div>
+        <div><label for="tn-time">Start time</label><input id="tn-time" type="time" value="09:00"></div>
+        <div>
+          <label for="tn-city">City</label>
+          <select id="tn-city"></select>
+        </div>
+        <div>
+          <label for="tn-sport">Sport</label>
+          <select id="tn-sport">
+            <option value="pickleball">Pickleball</option>
+            <option value="tennis">Tennis</option>
+            <option value="padel">Padel</option>
+            <option value="racquetball">Racquetball</option>
+            <option value="squash">Squash</option>
+          </select>
+        </div>
+        <div><label for="tn-max">Entries (2–24)</label><input id="tn-max" type="number" min="2" max="24" value="16"></div>
+        <div><label for="tn-level">Level range</label><input id="tn-level" maxlength="40" value="All levels"></div>
+      </div>
+      <div class="row-btns"><button class="btn btn-primary" id="tn-create" type="button">Create tournament</button></div>
+      <p class="msg" id="tn-msg"></p>
+      <h1 style="margin-top:22px; font-size:17px">Tournaments</h1>
+      <div id="tournament-list"></div>
     </div>
     <div class="card" id="pane-numbers" hidden>
       <h1>Numbers</h1>
@@ -432,6 +478,9 @@
       { id: 'r1', reporter: 'Sam', target: 'Alex', target_id: 'demo-alex', reason: 'Profile photo is a stock image, not a real person.', context: 'deck', created_at: new Date(Date.now() - 2 * 3600000).toISOString() },
       { id: 'r2', reporter: 'Elena', target: 'Jordan', target_id: 'demo-jordan', reason: 'Kept pushing to move the chat off the app after I said no.', context: 'chat', created_at: new Date(Date.now() - 20 * 3600000).toISOString() }
     ],
+    tournaments: [
+      { id: 'dt1', city: 'bakersfield', title: 'Bakersfield Fall Classic', venue: 'Jastro Park', sport: 'pickleball', level: 'All levels', starts_at: new Date(Date.now() + 5 * 86400000).toISOString(), max: 24, status: 'registration', size: 0, rounds: 0, champion: null, entries: [], matches: [] }
+    ],
     places: [
       { id: 'p1', city: 'bakersfield', name: 'Greenacres Park PicklePlex', address: '2014 Calloway Dr', sport: 'pickleball', setting: 'outdoor', access: 'public', courts: 8, lights: true, note: 'Eight dedicated courts. Open 6am–10pm.', sort_order: 10 },
       { id: 'p2', city: 'bakersfield', name: 'Dignity Health Sports Complex — GSA Pickleball', address: '3101 Gilmore Ave, Suite 100', sport: 'pickleball', setting: 'indoor', access: 'paid', courts: null, lights: true, note: 'Indoor open play three days a week.', sort_order: 110 }
@@ -451,7 +500,7 @@
     $('#who-email').textContent = LIVE ? (session ? session.email : '') : 'demo admin';
   }
 
-  var PANES = ['photos', 'reports', 'events', 'places', 'numbers'];
+  var PANES = ['photos', 'reports', 'events', 'places', 'tournaments', 'numbers'];
   PANES.forEach(function (p) {
     $('#tab-' + p).addEventListener('click', function () {
       PANES.forEach(function (q) {
@@ -460,6 +509,7 @@
       });
       if (p === 'numbers') loadNumbers();
       if (p === 'places') loadPlaces();
+      if (p === 'tournaments') loadTournaments();
     });
   });
 
@@ -827,6 +877,331 @@
       .catch(function (e) { alert('Could not remove: ' + e.message); });
   });
 
+  /* ---------- tournaments ---------- */
+  // The bracket rules, copied verbatim from mobile/src/lib/bracket.js so the
+  // demo desk draws exactly what the database would. The live desk never uses
+  // them to build anything — the server does — only bracketRoundName.
+  // BRACKET-LIB:START
+  function bracketSizeFor(n) {
+    var size = 2;
+    while (size < n) size *= 2;
+    return size;
+  }
+
+  // The seed in each first-round slot, top to bottom. 8 -> [1,8,4,5,2,7,3,6].
+  // Built by doubling: seed s in a bracket of n becomes the pair (s, 2n+1-s).
+  // Top seeds get the byes, byes never meet, and 1 and 2 can only meet last.
+  function bracketSeedOrder(size) {
+    var cur = [1];
+    var n = 1;
+    while (n < size) {
+      var next = [];
+      for (var i = 0; i < cur.length; i++) { next.push(cur[i]); next.push(2 * n + 1 - cur[i]); }
+      cur = next;
+      n *= 2;
+    }
+    return cur;
+  }
+
+  function bracketRounds(size) {
+    var r = 0;
+    while ((1 << r) < size) r++;
+    return r;
+  }
+
+  function bracketFind(bracket, round, slot) {
+    for (var i = 0; i < bracket.matches.length; i++) {
+      var m = bracket.matches[i];
+      if (m.round === round && m.slot === slot) return m;
+    }
+    return null;
+  }
+
+  // Put a match's winner into the next round (slot s feeds slot s/2: top when s
+  // is even, bottom when odd). The final's winner is the champion.
+  function bracketAdvance(bracket, m) {
+    if (m.round >= bracket.rounds) { bracket.champion = m.winner; return; }
+    var next = bracketFind(bracket, m.round + 1, Math.floor(m.slot / 2));
+    if (m.slot % 2 === 0) next.a = m.winner; else next.b = m.winner;
+  }
+
+  // players: ids in seed order (index 0 is seed 1). Returns the whole bracket,
+  // every round present, byes already advanced.
+  function buildBracket(players) {
+    var n = players.length;
+    var size = bracketSizeFor(n);
+    var rounds = bracketRounds(size);
+    var bracket = { size: size, rounds: rounds, matches: [], champion: null };
+    var r, s;
+    for (r = 1; r <= rounds; r++) {
+      for (s = 0; s < size / Math.pow(2, r); s++) {
+        bracket.matches.push({ id: 'r' + r + 's' + s, round: r, slot: s, a: null, b: null, winner: null, score: '', bye: false });
+      }
+    }
+    var order = bracketSeedOrder(size);
+    for (s = 0; s < size / 2; s++) {
+      var m = bracketFind(bracket, 1, s);
+      var sa = order[2 * s];
+      var sb = order[2 * s + 1];
+      m.a = sa <= n ? players[sa - 1] : null;
+      m.b = sb <= n ? players[sb - 1] : null;
+      if (m.a === null || m.b === null) {
+        m.bye = true;
+        m.winner = m.a === null ? m.b : m.a;
+        bracketAdvance(bracket, m);
+      }
+    }
+    return bracket;
+  }
+
+  // Record (or, with force, correct) a result. Returns null on success or a
+  // sentence saying why not. A correction is refused once the next match has
+  // been played, so nobody is shown advancing from a match they lost.
+  function bracketRecord(bracket, matchId, winner, score, force) {
+    var m = null;
+    for (var i = 0; i < bracket.matches.length; i++) if (bracket.matches[i].id === matchId) m = bracket.matches[i];
+    if (!m) return 'That match doesn’t exist.';
+    if (m.bye) return 'A bye has no result to record.';
+    if (m.a === null || m.b === null) return 'This match is still waiting for its players.';
+    if (winner !== m.a && winner !== m.b) return 'The winner has to be one of the two players in the match.';
+    if (m.winner !== null) {
+      if (!force) return 'This result is already in — ask the organiser to correct it.';
+      if (m.round < bracket.rounds) {
+        var next = bracketFind(bracket, m.round + 1, Math.floor(m.slot / 2));
+        if (next.winner !== null) return 'The next round has already been played — correct that result first.';
+      }
+      bracket.champion = null;
+    }
+    m.winner = winner;
+    m.score = String(score || '').slice(0, 40);
+    bracketAdvance(bracket, m);
+    return null;
+  }
+
+  // "Final", "Semifinals", "Quarterfinals", "Round of 16", "Round 1" …
+  function bracketRoundName(round, rounds) {
+    var left = rounds - round;
+    if (left === 0) return 'Final';
+    if (left === 1) return 'Semifinals';
+    if (left === 2) return 'Quarterfinals';
+    return 'Round of ' + Math.pow(2, left + 1);
+  }
+  // BRACKET-LIB:END
+
+  var SAMPLE_PLAYERS = ['Maya', 'Diego', 'Priya', 'Sam', 'Elena', 'Marcus', 'Jordan', 'Grace', 'Theo', 'Nadia', 'Chris', 'Lena', 'Omar', 'Tessa', 'Ravi', 'Bianca', 'Hugo', 'Imani', 'Wes', 'Carmen', 'Felix', 'Noor', 'Dale', 'Yuki'];
+  var tourneys = [];        // what is on screen, in one shape for demo and live
+  var playerNames = {};     // id -> name
+
+  $('#tn-city').innerHTML = '<option value="">Choose a city…</option>' + $('#ev-city').innerHTML;
+  $('#tn-city').value = '';
+
+  // Demo: put the first sample players into the one sample tournament, so the
+  // desk has something to draw the moment it is opened.
+  demo.tournaments[0].entries = SAMPLE_PLAYERS.slice(0, 13).map(function (n, i) { return { id: 'sp' + (i + 1), name: n, seed: null }; });
+  SAMPLE_PLAYERS.forEach(function (n, i) { playerNames['sp' + (i + 1)] = n; });
+
+  function tnName(id) { return id ? (playerNames[id] || 'Player') : ''; }
+
+  function tnFromRow(row) {
+    var size = row.bracket_size || 0, rounds = 0;
+    while (size && (1 << rounds) < size) rounds++;
+    return {
+      id: row.id, city: row.city, title: row.title, venue: row.venue || '', sport: row.sport, level: row.level_range,
+      starts_at: row.starts_at, max: row.max_entries, status: row.status, size: size, rounds: rounds, champion: row.champion_id || null,
+      entries: (row.tournament_entries || []).map(function (e) { return { id: e.user_id, seed: e.seed }; }),
+      matches: (row.tournament_matches || []).map(function (m) {
+        return { id: m.id, round: m.round, slot: m.slot, a: m.player_a, b: m.player_b, winner: m.winner, score: m.score || '', bye: !!m.is_bye };
+      }).sort(function (x, y) { return (x.round - y.round) || (x.slot - y.slot); })
+    };
+  }
+
+  function bracketHtml(t) {
+    var cols = [];
+    for (var r = 1; r <= t.rounds; r++) {
+      var ms = t.matches.filter(function (m) { return m.round === r; }).map(function (m) {
+        var line = function (id) {
+          if (!id) return '<div class="br-p empty-slot">' + (m.bye ? '— bye —' : 'To be decided') + '</div>';
+          var cls = 'br-p' + (m.winner ? (m.winner === id ? ' won' : ' lost') : '');
+          var label = esc(tnName(id)) + (m.winner === id ? ' ✓' : '');
+          // Clickable once both players are known and it isn't a bye: the desk
+          // may record a result or correct one.
+          if (!m.bye && m.a && m.b && t.status !== 'cancelled') {
+            return '<button type="button" class="' + cls + '" data-act="win" data-match="' + esc(m.id) + '" data-winner="' + esc(id) + '" title="Record ' + esc(tnName(id)) + ' as the winner">' + label + '</button>';
+          }
+          return '<div class="' + cls + '">' + label + '</div>';
+        };
+        return '<div class="br-match">' + line(m.a) + line(m.b) + (m.score ? '<div class="br-score">' + esc(m.score) + '</div>' : '') + '</div>';
+      }).join('');
+      cols.push('<div class="br-round"><h3>' + esc(bracketRoundName(r, t.rounds)) + '</h3>' + ms + '</div>');
+    }
+    return '<div class="bracket">' + cols.join('') + '</div>';
+  }
+
+  function renderTournaments() {
+    var cityName = {};
+    Array.prototype.forEach.call($('#tn-city').options, function (o) { cityName[o.value] = o.textContent; });
+    $('#tournament-list').innerHTML = tourneys.length ? tourneys.map(function (t) {
+      var d = new Date(t.starts_at);
+      var when = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) +
+        ' · ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      var state = t.status === 'registration' ? t.entries.length + ' of ' + t.max + ' entered'
+        : t.status === 'completed' ? 'Champion: ' + tnName(t.champion)
+        : t.status === 'cancelled' ? 'Cancelled'
+        : 'In progress · bracket of ' + t.size;
+      var btns = '';
+      if (t.status === 'registration') {
+        btns += '<button class="btn btn-primary btn-sm" data-act="draw"' + (t.entries.length < 2 ? ' disabled title="Needs at least 2 players"' : '') + '>Make the draw</button>';
+        if (!LIVE && t.entries.length < t.max) btns += '<button class="btn btn-ghost btn-sm" data-act="fill">Add sample players (demo)</button>';
+      }
+      btns += '<button class="btn btn-danger btn-sm" data-act="delete">Delete</button>';
+      var body = t.status === 'registration'
+        ? '<div class="meta">' + (t.entries.length ? esc(t.entries.map(function (e) { return tnName(e.id); }).join(' · ')) : 'No entries yet.') + '</div>'
+        : bracketHtml(t);
+      return '<div class="item" data-id="' + esc(t.id) + '">' +
+        '<div class="body">' +
+          '<div class="name">' + esc(t.title) + '<span class="pill">' + esc(t.sport) + '</span></div>' +
+          '<div class="meta">' + esc(cityName[t.city] || t.city) + (t.venue ? ' · ' + esc(t.venue) : '') + ' · ' + esc(when) + ' · ' + esc(t.level) + ' · <b>' + esc(state) + '</b></div>' +
+          body +
+          '<div class="row-btns">' + btns + '</div>' +
+        '</div></div>';
+    }).join('') : '<div class="empty">No tournaments yet — create the first one above.</div>';
+  }
+
+  function loadTournaments() {
+    if (!LIVE) { tourneys = demo.tournaments; renderTournaments(); return; }
+    rest('GET', '/rest/v1/tournaments?select=*,tournament_entries(user_id,seed),tournament_matches(id,round,slot,player_a,player_b,winner,score,is_bye)&order=starts_at.desc')
+      .then(function (rows) {
+        tourneys = (rows || []).map(tnFromRow);
+        var ids = {};
+        tourneys.forEach(function (t) {
+          t.entries.forEach(function (e) { ids[e.id] = true; });
+          t.matches.forEach(function (m) { if (m.a) ids[m.a] = true; if (m.b) ids[m.b] = true; });
+        });
+        var missing = Object.keys(ids).filter(function (id) { return !playerNames[id]; });
+        if (!missing.length) return null;
+        return rest('POST', '/rest/v1/rpc/get_profile_cards', { p_ids: missing }).then(function (cards) {
+          (cards || []).forEach(function (c) {
+            playerNames[c.id] = c.is_team && c.partner_name ? c.first_name + ' & ' + c.partner_name : c.first_name;
+          });
+        }).catch(function () { /* names are a nicety; the bracket still draws */ });
+      })
+      .then(renderTournaments)
+      .catch(function (e) { $('#tournament-list').innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; });
+  }
+
+  $('#tn-create').addEventListener('click', function () {
+    var msg = $('#tn-msg');
+    msg.className = 'msg';
+    var title = $('#tn-title').value.trim();
+    var date = $('#tn-date').value;
+    var time = $('#tn-time').value || '09:00';
+    var maxRaw = $('#tn-max').value.trim();
+    if (title.length < 2 || !date) { msg.textContent = 'A title and a date are required.'; msg.className = 'msg err'; return; }
+    if (!$('#tn-city').value) { msg.textContent = 'Choose the city this tournament is in.'; msg.className = 'msg err'; return; }
+    if (!/^\d{1,2}$/.test(maxRaw) || +maxRaw < 2 || +maxRaw > 24) { msg.textContent = 'Entries must be a whole number from 2 to 24.'; msg.className = 'msg err'; return; }
+    var starts = new Date(date + 'T' + time);
+    if (!(starts.getTime() > Date.now())) { msg.textContent = 'Pick a future date and time.'; msg.className = 'msg err'; return; }
+    var body = {
+      city: $('#tn-city').value, title: title, venue: $('#tn-venue').value.trim(), sport: $('#tn-sport').value,
+      level_range: $('#tn-level').value.trim() || 'All levels', starts_at: starts.toISOString(), max_entries: +maxRaw
+    };
+    var clear = function () { $('#tn-title').value = ''; $('#tn-venue').value = ''; $('#tn-date').value = ''; };
+    if (!LIVE) {
+      demo.tournaments.unshift({ id: 'dt' + Date.now(), city: body.city, title: body.title, venue: body.venue, sport: body.sport, level: body.level_range, starts_at: body.starts_at, max: body.max_entries, status: 'registration', size: 0, rounds: 0, champion: null, entries: [], matches: [] });
+      loadTournaments();
+      msg.textContent = 'Tournament created (demo).'; msg.className = 'msg ok';
+      clear();
+      return;
+    }
+    rest('POST', '/rest/v1/tournaments', body, { 'Prefer': 'return=minimal' })
+      .then(function () {
+        msg.textContent = 'Tournament created — members can enter from Events.'; msg.className = 'msg ok';
+        clear();
+        loadTournaments();
+      })
+      .catch(function (e) { msg.textContent = 'Could not create: ' + e.message; msg.className = 'msg err'; });
+  });
+
+  // The server's refusals are written to be read; pull the sentence out of the
+  // PostgREST error rather than showing the JSON around it.
+  function tnProblem(e) {
+    var m = /"message"\s*:\s*"([^"]+)"/.exec(e.message || '');
+    return m ? m[1] : (e.message || 'Something went wrong.');
+  }
+
+  $('#tournament-list').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[data-act]');
+    if (!btn || btn.disabled) return;
+    var id = btn.closest('.item').getAttribute('data-id');
+    var t = tourneys.filter(function (x) { return x.id === id; })[0];
+    if (!t) return;
+    var act = btn.getAttribute('data-act');
+
+    if (act === 'fill') {            // demo only
+      while (t.entries.length < t.max) {
+        var n = t.entries.length;
+        t.entries.push({ id: 'sp' + (n + 1), seed: null });
+      }
+      renderTournaments();
+      return;
+    }
+
+    if (act === 'draw') {
+      if (!confirm('Make the draw for "' + t.title + '" with ' + t.entries.length + ' ' + (t.entries.length === 1 ? 'entry' : 'entries') + '? Entries close and the bracket is built — this can\u2019t be undone.')) return;
+      if (!LIVE) {
+        var order = t.entries.slice().sort(function () { return Math.random() - 0.5; });
+        var br = buildBracket(order.map(function (e) { return e.id; }));
+        t.entries = order.map(function (e, i) { return { id: e.id, seed: i + 1 }; });
+        t.status = 'in_progress'; t.size = br.size; t.rounds = br.rounds; t.matches = br.matches; t.champion = null;
+        renderTournaments();
+        return;
+      }
+      rest('POST', '/rest/v1/rpc/start_tournament', { p_tournament: id })
+        .then(loadTournaments)
+        .catch(function (e) { alert('Could not make the draw: ' + tnProblem(e)); });
+      return;
+    }
+
+    if (act === 'win') {
+      var matchId = btn.getAttribute('data-match');
+      var winner = btn.getAttribute('data-winner');
+      var m = t.matches.filter(function (x) { return x.id === matchId; })[0];
+      if (!m) return;
+      var q = m.winner
+        ? (m.winner === winner ? null : 'Change this result to ' + tnName(winner) + ' winning?')
+        : 'Record ' + tnName(winner) + ' as the winner?';
+      if (q === null) return;            // already the winner: nothing to do
+      if (!confirm(q)) return;
+      var score = prompt('Score (optional), e.g. 11-8, 11-6', m.winner ? '' : '');
+      if (score === null) return;
+      if (!LIVE) {
+        var bracket = { size: t.size, rounds: t.rounds, champion: t.champion, matches: t.matches };
+        var problem = bracketRecord(bracket, matchId, winner, score, true);
+        if (problem) { alert(problem); return; }
+        t.champion = bracket.champion;
+        t.status = bracket.champion ? 'completed' : 'in_progress';
+        renderTournaments();
+        return;
+      }
+      rest('POST', '/rest/v1/rpc/report_match_result', { p_match: matchId, p_winner: winner, p_score: score })
+        .then(loadTournaments)
+        .catch(function (e) { alert('Could not record that: ' + tnProblem(e)); });
+      return;
+    }
+
+    if (act === 'delete') {
+      if (!confirm('Delete "' + t.title + '"? Its entries and bracket go with it.')) return;
+      if (!LIVE) {
+        demo.tournaments = demo.tournaments.filter(function (x) { return x.id !== id; });
+        loadTournaments();
+        return;
+      }
+      rest('DELETE', '/rest/v1/tournaments?id=eq.' + encodeURIComponent(id), undefined, { 'Prefer': 'return=minimal' })
+        .then(loadTournaments)
+        .catch(function (e) { alert('Could not delete: ' + e.message); });
+    }
+  });
+
   /* ---------- auth ---------- */
   $('#si-send').addEventListener('click', function () {
     var email = $('#si-email').value.trim().toLowerCase();
@@ -899,6 +1274,7 @@
           // Places and Numbers load when their tab is opened; if one is the tab
           // on screen (say, after signing back in), load it now too.
           if (!$('#pane-places').hidden) loadPlaces();
+          if (!$('#pane-tournaments').hidden) loadTournaments();
           if (!$('#pane-numbers').hidden) loadNumbers();
         } else {
           show('noadmin');

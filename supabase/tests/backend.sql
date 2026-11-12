@@ -858,7 +858,8 @@ begin
   foreach t in array array[
     'profiles', 'swipes', 'matches', 'messages', 'notifications',
     'profile_photos', 'reports', 'blocks', 'push_tokens', 'devices',
-    'admins', 'apple_identities', 'waitlist', 'event_rsvps', 'courts'
+    'admins', 'apple_identities', 'waitlist', 'event_rsvps', 'courts',
+    'tournaments', 'tournament_entries', 'tournament_matches'
   ] loop
     -- Two acceptable outcomes: the grant is withdrawn outright (stronger), or
     -- row-level security filters everything away. Anything returned is a leak.
@@ -1274,6 +1275,241 @@ begin
   assert c = 0, 'the desk could not remove a place';
 end $$;
 reset role;
+
+-- ---- 9j-iii. Tournaments: brackets build themselves for every size, 2 to 24 ----
+-- Twenty-four players of our own, so the draw has a full field to work with.
+reset role;
+do $$
+declare i int; uid uuid;
+begin
+  for i in 1..24 loop
+    uid := ('00000000-0000-4000-8000-0000000003' || lpad(i::text, 2, '0'))::uuid;
+    insert into auth.users (id, email) values (uid, format('player%s@example.com', i));
+    insert into profiles (id, first_name, birthdate, city) values (uid, 'Player' || i, '1990-01-01', 'bakersfield');
+  end loop;
+end $$;
+
+-- Aaron is on the admins list by now; the draw and the results go through him.
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
+do $$
+declare
+  n int; t uuid; size int; expect int; c int; r int; m record; champ uuid; champ_seed int;
+  players uuid[];
+begin
+  assert is_admin(), 'test setup: Aaron should be an admin here';
+  assert bracket_seed_order(8) = array[1,8,4,5,2,7,3,6], format('seed order for 8 is %s', bracket_seed_order(8));
+  assert bracket_seed_order(2) = array[1,2], 'seed order for 2';
+
+  for n in 2..24 loop
+    insert into tournaments (city, title, starts_at, max_entries)
+    values ('bakersfield', format('Draw of %s', n), now() + interval '2 days', 24)
+    returning id into t;
+    insert into tournament_entries (tournament_id, user_id)
+    select t, ('00000000-0000-4000-8000-0000000003' || lpad(i::text, 2, '0'))::uuid
+      from generate_series(1, n) i;
+
+    perform start_tournament(t);
+
+    expect := 2; while expect < n loop expect := expect * 2; end loop;
+    select bracket_size into size from tournaments where id = t;
+    assert size = expect, format('%s players: bracket of %s, expected %s', n, size, expect);
+    assert (select status from tournaments where id = t) = 'in_progress', format('%s players: not started', n);
+
+    select count(*) into c from tournament_matches where tournament_id = t;
+    assert c = size - 1, format('%s players: %s matches, expected %s', n, c, size - 1);
+
+    -- every entrant drawn exactly once in round 1, and seeded 1..n
+    select array_agg(p) into players from (
+      select player_a as p from tournament_matches where tournament_id = t and round = 1 and player_a is not null
+      union all
+      select player_b from tournament_matches where tournament_id = t and round = 1 and player_b is not null) x;
+    assert array_length(players, 1) = n, format('%s players: %s placed in round 1', n, array_length(players, 1));
+    assert (select count(distinct p) from unnest(players) p) = n, format('%s players: someone drawn twice', n);
+    assert (select count(*) from tournament_entries where tournament_id = t and seed between 1 and n) = n,
+      format('%s players: seeds are not 1..%s', n, n);
+
+    -- byes: exactly size - n, never two in one match, each already advanced
+    select count(*) into c from tournament_matches where tournament_id = t and round = 1 and is_bye;
+    assert c = size - n, format('%s players: %s byes, expected %s', n, c, size - n);
+    assert not exists (select 1 from tournament_matches where tournament_id = t and round = 1
+                        and player_a is null and player_b is null), format('%s players: a bye met a bye', n);
+    for m in select * from tournament_matches where tournament_id = t and round = 1 and is_bye loop
+      assert m.winner is not null, format('%s players: a bye has no winner', n);
+      assert exists (select 1 from tournament_matches where tournament_id = t and round = 2
+                      and slot = m.slot / 2 and (player_a = m.winner or player_b = m.winner)),
+        format('%s players: a bye did not advance', n);
+    end loop;
+    -- byes go to the top seeds
+    assert not exists (
+      select 1 from tournament_matches mm join tournament_entries e
+        on e.tournament_id = t and e.user_id = mm.winner
+       where mm.tournament_id = t and mm.round = 1 and mm.is_bye and e.seed > size - n),
+      format('%s players: a bye went to a low seed', n);
+
+    -- play it out: the top player always wins; the champion must be seed 1
+    for r in 1..round(log(2, size))::int loop
+      for m in select * from tournament_matches where tournament_id = t and round = r and winner is null order by slot loop
+        assert m.player_a is not null and m.player_b is not null,
+          format('%s players: round %s slot %s was not filled before it was due', n, r, m.slot);
+        perform report_match_result(m.id, m.player_a, '11-7');
+      end loop;
+    end loop;
+    select champion_id into champ from tournaments where id = t;
+    select seed into champ_seed from tournament_entries where tournament_id = t and user_id = champ;
+    assert (select status from tournaments where id = t) = 'completed', format('%s players: not completed', n);
+    assert champ_seed = 1, format('%s players: champion is seed %s, expected 1', n, champ_seed);
+
+    delete from tournaments where id = t;
+  end loop;
+end $$;
+reset role;
+
+-- The rules, from the members' side.
+do $$
+declare t uuid;
+begin
+  insert into tournaments (id, city, title, starts_at, max_entries)
+  values ('00000000-0000-4000-8000-0000000004aa', 'bakersfield', 'Rules Cup', now() + interval '2 days', 3);
+end $$;
+set role authenticated;
+do $$
+declare t uuid := '00000000-0000-4000-8000-0000000004aa'; c int;
+begin
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000301', false);
+  perform join_tournament(t);
+  perform join_tournament(t);   -- twice is not an error, and not two entries
+  assert (select count(*) from tournament_entries where tournament_id = t) = 1, 'joining twice made two entries';
+  begin
+    perform start_tournament(t);
+    assert false, 'a member started a tournament';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into tournament_entries (tournament_id, user_id) values (t, '00000000-0000-4000-8000-000000000305');
+    assert false, 'a member wrote an entry for someone else directly';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into tournaments (city, title, starts_at) values ('bakersfield', 'My Own Cup', now() + interval '1 day');
+    assert false, 'a member created a tournament';
+  exception when insufficient_privilege then null;
+  end;
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000302', false);
+  perform join_tournament(t);
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000303', false);
+  perform join_tournament(t);
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000304', false);
+  begin
+    perform join_tournament(t);
+    assert false, 'a fourth player joined a three-player tournament';
+  exception when raise_exception then null;
+  end;
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000303', false);
+  perform leave_tournament(t);
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000304', false);
+  perform join_tournament(t);   -- the freed place is genuinely reusable
+  assert (select count(*) from tournament_entries where tournament_id = t) = 3, 'freed place not reusable';
+end $$;
+reset role;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
+select start_tournament('00000000-0000-4000-8000-0000000004aa');
+set role authenticated;
+do $$
+declare
+  t uuid := '00000000-0000-4000-8000-0000000004aa';
+  m record; outsider uuid; nxt record;
+begin
+  -- three players in a bracket of four: one bye, one real first-round match
+  select * into m from tournament_matches where tournament_id = t and round = 1 and not is_bye;
+  select user_id into outsider from tournament_entries
+   where tournament_id = t and user_id not in (m.player_a, m.player_b);
+
+  perform set_config('request.jwt.claim.sub', m.player_a::text, false);
+  begin
+    perform leave_tournament(t);
+    assert false, 'a player left after the draw';
+  exception when raise_exception then null;
+  end;
+  begin
+    update tournament_matches set winner = m.player_a where id = m.id;
+    -- RLS hides the row from an update rather than raising; nothing may change
+  end;
+  assert (select winner from tournament_matches where id = m.id) is null, 'a member edited a match directly';
+
+  perform set_config('request.jwt.claim.sub', outsider::text, false);
+  begin
+    perform report_match_result(m.id, outsider, '11-0');
+    assert false, 'a player not in the match recorded its result';
+  exception when insufficient_privilege then null;
+  end;
+
+  perform set_config('request.jwt.claim.sub', m.player_a::text, false);
+  begin
+    perform report_match_result(m.id, outsider, '11-0');
+    assert false, 'someone outside the match was recorded as its winner';
+  exception when raise_exception then null;
+  end;
+  perform report_match_result(m.id, m.player_b, '9-11, 11-8, 11-6');   -- reports their own loss
+  assert (select winner from tournament_matches where id = m.id) = m.player_b, 'the result was not recorded';
+  assert (select score from tournament_matches where id = m.id) = '9-11, 11-8, 11-6', 'the score was not recorded';
+  begin
+    perform report_match_result(m.id, m.player_a, '11-0');
+    assert false, 'a player changed a result already recorded';
+  exception when raise_exception then null;
+  end;
+
+  -- the winner is in the final, against the player who had the bye
+  select * into nxt from tournament_matches where tournament_id = t and round = 2;
+  assert m.player_b in (nxt.player_a, nxt.player_b), 'the winner did not advance to the final';
+  assert nxt.player_a is not null and nxt.player_b is not null, 'the final is not filled';
+end $$;
+reset role;
+-- The desk can correct a result while the next match hasn't been played...
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
+do $$
+declare t uuid := '00000000-0000-4000-8000-0000000004aa'; m record; fin record;
+begin
+  select * into m from tournament_matches where tournament_id = t and round = 1 and not is_bye;
+  perform report_match_result(m.id, m.player_a, 'corrected');
+  select * into fin from tournament_matches where tournament_id = t and round = 2;
+  assert m.player_a in (fin.player_a, fin.player_b) and m.player_b not in (fin.player_a, fin.player_b),
+    'a corrected result did not replace the player in the next round';
+  -- ...but not once it has
+  perform report_match_result(fin.id, fin.player_a, '11-5');
+  begin
+    perform report_match_result(m.id, m.player_b, 'too late');
+    assert false, 'a result was changed after the next round was played';
+  exception when raise_exception then null;
+  end;
+  assert (select status from tournaments where id = t) = 'completed', 'the final did not complete the tournament';
+  assert (select champion_id from tournaments where id = t) = fin.player_a, 'the wrong champion';
+  -- correcting the final itself reopens and re-crowns
+  perform report_match_result(fin.id, fin.player_b, '5-11');
+  assert (select champion_id from tournaments where id = t) = fin.player_b, 'correcting the final did not change the champion';
+  assert (select status from tournaments where id = t) = 'completed', 'correcting the final left it unfinished';
+end $$;
+reset role;
+delete from tournaments where id = '00000000-0000-4000-8000-0000000004aa';
+-- Blocked members don't see each other's entries.
+insert into tournaments (id, city, title, starts_at) values
+  ('00000000-0000-4000-8000-0000000004ab', 'bakersfield', 'Block Cup', now() + interval '2 days');
+insert into tournament_entries (tournament_id, user_id) values
+  ('00000000-0000-4000-8000-0000000004ab', '00000000-0000-4000-8000-000000000310'),
+  ('00000000-0000-4000-8000-0000000004ab', '00000000-0000-4000-8000-000000000311');
+insert into blocks (blocker_id, blocked_id) values
+  ('00000000-0000-4000-8000-000000000310', '00000000-0000-4000-8000-000000000311');
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000311';
+do $$
+begin
+  assert not exists (select 1 from tournament_entries
+                      where tournament_id = '00000000-0000-4000-8000-0000000004ab'
+                        and user_id = '00000000-0000-4000-8000-000000000310'),
+    'a blocked member can see the entry of the person who blocked them';
+end $$;
+reset role;
+delete from blocks where blocker_id = '00000000-0000-4000-8000-000000000310';
+delete from tournaments where id = '00000000-0000-4000-8000-0000000004ab';
 
 -- ---- 9k. Meetups in a city other than your home one are readable ----
 -- The app shows a member the meetups for every city they have selected, and a

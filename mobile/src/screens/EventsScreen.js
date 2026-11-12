@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
@@ -7,6 +7,7 @@ import { Tag, Avatar } from '../components/ui';
 import { useApp } from '../state';
 import { cityLabel } from '../data/cities';
 import { ACCESS_LABELS } from '../data/courts';
+import { bracketRoundName } from '../lib/bracket';
 
 // Each city runs its own meetups. You see the calendar for the cities on your
 // profile — one or several — and nothing else. So this is a label, not a
@@ -20,6 +21,133 @@ function CityBadge({ cities }) {
     <View style={styles.picker} accessibilityLabel={`Meetups in ${cities.map(cityLabel).join(', ')}`}>
       <Ionicons name="location-outline" size={15} color={colors.optic} />
       <Text style={styles.pickerText} numberOfLines={1}>{citiesText(cities)}</Text>
+    </View>
+  );
+}
+
+// One line of a match: a player, highlighted if they won, with a button to
+// record them as the winner when this member is allowed to.
+function BracketPlayer({ app, t, m, id }) {
+  const won = !!m.winner && m.winner === id;
+  const lost = !!m.winner && m.winner !== id;
+  const name = id ? app.playerName(id) : (m.bye ? '— bye —' : 'To be decided');
+  const record = () => {
+    Alert.alert(
+      `${app.playerName(id)} won?`,
+      'This goes straight into the bracket and moves them to the next round. Only record a match that has been played.',
+      [{ text: 'Cancel', style: 'cancel' }, { text: 'Record result', onPress: () => app.reportMatch(t.id, m.id, id, '') }]
+    );
+  };
+  return (
+    <View style={styles.brPlayer}>
+      <Text
+        style={[styles.brName, won && { color: colors.optic, fontWeight: '800' }, (lost || !id) && { color: colors.dim }]}
+        numberOfLines={1}
+      >
+        {name}{id && app.isMe(id) ? '  (you)' : ''}
+      </Text>
+      {won && <Ionicons name="checkmark-circle" size={16} color={colors.optic} />}
+      {!!id && app.canReportMatch(m) && (
+        <Pressable onPress={record} style={styles.brWon} accessibilityRole="button" accessibilityLabel={`Record ${app.playerName(id)} as the winner`}>
+          <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 11.5 }}>Won</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+// The bracket, round by round, top to bottom — the shape that fits a phone.
+// Every round is there from the moment of the draw; later rounds fill in as
+// results come in.
+function Bracket({ app, t }) {
+  const rounds = [];
+  for (let r = 1; r <= t.rounds; r += 1) rounds.push(r);
+  return (
+    <View style={{ marginTop: 8, gap: 6 }}>
+      {rounds.map((r) => (
+        <View key={r}>
+          <Text style={[type.eyebrow, { marginTop: 8, marginBottom: 6 }]}>{bracketRoundName(r, t.rounds)}</Text>
+          {t.matches.filter((m) => m.round === r).map((m) => (
+            <View key={m.id} style={[styles.brMatch, (app.isMe(m.a) || app.isMe(m.b)) && { borderColor: colors.optic }]}>
+              <BracketPlayer app={app} t={t} m={m} id={m.a} />
+              <View style={styles.brRule} />
+              <BracketPlayer app={app} t={t} m={m} id={m.b} />
+              {!!m.score && <Text style={[type.hint, { fontSize: 11.5, marginTop: 4 }]}>{m.score}</Text>}
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// Tournaments in the member's cities: enter while entries are open, then
+// follow the bracket and record your own results once the draw is made.
+function Tournaments({ app }) {
+  const [open, setOpen] = useState({});
+  const list = app.tournaments;
+  if (!list.length) return null;
+  const many = app.eventCities.length > 1;
+  return (
+    <View style={{ marginTop: 22 }}>
+      <Text style={[type.display, { fontSize: 18 }]}>Tournaments</Text>
+      {list.map((t) => {
+        const isOpen = !!open[t.id];
+        const full = t.entries.length >= t.max;
+        const status = t.status === 'registration'
+          ? `${t.entries.length} of ${t.max} entered`
+          : t.status === 'completed'
+            ? `Champion: ${app.playerName(t.championId)}`
+            : `In progress · ${t.entries.length} players`;
+        return (
+          <View key={t.id} style={[styles.tourney, isOpen && { borderColor: colors.optic }]}>
+            <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{t.title}</Text>
+            <Text style={[type.hint, { fontSize: 12.5 }]}>{t.venue ? `${t.venue} · ` : ''}{t.when}</Text>
+            <View style={{ flexDirection: 'row', gap: 5, flexWrap: 'wrap', marginTop: 2 }}>
+              <Tag label={t.sport} accent />
+              <Tag label={t.level} />
+              <Tag label={status} />
+              {many && <Tag label={cityLabel(t.city)} />}
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+              {t.status === 'registration' && (
+                t.entered ? (
+                  <Pressable style={[styles.join, styles.joinGoing]} onPress={() => app.leaveTournament(t.id)} accessibilityRole="button">
+                    <Text style={{ fontWeight: '800', fontSize: 13, color: colors.optic }}>Entered ✓</Text>
+                  </Pressable>
+                ) : full ? (
+                  <Text style={[type.hint, { fontSize: 12.5 }]}>Full</Text>
+                ) : (
+                  <Pressable style={styles.join} onPress={() => app.joinTournament(t.id)} accessibilityRole="button">
+                    <Text style={{ fontWeight: '800', fontSize: 13, color: colors.ink }}>Enter</Text>
+                  </Pressable>
+                )
+              )}
+              <Pressable onPress={() => setOpen((o) => ({ ...o, [t.id]: !o[t.id] }))} accessibilityRole="button" accessibilityState={{ expanded: isOpen }}>
+                <Text style={{ color: colors.optic, fontWeight: '800', fontSize: 13 }}>
+                  {t.status === 'registration' ? (isOpen ? 'Hide entries' : 'See who’s in') : (isOpen ? 'Hide bracket' : 'See the bracket')}
+                </Text>
+              </Pressable>
+              {!app.live && t.status === 'registration' && t.entries.length >= 2 && (
+                <Pressable onPress={() => { app.drawTournament(t.id); setOpen((o) => ({ ...o, [t.id]: true })); }} accessibilityRole="button">
+                  <Text style={{ color: colors.dim, fontWeight: '700', fontSize: 12.5 }}>Make the draw (demo)</Text>
+                </Pressable>
+              )}
+            </View>
+            {isOpen && t.status === 'registration' && (
+              <View style={{ marginTop: 8 }}>
+                <Text style={[type.hint, { fontSize: 12.5 }]}>
+                  {t.entries.length ? t.entries.map((e) => app.playerName(e.id)).join(' · ') : 'Nobody yet — be the first.'}
+                </Text>
+                <Text style={[type.hint, { fontSize: 11.5, marginTop: 6 }]}>
+                  When entries close the organiser makes the draw: the bracket is built for however many have entered, up to {t.max}, and everyone is placed in it automatically.
+                </Text>
+              </View>
+            )}
+            {isOpen && t.status !== 'registration' && <Bracket app={app} t={t} />}
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -192,6 +320,7 @@ export default function EventsScreen({ navigation }) {
             })}
           </View>
         ))}
+        <Tournaments app={app} />
         <PlacesToPlay cities={app.eventCities} courtsFor={app.courtsFor} />
       </ScrollView>
     </SafeAreaView>
@@ -215,6 +344,18 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: colors.line, backgroundColor: colors.card,
   },
   filterOn: { backgroundColor: colors.optic, borderColor: colors.optic },
+  tourney: {
+    gap: 3, padding: 13, marginTop: 10,
+    backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line, borderRadius: 16,
+  },
+  brMatch: {
+    padding: 10, marginBottom: 8,
+    backgroundColor: colors.card2, borderWidth: 2, borderColor: colors.line, borderRadius: 12,
+  },
+  brPlayer: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 26 },
+  brName: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600' },
+  brRule: { height: 1, backgroundColor: colors.line, marginVertical: 5 },
+  brWon: { backgroundColor: colors.optic, borderRadius: 999, paddingVertical: 4, paddingHorizontal: 10 },
   place: {
     gap: 3, padding: 13, marginBottom: 10,
     backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line, borderRadius: 16,
