@@ -933,7 +933,7 @@ Migration `20260806000031_privacy_followups.sql`:
   hint at whether a hidden entrant blocked you or was suspended. Hiding
   players inside a bracket both people still have to play and report on is a
   bigger product change; tournaments are opt-in and public. Revisit if it
-  matters.
+  matters. **Fixed in migration 32 — see below.**
 - **Doubles partner limit.** Adding a partner, or changing their gender, is
   free in the first hour after signup and then once every 30 days, so a
   partner can't be switched on and off to probe someone's Play/Friends
@@ -945,3 +945,21 @@ Migration `20260806000031_privacy_followups.sql`:
   matches the rule.
 - Database suite section 9n; app settings test for the refusal message.
 - Still not run on a real Supabase project or a device.
+
+## Update — 2026-11-12 (tournament bracket leak closed)
+
+- **Suspension now withdraws the member from tournaments still taking
+  entries** (migration 32), the moment they're suspended. Their place frees
+  up and the count drops, exactly as if they had left. So the entrants hidden
+  from you that are still counted are only people you have a block with, and
+  every one of them is in the draw — the count, the entry list and the
+  bracket no longer say whether a hidden entrant blocked you or was
+  suspended.
+- After the draw nothing changes: the bracket keeps every place; a player
+  suspended after the draw shows unnamed, like one hidden by a block, and the
+  desk settles their matches.
+- Lifting a suspension doesn't re-enter them; they can enter again if there's
+  room. The desk's Suspend prompt now says they're withdrawn.
+- Still true, by design: once you meet an unnamed player in the bracket you
+  can tell they have a block with you (not who blocked whom).
+- Database suite section 9o. Still not run on a real Supabase project.

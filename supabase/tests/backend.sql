@@ -1589,6 +1589,16 @@ update profiles set suspended_at = null where id = '00000000-0000-4000-8000-0000
 insert into tournament_entries (tournament_id, user_id)
 values ('00000000-0000-4000-8000-0000000005aa', '00000000-0000-4000-8000-000000000506');
 update profiles set suspended_at = now() where id = '00000000-0000-4000-8000-000000000506';
+-- suspension withdraws them while entries are open (migration 32) ...
+do $$
+begin
+  assert not exists (select 1 from tournament_entries where tournament_id = '00000000-0000-4000-8000-0000000005aa'
+                      and user_id = '00000000-0000-4000-8000-000000000506'), 'suspension did not withdraw the entrant';
+end $$;
+-- ... and an entry left over from before that (put back by hand here) is
+-- still kept out of the draw below
+insert into tournament_entries (tournament_id, user_id)
+values ('00000000-0000-4000-8000-0000000005aa', '00000000-0000-4000-8000-000000000506');
 -- a member doesn't see a suspended entrant; the desk does
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000501';
@@ -2704,5 +2714,100 @@ end $$;
 delete from auth.users where id in ('00000000-0000-4000-8000-000000000701', '00000000-0000-4000-8000-000000000702',
                                     '00000000-0000-4000-8000-000000000703', '00000000-0000-4000-8000-000000000704',
                                     '00000000-0000-4000-8000-000000000705');
+
+-- ---- 9o. Tournaments don't tell a block from a suspension (migration 20260806000032) ----
+-- Ava watches a tournament that Ben (who blocked her), Cal and Dan entered.
+-- When Cal is suspended he must vanish the way someone who leaves does, so
+-- every entrant still counted but hidden from Ava is a block, and is drawn.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-4000-8000-000000000801', 'tp-ava@example.com'),
+  ('00000000-0000-4000-8000-000000000802', 'tp-ben@example.com'),
+  ('00000000-0000-4000-8000-000000000803', 'tp-cal@example.com'),
+  ('00000000-0000-4000-8000-000000000804', 'tp-dan@example.com');
+insert into profiles (id, first_name, birthdate, city, gender) values
+  ('00000000-0000-4000-8000-000000000801', 'Ava', '1990-01-01', 'phoenix', 'woman'),
+  ('00000000-0000-4000-8000-000000000802', 'Ben', '1990-01-01', 'phoenix', 'man'),
+  ('00000000-0000-4000-8000-000000000803', 'Cal', '1990-01-01', 'phoenix', 'man'),
+  ('00000000-0000-4000-8000-000000000804', 'Dan', '1990-01-01', 'phoenix', 'man');
+insert into blocks (blocker_id, blocked_id) values
+  ('00000000-0000-4000-8000-000000000802', '00000000-0000-4000-8000-000000000801');
+insert into tournaments (id, city, title, starts_at, max_entries) values
+  ('00000000-0000-4000-8000-0000000008a1', 'phoenix', 'Open Cup',  now() + interval '3 days', 8),
+  ('00000000-0000-4000-8000-0000000008a2', 'phoenix', 'Drawn Cup', now() + interval '1 day', 8);
+insert into tournament_entries (tournament_id, user_id) values
+  ('00000000-0000-4000-8000-0000000008a1', '00000000-0000-4000-8000-000000000801'),
+  ('00000000-0000-4000-8000-0000000008a1', '00000000-0000-4000-8000-000000000802'),
+  ('00000000-0000-4000-8000-0000000008a1', '00000000-0000-4000-8000-000000000803'),
+  ('00000000-0000-4000-8000-0000000008a1', '00000000-0000-4000-8000-000000000804'),
+  ('00000000-0000-4000-8000-0000000008a2', '00000000-0000-4000-8000-000000000803'),
+  ('00000000-0000-4000-8000-0000000008a2', '00000000-0000-4000-8000-000000000804');
+-- The second one is drawn before anything happens.
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
+select start_tournament('00000000-0000-4000-8000-0000000008a2');
+select suspend_member('00000000-0000-4000-8000-000000000803', 'test');
+do $$
+begin
+  -- withdrawn where entries are open, the count follows ...
+  assert not exists (select 1 from tournament_entries
+                      where tournament_id = '00000000-0000-4000-8000-0000000008a1'
+                        and user_id = '00000000-0000-4000-8000-000000000803'),
+    'a suspended member is still entered in a tournament taking entries';
+  assert (select entry_count from tournaments where id = '00000000-0000-4000-8000-0000000008a1') = 3,
+    'the entry count still includes the suspended member';
+  -- ... but a drawn bracket keeps its place
+  assert exists (select 1 from tournament_entries
+                  where tournament_id = '00000000-0000-4000-8000-0000000008a2'
+                    and user_id = '00000000-0000-4000-8000-000000000803'),
+    'suspension took a player out of a bracket that was already drawn';
+  assert (select entry_count from tournaments where id = '00000000-0000-4000-8000-0000000008a2') = 2,
+    'the drawn tournament''s count changed';
+end $$;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000801';  -- Ava
+do $$
+declare
+  counted int;
+  seen int;
+begin
+  select entry_count into counted from tournaments where id = '00000000-0000-4000-8000-0000000008a1';
+  select count(*) into seen from tournament_entries where tournament_id = '00000000-0000-4000-8000-0000000008a1';
+  -- Ava sees herself and Dan; the one counted entrant she can't see is Ben
+  assert seen = 2 and counted = 3, format('Ava sees %s of %s', seen, counted);
+end $$;
+reset role;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000000a';
+select start_tournament('00000000-0000-4000-8000-0000000008a1');
+do $$
+begin
+  -- every entrant Ava was counting is in the draw, Ben included
+  assert (select count(*) from (
+            select player_a from tournament_matches where tournament_id = '00000000-0000-4000-8000-0000000008a1' and round = 1 and player_a is not null
+            union all
+            select player_b from tournament_matches where tournament_id = '00000000-0000-4000-8000-0000000008a1' and round = 1 and player_b is not null) x)
+         = (select entry_count from tournaments where id = '00000000-0000-4000-8000-0000000008a1'),
+    'the draw and the entry count disagree';
+  assert exists (select 1 from tournament_matches
+                  where tournament_id = '00000000-0000-4000-8000-0000000008a1'
+                    and '00000000-0000-4000-8000-000000000802' in (player_a, player_b)),
+    'the blocked entrant was left out of the draw';
+end $$;
+-- Lifting the suspension doesn't put him back; he can enter something new.
+select unsuspend_member('00000000-0000-4000-8000-000000000803');
+insert into tournaments (id, city, title, starts_at, max_entries) values
+  ('00000000-0000-4000-8000-0000000008a3', 'phoenix', 'Next Cup', now() + interval '5 days', 8);
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000803';  -- Cal
+select join_tournament('00000000-0000-4000-8000-0000000008a3');
+reset role;
+do $$
+begin
+  assert (select entry_count from tournaments where id = '00000000-0000-4000-8000-0000000008a3') = 1,
+    'Cal could not enter again after his suspension was lifted';
+end $$;
+delete from tournaments where id in ('00000000-0000-4000-8000-0000000008a1', '00000000-0000-4000-8000-0000000008a2',
+                                     '00000000-0000-4000-8000-0000000008a3');
+delete from auth.users where id in ('00000000-0000-4000-8000-000000000801', '00000000-0000-4000-8000-000000000802',
+                                    '00000000-0000-4000-8000-000000000803', '00000000-0000-4000-8000-000000000804');
 
 select 'ALL BACKEND TESTS PASSED' as result;

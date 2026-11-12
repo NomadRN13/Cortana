@@ -678,7 +678,8 @@
       var target = item.getAttribute('data-target');
       if (!target) { alert('This report has no member attached — it may already be deleted.'); return; }
       if (!confirm('Suspend ' + who + '?\n\nThey disappear from everyone\u2019s deck, their open '
-        + 'conversations close, and they can\u2019t message, swipe or join events. They can still sign in '
+        + 'conversations close, they\u2019re withdrawn from tournaments still taking entries, and they '
+        + 'can\u2019t message, swipe or join events. They can still sign in '
         + 'and delete their own account, and you can undo this.')) return;
       var reason = prompt('A short note for the record (optional):', '') || '';
       rest('POST', '/rest/v1/rpc/suspend_member', { p_user: target, p_reason: reason })
