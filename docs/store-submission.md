@@ -30,8 +30,17 @@ submits or touches the live database is yours to run (CLAUDE.md, rule 1).
 
 ## 1. Before any build (one time)
 
-1. **Live backend.** Apply migrations 33–41 and deploy `send-push`
-   (`outreach/launch/checklist.md` row 4.3).
+1. **Live backend.** In Supabase → SQL Editor:
+   - Run `supabase/go-live/1-status.sql`. It changes nothing; it shows which
+     migrations the live project already has.
+   - All false (a fresh project): paste `supabase/setup.sql`.
+   - Base and 30–32 true, 33–41 false: paste
+     `supabase/go-live/2-upgrade-33-41.sql`. It is all or nothing — if a
+     statement fails, nothing changes.
+   - Anything else: send the result to Claude before pasting anything.
+   - Run `1-status.sql` again; every row must read true.
+   - Then deploy the push function from your computer:
+     `supabase functions deploy send-push --no-verify-jwt`.
 2. **Domain and pages.** The privacy policy, terms and account-deletion URLs
    must load (`docs/go-live-rename.md`). Both stores check them.
 3. **Real events.** Create at least three real upcoming Indianapolis events

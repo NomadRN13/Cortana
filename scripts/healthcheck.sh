@@ -36,6 +36,7 @@ check "no retired palette hexes in app/landing/admin/mobile" bash -c '! git grep
 echo "── derived files are current"
 check "supabase/setup.sql matches the migrations" ./scripts/build-setup-sql.sh --check
 check "site/ matches landing/, app/ and admin/" bash -c 'for p in "landing/index.html site/index.html" "app/index.html site/demo/index.html" "admin/index.html site/admin/index.html" "landing/privacy.html site/privacy/index.html" "landing/terms.html site/terms/index.html" "landing/delete-account.html site/delete-account/index.html"; do set -- $p; diff -q <(sed "s|content=\"https://[^\"]*/og.png\"|content=\"/og.png\"|g" "$2") "$1" >/dev/null || exit 1; done'
+check "the go-live upgrade (33–41) matches the migrations" ./scripts/build-go-live.sh --check
 check "brand/tokens.json current and all surfaces agree" node scripts/build-tokens.js --check
 check "every page carries the shared ball mark" bash -c 'for f in landing/index.html app/index.html admin/index.html; do grep -q "mark:defs" "$f" || exit 1; done'
 
