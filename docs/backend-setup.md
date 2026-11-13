@@ -399,3 +399,27 @@ Dead tokens (app uninstalled) are pruned automatically after a failed send.
   so the swap is mechanical.
 - Design intent: `docs/system-architecture.md`. Store rules:
   `docs/app-store-launch.md`.
+
+
+## Running an event night: check-in codes, bans and tiers (added 2026-11-13)
+
+All three are admin-only functions; run them from the Supabase SQL editor
+while signed in as an admin, or from the moderation desk once it grows the
+buttons. Nothing here takes money.
+
+```sql
+-- Give tonight's event a code the host reads out (4–8 letters or digits).
+select set_event_checkin_code('<event id>', '4821');
+
+-- Ban someone: suspends the account and blocks its phone number from ever
+-- verifying again, on any account. unban_member() reverses both.
+select ban_member('<user id>', 'why, in a sentence');
+
+-- Give a member Club (or 'plus' / 'free'). A purchase flow will do this later.
+select set_member_tier('<user id>', 'club');
+```
+
+Priority signup: set `events.general_opens_at`; before that time only Club
+members can RSVP. Quiet hours need nothing from you — the push function asks
+the database, and phones send their timezone when the app opens. Redeploy the
+function after pulling this change: `supabase functions deploy send-push --no-verify-jwt`.

@@ -49,6 +49,13 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  // Quiet hours: 10pm–8am in the member's own timezone (migration
+  // 20260806000036). The notification row already exists, so it is waiting in
+  // the app's inbox; only the buzz is held back. If the check itself fails we
+  // send — a missed quiet hour is better than a lost notification.
+  const { data: quiet } = await supabase.rpc("in_quiet_hours", { p_user: record.user_id });
+  if (quiet === true) return new Response("quiet hours", { status: 200 });
+
   const { data: tokens, error } = await supabase
     .from("push_tokens")
     .select("token")

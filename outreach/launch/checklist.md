@@ -963,3 +963,14 @@ Migration `20260806000031_privacy_followups.sql`:
 - Still true, by design: once you meet an unnamed player in the bracket you
   can tell they have a block with you (not who blocked whom).
 - Database suite section 9o. Still not run on a real Supabase project.
+
+
+## Added 2026-11-13 — after the fifteen additions
+
+| # | Item | Status | Owner | Notes |
+|---|------|--------|-------|-------|
+| 4.1 | Refile App Privacy / Data Safety answers | not started | agent drafts, founder files | The backend now also stores: event attendance (check-in time), waiver acceptance (time + version), device timezone, crew list, league results, membership tier, and a one-way hash of a banned phone number. `release-manager` should redraft `store-listing.md` from migrations 33–38 before any form is filed. |
+| 4.2 | Counsel review of the event waiver | not started | founder | `docs/event-waiver.md` is a draft with `[COUNSEL]` placeholders; the app records which version each member accepted. |
+| 4.3 | Apply migrations 33–38 and redeploy `send-push` | not started | founder / dev | `supabase db push`, then `supabase functions deploy send-push --no-verify-jwt`. Agents never run these. |
+| 4.4 | Rename the Netlify site and claim the domain + mailbox | not started | founder | See `docs/go-live-rename.md`. Until then the privacy and deletion URLs in the store pack do not resolve. |
+| 4.5 | Name clearance for "RSVPlay" | not started | founder | See `docs/name-clearance.md` for what was checked and what only you or counsel can check. |

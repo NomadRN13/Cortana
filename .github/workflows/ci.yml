@@ -1,0 +1,33 @@
+# RSVPlay — every push and pull request runs the whole health check:
+# structure, brand, derived files, the rules-and-stops spot checks, and the
+# backend (throwaway Postgres), app (Node) and web (Chromium) suites.
+# Netlify deploys the site on push; this is what tells you a push was red.
+name: healthcheck
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Postgres server binaries (no running server needed)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q postgresql
+          sudo systemctl stop postgresql || true
+      - name: Test dependencies
+        run: |
+          (cd tests/app && npm ci --no-audit --no-fund)
+          (cd tests/web && npm ci --no-audit --no-fund)
+          (cd tests/web && npx playwright-core install --with-deps chromium)
+      - name: Health check (full)
+        run: |
+          export PW_CHROMIUM="$(node -e "console.log(require('./tests/web/node_modules/playwright-core').chromium.executablePath())")"
+          ./scripts/healthcheck.sh --full

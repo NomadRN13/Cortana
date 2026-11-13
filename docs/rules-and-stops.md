@@ -2,7 +2,7 @@
 
 Everything the kit refuses to do, asks before doing, or holds a human to,
 in one place. Transferred intact from the 40/Love kit on 2026-11-13; nothing
-was loosened in the rename. A **hard stop** is enforced by code (the
+was loosened in the rename, and the 2026-11-13 additions only add stops. A **hard stop** is enforced by code (the
 database, the app, a script) and cannot be talked around. A **soft stop** is
 a confirmation, a warning, or a rule a person or an agent follows. Each entry
 names where it lives, so it can be verified rather than trusted.
@@ -57,6 +57,16 @@ Every table has row-level security; policies are listed in
 ### Events and tournaments
 - **Events refuse RSVPs past capacity** ("This event is full.") — `event_capacity_guard`, `20260806000020`.
 - **Tournaments**: sign in to join; finish your profile first; entries close when closed; full is full; a bracket has 1–128 places; at least 2 players to start; only the organiser can draw, start, or look entries up; once drawn, withdraw only through the organiser; only the two players in a match record its result; the winner must be one of them; a bye has no result; a result already in, or a next round already played, cannot be overwritten; a cancelled tournament accepts nothing — `20260806000027`, `20260806000029`.
+
+### Added 2026-11-13 (founder-approved; migrations 33–38)
+- **Waiver before check-in.** A member accepts the event waiver on their own RSVP (`accept_event_waiver()` records the time and the waiver version, `docs/event-waiver.md`); check-in refuses without it ("Accept the event waiver first.") — `20260806000033`.
+- **Check-in only with the host's code.** Codes live in `event_checkin_codes`, which has an admin-only policy and cannot be read by a member; a member cannot mark themselves checked in or forge a waiver by writing the row (`event_rsvps_guard_member_writes`); check-in opens an hour before and closes eight hours after the start — `20260806000033`.
+- **Your crew is only people who checked in to the same event as you** — never the RSVP list, never a blocked or suspended member. "Also open to dating" is true only when both people have Date mode on and each fits what the other is looking for; the server decides it and the app never infers it. `crew_add()` works only for someone you shared a court with — `20260806000033`.
+- **A ban sticks to the phone number.** `ban_member()` suspends the account and stores a hash of its verified number; `sync_phone_verification()` refuses a banned number and suspends the account that tried. The ban list has no policy at all (not readable through the API, admins included) — `20260806000034`.
+- **Rate limits:** 500 swipes per 24 hours, 20 reports per 24 hours, 60 messages per minute, enforced by triggers on every path — `20260806000035`.
+- **Quiet hours:** no push between 10pm and 8am in the member's own timezone; the notification still lands in the in-app inbox. Members cannot ask about anyone's quiet hours — `20260806000036`, `supabase/functions/send-push/index.ts`.
+- **Ladder leagues:** join takes the bottom rung; challenge at most two rungs up; one open challenge per pair; only the two players record a result, once; a suspended member cannot join, challenge or record and is taken off every ladder; someone hidden from you is "Player" in the standings — `20260806000037`.
+- **Tiers:** a member cannot set or change their own tier (`profiles_guard_tier`); before an event's general signup opens only Club members can RSVP. One price per tier for everyone; **no pricing by gender, ever.** No payment is taken anywhere and nothing promises a deposit — `20260806000038`.
 
 ### Chat, waitlist, devices
 - **Court-time messages must carry a court payload**; messages are capped at 2,000 characters — `20260805000001`.

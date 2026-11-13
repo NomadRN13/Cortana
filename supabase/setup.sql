@@ -4214,6 +4214,862 @@ delete from public.tournament_entries e
  where t.id = e.tournament_id and t.status = 'registration'
    and p.id = e.user_id and p.suspended_at is not null;
 
+-- RSVPlay — the waiver, check-in, and the crew you played with
+--
+-- The product's promise is "RSVP to a game, show up, and keep the people you
+-- met". Until now the backend stopped at the RSVP: nothing recorded that a
+-- member accepted the event waiver, nothing recorded that they actually
+-- turned up, and nothing connected the people who shared a court afterwards.
+--
+--   · Waiver: accept_event_waiver() stamps the member's own RSVP with the time
+--     and the waiver version they accepted. Check-in refuses without it.
+--   · Check-in: the host reads out a code; check_in_event() takes it. The code
+--     lives in its own table with no member policy at all, so it cannot be
+--     read through the API. Members can no longer mark themselves checked in
+--     by writing the row.
+--   · Crew: get_my_crew() lists the people who checked in to the same event
+--     as you — never the RSVP list, never anyone you've blocked or who has
+--     blocked you, never a suspended member. "Also open to dating" is true
+--     only when BOTH people have Date mode on and each fits what the other is
+--     looking for; otherwise it is false and says nothing about either.
+--   · crew_add() keeps someone on your list. It only works for a person you
+--     really shared an event with.
+--
+-- No deposits: there is no payment code anywhere in RSVPlay, so nothing here
+-- (or in the app) promises one.
+
+alter table public.event_rsvps
+  add column waiver_accepted_at timestamptz,
+  add column waiver_version text check (char_length(waiver_version) <= 20),
+  add column checked_in_at timestamptz;
+
+-- The waiver text members accept. Bump this when counsel changes the wording;
+-- every acceptance records which version it was.
+create or replace function public.current_waiver_version()
+returns text language sql immutable as $$ select '2026-11-draft'::text $$;
+
+-- ---- check-in codes: admin-only, never readable by a member ----
+create table public.event_checkin_codes (
+  event_id uuid primary key references public.events (id) on delete cascade,
+  code text not null check (code ~ '^[0-9A-Z]{4,8}$'),
+  created_at timestamptz not null default now()
+);
+alter table public.event_checkin_codes enable row level security;
+create policy checkin_codes_admin on public.event_checkin_codes
+  for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+
+-- ---- members cannot check themselves in or forge a waiver by writing the row ----
+create or replace function public.event_rsvps_guard_member_writes()
+returns trigger
+language plpgsql
+as $$
+begin
+  if current_user not in ('authenticated', 'anon') then
+    return new;
+  end if;
+  if tg_op = 'INSERT' then
+    if new.status = 'checked_in' then
+      raise exception 'Check in with the host''s code.' using errcode = '42501';
+    end if;
+    new.waiver_accepted_at := null;
+    new.waiver_version := null;
+    new.checked_in_at := null;
+    return new;
+  end if;
+  if new.waiver_accepted_at is distinct from old.waiver_accepted_at
+     or new.waiver_version is distinct from old.waiver_version
+     or new.checked_in_at is distinct from old.checked_in_at
+     or (new.status = 'checked_in' and old.status <> 'checked_in') then
+    raise exception 'Check in with the host''s code.' using errcode = '42501';
+  end if;
+  return new;
+end
+$$;
+revoke all on function public.event_rsvps_guard_member_writes() from public, anon, authenticated;
+
+create trigger event_rsvps_guard_member_writes
+  before insert or update on public.event_rsvps
+  for each row execute function public.event_rsvps_guard_member_writes();
+
+-- ---- the waiver ----
+create or replace function public.accept_event_waiver(p_event uuid)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+begin
+  if me is null then
+    raise exception 'Sign in first.' using errcode = '42501';
+  end if;
+  update event_rsvps
+     set waiver_accepted_at = coalesce(waiver_accepted_at, now()),
+         waiver_version = coalesce(waiver_version, current_waiver_version())
+   where event_id = p_event and user_id = me;
+  if not found then
+    raise exception 'RSVP before you accept the waiver.' using errcode = 'P0002';
+  end if;
+end
+$$;
+
+-- ---- check-in ----
+create or replace function public.check_in_event(p_event uuid, p_code text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+  r record;
+  ev record;
+  want text;
+begin
+  if me is null then
+    raise exception 'Sign in first.' using errcode = '42501';
+  end if;
+  if exists (select 1 from profiles where id = me and suspended_at is not null) then
+    raise exception 'Your account is suspended.' using errcode = '42501';
+  end if;
+  select * into ev from events where id = p_event;
+  if not found then
+    raise exception 'That event doesn''t exist.' using errcode = 'P0002';
+  end if;
+  select * into r from event_rsvps where event_id = p_event and user_id = me for update;
+  if not found or r.status = 'waitlist' then
+    raise exception 'RSVP before you check in.' using errcode = 'P0002';
+  end if;
+  if r.status = 'checked_in' then
+    return;  -- already in; saying so twice is not an error
+  end if;
+  if r.waiver_accepted_at is null then
+    raise exception 'Accept the event waiver first.' using errcode = '42501';
+  end if;
+  if now() < ev.starts_at - interval '1 hour' then
+    raise exception 'Check-in opens an hour before the event.' using errcode = '22023';
+  end if;
+  if now() > ev.starts_at + interval '8 hours' then
+    raise exception 'Check-in for this event has closed.' using errcode = '22023';
+  end if;
+  select code into want from event_checkin_codes where event_id = p_event;
+  -- Same answer whether there is no code yet or the wrong one was typed.
+  if want is null or upper(btrim(coalesce(p_code, ''))) <> want then
+    raise exception 'That code isn''t right.' using errcode = '22023';
+  end if;
+  update event_rsvps set status = 'checked_in', checked_in_at = now()
+   where event_id = p_event and user_id = me;
+end
+$$;
+
+-- The host's side: set or replace an event's code. Admins only.
+create or replace function public.set_event_checkin_code(p_event uuid, p_code text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'admins only' using errcode = '42501';
+  end if;
+  insert into event_checkin_codes (event_id, code) values (p_event, upper(btrim(p_code)))
+  on conflict (event_id) do update set code = excluded.code, created_at = now();
+end
+$$;
+
+-- ---- the crew ----
+create table public.crew_adds (
+  owner_id uuid not null references public.profiles (id) on delete cascade,
+  member_id uuid not null references public.profiles (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (owner_id, member_id),
+  check (owner_id <> member_id)
+);
+alter table public.crew_adds enable row level security;
+-- Your own list, readable by you. Written only through crew_add()/crew_remove().
+create policy crew_adds_select on public.crew_adds
+  for select to authenticated using (owner_id = auth.uid());
+revoke insert, update, delete on public.crew_adds from anon, authenticated;
+
+-- Did the two of us check in to the same event?
+create or replace function public.shared_a_court(p_a uuid, p_b uuid)
+returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select exists (
+    select 1 from event_rsvps a
+      join event_rsvps b on b.event_id = a.event_id
+     where a.user_id = p_a and b.user_id = p_b
+       and a.status = 'checked_in' and b.status = 'checked_in')
+$$;
+revoke all on function public.shared_a_court(uuid, uuid) from public, anon, authenticated;
+
+create or replace function public.get_my_crew()
+returns table (
+  user_id uuid, first_name text, event_id uuid, event_title text,
+  event_starts_at timestamptz, added boolean, also_open_to_dating boolean)
+language sql stable security definer set search_path = public
+as $$
+  select distinct on (p.id)
+         p.id, p.first_name, e.id, e.title, e.starts_at,
+         exists (select 1 from crew_adds c where c.owner_id = auth.uid() and c.member_id = p.id),
+         -- Mutual, or nothing: both in Date mode, and each fits the other.
+         ('date' = any (me.modes) and 'date' = any (p.modes)
+          and not me.is_team and not p.is_team
+          and me.gender is not null and p.gender is not null
+          and p.gender = any (me.seeking) and me.gender = any (p.seeking))
+    from profiles me
+    join event_rsvps mine on mine.user_id = me.id and mine.status = 'checked_in'
+    join event_rsvps theirs on theirs.event_id = mine.event_id
+                           and theirs.status = 'checked_in'
+                           and theirs.user_id <> me.id
+    join profiles p on p.id = theirs.user_id
+    join events e on e.id = mine.event_id
+   where me.id = auth.uid()
+     and me.suspended_at is null
+     and not public.hidden_from_me(p.id)
+   order by p.id, e.starts_at desc
+$$;
+
+create or replace function public.crew_add(p_member uuid)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+begin
+  if me is null then
+    raise exception 'Sign in first.' using errcode = '42501';
+  end if;
+  if public.i_am_suspended() then
+    raise exception 'Your account is suspended.' using errcode = '42501';
+  end if;
+  -- One answer for "not someone you played with", "blocked" and "doesn't
+  -- exist", so the function can't be used to probe any of them.
+  if p_member is null or p_member = me
+     or public.hidden_from_me(p_member)
+     or not public.shared_a_court(me, p_member) then
+    raise exception 'You can add people you''ve shared a court with.' using errcode = '22023';
+  end if;
+  insert into crew_adds (owner_id, member_id) values (me, p_member) on conflict do nothing;
+end
+$$;
+
+create or replace function public.crew_remove(p_member uuid)
+returns void
+language sql security definer set search_path = public
+as $$ delete from crew_adds where owner_id = auth.uid() and member_id = p_member $$;
+
+revoke all on function public.accept_event_waiver(uuid) from public, anon;
+revoke all on function public.check_in_event(uuid, text) from public, anon;
+revoke all on function public.set_event_checkin_code(uuid, text) from public, anon;
+revoke all on function public.get_my_crew() from public, anon;
+revoke all on function public.crew_add(uuid) from public, anon;
+revoke all on function public.crew_remove(uuid) from public, anon;
+grant execute on function public.accept_event_waiver(uuid) to authenticated;
+grant execute on function public.check_in_event(uuid, text) to authenticated;
+grant execute on function public.set_event_checkin_code(uuid, text) to authenticated;
+grant execute on function public.get_my_crew() to authenticated;
+grant execute on function public.crew_add(uuid) to authenticated;
+grant execute on function public.crew_remove(uuid) to authenticated;
+
+-- RSVPlay — a ban that sticks to the phone number
+--
+-- The architecture promised "bans are by phone number hash, not just account".
+-- What existed was suspension, which is per account: a suspended member could
+-- delete the account, sign up again with a new email, verify the same phone
+-- and be back in the deck the same evening.
+--
+-- ban_member() suspends the account AND records a hash of its verified
+-- number. sync_phone_verification() — the only way a profile becomes
+-- phone-verified — now refuses a banned number and suspends the profile that
+-- tried. The raw number is never copied out of auth.users.
+--
+-- Honest limit: phone numbers are a small space, so the hash is not secrecy
+-- against someone holding the database; it is there so the ban list is not a
+-- list of phone numbers. Nobody but the database owner can read the table.
+
+create table public.banned_phones (
+  phone_hash text primary key,
+  reason text not null default '' check (char_length(reason) <= 300),
+  banned_at timestamptz not null default now()
+);
+alter table public.banned_phones enable row level security;
+-- No policies at all: not readable or writable through the API, admins included.
+revoke all on public.banned_phones from anon, authenticated;
+
+create or replace function public.phone_ban_hash(p_phone text)
+returns text language sql immutable
+as $$ select encode(sha256(convert_to('rsvplay:ban:' || regexp_replace(coalesce(p_phone, ''), '[^0-9]', '', 'g'), 'UTF8')), 'hex') $$;
+revoke all on function public.phone_ban_hash(text) from public, anon, authenticated;
+
+create or replace function public.ban_member(p_user uuid, p_reason text default '')
+returns boolean
+language plpgsql security definer set search_path = public, auth
+as $$
+declare
+  v_phone text;
+begin
+  if not public.is_admin() then
+    return false;
+  end if;
+  if not public.suspend_member(p_user, p_reason) then
+    return false;
+  end if;
+  select phone into v_phone from auth.users where id = p_user;
+  if v_phone is not null and btrim(v_phone) <> '' then
+    insert into banned_phones (phone_hash, reason)
+    values (public.phone_ban_hash(v_phone), left(coalesce(p_reason, ''), 300))
+    on conflict (phone_hash) do nothing;
+  end if;
+  return true;
+end
+$$;
+
+-- Lifting a ban is deliberate and separate from lifting a suspension.
+create or replace function public.unban_member(p_user uuid)
+returns boolean
+language plpgsql security definer set search_path = public, auth
+as $$
+declare
+  v_phone text;
+begin
+  if not public.is_admin() then
+    return false;
+  end if;
+  select phone into v_phone from auth.users where id = p_user;
+  if v_phone is not null then
+    delete from banned_phones where phone_hash = public.phone_ban_hash(v_phone);
+  end if;
+  return public.unsuspend_member(p_user);
+end
+$$;
+
+create or replace function public.sync_phone_verification()
+returns boolean
+language plpgsql security definer set search_path = public, auth
+as $$
+declare
+  v_confirmed timestamptz;
+  v_phone text;
+begin
+  select phone_confirmed_at, phone into v_confirmed, v_phone
+  from auth.users
+  where id = auth.uid();
+
+  if v_confirmed is null then
+    return false;
+  end if;
+
+  -- A banned number never verifies, and the account that tried is suspended
+  -- so it cannot reach anyone while unverified either.
+  if v_phone is not null
+     and exists (select 1 from banned_phones where phone_hash = public.phone_ban_hash(v_phone)) then
+    update profiles
+       set suspended_at = coalesce(suspended_at, now()),
+           suspended_reason = coalesce(suspended_reason, 'This phone number is banned.')
+     where id = auth.uid();
+    return false;
+  end if;
+
+  update profiles
+  set phone_verified_at = coalesce(phone_verified_at, now())
+  where id = auth.uid();
+  return true;
+end
+$$;
+
+revoke all on function public.ban_member(uuid, text) from public, anon;
+revoke all on function public.unban_member(uuid) from public, anon;
+grant execute on function public.ban_member(uuid, text) to authenticated;
+grant execute on function public.unban_member(uuid) to authenticated;
+grant execute on function public.sync_phone_verification() to authenticated;
+
+-- RSVPlay — rate limits
+--
+-- The deck returns at most 100 cards per call, but nothing limited how many
+-- calls, swipes, reports or messages one account could make. A script could
+-- swipe the whole city in a minute, flood a conversation, or bury the
+-- moderation desk (which promises a 24-hour review) in reports.
+--
+-- Generous for a person, tight for a script:
+--   swipes    500 per rolling 24 hours
+--   reports    20 per rolling 24 hours
+--   messages   60 per rolling minute
+--
+-- Enforced by triggers, so every path — the API, a function, a future client —
+-- hits the same limit. Only members' own sessions are counted; the seed, the
+-- service role and the SQL editor are not.
+
+create or replace function public.rate_limit_swipes()
+returns trigger language plpgsql security definer set search_path = public
+as $$
+begin
+  if auth.uid() is null then return new; end if;
+  if (select count(*) from swipes
+       where actor_id = new.actor_id and created_at > now() - interval '24 hours') >= 500 then
+    raise exception 'That''s plenty for one day. The deck will be here tomorrow.' using errcode = '54000';
+  end if;
+  return new;
+end $$;
+
+create or replace function public.rate_limit_reports()
+returns trigger language plpgsql security definer set search_path = public
+as $$
+begin
+  if auth.uid() is null then return new; end if;
+  if (select count(*) from reports
+       where reporter_id = new.reporter_id and created_at > now() - interval '24 hours') >= 20 then
+    raise exception 'You''ve sent a lot of reports today. If someone is in danger, email hello@rsvplay.app.' using errcode = '54000';
+  end if;
+  return new;
+end $$;
+
+create or replace function public.rate_limit_messages()
+returns trigger language plpgsql security definer set search_path = public
+as $$
+begin
+  if auth.uid() is null then return new; end if;
+  if (select count(*) from messages
+       where sender_id = new.sender_id and sent_at > now() - interval '1 minute') >= 60 then
+    raise exception 'Slow down a moment, then send again.' using errcode = '54000';
+  end if;
+  return new;
+end $$;
+
+revoke all on function public.rate_limit_swipes() from public, anon, authenticated;
+revoke all on function public.rate_limit_reports() from public, anon, authenticated;
+revoke all on function public.rate_limit_messages() from public, anon, authenticated;
+
+create index if not exists swipes_actor_created_idx on public.swipes (actor_id, created_at);
+create index if not exists reports_reporter_created_idx on public.reports (reporter_id, created_at);
+create index if not exists messages_sender_sent_idx on public.messages (sender_id, sent_at);
+
+create trigger swipes_rate_limit before insert on public.swipes
+  for each row execute function public.rate_limit_swipes();
+create trigger reports_rate_limit before insert on public.reports
+  for each row execute function public.rate_limit_reports();
+create trigger messages_rate_limit before insert on public.messages
+  for each row execute function public.rate_limit_messages();
+
+-- RSVPlay — quiet hours for push notifications
+--
+-- The architecture says notifications keep quiet from 10pm to 8am local time.
+-- Nothing enforced it: the push function sent the moment a row landed, in
+-- whatever timezone the server happened to think it was.
+--
+-- The phone tells us its timezone (an IANA name such as America/Indiana/
+-- Indianapolis) through set_my_timezone(). in_quiet_hours() answers for the
+-- push function, which now holds a push back during those hours. The
+-- notification itself is still written, so it is in the app's inbox when the
+-- member next opens it; only the buzz is skipped. A member with no timezone
+-- on file is never treated as being in quiet hours.
+
+alter table public.profiles
+  add column timezone text check (char_length(timezone) <= 64);
+
+create or replace function public.set_my_timezone(p_tz text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Sign in first.' using errcode = '42501';
+  end if;
+  if p_tz is null or not exists (select 1 from pg_timezone_names where name = p_tz) then
+    raise exception 'That isn''t a timezone we know.' using errcode = '22023';
+  end if;
+  update profiles set timezone = p_tz where id = auth.uid();
+end
+$$;
+
+-- A timezone written straight to the row has to be a real one too.
+create or replace function public.profiles_check_timezone()
+returns trigger language plpgsql
+as $$
+begin
+  if new.timezone is not null
+     and (tg_op = 'INSERT' or new.timezone is distinct from old.timezone)
+     and not exists (select 1 from pg_timezone_names where name = new.timezone) then
+    raise exception 'That isn''t a timezone we know.' using errcode = '22023';
+  end if;
+  return new;
+end
+$$;
+create trigger profiles_check_timezone
+  before insert or update on public.profiles
+  for each row execute function public.profiles_check_timezone();
+
+-- 10pm–8am in the member's own timezone. p_at is there so it can be tested.
+create or replace function public.in_quiet_hours(p_user uuid, p_at timestamptz default now())
+returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select coalesce((
+    select extract(hour from (p_at at time zone p.timezone)) >= 22
+        or extract(hour from (p_at at time zone p.timezone)) < 8
+      from profiles p
+     where p.id = p_user and p.timezone is not null), false)
+$$;
+
+revoke all on function public.set_my_timezone(text) from public, anon;
+grant execute on function public.set_my_timezone(text) to authenticated;
+-- Only the push function (service role) asks; members have no reason to.
+revoke all on function public.in_quiet_hours(uuid, timestamptz) from public, anon, authenticated;
+revoke all on function public.profiles_check_timezone() from public, anon, authenticated;
+
+-- RSVPlay — ladder leagues
+--
+-- "Socials, leagues and pickup games" is the positioning, and the event
+-- calendar already advertises a "Ladder League Kickoff" — but nothing
+-- modelled a league. This is the ladder:
+--
+--   · An admin creates a league for a city.
+--   · A member joins and takes the bottom rung.
+--   · You may challenge anyone up to two rungs above you. One open challenge
+--     per pair at a time.
+--   · Either of the two players records the result. If the challenger wins,
+--     they take the challenged player's rung and everyone between moves down
+--     one. If the challenged player wins, nothing moves.
+--
+-- The same people rules as everywhere else: a suspended member cannot join,
+-- challenge or record; you cannot challenge someone you've blocked or who has
+-- blocked you, and their name is not shown to you in the standings.
+-- Standings come from a function that decides what to hand over; the tables
+-- themselves show a member only their own rows.
+
+create table public.leagues (
+  id uuid primary key default gen_random_uuid(),
+  city text not null references public.cities (slug),
+  title text not null check (char_length(btrim(title)) between 2 and 80),
+  venue text not null default '' check (char_length(venue) <= 80),
+  sport public.sport not null default 'pickleball',
+  level_range text not null default 'All levels' check (char_length(level_range) <= 40),
+  starts_at timestamptz not null,
+  weeks int not null default 8 check (weeks between 1 and 52),
+  created_at timestamptz not null default now()
+);
+create index leagues_city_starts_idx on public.leagues (city, starts_at);
+
+create table public.league_members (
+  league_id uuid not null references public.leagues (id) on delete cascade,
+  user_id uuid not null references public.profiles (id) on delete cascade,
+  rung int not null check (rung >= 1),
+  wins int not null default 0 check (wins >= 0),
+  losses int not null default 0 check (losses >= 0),
+  joined_at timestamptz not null default now(),
+  primary key (league_id, user_id),
+  unique (league_id, rung) deferrable initially deferred
+);
+
+create table public.league_challenges (
+  id uuid primary key default gen_random_uuid(),
+  league_id uuid not null references public.leagues (id) on delete cascade,
+  challenger_id uuid not null references public.profiles (id) on delete cascade,
+  challenged_id uuid not null references public.profiles (id) on delete cascade,
+  winner_id uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now(),
+  decided_at timestamptz,
+  check (challenger_id <> challenged_id)
+);
+create unique index league_challenges_open_idx
+  on public.league_challenges (league_id, least(challenger_id, challenged_id), greatest(challenger_id, challenged_id))
+  where decided_at is null;
+
+alter table public.leagues enable row level security;
+alter table public.league_members enable row level security;
+alter table public.league_challenges enable row level security;
+
+create policy leagues_select on public.leagues for select to authenticated using (true);
+create policy leagues_admin_insert on public.leagues for insert to authenticated with check (public.is_admin());
+create policy leagues_admin_update on public.leagues for update to authenticated using (public.is_admin()) with check (public.is_admin());
+create policy leagues_admin_delete on public.leagues for delete to authenticated using (public.is_admin());
+
+create policy league_members_select on public.league_members
+  for select to authenticated using (user_id = auth.uid() or public.is_admin());
+create policy league_challenges_select on public.league_challenges
+  for select to authenticated using (auth.uid() in (challenger_id, challenged_id) or public.is_admin());
+revoke insert, update, delete on public.league_members from anon, authenticated;
+revoke insert, update, delete on public.league_challenges from anon, authenticated;
+
+create or replace function public.join_league(p_league uuid)
+returns int
+language plpgsql security definer set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+  v_rung int;
+begin
+  if me is null then
+    raise exception 'Sign in to join.' using errcode = '42501';
+  end if;
+  if not exists (select 1 from profiles where id = me) then
+    raise exception 'Finish your profile before joining a league.' using errcode = 'P0002';
+  end if;
+  if public.i_am_suspended() then
+    raise exception 'Your account is suspended.' using errcode = '42501';
+  end if;
+  perform 1 from leagues where id = p_league for update;
+  if not found then
+    raise exception 'That league doesn''t exist.' using errcode = 'P0002';
+  end if;
+  select rung into v_rung from league_members where league_id = p_league and user_id = me;
+  if found then
+    return v_rung;
+  end if;
+  select coalesce(max(rung), 0) + 1 into v_rung from league_members where league_id = p_league;
+  insert into league_members (league_id, user_id, rung) values (p_league, me, v_rung);
+  return v_rung;
+end
+$$;
+
+-- Leaving closes the gap: everyone below moves up one. Open challenges go.
+create or replace function public.leave_league(p_league uuid)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+  v_rung int;
+begin
+  perform 1 from leagues where id = p_league for update;
+  delete from league_members where league_id = p_league and user_id = me returning rung into v_rung;
+  if v_rung is null then
+    return;
+  end if;
+  delete from league_challenges
+   where league_id = p_league and decided_at is null and me in (challenger_id, challenged_id);
+  update league_members set rung = rung - 1 where league_id = p_league and rung > v_rung;
+end
+$$;
+
+create or replace function public.get_league_standings(p_league uuid)
+returns table (rung int, user_id uuid, first_name text, wins int, losses int, is_me boolean)
+language sql stable security definer set search_path = public
+as $$
+  select m.rung,
+         -- Someone hidden from you keeps their rung but not their identity.
+         case when public.hidden_from_me(m.user_id) then null else m.user_id end,
+         case when public.hidden_from_me(m.user_id) then 'Player' else p.first_name end,
+         m.wins, m.losses, m.user_id = auth.uid()
+    from league_members m
+    join profiles p on p.id = m.user_id
+   where m.league_id = p_league and auth.uid() is not null
+   order by m.rung
+$$;
+
+create or replace function public.league_challenge(p_league uuid, p_target uuid)
+returns uuid
+language plpgsql security definer set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+  my_rung int;
+  their_rung int;
+  v_id uuid;
+begin
+  if me is null then
+    raise exception 'Sign in first.' using errcode = '42501';
+  end if;
+  if public.i_am_suspended() then
+    raise exception 'Your account is suspended.' using errcode = '42501';
+  end if;
+  select rung into my_rung from league_members where league_id = p_league and user_id = me;
+  if my_rung is null then
+    raise exception 'Join the league before you challenge anyone.' using errcode = 'P0002';
+  end if;
+  select rung into their_rung from league_members where league_id = p_league and user_id = p_target;
+  -- Not in the league, blocked, suspended, or yourself: one answer for all.
+  if their_rung is null or p_target = me or public.hidden_from_me(p_target) then
+    raise exception 'That isn''t someone you can challenge.' using errcode = '22023';
+  end if;
+  if their_rung > my_rung or my_rung - their_rung > 2 then
+    raise exception 'You can challenge up to two rungs above you.' using errcode = '22023';
+  end if;
+  begin
+    insert into league_challenges (league_id, challenger_id, challenged_id)
+    values (p_league, me, p_target) returning id into v_id;
+  exception when unique_violation then
+    raise exception 'You two already have a challenge to play.' using errcode = '23505';
+  end;
+  return v_id;
+end
+$$;
+
+create or replace function public.report_league_result(p_challenge uuid, p_winner uuid)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+declare
+  me uuid := auth.uid();
+  c record;
+  hi int;  -- the challenged player's rung (numerically smaller)
+  lo int;  -- the challenger's rung
+begin
+  if me is null then
+    raise exception 'Sign in first.' using errcode = '42501';
+  end if;
+  if public.i_am_suspended() then
+    raise exception 'Your account is suspended.' using errcode = '42501';
+  end if;
+  select * into c from league_challenges where id = p_challenge for update;
+  if not found then
+    raise exception 'That challenge doesn''t exist.' using errcode = 'P0002';
+  end if;
+  if me not in (c.challenger_id, c.challenged_id) then
+    raise exception 'Only the two players in a challenge can record its result.' using errcode = '42501';
+  end if;
+  if c.decided_at is not null then
+    raise exception 'This result is already in.' using errcode = '22023';
+  end if;
+  if p_winner is null or p_winner not in (c.challenger_id, c.challenged_id) then
+    raise exception 'The winner has to be one of the two players.' using errcode = '22023';
+  end if;
+  perform 1 from leagues where id = c.league_id for update;
+  select rung into hi from league_members where league_id = c.league_id and user_id = c.challenged_id;
+  select rung into lo from league_members where league_id = c.league_id and user_id = c.challenger_id;
+  if hi is null or lo is null then
+    raise exception 'One of you has left the league.' using errcode = '22023';
+  end if;
+
+  update league_challenges set winner_id = p_winner, decided_at = now() where id = p_challenge;
+  update league_members set wins = wins + 1 where league_id = c.league_id and user_id = p_winner;
+  update league_members set losses = losses + 1
+   where league_id = c.league_id
+     and user_id = case when p_winner = c.challenger_id then c.challenged_id else c.challenger_id end;
+
+  -- The challenger won from below: take that rung, everyone between drops one.
+  if p_winner = c.challenger_id and lo > hi then
+    update league_members set rung = rung + 1
+     where league_id = c.league_id and rung >= hi and rung < lo;
+    update league_members set rung = hi
+     where league_id = c.league_id and user_id = c.challenger_id;
+  end if;
+end
+$$;
+
+-- A suspended member is taken off every ladder, like tournaments.
+create or replace function public.profiles_suspension_leaves_leagues()
+returns trigger language plpgsql security definer set search_path = public
+as $$
+declare
+  r record;
+begin
+  if new.suspended_at is not null and old.suspended_at is null then
+    for r in select league_id, rung from league_members where user_id = new.id order by league_id loop
+      delete from league_members where league_id = r.league_id and user_id = new.id;
+      delete from league_challenges
+       where league_id = r.league_id and decided_at is null and new.id in (challenger_id, challenged_id);
+      update league_members set rung = rung - 1 where league_id = r.league_id and rung > r.rung;
+    end loop;
+  end if;
+  return new;
+end
+$$;
+create trigger profiles_suspension_leaves_leagues
+  after update on public.profiles
+  for each row execute function public.profiles_suspension_leaves_leagues();
+
+revoke all on function public.join_league(uuid) from public, anon;
+revoke all on function public.leave_league(uuid) from public, anon;
+revoke all on function public.get_league_standings(uuid) from public, anon;
+revoke all on function public.league_challenge(uuid, uuid) from public, anon;
+revoke all on function public.report_league_result(uuid, uuid) from public, anon;
+revoke all on function public.profiles_suspension_leaves_leagues() from public, anon, authenticated;
+grant execute on function public.join_league(uuid) to authenticated;
+grant execute on function public.leave_league(uuid) to authenticated;
+grant execute on function public.get_league_standings(uuid) to authenticated;
+grant execute on function public.league_challenge(uuid, uuid) to authenticated;
+grant execute on function public.report_league_result(uuid, uuid) to authenticated;
+
+-- RSVPlay — Free, Plus and Club
+--
+-- The revenue order is event tickets, then Club membership (event discounts
+-- and priority signup), then venue deals. This lays the entitlement down so
+-- the app can show it honestly; it takes no money. There is no purchase flow
+-- and no payment table here — when one exists it will set the tier through
+-- the service role, the same way an admin does today.
+--
+--   · profiles.tier: 'free' | 'plus' | 'club'. A member cannot write it.
+--   · events.price_cents and events.club_discount_pct: what the app shows
+--     ("Club members save 20%"). Display only.
+--   · events.general_opens_at: priority signup. Before it, only Club members
+--     can RSVP; after it (or when null) everyone can.
+--
+-- One price for everyone at a tier. No pricing by gender, ever.
+
+alter table public.profiles
+  add column tier text not null default 'free' check (tier in ('free', 'plus', 'club'));
+
+alter table public.events
+  add column price_cents int check (price_cents is null or price_cents between 0 and 100000),
+  add column club_discount_pct int not null default 0 check (club_discount_pct between 0 and 100),
+  add column general_opens_at timestamptz;
+
+-- A member's own session can never set or change its tier.
+create or replace function public.profiles_guard_tier()
+returns trigger language plpgsql
+as $$
+begin
+  if current_user not in ('authenticated', 'anon') then
+    return new;
+  end if;
+  if tg_op = 'INSERT' then
+    new.tier := 'free';
+  elsif new.tier is distinct from old.tier then
+    raise exception 'That part of your profile can''t be changed from the app.' using errcode = '42501';
+  end if;
+  return new;
+end
+$$;
+create trigger profiles_guard_tier
+  before insert or update on public.profiles
+  for each row execute function public.profiles_guard_tier();
+
+create or replace function public.set_member_tier(p_user uuid, p_tier text)
+returns boolean
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not public.is_admin() then
+    return false;
+  end if;
+  if p_tier not in ('free', 'plus', 'club') then
+    raise exception 'Unknown tier.' using errcode = '22023';
+  end if;
+  update profiles set tier = p_tier where id = p_user;
+  return found;
+end
+$$;
+
+-- Priority signup: taking a place before general signup opens needs Club.
+create or replace function public.enforce_event_priority()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+declare
+  opens timestamptz;
+begin
+  if new.status not in ('going') then
+    return new;
+  end if;
+  if tg_op = 'UPDATE' and old.status in ('going', 'checked_in') then
+    return new;  -- already holding a place
+  end if;
+  select general_opens_at into opens from events where id = new.event_id;
+  if opens is not null and now() < opens
+     and not exists (select 1 from profiles where id = new.user_id and tier = 'club') then
+    raise exception 'Signup opens to everyone soon. Club members can RSVP now.' using errcode = '42501';
+  end if;
+  return new;
+end
+$$;
+create trigger event_priority_guard
+  before insert or update on public.event_rsvps
+  for each row execute function public.enforce_event_priority();
+
+revoke all on function public.profiles_guard_tier() from public, anon, authenticated;
+revoke all on function public.enforce_event_priority() from public, anon, authenticated;
+revoke all on function public.set_member_tier(uuid, text) from public, anon;
+grant execute on function public.set_member_tier(uuid, text) to authenticated;
+
 -- RSVPlay — deleting an account also takes the address off the waitlist
 --
 -- delete_account() works by deleting the auth.users row and letting foreign

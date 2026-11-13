@@ -33,10 +33,11 @@ check "no retired palette hexes in app/landing/admin/mobile" bash -c '! git grep
 echo "── derived files are current"
 check "supabase/setup.sql matches the migrations" ./scripts/build-setup-sql.sh --check
 check "site/ matches landing/, app/ and admin/" bash -c 'for p in "landing/index.html site/index.html" "app/index.html site/demo/index.html" "admin/index.html site/admin/index.html" "landing/privacy.html site/privacy/index.html" "landing/terms.html site/terms/index.html" "landing/delete-account.html site/delete-account/index.html"; do set -- $p; diff -q <(sed "s|content=\"https://[^\"]*/og.png\"|content=\"/og.png\"|g" "$2") "$1" >/dev/null || exit 1; done'
+check "brand/tokens.json current and all surfaces agree" node scripts/build-tokens.js --check
 check "every page carries the shared ball mark" bash -c 'for f in landing/index.html app/index.html admin/index.html; do grep -q "mark:defs" "$f" || exit 1; done'
 
 echo "── rules and stops still enforced (docs/rules-and-stops.md vs the code)"
-for m in 20260805000001 20260806000003 20260806000006 20260806000007 20260806000008 20260806000009 20260806000014 20260806000015 20260806000017 20260806000019 20260806000020 20260806000023 20260806000024 20260806000027 20260806000029 20260806000030 20260806000031 20260806000032; do
+for m in 20260806000033 20260806000034 20260806000035 20260806000036 20260806000037 20260806000038 20260805000001 20260806000003 20260806000006 20260806000007 20260806000008 20260806000009 20260806000014 20260806000015 20260806000017 20260806000019 20260806000020 20260806000023 20260806000024 20260806000027 20260806000029 20260806000030 20260806000031 20260806000032; do
   check "migration $m cited by the rules doc exists" bash -c "ls supabase/migrations/${m}_*.sql >/dev/null"
 done
 check "18+ birthdate check constraint" grep -q "birthdate <= (current_date - interval '18 years')" supabase/migrations/20260805000001_initial_schema.sql
@@ -54,6 +55,16 @@ check "app: under-18 stop" grep -q "RSVPlay is 18+" mobile/src/screens/Onboardin
 check "app: phone verification required to continue" grep -q "Verify your phone number to continue" mobile/src/screens/OnboardingScreen.js
 check "app: coarse location permission only" grep -q "ACCESS_COARSE_LOCATION" mobile/app.json
 check "agents: every agent keeps the humans-send rule or a never-runs line" bash -c 'for a in .claude/agents/*.md; do grep -q -i -E "draft|never (send|run|submit|publish|commit)|recommend" "$a" || exit 1; done'
+check "check-in only by host code (member-write guard on RSVPs)" grep -q "create trigger event_rsvps_guard_member_writes" supabase/migrations/20260806000033_checkin_waiver_crew.sql
+check "check-in requires the waiver" grep -q "Accept the event waiver first" supabase/migrations/20260806000033_checkin_waiver_crew.sql
+check "check-in codes have only an admin policy" bash -c "[ \"\$(grep -c 'create policy .* on public.event_checkin_codes' supabase/migrations/*.sql | awk -F: '{s+=\$2} END {print s}')\" = 1 ] && grep -q 'checkin_codes_admin' supabase/migrations/20260806000033_checkin_waiver_crew.sql"
+check "crew dating flag is mutual and server-decided" grep -q "p.gender = any (me.seeking) and me.gender = any (p.seeking)" supabase/migrations/20260806000033_checkin_waiver_crew.sql
+check "bans stick to the phone hash; ban list has no policy" bash -c "grep -q 'from banned_phones where phone_hash' supabase/migrations/20260806000034_phone_bans.sql && ! git grep -q -E 'create policy .* on public\.banned_phones' -- supabase/migrations"
+check "rate limits on swipes, reports, messages" bash -c "grep -q 'create trigger swipes_rate_limit' supabase/migrations/20260806000035_rate_limits.sql && grep -q 'create trigger reports_rate_limit' supabase/migrations/20260806000035_rate_limits.sql && grep -q 'create trigger messages_rate_limit' supabase/migrations/20260806000035_rate_limits.sql"
+check "quiet hours enforced by the push function" bash -c "grep -q 'in_quiet_hours' supabase/functions/send-push/index.ts && grep -q '>= 22' supabase/migrations/20260806000036_quiet_hours.sql"
+check "members cannot set their own tier" grep -q "create trigger profiles_guard_tier" supabase/migrations/20260806000038_membership_tiers.sql
+check "no deposit promise anywhere in the product" bash -c "! git grep -q -i 'deposit' -- app landing admin mobile/src"
+check "CI workflow runs the full health check" grep -q "healthcheck.sh --full" .github/workflows/ci.yml
 check "safety core untouched by automation: self-repair agent names it off-limits" grep -q "safety core" .claude/agents/self-repair.md
 
 if [ "${1:-}" = "--full" ]; then
