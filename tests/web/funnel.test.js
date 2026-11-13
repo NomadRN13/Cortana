@@ -17,6 +17,7 @@ async function walk(page) {
   await page.click('#ob-seeking [data-seek="man"]');
   await page.click('#ob4-done');
   await page.waitForSelector('#screen-home.active', { timeout: 4000 });
+  await page.click('#open-deck');   // Home opens on events; the deck is one tap away
   await page.click('.act-like');
   await page.waitForTimeout(500);
 }

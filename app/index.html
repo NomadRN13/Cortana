@@ -327,6 +327,24 @@
   .mode-pill svg { width: 16px; height: 16px; }
   .mode-pill.on { background: var(--optic); border-color: var(--optic); color: var(--ink); }
 
+  /* Home leads with events; the deck sits one tap away, under "Find a game". */
+  .home-feed { display: flex; flex-direction: column; gap: 18px; padding-top: 6px; }
+  .home-feed > * { flex: 0 0 auto; }
+  .home-feed .greet { padding: 0; }
+  .home-h { font-size: 20px; font-weight: 800; }
+  .home-sub { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 0 10px; }
+  .findgame {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border: 2px solid var(--optic); border-radius: 18px;
+    padding: 16px;
+  }
+  .findgame-mid { flex: 1; min-width: 0; }
+  .findgame h2 { font-size: 19px; font-weight: 800; }
+  .findgame p { margin: 5px 0 10px; font-size: 13.5px; color: var(--dim); line-height: 1.45; }
+  .home-deck { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .deck-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 18px 0; }
+  .deck-top h2 { font-size: 18px; font-weight: 800; }
+
   /* Same-sport filter: sits under the mode pills, above the deck it changes. */
   .deck-filter { display: flex; align-items: center; gap: 10px; padding: 10px 18px 0; }
   .filter-chip {
@@ -595,22 +613,70 @@
   }
   .tourney.open { border-color: var(--optic); }
   .tourney-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
-  .tourney-actions .link-btn.quiet { color: var(--dim); font-weight: 700; font-size: 12.5px; }
-  .br-head { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: var(--dim); margin: 12px 0 6px; }
-  .br-match { padding: 8px 10px; margin-bottom: 8px; background: var(--card-2, #1B1E24); border: 2px solid var(--line); border-radius: 12px; }
+  .tourney-actions .link-btn.quiet, .event-rsvp .link-btn.quiet { color: var(--dim); font-weight: 700; font-size: 12.5px; }
+  /* The bracket: one column per round, read left to right. It scrolls sideways
+     inside its card, so a draw of 128 never widens the page. */
+  .br-rounds {
+    display: flex; align-items: stretch; gap: 10px; margin-top: 10px; padding-bottom: 6px;
+    overflow-x: auto; scroll-snap-type: x proximity; border-radius: 12px;
+  }
+  .br-rounds:focus-visible { outline: 3px solid var(--optic); outline-offset: 2px; }
+  .br-round { flex: 0 0 204px; display: flex; flex-direction: column; min-width: 0; scroll-snap-align: start; }
+  .br-col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  /* A small draw is laid out as the tree it is: each match sits between the two that feed it. */
+  .br-tree .br-col { justify-content: space-around; }
+  .br-head { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: var(--dim); margin: 0 0 8px; }
+  .br-match { background: var(--card2); border: 2px solid var(--line); border-radius: 12px; overflow: hidden; }
   .br-match.mine { border-color: var(--optic); }
-  .br-player { display: flex; align-items: center; gap: 8px; min-height: 28px; font-size: 14px; font-weight: 600; }
-  .br-player + .br-player { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px; }
+  .br-player { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 5px 10px; font-size: 14px; font-weight: 600; }
+  .br-player + .br-player { border-top: 1px solid var(--line); }
   .br-player .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .br-player.won { color: var(--optic); font-weight: 800; }
+  .br-player.won { color: var(--optic); font-weight: 800; background: var(--optic-dim); }
   .br-player.lost, .br-player.tbd { color: var(--dim); }
-  .br-won { background: var(--optic); color: var(--ink); border: 0; border-radius: 999px; padding: 4px 10px; font-size: 11.5px; font-weight: 800; }
-  .br-score { font-size: 11.5px; color: var(--dim); margin-top: 4px; }
+  .br-won { flex: 0 0 auto; background: var(--optic); color: var(--ink); border: 0; border-radius: 999px; padding: 4px 10px; font-size: 11.5px; font-weight: 800; }
+  .br-score { flex: 0 0 auto; margin-left: auto; text-align: right; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; white-space: nowrap; }
+  .br-score i { font-style: normal; display: inline-block; min-width: 1.5em; }
+  .br-score.note { display: block; padding: 4px 10px 6px; border-top: 1px solid var(--line); font-size: 11.5px; font-weight: 600; color: var(--dim); letter-spacing: 0; }
   .br-byes { font-size: 12px; color: var(--dim); margin: 0 0 8px; }
   .event-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 8px; }
   .spots { font-size: 11px; font-weight: 700; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .join-btn { font-size: 13px; font-weight: 800; padding: 8px 14px; border-radius: 999px; background: var(--optic); color: var(--ink); white-space: nowrap; }
+  .join-btn, .rsvp-go { font-size: 13px; font-weight: 800; padding: 8px 14px; border-radius: 999px; background: var(--optic); color: var(--ink); white-space: nowrap; }
   .join-btn.going { background: transparent; color: var(--optic); border: 2px solid var(--optic); }
+
+  /* RSVP: the waiver tick first, then check-in with the host's code. A full-width
+     row under the card, so neither has to fit beside the date. */
+  .event { flex-wrap: wrap; }
+  .event-rsvp {
+    flex: 0 0 100%; display: flex; flex-direction: column; gap: 8px;
+    padding-top: 10px; border-top: 2px solid var(--line); cursor: default;
+  }
+  .event-rsvp label { margin: 0; }
+  .waiver-row { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.4; cursor: pointer; }
+  .waiver-row input { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; accent-color: var(--optic); }
+  .rsvp-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; }
+  .checkin-form { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+  .checkin-form input[type="text"] { width: 104px; padding: 9px 10px; text-align: center; letter-spacing: 0.3em; font-variant-numeric: tabular-nums; }
+  .demo-hint { color: var(--optic); }
+  .checked-tag { white-space: nowrap; }
+
+  /* Crew: the people you shared a court with, on top of Matches */
+  .crew { margin-bottom: 20px; }
+  .crew-title { font-size: 18px; font-weight: 800; }
+  .crew > .hint { margin: 3px 0 10px; }
+  .crew-row {
+    display: flex; align-items: center; gap: 10px; padding: 10px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 14px; margin-bottom: 8px;
+  }
+  .crew-row .ava { width: 44px; height: 44px; font-size: 16px; }
+  .crew-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .crew-mid .n { font-size: 14.5px; font-weight: 800; }
+  .crew-mid .s { font-size: 12px; color: var(--dim); }
+  .crew-mid .tag { align-self: flex-start; margin-top: 2px; }
+  .crew-add { flex: 0 0 auto; font-size: 12.5px; font-weight: 800; padding: 8px 12px; border-radius: 999px; background: var(--optic); color: var(--ink); white-space: nowrap; }
+  .crew-add.added { background: transparent; color: var(--optic); border: 2px solid var(--optic); }
+  .crew-more { flex: 0 0 auto; padding: 6px; border-radius: 10px; display: inline-flex; color: var(--dim); }
+  .crew-more:hover { background: var(--card2); }
+  .crew-more svg { width: 18px; height: 18px; }
 
   /* ---------- Profile & settings ---------- */
   .profile-card {
@@ -767,10 +833,10 @@
   @keyframes screenIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   .screen.active { animation: screenIn 0.22s ease; }
 
-  .act, .btn, .chip, .join-btn, .mode-pill, .tool-chip, .chat-send, .topmatch-btn, .icon-btn, .tab {
+  .act, .btn, .chip, .join-btn, .rsvp-go, .crew-add, .mode-pill, .tool-chip, .chat-send, .topmatch-btn, .icon-btn, .tab {
     transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   }
-  .act:active, .btn:active, .chip:active, .join-btn:active, .mode-pill:active,
+  .act:active, .btn:active, .chip:active, .join-btn:active, .rsvp-go:active, .crew-add:active, .mode-pill:active,
   .tool-chip:active, .chat-send:active, .topmatch-btn:active { transform: scale(0.94); }
 
   @keyframes wiggle { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-14deg); } 60% { transform: rotate(11deg); } }
@@ -899,12 +965,12 @@
       </div>
       <div class="welcome-modes">
         <div class="wm-row">
-          <span class="wm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg></span>
-          <div><strong>Date Mode</strong><span class="wm-desc">Find your perfect match.</span></div>
-        </div>
-        <div class="wm-row">
           <span class="wm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg></span>
           <div><strong>Play Mode</strong><span class="wm-desc">Find players for your next match.</span></div>
+        </div>
+        <div class="wm-row">
+          <span class="wm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg></span>
+          <div><strong>Date Mode</strong><span class="wm-desc">Find your perfect match.</span></div>
         </div>
         <div class="wm-row">
           <span class="wm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg></span>
@@ -1142,9 +1208,33 @@
           <span class="bell-dot" aria-hidden="true"></span>
         </button>
       </div>
-      <div class="greet">
-        <h1 id="greet-line">Good morning 👋</h1>
-        <p>Ready to rally?</p>
+      <!-- Home leads with events. The deck is one tap away, under "Find a game". -->
+      <div class="scroll home-feed" id="home-feed">
+        <div class="greet">
+          <h1 id="greet-line">Good morning 👋</h1>
+          <p>Ready to rally?</p>
+        </div>
+        <section class="home-events" aria-labelledby="home-events-title">
+          <h2 class="home-h" id="home-events-title">This week on the courts</h2>
+          <div class="home-sub">
+            <h3 class="eyebrow">Events near you</h3>
+            <button class="link-btn" id="home-all-events" type="button">See all events</button>
+          </div>
+          <div id="home-event-list"></div>
+        </section>
+        <section class="findgame" id="find-game" aria-labelledby="find-game-title">
+          <div class="findgame-mid">
+            <h2 id="find-game-title">Find a game</h2>
+            <p>Between events, meet players near you and line up your next hit.</p>
+            <div class="event-tags" id="find-game-modes"></div>
+          </div>
+          <button class="topmatch-btn" id="open-deck" type="button">Find players</button>
+        </section>
+      </div>
+      <div class="home-deck" id="home-deck" hidden>
+      <div class="deck-top">
+        <button class="link-btn" id="close-deck" type="button"><span aria-hidden="true">‹ </span>Events near you</button>
+        <h2>Find a game</h2>
       </div>
       <div class="mode-pills" role="group" aria-label="Mode" id="mode-pills">
         <button class="mode-pill" data-mode="play">
@@ -1190,6 +1280,7 @@
           </div>
         </div>
         <div class="deck" id="deck"></div>
+      </div>
       </div>
     </section>
 
@@ -1392,7 +1483,7 @@
               <input type="number" id="age-max" value="55" min="18" max="99" aria-label="Maximum age">
             </div>
           </div>
-          <p class="hint">Looking for “Only my sports”? It's on the Home screen now, right above the players it filters.</p>
+          <p class="hint">Looking for “Only my sports”? It's on Home under Find a game, right above the players it filters.</p>
         </div>
         <div class="set-group">
           <h3>Notifications</h3>
@@ -1672,6 +1763,13 @@
     matches: ['maya', 'sam', 'priya'],
     joined: {},
     expandedEvents: {},
+    // Home opens on events ('feed'); "Find a game" switches it to the deck.
+    homeView: 'feed',
+    // RSVP and check-in, kept the way joined is: in memory, for this visit.
+    rsvpPrompt: null,     // the event whose waiver line is open
+    checkinPrompt: null,  // the event whose check-in code field is open
+    checkedIn: {},        // event id -> true once the host's code is in
+    crewAdded: {},        // profile id -> true: someone you'd play with again
     replied: {},
     threads: THREADS,
     prefs: { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false },
@@ -1774,7 +1872,7 @@
     var isTab = TABS.indexOf(id) !== -1;
     $('#tabbar').style.display = isTab ? 'flex' : 'none';
     $all('.tab').forEach(function (t) { t.classList.toggle('on', t.getAttribute('data-screen') === id); });
-    if (id === 'screen-home') { renderGreeting(); renderDeck(); }
+    if (id === 'screen-home') renderHome();
     if (id === 'screen-matches') renderMatches();
     if (id === 'screen-chat') renderThreads();
     if (id === 'screen-events') renderEvents();
@@ -2054,19 +2152,65 @@
     delete state.draft;
     saveUser();
     state.mode = state.user.modes[0];
+    state.homeView = 'feed';
     syncModeUI();
     syncSettings();
     toast('Welcome to the court, ' + state.user.name + '!');
     show('screen-home');
   });
 
-  /* ---------- Home ---------- */
+  /* ---------- Home ----------
+     RSVPlay is events first, so Home leads with what's on: the next few
+     events in the member's cities, each with its RSVP. The deck is one tap
+     away under "Find a game" and keeps every id it had, so nothing that
+     drives it had to change. */
   function renderGreeting() {
     var h = new Date().getHours();
     var part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
     var name = state.user ? ', ' + state.user.name : '';
     $('#greet-line').textContent = 'Good ' + part + name + ' 👋';
   }
+  var HOME_EVENTS = 3;
+  var MODE_ORDER = ['play', 'date', 'friends'];
+  var MODE_NAMES = { play: 'Play', date: 'Date', friends: 'Friends' };
+  function renderHomeEvents() {
+    var cities = userCities();
+    var next = nextEvents(HOME_EVENTS);
+    var soon = !next.length || next.some(function (e) { return e.week === WEEK_ORDER[0]; });
+    $('#home-events-title').textContent = soon ? 'This week on the courts' : 'Coming up on the courts';
+    $('#home-event-list').innerHTML = next.length
+      ? next.map(function (e) { return eventCardHtml(e, cities, 'h'); }).join('')
+      : noEventsHtml(cities);
+  }
+  function syncHomeView() {
+    var deckOpen = state.homeView === 'deck';
+    $('#home-feed').hidden = deckOpen;
+    $('#home-deck').hidden = !deckOpen;
+    // The modes they turned on, so the card says what "a game" covers for them.
+    var mine = (state.user && state.user.modes) || [];
+    $('#find-game-modes').innerHTML = MODE_ORDER
+      .filter(function (m) { return mine.indexOf(m) !== -1; })
+      .map(function (m) { return '<span class="tag">' + MODE_NAMES[m] + '</span>'; }).join('');
+  }
+  function renderHome() {
+    renderGreeting();
+    syncHomeView();
+    renderHomeEvents();
+    renderDeck();
+  }
+  $('#open-deck').addEventListener('click', function () {
+    state.homeView = 'deck';
+    syncHomeView();
+    renderDeck();
+    $('#close-deck').focus();
+  });
+  $('#close-deck').addEventListener('click', function () {
+    state.homeView = 'feed';
+    syncHomeView();
+    renderHomeEvents();
+    $('#open-deck').focus();
+  });
+  $('#home-all-events').addEventListener('click', function () { show('screen-events'); });
 
   /* ---------- Top picks ----------
      The deck is already ranked by fit, so the best candidates are simply the
@@ -2185,27 +2329,35 @@
     closeSheet();
     state.blocked[id] = true;
     state.saved[id] = false;
+    state.crewAdded[id] = false;
     state.matches = state.matches.filter(function (m) { return m !== id; });
     state.threads = state.threads.filter(function (t) { return t.id !== id; });
     if (sheetCtx.from === 'chat') { show('screen-chat'); }
+    else if (sheetCtx.from === 'crew') { renderMatches(); }
     else { renderDeck(); }
     toast((p ? p.name : 'They') + ' won’t see you, and you won’t see them');
   });
+
+  // Date fit is mutual — they're who I'm looking for AND I'm who they're
+  // looking for. One function for the Date deck and for the crew's "Also open
+  // to dating" tag, so the two can never disagree.
+  function dateFit(p) {
+    var u = state.user;
+    // Empty 'looking to date' matches nobody rather than disabling the
+    // filter — otherwise we'd show people they explicitly ruled out.
+    if (!u.seeking || !u.seeking.length) return false;
+    if (!p.gender || !p.seeking) return false;
+    if (u.seeking.indexOf(p.gender) === -1) return false;
+    if (p.seeking.indexOf(u.gender) === -1) return false;
+    return true;
+  }
 
   function eligible(p) {
     if (state.blocked[p.id] || state.seen[p.id]) return false;
     if (p.dist > state.prefs.radius) return false;
     if (p.age < state.prefs.ageMin || p.age > state.prefs.ageMax) return false;
-    // Date mode: mutual fit — they're who I'm looking for AND I'm who
-    // they're looking for. Play/Friends are for everyone.
-    if (state.mode === 'date' && state.user && state.user.gender) {
-      // Empty 'looking to date' matches nobody rather than disabling the
-      // filter — otherwise we'd show people they explicitly ruled out.
-      if (!state.user.seeking || !state.user.seeking.length) return false;
-      if (!p.gender || !p.seeking) return false;
-      if (state.user.seeking.indexOf(p.gender) === -1) return false;
-      if (p.seeking.indexOf(state.user.gender) === -1) return false;
-    }
+    // Date mode: mutual fit. Play/Friends are for everyone.
+    if (state.mode === 'date' && state.user && state.user.gender && !dateFit(p)) return false;
     // Play mode: shared game type; singles/doubles honor both players'
     // play-with preference; mixed doubles is open by nature.
     if (state.mode === 'play' && state.user) {
@@ -2506,6 +2658,60 @@
     $('#match-overlay').classList.remove('open');
   });
 
+  /* ---------- Crew ----------
+     The people you shared a court with. It is built from check-ins, never
+     from the RSVP list: nobody lands in your crew, or you in theirs, for
+     saying they'd come. Someone you've blocked is never in it. */
+  function crewList() {
+    var seen = {}, list = [];
+    EVENTS.forEach(function (e) {
+      if (!state.checkedIn[e.id]) return;
+      eventAttendees(e).forEach(function (p) {
+        if (state.blocked[p.id] || seen[p.id]) return;
+        seen[p.id] = true;
+        list.push({ p: p, e: e });
+      });
+    });
+    return list;
+  }
+  // "Also open to dating" on a crew row. Mutual, or nothing: both of you have
+  // Date mode on, neither is a doubles team, and each fits what the other is
+  // looking for — the same rule as get_my_crew() in the database. In every
+  // other case the tag is absent, and its absence says nothing about anyone.
+  function alsoOpenToDating(p) {
+    var u = state.user;
+    if (!u || !u.gender || u.isTeam || !u.modes || u.modes.indexOf('date') === -1) return false;
+    if (p.isTeam || (p.modes && p.modes.indexOf('date') === -1)) return false;
+    return dateFit(p);
+  }
+  function crewHtml() {
+    var crew = crewList();
+    if (!crew.length) return '';
+    return '<section class="crew" id="crew" aria-labelledby="crew-title">' +
+      '<h3 class="crew-title" id="crew-title">Your crew</h3>' +
+      '<p class="hint">The people you shared a court with. Add the ones you’d play with again.</p>' +
+      crew.map(function (c) {
+        var p = c.p;
+        var nm = p.isTeam && p.partnerName ? p.name + ' & ' + p.partnerName : p.name;
+        var added = !!state.crewAdded[p.id];
+        return '<div class="crew-row" data-crew="' + esc(p.id) + '">' +
+          '<span class="ava" style="background:' + gradFor(p.id) + '">' + esc(initials(p.name)) + '</span>' +
+          '<span class="crew-mid">' +
+            '<span class="n">' + esc(nm) + '</span>' +
+            '<span class="s">You shared a court at ' + esc(c.e.title) + '</span>' +
+            (alsoOpenToDating(p) ? '<span class="tag crew-date">Also open to dating</span>' : '') +
+          '</span>' +
+          '<button class="crew-add' + (added ? ' added' : '') + '" type="button" data-id="' + esc(p.id) + '" aria-label="' +
+            (added ? 'Added ✓ — ' + esc(nm) + ' is in your crew. Tap to remove' : 'Play again — add ' + esc(nm) + ' to your crew') + '">' +
+            (added ? 'Added ✓' : 'Play again') + '</button>' +
+          '<button class="crew-more" type="button" data-id="' + esc(p.id) + '" aria-label="More options for ' + esc(nm) + '">' +
+            '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>' +
+          '</button>' +
+        '</div>';
+      }).join('') +
+    '</section>';
+  }
+
   /* ---------- Matches grid ---------- */
   function renderMatches() {
     var wrap = $('#match-grid-wrap');
@@ -2542,7 +2748,23 @@
         '</button>';
       }).join('') + '</div>';
     }
-    wrap.innerHTML = savedHtml + gridHtml;
+    var crew = crewHtml();
+    // With the crew on top, the grid below it needs its own name.
+    wrap.innerHTML = crew + savedHtml + (crew && state.matches.length ? '<div class="saved-head">Your matches</div>' : '') + gridHtml;
+    $all('#match-grid-wrap .crew-add').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-id');
+        var p = profileById(id);
+        state.crewAdded[id] = !state.crewAdded[id];
+        renderMatches();
+        var again = $('#match-grid-wrap .crew-add[data-id="' + id + '"]');
+        if (again) again.focus();
+        toast(state.crewAdded[id] ? 'Added ' + p.name + ' to your crew — play again soon 🎾' : 'Removed ' + p.name + ' from your crew');
+      });
+    });
+    $all('#match-grid-wrap .crew-more').forEach(function (b) {
+      b.addEventListener('click', function () { openSheet(b.getAttribute('data-id'), 'crew'); });
+    });
     $all('.match-cell').forEach(function (el) {
       el.addEventListener('click', function () {
         ensureThread(el.getAttribute('data-id'));
@@ -2921,19 +3143,39 @@
     return 'Player';
   }
 
+  // "11-8, 11-6" (the winner's points first in each game) becomes one list per
+  // row: [['11', '11'], ['8', '6']]. Null when the score was written any other
+  // way — it is free text in the real app — and then it is shown as written.
+  function tGames(score) {
+    var parts = String(score || '').split(','), won = [], lost = [];
+    for (var i = 0; i < parts.length; i++) {
+      var g = /^\s*(\d{1,2})\s*-\s*(\d{1,2})\s*$/.exec(parts[i]);
+      if (!g) return null;
+      won.push(g[1]); lost.push(g[2]);
+    }
+    return [won, lost];
+  }
+
+  // The bracket, drawn the way one is read: a column per round, each match a
+  // card with a row per player, the winner's row in the accent colour and the
+  // score at the right-hand edge. The rules — who may record what, byes,
+  // withdrawals — are all still the bracket library's; this only draws them.
   function tBracketHtml(t) {
-    var br = t.bracket, html = '';
+    var br = t.bracket, cols = '';
     for (var r = 1; r <= br.rounds; r++) {
-      html += '<div class="br-head">' + esc(bracketRoundName(r, br.rounds)) + '</div>';
+      var roundName = bracketRoundName(r, br.rounds);
+      var top = '<div class="br-head">' + esc(roundName) + '</div>';
       if (r === 1) {
         // Byes aren't matches anyone plays (72 entries in a bracket of 128 has
         // 56), so they are counted in one line, not listed.
         var byes = br.matches.filter(function (m) { return m.round === 1 && m.bye; }).length;
-        if (byes) html += '<p class="br-byes" data-byes="' + byes + '">' + esc(bracketByeLine(byes, br.rounds)) + '</p>';
+        if (byes) top += '<p class="br-byes" data-byes="' + byes + '">' + esc(bracketByeLine(byes, br.rounds)) + '</p>';
       }
+      var cards = '';
       br.matches.forEach(function (m) {
         if (m.round !== r || m.bye) return;
         var open = !m.bye && !m.winner && m.a && m.b;
+        var games = m.winner ? tGames(m.score) : null;
         var line = function (id, side) {
           if (!id) {
             // An empty side is a bye, a player who left, or a match still to be played.
@@ -2942,21 +3184,30 @@
               (kind === 'bye' ? '\u2014 bye \u2014' : kind === 'withdrawn' ? 'Withdrawn' : 'To be decided') + '</span></div>';
           }
           var cls = 'br-player' + (m.winner ? (m.winner === id ? ' won' : ' lost') : '');
+          var pts = games ? games[m.winner === id ? 0 : 1] : null;
           return '<div class="' + cls + '"><span class="nm">' + esc(tName(id)) + (id === 'me' ? '  (you)' : '') + (m.winner === id ? ' \u2713' : '') + '</span>' +
+            (pts ? '<span class="br-score">' + pts.map(function (n) { return '<i>' + esc(n) + '</i>'; }).join('') + '</span>' : '') +
             (open ? '<button class="br-won" type="button" data-t="' + t.id + '" data-match="' + m.id + '" data-winner="' + esc(id) + '" aria-label="Record ' + esc(tName(id)) + ' as the winner">Won</button>' : '') +
             '</div>';
         };
-        html += '<div class="br-match' + (m.a === 'me' || m.b === 'me' ? ' mine' : '') + '" data-round="' + m.round + '" data-slot="' + m.slot + '">' +
-          line(m.a, 'a') + line(m.b, 'b') + (m.score ? '<div class="br-score">' + esc(m.score) + '</div>' : '') + '</div>';
+        cards += '<div class="br-match' + (m.a === 'me' || m.b === 'me' ? ' mine' : '') + '" data-round="' + m.round + '" data-slot="' + m.slot + '">' +
+          line(m.a, 'a') + line(m.b, 'b') + (m.score && !games ? '<div class="br-score note">' + esc(m.score) + '</div>' : '') + '</div>';
       });
+      cols += '<div class="br-round" role="group" aria-label="' + esc(roundName) + '">' + top + '<div class="br-col">' + cards + '</div></div>';
     }
-    return html;
+    // Focusable, so the later rounds can be reached with the arrow keys too.
+    return '<div class="br-rounds' + (br.size <= 16 ? ' br-tree' : '') + '" data-bracket="' + t.id + '" tabindex="0" role="group" ' +
+      'aria-label="' + esc(t.title) + ' bracket, ' + br.rounds + (br.rounds === 1 ? ' round' : ' rounds') + ' — scroll sideways for the later rounds">' + cols + '</div>';
   }
 
   function renderTournaments(cities) {
     var box = $('#tournament-list');
     var list = TOURNEYS.filter(function (t) { return cities.indexOf(t.city) !== -1; });
     if (!list.length) { box.innerHTML = ''; return; }
+    // Recording a result redraws the bracket; keep each one scrolled to the
+    // round the member was looking at instead of snapping back to the first.
+    var scrolled = {};
+    $all('#tournament-list .br-rounds').forEach(function (el) { scrolled[el.getAttribute('data-bracket')] = el.scrollLeft; });
     box.innerHTML = '<h3 class="places-head">Tournaments</h3>' + list.map(function (t) {
       var entered = t.entries.indexOf('me') !== -1;
       var full = t.entries.length >= t.max;
@@ -2991,6 +3242,10 @@
         '<div class="tourney-actions">' + actions + '</div>' + detail +
       '</div>';
     }).join('');
+    $all('#tournament-list .br-rounds').forEach(function (el) {
+      var left = scrolled[el.getAttribute('data-bracket')];
+      if (left) el.scrollLeft = left;
+    });
   }
 
   $('#tournament-list').addEventListener('click', function (ev) {
@@ -3098,6 +3353,225 @@
     return EVENTS.filter(function (e) { return cities.indexOf(e.city) !== -1; });
   }
 
+  // The next few, soonest first, for Home.
+  var WEEK_ORDER = ['This week', 'Next week'];
+  function nextEvents(n) {
+    return visibleEvents().slice().sort(function (a, b) {
+      return (WEEK_ORDER.indexOf(a.week) - WEEK_ORDER.indexOf(b.week)) || (Number(a.dom) - Number(b.dom));
+    }).slice(0, n);
+  }
+  function eventById(id) {
+    for (var i = 0; i < EVENTS.length; i++) if (EVENTS[i].id === id) return EVENTS[i];
+    return null;
+  }
+  // The three faces on an event's "going" row. Deterministic, so the people
+  // shown going are the people you share a court with once you check in.
+  function eventAttendees(e) {
+    var idx = EVENTS.indexOf(e), n = PROFILES.length;
+    return [PROFILES[(idx * 3) % n], PROFILES[(idx * 3 + 4) % n], PROFILES[(idx * 3 + 8) % n]];
+  }
+  function noEventsHtml(cities) {
+    return '<p class="hint" style="text-align:center;padding:40px 20px">'
+      + (cities.length === 1
+          ? 'Nothing on in ' + esc(cityLabel(cities[0])) + ' yet — check back soon. 🎾'
+          : 'Nothing on in any of your ' + cities.length + ' cities yet — check back soon. 🎾')
+      + '</p>';
+  }
+
+  // One event card, used by the Events tab ('e') and by Home ('h') — the same
+  // markup and the same RSVP in both, so the two can't drift apart. Under the
+  // card sits whichever step comes next:
+  //   RSVP      -> the waiver line, which has to be ticked before it counts
+  //   Going     -> Check in, with the code the host reads out at the event
+  //   Checked in -> a way through to the crew
+  function eventCardHtml(e, cities, where) {
+    var going = !!state.joined[e.id];
+    var checked = going && !!state.checkedIn[e.id];
+    var spots = going ? e.spots - 1 : e.spots;
+    var idx = EVENTS.indexOf(e);
+    var uid = where + '-' + e.id;   // the card is drawn in two lists; ids must stay unique
+    var avas = eventAttendees(e).filter(function (a) { return !state.blocked[a.id]; }).map(function (a) {
+      return '<span class="ava" style="background:' + gradFor(a.id) + '">' + esc(initials(a.name)) + '</span>';
+    }).join('');
+    var goingCount = 3 + ((idx * 5) % 7) + (going ? 1 : 0);
+    var side = checked
+      ? '<span class="tag tag-sport checked-tag">Checked in ✓</span>'
+      : '<button class="join-btn' + (going ? ' going' : '') + '" type="button" data-act="rsvp" data-id="' + e.id + '" aria-label="' +
+          (going ? 'Going ✓ to ' + esc(e.title) + '. Tap to cancel your RSVP' : 'RSVP to ' + esc(e.title)) + '">' +
+          (going ? 'Going ✓' : 'RSVP') + '</button>';
+    var below = '';
+    if (checked) {
+      below = '<div class="event-rsvp" data-step="checked">' +
+        '<p class="hint">You’re checked in. The people you shared a court with are in your crew.</p>' +
+        '<div class="rsvp-actions"><button class="link-btn" type="button" data-act="crew">See your crew</button></div>' +
+      '</div>';
+    } else if (going && state.checkinPrompt === e.id) {
+      below = '<div class="event-rsvp" data-step="code">' +
+        '<label for="code-' + uid + '">Host’s check-in code</label>' +
+        '<div class="checkin-form">' +
+          '<input type="text" class="checkin-code" id="code-' + uid + '" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="••••">' +
+          '<button class="rsvp-go" type="button" data-act="checkin-confirm">Check in</button>' +
+          '<button class="link-btn quiet" type="button" data-act="checkin-cancel">Not now</button>' +
+        '</div>' +
+        '<p class="hint demo-hint">Demo: there’s no host here — enter any 4 digits.</p>' +
+      '</div>';
+    } else if (going) {
+      below = '<div class="event-rsvp" data-step="going">' +
+        '<div class="rsvp-actions">' +
+          '<button class="link-btn" type="button" data-act="checkin-open" aria-label="Check in to ' + esc(e.title) + '">Check in</button>' +
+          '<span class="hint">At the event? The host reads out a code.</span>' +
+        '</div>' +
+      '</div>';
+    } else if (state.rsvpPrompt === e.id) {
+      below = '<div class="event-rsvp" data-step="waiver">' +
+        '<label class="waiver-row" for="waiver-' + uid + '">' +
+          '<input type="checkbox" id="waiver-' + uid + '">' +
+          '<span>I’ve read the event waiver and code of conduct</span>' +
+        '</label>' +
+        '<p class="hint demo-hint">Demo: the real app puts both here to read before you tick.</p>' +
+        '<div class="rsvp-actions">' +
+          '<button class="rsvp-go" type="button" data-act="rsvp-confirm">Confirm RSVP</button>' +
+          '<button class="link-btn quiet" type="button" data-act="rsvp-cancel">Not now</button>' +
+        '</div>' +
+      '</div>';
+    }
+    return '<div class="event' + (state.expandedEvents[e.id] ? ' expanded' : '') + '" data-id="' + e.id + '" role="button" tabindex="0" aria-expanded="' + (state.expandedEvents[e.id] ? 'true' : 'false') + '">' +
+      '<div class="event-date"><span class="dow">' + esc(e.dow) + '</span><span class="dom">' + esc(e.dom) + '</span></div>' +
+      '<div class="event-mid">' +
+        '<div class="event-title">' + esc(e.title) + '</div>' +
+        '<div class="event-meta">' + esc(e.venue) + ' · ' + esc(e.time) + '</div>' +
+        '<div class="event-tags"><span class="tag tag-sport">' + esc(e.sport) + '</span><span class="tag">' + esc(e.level) + '</span>' +
+          // which city, once the list spans more than one
+          (cities.length > 1 && e.city ? '<span class="tag tag-city">' + esc(cityLabel(e.city)) + '</span>' : '') + '</div>' +
+        '<div class="event-extra">' +
+          '<p class="hint" style="margin:0">' + esc(e.desc || '') + '</p>' +
+          '<div class="going-row">' + avas + '<span class="going-label">+' + goingCount + ' going' + (going ? ' · including you' : '') + '</span></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="event-side">' +
+        '<span class="spots">' + spots + ' spots left</span>' +
+        side +
+      '</div>' +
+      below +
+    '</div>';
+  }
+
+  // Every tap inside an event card, in either list.
+  function eventAction(act, id, card, box) {
+    var e = eventById(id);
+    if (!e) return;
+    var focus = '.join-btn';
+    if (act === 'rsvp') {
+      if (state.joined[id]) {
+        // Going -> not going. (Once checked in there is no button to cancel with.)
+        state.joined[id] = false;
+        if (state.checkinPrompt === id) state.checkinPrompt = null;
+      } else {
+        // Nothing is accepted yet: RSVP opens the waiver line, and the tick is
+        // what lets it through.
+        state.rsvpPrompt = state.rsvpPrompt === id ? null : id;
+        if (state.rsvpPrompt) focus = '.waiver-row input';
+      }
+    } else if (act === 'rsvp-cancel') {
+      state.rsvpPrompt = null;
+    } else if (act === 'rsvp-confirm') {
+      var tick = card.querySelector('.waiver-row input');
+      if (!tick || !tick.checked) {
+        toast('Tick the box first — every RSVP comes with the waiver and code of conduct');
+        if (tick) tick.focus();
+        return;
+      }
+      state.joined[id] = true;
+      state.rsvpPrompt = null;
+      focus = '[data-act="checkin-open"]';
+      toast('See you there! Added to your events 🎾');
+    } else if (act === 'checkin-open') {
+      state.checkinPrompt = id;
+      focus = '.checkin-code';
+    } else if (act === 'checkin-cancel') {
+      state.checkinPrompt = null;
+      focus = '[data-act="checkin-open"]';
+    } else if (act === 'checkin-confirm') {
+      // The real app checks the code against the one the host was given, and
+      // only around the event's start time. The demo has no host: 4 digits.
+      var code = card.querySelector('.checkin-code');
+      if (!code || !/^\d{4}$/.test(code.value.trim())) {
+        toast('Enter the 4-digit code from the host');
+        if (code) code.focus();
+        return;
+      }
+      if (!state.joined[id]) return;
+      state.checkedIn[id] = true;
+      state.checkinPrompt = null;
+      focus = '[data-act="crew"]';
+      toast('Checked in ✓ Your crew is in Matches');
+    } else if (act === 'crew') {
+      show('screen-matches');
+      return;
+    } else {
+      return;
+    }
+    renderEventLists();
+    var el = box.querySelector('.event[data-id="' + id + '"] ' + focus);
+    if (el) el.focus();
+  }
+  function toggleEventCard(card) {
+    var id = card.getAttribute('data-id');
+    state.expandedEvents[id] = !state.expandedEvents[id];
+    card.classList.toggle('expanded', state.expandedEvents[id]);
+    card.setAttribute('aria-expanded', String(!!state.expandedEvents[id]));
+  }
+  // Wired once per list, by delegation, so a redraw never has to re-bind.
+  function wireEventList(box) {
+    box.addEventListener('click', function (ev) {
+      var card = ev.target.closest('.event');
+      if (!card) return;
+      var actEl = ev.target.closest('[data-act]');
+      if (actEl) { eventAction(actEl.getAttribute('data-act'), card.getAttribute('data-id'), card, box); return; }
+      // Ticking the waiver or typing the code is not a tap on the card.
+      if (ev.target.closest('.event-rsvp')) return;
+      toggleEventCard(card);
+    });
+    box.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' && ev.target.classList.contains('checkin-code')) {
+        ev.preventDefault();
+        var card = ev.target.closest('.event');
+        eventAction('checkin-confirm', card.getAttribute('data-id'), card, box);
+        return;
+      }
+      // The card itself is a button: Enter or Space opens it, as a tap does.
+      if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.classList.contains('event')) {
+        ev.preventDefault();
+        toggleEventCard(ev.target);
+      }
+    });
+    box.addEventListener('input', function (ev) {
+      if (ev.target.classList.contains('checkin-code')) ev.target.value = ev.target.value.replace(/\D/g, '').slice(0, 4);
+    });
+  }
+  wireEventList($('#event-list'));
+  wireEventList($('#home-event-list'));
+
+  function renderEventList() {
+    var cities = userCities();
+    var list = $('#event-list');
+    var shown = visibleEvents();
+    if (!shown.length) { list.innerHTML = noEventsHtml(cities); return; }
+    var weeks = [];
+    shown.forEach(function (e) { if (weeks.indexOf(e.week) === -1) weeks.push(e.week); });
+    list.innerHTML = weeks.map(function (w) {
+      var rows = shown.filter(function (e) { return e.week === w; }).map(function (e) {
+        return eventCardHtml(e, cities, 'e');
+      }).join('');
+      return '<div class="week-head">' + esc(w) + '</div>' + rows;
+    }).join('');
+  }
+  // An RSVP made on Home shows on the Events tab and the other way round.
+  function renderEventLists() {
+    renderEventList();
+    renderHomeEvents();
+  }
+
   function renderEvents() {
     var cities = userCities();
     var badge = $('#event-city-label');
@@ -3105,67 +3579,7 @@
     badge.parentNode.setAttribute('title', cities.map(cityLabel).join(', '));
     renderTournaments(cities);
     renderPlaces(cities);
-    var list = $('#event-list');
-    var shown = visibleEvents();
-    if (!shown.length) {
-      list.innerHTML = '<p class="hint" style="text-align:center;padding:40px 20px">'
-        + (cities.length === 1
-            ? 'Nothing on in ' + esc(cityLabel(cities[0])) + ' yet — check back soon. 🎾'
-            : 'Nothing on in any of your ' + cities.length + ' cities yet — check back soon. 🎾')
-        + '</p>';
-      return;
-    }
-    var weeks = [];
-    shown.forEach(function (e) { if (weeks.indexOf(e.week) === -1) weeks.push(e.week); });
-    list.innerHTML = weeks.map(function (w) {
-      var rows = shown.filter(function (e) { return e.week === w; }).map(function (e, wi) {
-        var going = !!state.joined[e.id];
-        var spots = going ? e.spots - 1 : e.spots;
-        var idx = EVENTS.indexOf(e);
-        var attendees = [PROFILES[(idx * 3) % PROFILES.length], PROFILES[(idx * 3 + 4) % PROFILES.length], PROFILES[(idx * 3 + 8) % PROFILES.length]];
-        var avas = attendees.map(function (a) {
-          return '<span class="ava" style="background:' + gradFor(a.id) + '">' + esc(initials(a.name)) + '</span>';
-        }).join('');
-        var goingCount = 3 + ((idx * 5) % 7) + (going ? 1 : 0);
-        return '<div class="event' + (state.expandedEvents[e.id] ? ' expanded' : '') + '" data-id="' + e.id + '" role="button" tabindex="0" aria-expanded="' + (state.expandedEvents[e.id] ? 'true' : 'false') + '">' +
-          '<div class="event-date"><span class="dow">' + esc(e.dow) + '</span><span class="dom">' + esc(e.dom) + '</span></div>' +
-          '<div class="event-mid">' +
-            '<div class="event-title">' + esc(e.title) + '</div>' +
-            '<div class="event-meta">' + esc(e.venue) + ' · ' + esc(e.time) + '</div>' +
-            '<div class="event-tags"><span class="tag tag-sport">' + esc(e.sport) + '</span><span class="tag">' + esc(e.level) + '</span>' +
-              // which city, once the list spans more than one
-              (cities.length > 1 && e.city ? '<span class="tag tag-city">' + esc(cityLabel(e.city)) + '</span>' : '') + '</div>' +
-            '<div class="event-extra">' +
-              '<p class="hint" style="margin:0">' + esc(e.desc || '') + '</p>' +
-              '<div class="going-row">' + avas + '<span class="going-label">+' + goingCount + ' going' + (going ? ' · including you' : '') + '</span></div>' +
-            '</div>' +
-          '</div>' +
-          '<div class="event-side">' +
-            '<span class="spots">' + spots + ' spots left</span>' +
-            '<button class="join-btn' + (going ? ' going' : '') + '" data-id="' + e.id + '">' + (going ? 'Going ✓' : 'Join') + '</button>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-      return '<div class="week-head">' + esc(w) + '</div>' + rows;
-    }).join('');
-    $all('#event-list .event').forEach(function (el) {
-      el.addEventListener('click', function (ev) {
-        if (ev.target.closest('.join-btn')) return;
-        var id = el.getAttribute('data-id');
-        state.expandedEvents[id] = !state.expandedEvents[id];
-        el.classList.toggle('expanded', state.expandedEvents[id]);
-        el.setAttribute('aria-expanded', String(!!state.expandedEvents[id]));
-      });
-    });
-    $all('#event-list .join-btn').forEach(function (b) {
-      b.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        var id = b.getAttribute('data-id');
-        state.joined[id] = !state.joined[id];
-        renderEvents();
-        if (state.joined[id]) toast('See you there! Added to your events 🎾');
-      });
-    });
+    renderEventList();
   }
 
   /* ---------- Profile ---------- */
@@ -3526,6 +3940,18 @@
     state.saved = {};
     state.blocked = {};
     state.seen = {};
+    // RSVPs, check-ins and the crew belong to whoever just left; the next
+    // person on this device starts on the events, with none of them.
+    state.joined = {};
+    state.expandedEvents = {};
+    state.rsvpPrompt = null;
+    state.checkinPrompt = null;
+    state.checkedIn = {};
+    state.crewAdded = {};
+    state.homeView = 'feed';
+    // ...and none of it stays drawn in the screens behind the welcome page.
+    renderEventLists();
+    renderMatches();
     state.prefs = { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false };
     try { localStorage.removeItem(PREFS_KEY); } catch (e) { /* nothing to clear */ }
     // The tournaments hold the last user's entries ('me') and any bracket they drew.
@@ -3571,7 +3997,12 @@
 
   /* ---------- Tab bar ---------- */
   $all('.tab').forEach(function (t) {
-    t.addEventListener('click', function () { show(t.getAttribute('data-screen')); });
+    t.addEventListener('click', function () {
+      var id = t.getAttribute('data-screen');
+      // Tapping Home while already on it goes back to the top of Home: the events.
+      if (id === 'screen-home' && $('#screen-home').classList.contains('active')) state.homeView = 'feed';
+      show(id);
+    });
   });
 
   /* ---------- Boot ---------- */

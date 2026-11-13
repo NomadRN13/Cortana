@@ -22,9 +22,11 @@ These drive the real pages in headless Chromium — the same files the site buil
 copies to Netlify, served over http from a local static server so that
 root-absolute paths like `/favicon.png` resolve the way they do in production.
 
-- `prototype.test.js` — 26 steps through the demo people are actually being
-  sent to: onboarding, the deck, blocking, matching, chat, events, photos,
-  sign-out.
+- `prototype.test.js` — 41 steps through the demo people are actually being
+  sent to: onboarding, the events-first Home, RSVP with the waiver tick, the
+  deck behind "Find a game", blocking, matching, chat, check-in with the host's
+  code, the crew (and when "Also open to dating" may show), the tournament
+  bracket drawn as rounds, photos, sign-out.
 - `admin.test.js` — the moderation desk in demo mode: photo queue,
   approve/reject, reports, events, empty states. If this breaks, every tester's
   photo stays invisible.

@@ -58,9 +58,37 @@ const out = (n) => require('path').join(OUT, n);
 
   const shot = (n) => page.screenshot({ path: out(`flow-${n}.png`) });
   const cardName = () => page.textContent('#deck-card .card-name');
+  const toastText = async () => (await page.textContent('#toast')).trim();
+  const ACCENT = 'rgb(200, 240, 74)';   // Optic, #C8F04A
+  // Home, on its events (leaving the deck if it was left open)
+  const homeFeed = async () => {
+    await page.click('.tab[data-screen="screen-home"]');
+    if (await page.isVisible('#close-deck')) await page.click('#close-deck');
+    await page.waitForSelector('#home-feed:not([hidden])', { timeout: 2000 });
+  };
+  // Settings by way of the Profile tab; its Back button lands on Home
+  const openSettings = async () => {
+    await page.click('.tab[data-screen="screen-profile"]');
+    await page.click('#open-settings');
+    await page.waitForSelector('#screen-settings.active', { timeout: 2000 });
+  };
+  const backToMatches = async () => {
+    await page.click('#settings-back');
+    await page.click('.tab[data-screen="screen-matches"]');
+    await page.waitForSelector('#screen-matches.active', { timeout: 2000 });
+  };
 
   await page.goto(site.url('app/index.html'));
 
+  await step('welcome lists the modes Play, Date, Friends; no deposit promise, no retired name', async () => {
+    const modes = await page.$$eval('#screen-welcome .wm-row strong', (els) => els.map((e) => e.textContent.trim()).join('|'));
+    if (modes !== 'Play Mode|Date Mode|Friends Mode') throw new Error('welcome modes: ' + modes);
+    // Payments do not exist, so nothing on the page may promise a deposit —
+    // and the retired name stays retired. The whole document, scripts included.
+    const html = await page.content();
+    if (/deposit/i.test(html)) throw new Error('the page mentions a deposit');
+    if (/40\s*[\/–-]\s*love|first date is a game|love at first serve/i.test(html)) throw new Error('the retired name is back');
+  });
   await step('welcome -> create profile', async () => {
     await page.click('#btn-create');
     await page.waitForSelector('#screen-ob1.active', { timeout: 3000 });
@@ -69,7 +97,7 @@ const out = (n) => require('path').join(OUT, n);
     await page.setInputFiles('#photo-input', out('avatar.png'));
     await page.waitForSelector('#photo-preview.has', { timeout: 3000 });
   });
-  await step('onboarding requires gender, then to home (first card Maya)', async () => {
+  await step('onboarding requires gender, then to home', async () => {
     await page.fill('#ob-name', 'Aaron');
     await page.fill('#ob-age', '34');
     await page.click('#ob1-next');
@@ -125,8 +153,70 @@ const out = (n) => require('path').join(OUT, n);
     await page.click('#ob-seeking [data-seek="woman"]');
     await page.click('#ob4-done');
     await page.waitForSelector('#screen-home.active', { timeout: 3000 });
+  });
+  await step('home leads with events near you; the deck is not on screen yet', async () => {
+    if (!(await page.isVisible('#home-feed'))) throw new Error('the events feed is not showing');
+    const head = (await page.textContent('#home-events-title')).trim();
+    if (head !== 'This week on the courts') throw new Error('heading: ' + head);
+    if (!/Events near you/.test(await page.textContent('#screen-home .home-events'))) throw new Error('no "Events near you"');
+    const titles = await page.$$eval('#home-event-list .event-title', (els) => els.map((e) => e.textContent));
+    if (titles.length < 2 || titles.length > 3) throw new Error('expected the next 2-3 events, got ' + titles.length);
+    if (titles[0] !== 'Sunset Doubles Social') throw new Error('first event: ' + titles[0]);
+    const btns = await page.$$eval('#home-event-list .join-btn', (els) => els.map((e) => e.textContent.trim()));
+    if (btns.length !== titles.length || btns.some((t) => t !== 'RSVP')) throw new Error('RSVP buttons: ' + btns.join('|'));
+    // events first, then "Find a game" — and the deck stays behind it
+    const order = await page.evaluate(() => {
+      const ev = document.querySelector('#screen-home .home-events');
+      const fg = document.querySelector('#find-game');
+      return !!(ev.compareDocumentPosition(fg) & Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    if (!order) throw new Error('"Find a game" comes before the events');
+    if (!(await page.isVisible('#find-game #open-deck'))) throw new Error('no way into the deck');
+    for (const sel of ['#deck', '#mode-pills', '#picks-panel', '#sw-mysports']) {
+      if (await page.isVisible(sel)) throw new Error(sel + ' is on screen before "Find a game" is tapped');
+    }
+    // the card shows the modes that are on, in Play-Date-Friends order
+    const mine = await page.$$eval('#find-game-modes .tag', (els) => els.map((e) => e.textContent).join('|'));
+    if (mine !== 'Play|Date') throw new Error('modes on the card: ' + mine);
+  });
+  await shot('home');
+  await step('RSVP on Home needs the waiver tick before it is accepted', async () => {
+    const card = '#home-event-list .event[data-id="e2"]';
+    const spotsBefore = (await page.textContent(card + ' .spots')).trim();
+    await page.click(card + ' .join-btn');
+    await page.waitForSelector(card + ' .waiver-row', { timeout: 2000 });
+    const line = (await page.textContent(card + ' .waiver-row')).trim();
+    if (line !== 'I’ve read the event waiver and code of conduct') throw new Error('waiver line: ' + line);
+    // the tick box is a real, labelled checkbox
+    const labelled = await page.$eval(card + ' .waiver-row input', (el) => el.type === 'checkbox' && !!el.labels.length && !el.checked);
+    if (!labelled) throw new Error('waiver checkbox is not an unticked, labelled checkbox');
+    // no tick, no RSVP
+    await page.click(card + ' [data-act="rsvp-confirm"]');
+    if (await page.$(card + ' .join-btn.going')) throw new Error('RSVP accepted without the waiver tick');
+    if (!/Tick the box/.test(await toastText())) throw new Error('no explanation: ' + await toastText());
+    if ((await page.textContent(card + ' .spots')).trim() !== spotsBefore) throw new Error('a spot was taken without the tick');
+    // "Not now" backs out without an RSVP, and the tick does not carry over
+    await page.check(card + ' .waiver-row input');
+    await page.click(card + ' [data-act="rsvp-cancel"]');
+    if (await page.$(card + ' .join-btn.going')) throw new Error('"Not now" made an RSVP');
+    await page.click(card + ' .join-btn');
+    if (await page.isChecked(card + ' .waiver-row input')) throw new Error('the tick carried over');
+    // ticked: accepted
+    await page.check(card + ' .waiver-row input');
+    await page.click(card + ' [data-act="rsvp-confirm"]');
+    await page.waitForSelector(card + ' .join-btn.going', { timeout: 2000 });
+    if ((await page.textContent(card + ' .join-btn')).trim() !== 'Going ✓') throw new Error('joined label: ' + await page.textContent(card + ' .join-btn'));
+    if (await page.$(card + ' .waiver-row')) throw new Error('waiver line still showing after the RSVP');
+    if (!(await page.isVisible(card + ' [data-act="checkin-open"]'))) throw new Error('a joined event has no Check in');
+  });
+  await step('"Find a game" opens the deck in one tap (first card Maya)', async () => {
+    await page.click('#open-deck');
     await page.waitForSelector('#deck-card', { timeout: 3000 });
     if (!(await cardName()).includes('Maya')) throw new Error('expected Maya first, got ' + await cardName());
+    if (await page.isVisible('#home-feed')) throw new Error('events feed still showing behind the deck');
+    for (const sel of ['#mode-pills', '#picks-panel', '#sw-mysports', '#deck .deck-actions']) {
+      if (!(await page.isVisible(sel))) throw new Error(sel + ' missing once the deck is open');
+    }
   });
   await step('top picks panel ranks up to 5 with a reason each', async () => {
     const n = await page.locator('#picks-strip .pick').count();
@@ -153,6 +243,8 @@ const out = (n) => require('path').join(OUT, n);
     await page.reload();
     await page.waitForSelector('#screen-welcome.active, #screen-home.active', { timeout: 3000 });
     if (await page.isVisible('#screen-welcome.active')) await page.click('#btn-continue');
+    // a fresh visit opens on the events again, not on the deck
+    if (!(await page.isVisible('#home-feed')) || (await page.isVisible('#deck'))) throw new Error('reload did not open Home on events');
     await page.click('#menu-btn');
     const got = {
       r: await page.inputValue('#radius'),
@@ -178,6 +270,8 @@ const out = (n) => require('path').join(OUT, n);
     await page.fill('#age-max', '55');
     await page.dispatchEvent('#age-max', 'change');
     await page.click('#settings-back');
+    await page.click('#open-deck');   // back into the deck for the steps that follow
+    await page.waitForSelector('#deck-card', { timeout: 2000 });
   });
   await step('radius filter hides Maya (2mi), shows Priya (1mi, nearby)', async () => {
     await page.click('#menu-btn');
@@ -197,6 +291,19 @@ const out = (n) => require('path').join(OUT, n);
     await page.click('#settings-back');
     await page.waitForSelector('#deck-card', { timeout: 2000 });
     if (!(await cardName()).includes('Maya')) throw new Error('expected Maya back, got ' + await cardName());
+  });
+  await step('back to events and into the deck again: it is where it was left', async () => {
+    await page.click('#close-deck');
+    await page.waitForSelector('#home-event-list .event', { timeout: 2000 });
+    if (await page.isVisible('#deck')) throw new Error('deck still showing after going back to events');
+    await page.click('#open-deck');
+    await page.waitForSelector('#deck-card', { timeout: 2000 });
+    if (!(await cardName()).includes('Maya')) throw new Error('deck lost its place: ' + await cardName());
+    // tapping the Home tab while on Home is the other way back to the events
+    await page.click('.tab[data-screen="screen-home"]');
+    await page.waitForSelector('#home-feed:not([hidden])', { timeout: 2000 });
+    await page.click('#open-deck');
+    await page.waitForSelector('#deck-card', { timeout: 2000 });
   });
   await step('bookmark Maya', async () => {
     await page.click('#bookmark-btn');
@@ -312,7 +419,7 @@ const out = (n) => require('path').join(OUT, n);
     const dot = await page.$eval('#bell-btn .bell-dot', (el) => getComputedStyle(el).display);
     if (dot !== 'none') throw new Error('bell dot still visible');
   });
-  await step('my-sports filter toggle is on Home, above the deck', async () => {
+  await step('my-sports filter toggle is on Home, above the deck it filters', async () => {
     // It used to be the last row of Settings; it now sits where it is used.
     if (!(await page.isVisible('#screen-home #sw-mysports'))) throw new Error('filter is not visible on Home');
     await page.click('#sw-mysports');
@@ -354,10 +461,225 @@ const out = (n) => require('path').join(OUT, n);
     await page.waitForSelector('#event-list .event.expanded', { timeout: 2000 });
     if (!(await page.isVisible('#event-list .event.expanded .going-row'))) throw new Error('attendees row not shown');
   });
-  await step('events join flips (without collapsing expand)', async () => {
-    await page.click('#event-list .event.expanded .join-btn');
-    await page.waitForSelector('#event-list .join-btn.going', { timeout: 2000 });
-    if (!(await page.isVisible('#event-list .event.expanded'))) throw new Error('expansion lost on join');
+  await step('RSVP in the expanded event needs the waiver tick too (and keeps it expanded)', async () => {
+    const card = '#event-list .event[data-id="e1"]';
+    if ((await page.textContent(card + ' .join-btn')).trim() !== 'RSVP') throw new Error('button says ' + await page.textContent(card + ' .join-btn'));
+    await page.click(card + '.expanded .join-btn');
+    await page.waitForSelector(card + ' .waiver-row', { timeout: 2000 });
+    if (!(await page.isVisible(card + '.expanded'))) throw new Error('expansion lost on RSVP');
+    await page.click(card + ' [data-act="rsvp-confirm"]');
+    if (await page.$(card + ' .join-btn.going')) throw new Error('RSVP accepted without the waiver tick');
+    // ticking the box must not collapse the card it sits in
+    await page.check(card + ' .waiver-row input');
+    if (!(await page.isVisible(card + '.expanded'))) throw new Error('ticking the waiver collapsed the event');
+    await page.click(card + ' [data-act="rsvp-confirm"]');
+    await page.waitForSelector(card + ' .join-btn.going', { timeout: 2000 });
+    if ((await page.textContent(card + ' .join-btn')).trim() !== 'Going ✓') throw new Error('joined label wrong');
+    if (!(await page.isVisible(card + '.expanded'))) throw new Error('expansion lost on join');
+    if (!/including you/.test(await page.textContent(card + ' .going-label'))) throw new Error('going row does not count you');
+  });
+  await step('an RSVP made on Home shows on Events; cancelling asks for the waiver again', async () => {
+    // (the one made earlier went with the reload: RSVPs live in memory, like the rest of the demo)
+    await homeFeed();
+    const home = '#home-event-list .event[data-id="e2"]';
+    if (!(await page.$('#home-event-list .event[data-id="e1"] .join-btn.going'))) throw new Error('the Events RSVP is not reflected on Home');
+    await page.click(home + ' .join-btn');
+    await page.check(home + ' .waiver-row input');
+    await page.click(home + ' [data-act="rsvp-confirm"]');
+    await page.waitForSelector(home + ' .join-btn.going', { timeout: 2000 });
+    await page.click('#home-all-events');
+    await page.waitForSelector('#screen-events.active', { timeout: 2000 });
+    const card = '#event-list .event[data-id="e2"]';
+    if (!(await page.$(card + ' .join-btn.going'))) throw new Error('Home RSVP is not reflected on the Events tab');
+    await page.click(card + ' .join-btn');   // Going -> cancel
+    if (await page.$(card + ' .join-btn.going')) throw new Error('could not cancel the RSVP');
+    if (await page.$(card + ' [data-act="checkin-open"]')) throw new Error('Check in offered for an event not joined');
+    await page.click(card + ' .join-btn');
+    if (!(await page.isVisible(card + ' .waiver-row'))) throw new Error('a second RSVP skipped the waiver');
+    await page.click(card + ' [data-act="rsvp-cancel"]');
+  });
+  await step('no crew before a check-in', async () => {
+    await page.click('.tab[data-screen="screen-matches"]');
+    if (await page.$('#match-grid-wrap .crew')) throw new Error('a crew is shown before anyone checked in');
+    await page.click('.tab[data-screen="screen-events"]');
+  });
+  await step('check in asks for the host code; the demo takes any 4 digits and says so', async () => {
+    const card = '#event-list .event[data-id="e1"]';
+    await page.click(card + ' [data-act="checkin-open"]');
+    await page.waitForSelector(card + ' .checkin-code', { timeout: 2000 });
+    const labelled = await page.$eval(card + ' .checkin-code', (el) => el.labels.length === 1 && /host/i.test(el.labels[0].textContent));
+    if (!labelled) throw new Error('the code field has no label');
+    const hint = (await page.textContent(card + ' .demo-hint')).trim();
+    if (!/^Demo:/.test(hint) || !/any 4 digits/.test(hint)) throw new Error('demo hint: ' + hint);
+    // not a code: refused
+    await page.click(card + ' [data-act="checkin-confirm"]');
+    if (await page.$(card + ' .checked-tag')) throw new Error('checked in with no code');
+    await page.fill(card + ' .checkin-code', '12');
+    await page.click(card + ' [data-act="checkin-confirm"]');
+    if (await page.$(card + ' .checked-tag')) throw new Error('checked in with a 2-digit code');
+    if (!/4-digit code/.test(await toastText())) throw new Error('no explanation: ' + await toastText());
+    // letters never make it into the field
+    await page.fill(card + ' .checkin-code', '');
+    await page.type(card + ' .checkin-code', 'ab4821');
+    if ((await page.inputValue(card + ' .checkin-code')) !== '4821') throw new Error('field holds ' + await page.inputValue(card + ' .checkin-code'));
+    await page.press(card + ' .checkin-code', 'Enter');
+    await page.waitForSelector(card + ' .checked-tag', { timeout: 2000 });
+    if (!/Checked in/.test(await page.textContent(card + ' .checked-tag'))) throw new Error('no checked-in mark');
+    const said = await toastText();
+    if (!/crew/i.test(said) || !/Matches/.test(said)) throw new Error('toast does not mention the crew: ' + said);
+    if (await page.$(card + ' .join-btn')) throw new Error('a checked-in event can still be un-RSVPed');
+    if (!(await page.isVisible(card + '.expanded'))) throw new Error('expansion lost on check-in');
+  });
+  await step('crew appears on top of Matches after check-in: the people from that event', async () => {
+    await page.click('#event-list .event[data-id="e1"] [data-act="crew"]');
+    await page.waitForSelector('#screen-matches.active', { timeout: 2000 });
+    await page.waitForSelector('#match-grid-wrap .crew', { timeout: 2000 });
+    const first = await page.$eval('#match-grid-wrap', (el) => el.firstElementChild.id);
+    if (first !== 'crew') throw new Error('crew is not at the top of Matches');
+    if ((await page.textContent('#crew-title')).trim() !== 'Your crew') throw new Error('heading: ' + await page.textContent('#crew-title'));
+    if (!/shared a court/.test(await page.textContent('#crew'))) throw new Error('no "shared a court" line');
+    // the same three faces the event showed as going
+    const names = await page.$$eval('#crew .crew-row .n', (els) => els.map((e) => e.textContent).join('|'));
+    if (names !== 'Maya|Elena|Grace & Rosa') throw new Error('crew: ' + names);
+    const where = await page.$$eval('#crew .crew-row .s', (els) => els.map((e) => e.textContent));
+    if (where.some((t) => !/Sunset Doubles Social/.test(t))) throw new Error('crew rows do not name the event: ' + where.join('|'));
+  });
+  await step('crew: "Play again" adds, and toggles back', async () => {
+    const btn = '#crew .crew-row[data-crew="maya"] .crew-add';
+    if ((await page.textContent(btn)).trim() !== 'Play again') throw new Error('button says ' + await page.textContent(btn));
+    await page.click(btn);
+    await page.waitForFunction((s) => document.querySelector(s).textContent.trim() === 'Added ✓', btn, { timeout: 2000 });
+    if (!/Added Maya/.test(await toastText())) throw new Error('toast: ' + await toastText());
+    // one add is one add
+    const others = await page.$$eval('#crew .crew-add', (els) => els.filter((e) => e.textContent.trim() === 'Added ✓').length);
+    if (others !== 1) throw new Error(others + ' rows marked Added');
+    // it survives leaving the tab and coming back
+    await page.click('.tab[data-screen="screen-chat"]');
+    await page.click('.tab[data-screen="screen-matches"]');
+    if ((await page.textContent(btn)).trim() !== 'Added ✓') throw new Error('the add was lost');
+    await page.click(btn);
+    await page.waitForFunction((s) => document.querySelector(s).textContent.trim() === 'Play again', btn, { timeout: 2000 });
+    await page.click(btn);
+    await page.waitForFunction((s) => document.querySelector(s).textContent.trim() === 'Added ✓', btn, { timeout: 2000 });
+  });
+  await step('"Also open to dating" shows only with Date mode on and a mutual fit', async () => {
+    const tagged = () => page.$$eval('#crew .crew-row', (rows) => rows
+      .filter((r) => r.querySelector('.crew-date')).map((r) => r.getAttribute('data-crew')).join('|'));
+    // Aaron (man, looking to date women, Date mode on): Maya and Elena are
+    // women looking to date men. Grace & Rosa are a team — never.
+    if ((await tagged()) !== 'maya|elena') throw new Error('with Date on: ' + await tagged());
+    if ((await page.textContent('#crew .crew-row[data-crew="maya"] .crew-date')).trim() !== 'Also open to dating') throw new Error('tag text');
+    // not mutual any more: he now looks to date men only
+    await openSettings();
+    await page.click('#set-seeking [data-seek="man"]');
+    await page.click('#set-seeking [data-seek="woman"]');
+    await backToMatches();
+    if ((await tagged()) !== '') throw new Error('tag shown without a mutual fit: ' + await tagged());
+    await openSettings();
+    await page.click('#set-seeking [data-seek="woman"]');
+    await page.click('#set-seeking [data-seek="man"]');
+    // Date mode off: no tag for anyone, though everything else still fits
+    await page.click('#sw-date');
+    if ((await page.getAttribute('#sw-date', 'aria-checked')) !== 'false') throw new Error('Date mode did not switch off');
+    await backToMatches();
+    await page.waitForSelector('#crew .crew-row', { timeout: 2000 });
+    if (await page.$('#crew .crew-date')) throw new Error('dating tag shown with Date mode off: ' + await tagged());
+    if (/dating/i.test(await page.textContent('#crew'))) throw new Error('the crew mentions dating with Date mode off');
+    // and "Find a game" stops listing Date
+    await homeFeed();
+    const mine = await page.$$eval('#find-game-modes .tag', (els) => els.map((e) => e.textContent).join('|'));
+    if (mine !== 'Play') throw new Error('modes on the card with Date off: ' + mine);
+    // back on for the steps that follow
+    await openSettings();
+    await page.click('#sw-date');
+    if ((await page.getAttribute('#sw-date', 'aria-checked')) !== 'true') throw new Error('Date mode did not switch back on');
+    await backToMatches();
+    if ((await tagged()) !== 'maya|elena') throw new Error('with Date back on: ' + await tagged());
+  });
+  await shot('crew');
+  await step('blocking someone from the crew takes them out of it, and out of the going row', async () => {
+    await page.click('#crew .crew-row[data-crew="elena"] .crew-more');
+    await page.waitForSelector('#more-overlay.open', { timeout: 2000 });
+    await page.click('#sheet-block');
+    await page.waitForFunction(() => !document.querySelector('#crew .crew-row[data-crew="elena"]'), { timeout: 2000 });
+    const names = await page.$$eval('#crew .crew-row .n', (els) => els.map((e) => e.textContent).join('|'));
+    if (names !== 'Maya|Grace & Rosa') throw new Error('crew after the block: ' + names);
+    if (/Elena/.test(await page.textContent('#match-grid-wrap'))) throw new Error('Elena still on Matches after the block');
+    await page.click('.tab[data-screen="screen-events"]');
+    const faces = await page.$$eval('#event-list .event[data-id="e1"] .going-row .ava', (els) => els.map((e) => e.textContent).join('|'));
+    if (faces !== 'M|G') throw new Error('going row after the block: ' + faces);
+  });
+  await step('a tournament bracket is drawn as rounds: cards, winner in the accent colour, scores at the right', async () => {
+    const t = '#tournament-list [data-tourney="t2"]';
+    await page.click(t + ' [data-t-act="toggle"]');
+    await page.waitForSelector(t + ' .br-rounds', { timeout: 2000 });
+    const info = await page.evaluate((sel) => {
+      const card = document.querySelector(sel);
+      const rounds = [...card.querySelectorAll('.br-rounds > .br-round')];
+      const box = (el) => el.getBoundingClientRect();
+      const m = card.querySelector('.br-match[data-round="1"]');
+      const won = m.querySelector('.br-player.won');
+      const lost = m.querySelector('.br-player.lost');
+      const score = won.querySelector('.br-score');
+      return {
+        heads: rounds.map((r) => r.querySelector('.br-head').textContent).join('|'),
+        perRound: rounds.map((r) => r.querySelectorAll('.br-match').length).join(','),
+        // side by side: every round starts to the right of the one before it, level with it
+        columns: rounds.every((r, i) => i === 0 || (box(r).left > box(rounds[i - 1]).left && Math.abs(box(r).top - box(rounds[0]).top) < 2)),
+        twoRows: [...card.querySelectorAll('.br-match')].every((x) => x.querySelectorAll('.br-player').length === 2),
+        wonColor: getComputedStyle(won).color,
+        lostColor: getComputedStyle(lost).color,
+        wonName: won.querySelector('.nm').textContent.trim(),
+        wonPts: [...won.querySelectorAll('.br-score i')].map((e) => e.textContent).join(' '),
+        lostPts: [...lost.querySelectorAll('.br-score i')].map((e) => e.textContent).join(' '),
+        // right-aligned: the score ends at the card's right edge, after the name
+        gapRight: box(m).right - box(score).right,
+        afterName: box(score).left >= box(won.querySelector('.nm')).right - 1,
+        lostGapRight: box(m).right - box(lost.querySelector('.br-score')).right,
+        scrolls: card.querySelector('.br-rounds').scrollWidth > card.querySelector('.br-rounds').clientWidth,
+        pageWide: document.querySelector('#events-scroll').scrollWidth > document.querySelector('#events-scroll').clientWidth,
+        semis: [...rounds[2].querySelectorAll('.br-player.tbd .nm')].map((e) => e.textContent).join('|'),
+        wonButtons: rounds[1].querySelectorAll('.br-won').length,
+      };
+    }, t);
+    if (info.heads !== 'Round of 16|Quarterfinals|Semifinals|Final') throw new Error('rounds: ' + info.heads);
+    if (info.perRound !== '4,4,2,1') throw new Error('matches per round: ' + info.perRound);
+    if (!info.columns) throw new Error('rounds are not laid out as columns');
+    if (!info.twoRows) throw new Error('a match card does not have exactly two rows');
+    if (info.wonColor !== ACCENT) throw new Error('winner colour ' + info.wonColor);
+    if (info.lostColor === ACCENT) throw new Error('loser is in the accent colour too');
+    if (!/✓/.test(info.wonName)) throw new Error('winner is marked by colour alone: ' + info.wonName);
+    if (info.wonPts !== '11 11' || info.lostPts !== '8 6') throw new Error('scores: ' + info.wonPts + ' / ' + info.lostPts);
+    if (info.gapRight < 0 || info.gapRight > 16 || !info.afterName) throw new Error('score is not right-aligned: ' + JSON.stringify(info));
+    if (Math.abs(info.gapRight - info.lostGapRight) > 1) throw new Error('the two scores do not line up');
+    if (!info.scrolls) throw new Error('later rounds are not reachable by scrolling the bracket');
+    if (info.pageWide) throw new Error('the bracket made the whole screen scroll sideways');
+    if (info.semis !== 'To be decided|To be decided|To be decided|To be decided') throw new Error('semifinals: ' + info.semis);
+    if (info.wonButtons !== 8) throw new Error(info.wonButtons + ' "Won" buttons in the quarterfinals');
+  });
+  await shot('bracket');
+  await step('recording a result still fills the next round, and keeps the bracket where it was scrolled', async () => {
+    const t = '#tournament-list [data-tourney="t2"]';
+    const res = await page.evaluate((sel) => {
+      const card = () => document.querySelector(sel);
+      // one round along (the bracket snaps to its columns, so read back where it settled)
+      card().querySelector('.br-rounds').scrollLeft = 214;
+      const before = card().querySelector('.br-rounds').scrollLeft;
+      const btn = card().querySelector('.br-match[data-round="2"][data-slot="0"] .br-won');
+      const who = btn.getAttribute('aria-label').replace(/^Record | as the winner$/g, '');
+      btn.click();
+      const semi = card().querySelector('.br-match[data-round="3"][data-slot="0"] .br-player:not(.tbd) .nm');
+      const qf = card().querySelector('.br-match[data-round="2"][data-slot="0"] .br-player.won .nm');
+      return { who, semi: semi && semi.textContent.trim(), qf: qf && qf.textContent, before, left: card().querySelector('.br-rounds').scrollLeft };
+    }, t);
+    if (res.semi !== res.who) throw new Error('winner ' + res.who + ' did not reach the semifinal: ' + res.semi);
+    if (!res.qf || !res.qf.includes(res.who)) throw new Error('quarterfinal winner not marked');
+    if (res.before < 100) throw new Error('the bracket did not scroll: ' + res.before);
+    if (Math.abs(res.left - res.before) > 2) throw new Error('bracket jumped from ' + res.before + ' to ' + res.left);
+    // a result already in cannot be recorded again: its buttons are gone
+    if (await page.$(t + ' .br-match[data-round="2"][data-slot="0"] .br-won')) throw new Error('a decided match still offers "Won"');
+    await page.click(t + ' [data-t-act="toggle"]');
+    if (await page.$(t + ' .br-rounds')) throw new Error('"Hide bracket" did not hide it');
   });
   await step('profile shows uploaded photo + bio saves', async () => {
     await page.click('.tab[data-screen="screen-profile"]');
@@ -392,6 +714,12 @@ const out = (n) => require('path').join(OUT, n);
     await page.waitForSelector('#screen-welcome.active', { timeout: 2000 });
     const saved = await page.evaluate(() => localStorage.getItem('rsvplay.profile'));
     if (saved) throw new Error('profile not cleared');
+    // RSVPs, the check-in and the crew went with the account
+    const left = await page.evaluate(() => ({
+      going: document.querySelectorAll('.join-btn.going, .checked-tag').length,
+      crew: document.querySelectorAll('#crew .crew-row').length,
+    }));
+    if (left.going || left.crew) throw new Error('left behind for the next person: ' + JSON.stringify(left));
     await page.reload();
     await page.waitForSelector('#screen-welcome.active', { timeout: 3000 });
   });
