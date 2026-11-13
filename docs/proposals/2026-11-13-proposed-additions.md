@@ -13,7 +13,7 @@
 > | 5 | Ladder league | **Done** — migration 37, phone app; the prototype shows no ladder yet |
 > | 6 | Club tier | **Done as entitlement only** — migration 38, shown in the app; no purchase flow |
 > | 7 | Waiver at RSVP | **Done** — text is a draft for counsel (`docs/event-waiver.md`) |
-> | 8 | Phone-hash ban list | **Done** — migration 34 + m23; Ban button on the desk |
+> | 8 | Phone-hash ban list | **Done** — migrations 34 and 41; Ban button on the desk |
 > | 9 | Rate limits | **Done** — migration 35 |
 > | 10 | Quiet hours | **Done** — migration 36 + push function (needs redeploy) |
 > | 11 | CI on every push | **Done** — `.github/workflows/ci.yml` (first run will confirm it on GitHub's runners) |
@@ -25,6 +25,16 @@
 > Also added beyond the fifteen, because the review showed it was needed:
 > migration 39 (a verified phone is required to swipe, message, RSVP, enter or
 > join). Decisions the review left for you: `2026-11-13-review-decisions.md`.
+>
+> Built differently from the text below: **2** — there is no "Open to dating"
+> switch; the server derives the flag from Date mode, what each person is
+> looking for and both age ranges. **5** — no weekly hold rule. **8** —
+> `ban_member()` / `unban_member()` / `unban_phone()`, not
+> `suspend_member(..., ban := true)`; the hash is SHA-256 with a fixed prefix,
+> not a per-row salt. **9** — enforced by triggers on swipes and messages and
+> inside `report_member()`, counted in `rate_events`. **10** — the timezone is
+> `profiles.timezone`, set by `set_my_timezone()`.
+>
 > The original proposal text follows unchanged.
 
 First output of the self-improvement network: what I would add or change

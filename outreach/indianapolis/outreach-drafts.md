@@ -19,7 +19,7 @@ Subject: Beginner-welcome mixer with Indy Pickleball Club
 
 > Hi Indy Pickleball Club team,
 >
-> I'm launching RSVPlay in Indianapolis — a social and dating app for
+> I'm launching RSVPlay in Indianapolis — an events-first social app for
 > pickleball and tennis players. Your mission of growing pickleball in Central
 > Indiana is exactly why you're my first call.
 >
@@ -63,7 +63,7 @@ Subject: A recurring RSVPlay night in Fishers
 
 > Hi Chicken N Pickle Fishers events team,
 >
-> I'm launching RSVPlay in Indianapolis — a dating and social app for racquet
+> I'm launching RSVPlay in Indianapolis — an events-first social app for racquet
 > sports players. Since opening in Fishers District in late 2024, you've built
 > the best social-pickleball venue in the metro: courts and a great meal in the
 > same building, which is exactly how our members want to meet.
@@ -108,7 +108,7 @@ Subject: Tennis on Tap partnership idea
 
 > Hi CITA team,
 >
-> I'm launching RSVPlay in Indianapolis — a dating and social app for racquet
+> I'm launching RSVPlay in Indianapolis — an events-first social app for racquet
 > sports players. Tennis on Tap is the smartest social-tennis format in the
 > city: Red Ball at a brewery takes all the pressure out of picking up a
 > racquet, and that is exactly the crowd we serve.
@@ -150,7 +150,7 @@ Subject: Filling your off-peak evening courts
 
 > Hi Indianapolis Pickleball Club team,
 >
-> I'm launching RSVPlay in Indianapolis — a dating and social app for racquet
+> I'm launching RSVPlay in Indianapolis — an events-first social app for racquet
 > sports players. With ten indoor courts open 24/7 at Industry Dr, you have
 > hours every week when courts sit quiet — that's the exact gap our events
 > fill.
@@ -194,7 +194,7 @@ Subject: Social round robins for E 82nd St
 
 > Hi [club manager name],
 >
-> I'm launching RSVPlay in Indianapolis — a dating and social app for racquet
+> I'm launching RSVPlay in Indianapolis — an events-first social app for racquet
 > sports players. Your E 82nd St club already has the infrastructure — ten
 > courts, leagues, tournaments, open play — and we'd like to add the one
 > format you're not running: a round robin engineered for meeting people.
@@ -237,7 +237,7 @@ Subject: A social night for Live Ball players
 
 > Hi IRC team,
 >
-> I'm launching RSVPlay in Indianapolis — a dating and social app for racquet
+> I'm launching RSVPlay in Indianapolis — an events-first social app for racquet
 > sports players. (Yes, the name is a tennis pun; it's the whole brand.) Your
 > Live Ball classes are already the most social tennis in the city — fast,
 > rotating, fun — which makes IRC the natural home for what we run.
@@ -278,7 +278,7 @@ Subject: Advice from the west side's connectors
 
 > Hi West Indy Racquet Club team,
 >
-> I'm launching RSVPlay in Indianapolis — a dating and social app for racquet
+> I'm launching RSVPlay in Indianapolis — an events-first social app for racquet
 > sports players — and your club keeps coming up in my research: not just the
 > six indoor and six outdoor courts, but your staff's reputation for actually
 > connecting players to teams and organized play.
@@ -364,7 +364,7 @@ Subject: A beginner-friendly pickleball social at JCC
 
 > Hi JCC programs team,
 >
-> I'm launching RSVPlay in Indianapolis — a social and dating app for racquet
+> I'm launching RSVPlay in Indianapolis — an events-first social app for racquet
 > sports players — and the JCC's approach to pickleball caught my eye: open
 > play for every level, ages 11 and up, inside a real community. That
 > all-levels welcome is the spirit of our events too.
@@ -404,7 +404,7 @@ Subject: Re: A beginner-friendly pickleball social at JCC
 
 **Primary DM — Indy Pickleball Group (Facebook) admins**
 
-> Hi! I'm [Your name], founder of RSVPlay — a social and dating app for
+> Hi! I'm [Your name], founder of RSVPlay — an events-first social app for
 > pickleball and tennis players getting started here in Indy. Before I ever
 > post anything in Indy Pickleball Group, I wanted to ask you directly: is
 > there a way for us to show up that's actually useful to members — like
@@ -415,7 +415,7 @@ Subject: Re: A beginner-friendly pickleball social at JCC
 
 **Primary DM — Indianapolis Pickleball Club Meetup organizers**
 
-> Hi! I'm [Your name], founder of RSVPlay — a social and dating app for
+> Hi! I'm [Your name], founder of RSVPlay — an events-first social app for
 > pickleball and tennis players launching in Indy. I've seen how active your
 > community is across Meetup, Instagram, and TeamReach, and before posting
 > anything I wanted to ask the organizers first: how could we contribute

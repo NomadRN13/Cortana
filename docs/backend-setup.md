@@ -420,6 +420,11 @@ select admin_check_in('<event id>', '<user id>');
 -- verifying again, on any account. unban_member('<user id>') reverses both.
 select ban_member('<user id>', 'why, in a sentence');
 
+-- If the banned account has since been deleted, lift the ban by number
+-- instead (SQL editor only; it is not callable from the desk or the app).
+-- Give the full number with its country code, any punctuation:
+select unban_phone('+1 317 555 0142');
+
 -- Give a member Club (or 'plus' / 'free'). A purchase flow will do this later.
 select set_member_tier('<user id>', 'club');
 ```

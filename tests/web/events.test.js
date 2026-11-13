@@ -7,8 +7,18 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto(fileUrl('app/index.html'));
-  // straight into the app (and again later, as someone new, after signing out)
-  const signUp = async (name, city) => {
+  // What the "What are you here for?" step is showing: the modes switched on,
+  // whether the Date question is on screen, and any answer already given to it.
+  const modeStep = async () => ({
+    on: await p.$$eval('#ob-modes .mode-row[aria-pressed="true"]', els => els.map(e => e.getAttribute('data-mode')).join(',')),
+    asksDate: await p.isVisible('#seeking-box'),
+    seeking: await p.$$eval('#ob-seeking .chip[aria-pressed="true"]', els => els.map(e => e.getAttribute('data-seek')).join(',')),
+  });
+  // straight into the app (and again later, as someone new, after signing out).
+  // Signup starts in Play with Date off; `date: true` opts in, the way a
+  // member would, and answers the question that then appears.
+  let firstLook = null, secondLook = null;
+  const signUp = async (name, city, { date = false } = {}) => {
     await p.click('#btn-create');
     await p.fill('#ob-name', name); await p.fill('#ob-age','32');
     await p.click('#ob-gender [data-gender="woman"]');
@@ -18,10 +28,23 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     await p.fill('#ob-phone-code','123456'); await p.click('#phone-verify'); await p.click('#obphone-next');
     await p.click('[data-sport="Pickleball"]'); await p.click('#ob2-next');
     await p.click('[data-skill="Intermediate"]'); await p.click('#ob3-next');
-    await p.click('#ob-seeking [data-seek="man"]'); await p.click('#ob4-done');
+    const look = await modeStep();
+    if (date) {
+      await p.click('#ob-modes .mode-row[data-mode="date"]');
+      await p.click('#ob-seeking [data-seek="man"]');
+    }
+    await p.click('#ob4-done');
     await p.waitForSelector('#screen-home.active');
+    return look;
   };
-  await signUp('Sam', 'indianapolis');
+  firstLook = await signUp('Sam', 'indianapolis', { date: true });
+
+  await step('signup starts in Play; Date is off and asks nothing until it is turned on', async () => {
+    if (firstLook.on !== 'play' || firstLook.asksDate || firstLook.seeking) throw new Error(JSON.stringify(firstLook));
+    // Sam turned Date on herself, so she has both — Play first
+    const mine = await p.$$eval('#find-game-modes .tag', els => els.map(e => e.textContent).join('|'));
+    if (mine !== 'Play|Date') throw new Error('modes after opting in to Date: ' + mine);
+  });
 
   const openEvents = async () => {
     await p.click('.tab[data-screen="screen-events"]');
@@ -221,7 +244,7 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     await p.waitForSelector('#screen-settings.active');
     await p.click('#sign-out');
     await p.waitForSelector('#screen-welcome.active');
-    await signUp('Robin', 'bakersfield');
+    secondLook = await signUp('Robin', 'bakersfield');
     await openEvents();
     const card = await p.$(tcard('t1'));
     if (!card) throw new Error('the Bakersfield tournament is not shown');
@@ -230,6 +253,20 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     if (!/71 of 72/.test(status)) throw new Error('status: ' + status);
     if (!(await p.$(tcard('t1') + ' [data-t-act="join"]'))) throw new Error('not offering Enter: the last member is still entered');
     if (await p.$(tcard('t1') + ' .br-match')) throw new Error('the last member’s bracket is still shown');
+  });
+  await step('...and was offered Play only at signup: the last member’s Date choice did not carry over', async () => {
+    // Sam left that step with Date on and "men" picked.
+    if (secondLook.on !== 'play' || secondLook.asksDate || secondLook.seeking) throw new Error(JSON.stringify(secondLook));
+    await p.click('.tab[data-screen="screen-home"]');
+    const mine = await p.$$eval('#find-game-modes .tag', els => els.map(e => e.textContent).join('|'));
+    if (mine !== 'Play') throw new Error('modes for someone who never turned Date on: ' + mine);
+    await p.click('#open-deck');
+    const pills = await p.$$eval('.mode-pill', els => els.filter(e => !e.hidden).map(e => e.getAttribute('data-mode') + (e.classList.contains('on') ? '*' : '')).join());
+    if (pills !== 'play*') throw new Error('mode pills: ' + pills);
+    // the deck she sees is the Play one: Maya, a woman looking to date men,
+    // leads it — and could never be on this member's Date deck
+    const picks = await p.$$eval('#picks-strip .pick .pn', els => els.map(e => e.textContent));
+    if (picks[0] !== 'Maya') throw new Error('first Play pick: ' + picks.join('|'));
   });
 
   await finish(b, errs);

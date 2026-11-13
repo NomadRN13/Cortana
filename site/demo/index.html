@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/favicon.png">
 <meta property="og:title" content="RSVPlay — Try the app">
-<meta property="og:description" content="A clickable demo of RSVPlay: sign up, swipe, match and chat. Runs in your browser; nothing is saved.">
+<meta property="og:description" content="A clickable demo of RSVPlay: RSVP to a game, show up, play, and keep the people you meet. Runs in your browser; nothing is saved.">
 <meta property="og:image" content="https://rsvplay.netlify.app/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="RSVPlay">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="RSVPlay — Try the app">
-<meta name="twitter:description" content="A clickable demo of RSVPlay: sign up, swipe, match and chat. Runs in your browser; nothing is saved.">
+<meta name="twitter:description" content="A clickable demo of RSVPlay: RSVP to a game, show up, play, and keep the people you meet. Runs in your browser; nothing is saved.">
 <meta name="twitter:image" content="https://rsvplay.netlify.app/og.png">
 <style>
   :root {
@@ -572,6 +572,14 @@
     display: flex; gap: 12px; padding: 13px;
     background: var(--card); border: 2px solid var(--line); border-radius: 16px; margin-bottom: 10px;
   }
+  /* The card is a plain box. Its header — date, title, tags — is the one real
+     button that opens and closes it; RSVP, the waiver tick and the check-in
+     code sit beside and under that button, never inside it. */
+  .event-head {
+    flex: 1; min-width: 0; display: flex; gap: 12px; align-items: stretch;
+    padding: 0; border-radius: 12px; text-align: left; cursor: pointer;
+  }
+  .event-head .event-title, .event-head .event-meta { display: block; }
   .event-date {
     flex: 0 0 auto; width: 52px; border: 2px solid var(--optic); border-radius: 12px;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -655,7 +663,7 @@
   .waiver-row input { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; accent-color: var(--optic); }
   .rsvp-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; }
   .checkin-form { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
-  .checkin-form input[type="text"] { width: 104px; padding: 9px 10px; text-align: center; letter-spacing: 0.3em; font-variant-numeric: tabular-nums; }
+  .checkin-form input[type="text"] { width: 148px; padding: 9px 10px; text-align: center; letter-spacing: 0.2em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
   .demo-hint { color: var(--optic); }
   .checked-tag { white-space: nowrap; }
 
@@ -823,7 +831,9 @@
   }
   .ptile-add { display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--dim); border-style: dashed; opacity: 0.55; }
   .ptile-add.next { color: var(--optic); border-color: var(--optic); opacity: 1; }
-  .ptag { position: absolute; bottom: 5px; left: 5px; background: var(--optic); color: var(--ink); font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
+  .pmain { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; border-radius: 10px; cursor: pointer; }
+  .pmain:focus-visible { outline: 2px solid var(--optic); outline-offset: -2px; }
+  .ptag { pointer-events: none; position: absolute; bottom: 5px; left: 5px; background: var(--optic); color: var(--ink); font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
   .pdel {
     position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; padding: 0;
     background: rgba(20, 22, 28, 0.78); color: var(--text); font-size: 15px; display: flex; align-items: center; justify-content: center;
@@ -900,9 +910,11 @@
   .psheet-close { align-self: center; padding: 10px 18px; color: var(--dim); font-weight: 700; font-size: 13px; }
 
   /* Expandable event cards */
-  .event { cursor: pointer; transition: border-color 0.15s ease; }
+  .event { transition: border-color 0.15s ease; }
   .event.expanded { border-color: var(--optic); }
-  .event-extra { display: none; flex-direction: column; gap: 8px; margin-top: 8px; }
+  /* Its own row under the header, indented to sit under the title (date
+     column 52px + the 12px gap). */
+  .event-extra { display: none; flex: 0 0 100%; flex-direction: column; gap: 8px; padding-left: 64px; }
   .event.expanded .event-extra { display: flex; }
   .going-row { display: flex; align-items: center; gap: 6px; }
   .going-row .ava { width: 26px; height: 26px; font-size: 10px; }
@@ -970,7 +982,7 @@
         </div>
         <div class="wm-row">
           <span class="wm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg></span>
-          <div><strong>Date Mode</strong><span class="wm-desc">Find your perfect match.</span></div>
+          <div><strong>Date Mode</strong><span class="wm-desc">Opt-in — meet people you’d like to date.</span></div>
         </div>
         <div class="wm-row">
           <span class="wm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8.5" r="3.4"></circle><path d="M3.5 19.5c.9-3 3-4.6 5.5-4.6s4.6 1.6 5.5 4.6"></path><circle cx="16.8" cy="9.5" r="2.6"></circle><path d="M16.5 14.6c2 .2 3.5 1.6 4.2 3.9"></path></svg></span>
@@ -1137,12 +1149,12 @@
       </div>
       <div class="scroll ob-body">
         <div class="mode-rows" id="ob-modes" role="group" aria-label="Modes">
-          <button class="mode-row" aria-pressed="false" data-mode="play">
+          <button class="mode-row" aria-pressed="true" data-mode="play">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>
             <span><span class="mode-name">Play Mode</span><span class="mode-desc">Find players for your next match</span></span>
             <span class="mode-check" aria-hidden="true">✓</span>
           </button>
-          <div class="seeking-box" id="play-box" hidden>
+          <div class="seeking-box" id="play-box">
             <label>Game types</label>
             <div class="chips" id="ob-playgames" role="group" aria-label="Game types">
               <button class="chip" aria-pressed="true" data-game="singles">Singles</button>
@@ -1158,12 +1170,12 @@
             </div>
             <p class="hint" style="margin-top:8px">Mixed doubles is open to everyone by nature.</p>
           </div>
-          <button class="mode-row" aria-pressed="true" data-mode="date">
+          <button class="mode-row" aria-pressed="false" data-mode="date">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
-            <span><span class="mode-name">Date Mode</span><span class="mode-desc">Find your perfect match</span></span>
+            <span><span class="mode-name">Date Mode</span><span class="mode-desc">Opt-in — meet people you’d like to date</span></span>
             <span class="mode-check" aria-hidden="true">✓</span>
           </button>
-          <div class="seeking-box" id="seeking-box">
+          <div class="seeking-box" id="seeking-box" hidden>
             <label>Looking to date</label>
             <div class="chips" id="ob-seeking" role="group" aria-label="Looking to date">
               <button class="chip" aria-pressed="false" data-seek="woman">Women</button>
@@ -1187,7 +1199,7 @@
             </div>
           </div>
         </div>
-        <p class="hint">Pick at least one — you can switch modes anytime from Home. Play and Friends are for everyone, whatever your dating preference.</p>
+        <p class="hint">Pick at least one — you can switch modes anytime from Home. Play and Friends are for everyone, whatever your dating preference. Dating is opt-in: nobody sees you in Date Mode unless you turn it on.</p>
         <p class="hint" id="ob-consent">By tapping Step on court you confirm you're 18 or older and agree to our <a href="/terms/" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy/" target="_blank" rel="noopener">Privacy Policy</a>. We don't run background checks — read our <a href="/safety/" target="_blank" rel="noopener">safety tips</a> before you meet anyone.</p>
       </div>
       <div class="ob-foot">
@@ -1237,11 +1249,11 @@
         <h2>Find a game</h2>
       </div>
       <div class="mode-pills" role="group" aria-label="Mode" id="mode-pills">
-        <button class="mode-pill" data-mode="play">
+        <button class="mode-pill on" data-mode="play">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><ellipse cx="13.5" cy="8.5" rx="6" ry="6.5" transform="rotate(35 13.5 8.5)"></ellipse><path d="M9.5 13.5L4 20"></path></svg>
           Play Mode
         </button>
-        <button class="mode-pill on" data-mode="date">
+        <button class="mode-pill" data-mode="date">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 20.5S3.5 15 3.5 9.1C3.5 6.3 5.7 4 8.4 4c1.5 0 2.8.7 3.6 1.8C12.8 4.7 14.1 4 15.6 4c2.7 0 4.9 2.3 4.9 5.1 0 5.9-8.5 11.4-8.5 11.4z"></path></svg>
           Date Mode
         </button>
@@ -1748,37 +1760,56 @@
     return g ? '<div class="card-line card-gender">' + PERSON_ICON + esc(g) + '</div>' : '';
   }
 
-  /* ---------- State ---------- */
+  /* ---------- State ----------
+     Everything here belongs to whoever is signed in. It is built by
+     freshState() at boot and again at sign-out, so the next person on this
+     device starts from the demo as it shipped: the seed chats, matches and
+     notifications above are only ever copied, never handed out — a message
+     typed into a chat lands in the copy, and the copy goes with the account. */
   var STORE_KEY = 'rsvplay.profile';
-  var state = {
-    user: null,
-    mode: 'date',
-    deckPos: 0,
-    likeCount: 0,
-    history: [],
-    saved: {},
-    blocked: {},
-    seen: {},
-    matchedId: null,
-    matches: ['maya', 'sam', 'priya'],
-    joined: {},
-    expandedEvents: {},
-    // Home opens on events ('feed'); "Find a game" switches it to the deck.
-    homeView: 'feed',
-    // RSVP and check-in, kept the way joined is: in memory, for this visit.
-    rsvpPrompt: null,     // the event whose waiver line is open
-    checkinPrompt: null,  // the event whose check-in code field is open
-    checkedIn: {},        // event id -> true once the host's code is in
-    crewAdded: {},        // profile id -> true: someone you'd play with again
-    replied: {},
-    threads: THREADS,
-    prefs: { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false },
-    notifs: [
-      { ico: '❤️', txt: 'It’s a Match Point! You and Maya matched.', sub: 'Yesterday 9:05 PM' },
-      { ico: '🎾', txt: 'Your serve — Priya sent you two messages.', sub: 'Mon 6:21 PM' },
-      { ico: '📅', txt: 'Sunset Doubles Social is this Friday at 6:00 PM — 6 spots left.', sub: 'Mon 9:00 AM' }
-    ]
-  };
+  var SEED_MATCHES = ['maya', 'sam', 'priya'];
+  var SEED_NOTIFS = [
+    { ico: '❤️', txt: 'It’s a Match Point! You and Maya matched.', sub: 'Yesterday 9:05 PM' },
+    { ico: '🎾', txt: 'Your serve — Priya sent you two messages.', sub: 'Mon 6:21 PM' },
+    { ico: '📅', txt: 'Sunset Doubles Social is this Friday at 6:00 PM — 6 spots left.', sub: 'Mon 9:00 AM' }
+  ];
+  var DEFAULT_PREFS = { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false };
+  // RSVPlay is events first: Play is the mode a new member starts in, and Date
+  // is only ever on because they turned it on.
+  var DEFAULT_MODE = 'play';
+  function seedCopy(v) { return JSON.parse(JSON.stringify(v)); }
+  function freshState() {
+    return {
+      user: null,
+      mode: DEFAULT_MODE,
+      deckPos: 0,
+      likeCount: 0,
+      history: [],
+      saved: {},
+      blocked: {},
+      reported: {},         // profile id -> true: hidden from the reporter, like a block
+      seen: {},
+      matchedId: null,
+      matches: seedCopy(SEED_MATCHES),
+      joined: {},
+      expandedEvents: {},
+      // Home opens on events ('feed'); "Find a game" switches it to the deck.
+      homeView: 'feed',
+      // RSVP and check-in, kept the way joined is: in memory, for this visit.
+      rsvpPrompt: null,     // the event whose waiver line is open
+      checkinPrompt: null,  // the event whose check-in code field is open
+      checkedIn: {},        // event id -> true once the host's code is in
+      crewAdded: {},        // profile id -> true: someone you'd play with again
+      replied: {},
+      threads: seedCopy(THREADS),
+      prefs: seedCopy(DEFAULT_PREFS),
+      notifs: seedCopy(SEED_NOTIFS)
+    };
+  }
+  var state = freshState();
+  // Counts sign-outs. A reply that was still "typing" when its sender signed
+  // out checks this and is dropped, rather than landing in the next person's chat.
+  var session = 0;
 
   function loadUser() {
     try {
@@ -2151,7 +2182,7 @@
     state.user = state.draft;
     delete state.draft;
     saveUser();
-    state.mode = state.user.modes[0];
+    state.mode = homeMode(state.user);
     state.homeView = 'feed';
     syncModeUI();
     syncSettings();
@@ -2173,6 +2204,16 @@
   var HOME_EVENTS = 3;
   var MODE_ORDER = ['play', 'date', 'friends'];
   var MODE_NAMES = { play: 'Play', date: 'Date', friends: 'Friends' };
+  // The mode the deck opens in: Play when the member has it on, then Date,
+  // then Friends — never simply whichever was switched on first, so nobody
+  // lands on the Date deck because of the order they tapped things in.
+  function homeMode(u) {
+    var on = (u && u.modes) || [];
+    for (var i = 0; i < MODE_ORDER.length; i++) {
+      if (on.indexOf(MODE_ORDER[i]) !== -1) return MODE_ORDER[i];
+    }
+    return DEFAULT_MODE;
+  }
   function renderHomeEvents() {
     var cities = userCities();
     var next = nextEvents(HOME_EVENTS);
@@ -2317,10 +2358,26 @@
   $('#more-overlay').addEventListener('click', function (ev) {
     if (ev.target === $('#more-overlay')) closeSheet();
   });
+  // Someone the member blocked or reported. They are never drawn for this
+  // member again: not in the deck, not in the crew, not among the faces
+  // "going" to an event.
+  function hiddenFromMe(id) {
+    return !!(state.blocked[id] || state.reported[id]);
+  }
+  // A report goes to the safety desk, and from that moment the reporter stops
+  // seeing the person — wherever the report was made from. (It used to hide
+  // them only when it came from the deck, and only until the deck was reset.)
+  // The conversation stays, so there is still a record to point the desk at;
+  // Block is what removes that.
   $('#sheet-report').addEventListener('click', function () {
-    var p = profileById(sheetCtx.id);
+    var id = sheetCtx.id;
+    var p = profileById(id);
     closeSheet();
-    if (sheetCtx.from === 'deck') { state.seen[sheetCtx.id] = true; renderDeck(); }
+    state.reported[id] = true;
+    state.saved[id] = false;
+    state.crewAdded[id] = false;
+    if (sheetCtx.from === 'deck') { renderDeck(); }
+    else if (sheetCtx.from === 'crew') { renderMatches(); }
     toast('Thanks — our safety team will review ' + (p ? p.name : 'this profile'));
   });
   $('#sheet-block').addEventListener('click', function () {
@@ -2338,9 +2395,20 @@
     toast((p ? p.name : 'They') + ' won’t see you, and you won’t see them');
   });
 
+  // Each person's age inside the other's age range. The member's range is the
+  // one in Settings. The demo's profiles don't carry a range of their own, so
+  // theirs counts as open — unless a profile has ageMin/ageMax, which is then
+  // applied to the member's age.
+  function ageFit(p) {
+    var u = state.user;
+    if (p.age < state.prefs.ageMin || p.age > state.prefs.ageMax) return false;
+    if (p.ageMin != null && !(u.age >= p.ageMin)) return false;
+    if (p.ageMax != null && !(u.age <= p.ageMax)) return false;
+    return true;
+  }
   // Date fit is mutual — they're who I'm looking for AND I'm who they're
-  // looking for. One function for the Date deck and for the crew's "Also open
-  // to dating" tag, so the two can never disagree.
+  // looking for, by gender and by age. One function for the Date deck and for
+  // the crew's "Also open to dating" tag, so the two can never disagree.
   function dateFit(p) {
     var u = state.user;
     // Empty 'looking to date' matches nobody rather than disabling the
@@ -2349,11 +2417,11 @@
     if (!p.gender || !p.seeking) return false;
     if (u.seeking.indexOf(p.gender) === -1) return false;
     if (p.seeking.indexOf(u.gender) === -1) return false;
-    return true;
+    return ageFit(p);
   }
 
   function eligible(p) {
-    if (state.blocked[p.id] || state.seen[p.id]) return false;
+    if (hiddenFromMe(p.id) || state.seen[p.id]) return false;
     if (p.dist > state.prefs.radius) return false;
     if (p.age < state.prefs.ageMin || p.age > state.prefs.ageMax) return false;
     // Date mode: mutual fit. Play/Friends are for everyone.
@@ -2661,13 +2729,13 @@
   /* ---------- Crew ----------
      The people you shared a court with. It is built from check-ins, never
      from the RSVP list: nobody lands in your crew, or you in theirs, for
-     saying they'd come. Someone you've blocked is never in it. */
+     saying they'd come. Someone you've blocked or reported is never in it. */
   function crewList() {
     var seen = {}, list = [];
     EVENTS.forEach(function (e) {
       if (!state.checkedIn[e.id]) return;
       eventAttendees(e).forEach(function (p) {
-        if (state.blocked[p.id] || seen[p.id]) return;
+        if (hiddenFromMe(p.id) || seen[p.id]) return;
         seen[p.id] = true;
         list.push({ p: p, e: e });
       });
@@ -2675,9 +2743,11 @@
     return list;
   }
   // "Also open to dating" on a crew row. Mutual, or nothing: both of you have
-  // Date mode on, neither is a doubles team, and each fits what the other is
-  // looking for — the same rule as get_my_crew() in the database. In every
-  // other case the tag is absent, and its absence says nothing about anyone.
+  // Date mode on, neither is a doubles team, each one's gender is among those
+  // the other is looking to date, and each one's age is inside the other's age
+  // range — the same rule as get_my_crew() in the database, and the same
+  // dateFit() the Date deck runs. In every other case the tag is absent, and
+  // its absence says nothing about anyone.
   function alsoOpenToDating(p) {
     var u = state.user;
     if (!u || !u.gender || u.isTeam || !u.modes || u.modes.indexOf('date') === -1) return false;
@@ -2715,7 +2785,7 @@
   /* ---------- Matches grid ---------- */
   function renderMatches() {
     var wrap = $('#match-grid-wrap');
-    var savedIds = Object.keys(state.saved).filter(function (k) { return state.saved[k] && !state.blocked[k]; });
+    var savedIds = Object.keys(state.saved).filter(function (k) { return state.saved[k] && !hiddenFromMe(k); });
     var savedHtml = '';
     if (savedIds.length) {
       savedHtml = '<div class="saved-head">Saved for later</div><div class="saved-strip">' +
@@ -2883,8 +2953,10 @@
   function deliverReply(id) {
     if (state.replied[id]) return;
     state.replied[id] = true;
+    var mine = session;   // whoever is signed in now; see sign-out
     // they start "typing"…
     setTimeout(function () {
+      if (session !== mine) return;
       var t = threadById(id);
       if (!t) return;
       t.msgs.push({ who: 'them', typing: true });
@@ -2892,6 +2964,7 @@
     }, 500);
     // …then the reply lands
     setTimeout(function () {
+      if (session !== mine) return;
       var t = threadById(id);
       if (!t) return;
       for (var i = t.msgs.length - 1; i >= 0; i--) {
@@ -3378,6 +3451,11 @@
       + '</p>';
   }
 
+  // The shape of a host's check-in code: the database's own check,
+  // ^[0-9A-Z]{4,8}$, applied after trimming and upper-casing.
+  var CHECKIN_CODE = /^[0-9A-Z]{4,8}$/;
+  var CHECKIN_CODE_MAX = 8;
+
   // One event card, used by the Events tab ('e') and by Home ('h') — the same
   // markup and the same RSVP in both, so the two can't drift apart. Under the
   // card sits whichever step comes next:
@@ -3390,7 +3468,7 @@
     var spots = going ? e.spots - 1 : e.spots;
     var idx = EVENTS.indexOf(e);
     var uid = where + '-' + e.id;   // the card is drawn in two lists; ids must stay unique
-    var avas = eventAttendees(e).filter(function (a) { return !state.blocked[a.id]; }).map(function (a) {
+    var avas = eventAttendees(e).filter(function (a) { return !hiddenFromMe(a.id); }).map(function (a) {
       return '<span class="ava" style="background:' + gradFor(a.id) + '">' + esc(initials(a.name)) + '</span>';
     }).join('');
     var goingCount = 3 + ((idx * 5) % 7) + (going ? 1 : 0);
@@ -3407,13 +3485,13 @@
       '</div>';
     } else if (going && state.checkinPrompt === e.id) {
       below = '<div class="event-rsvp" data-step="code">' +
-        '<label for="code-' + uid + '">Host’s check-in code</label>' +
+        '<label for="code-' + uid + '">Host’s check-in code (4–8 letters or digits)</label>' +
         '<div class="checkin-form">' +
-          '<input type="text" class="checkin-code" id="code-' + uid + '" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="••••">' +
+          '<input type="text" class="checkin-code" id="code-' + uid + '" inputmode="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="' + CHECKIN_CODE_MAX + '" placeholder="••••" aria-describedby="code-hint-' + uid + '">' +
           '<button class="rsvp-go" type="button" data-act="checkin-confirm">Check in</button>' +
           '<button class="link-btn quiet" type="button" data-act="checkin-cancel">Not now</button>' +
         '</div>' +
-        '<p class="hint demo-hint">Demo: there’s no host here — enter any 4 digits.</p>' +
+        '<p class="hint demo-hint" id="code-hint-' + uid + '">Demo: there’s no host here — any 4–8 letters or digits works in this demo. In the real app, check-in opens an hour before the event, and five wrong codes lock it until the host lets you in.</p>' +
       '</div>';
     } else if (going) {
       below = '<div class="event-rsvp" data-step="going">' +
@@ -3435,22 +3513,29 @@
         '</div>' +
       '</div>';
     }
-    return '<div class="event' + (state.expandedEvents[e.id] ? ' expanded' : '') + '" data-id="' + e.id + '" role="button" tabindex="0" aria-expanded="' + (state.expandedEvents[e.id] ? 'true' : 'false') + '">' +
-      '<div class="event-date"><span class="dow">' + esc(e.dow) + '</span><span class="dom">' + esc(e.dom) + '</span></div>' +
-      '<div class="event-mid">' +
-        '<div class="event-title">' + esc(e.title) + '</div>' +
-        '<div class="event-meta">' + esc(e.venue) + ' · ' + esc(e.time) + '</div>' +
-        '<div class="event-tags"><span class="tag tag-sport">' + esc(e.sport) + '</span><span class="tag">' + esc(e.level) + '</span>' +
-          // which city, once the list spans more than one
-          (cities.length > 1 && e.city ? '<span class="tag tag-city">' + esc(cityLabel(e.city)) + '</span>' : '') + '</div>' +
-        '<div class="event-extra">' +
-          '<p class="hint" style="margin:0">' + esc(e.desc || '') + '</p>' +
-          '<div class="going-row">' + avas + '<span class="going-label">+' + goingCount + ' going' + (going ? ' · including you' : '') + '</span></div>' +
-        '</div>' +
-      '</div>' +
+    // The card itself is a plain container. The header is a real button that
+    // opens and closes the details (so Enter and Space work without any key
+    // handling of ours); everything else that can be pressed — RSVP, the
+    // waiver tick, the code field — is its sibling, never its descendant.
+    var open = !!state.expandedEvents[e.id];
+    return '<div class="event' + (open ? ' expanded' : '') + '" data-id="' + esc(e.id) + '">' +
+      '<button class="event-head" type="button" aria-expanded="' + (open ? 'true' : 'false') + '" aria-controls="extra-' + esc(uid) + '">' +
+        '<span class="event-date"><span class="dow">' + esc(e.dow) + '</span><span class="dom">' + esc(e.dom) + '</span></span>' +
+        '<span class="event-mid">' +
+          '<span class="event-title">' + esc(e.title) + '</span>' +
+          '<span class="event-meta">' + esc(e.venue) + ' · ' + esc(e.time) + '</span>' +
+          '<span class="event-tags"><span class="tag tag-sport">' + esc(e.sport) + '</span><span class="tag">' + esc(e.level) + '</span>' +
+            // which city, once the list spans more than one
+            (cities.length > 1 && e.city ? '<span class="tag tag-city">' + esc(cityLabel(e.city)) + '</span>' : '') + '</span>' +
+        '</span>' +
+      '</button>' +
       '<div class="event-side">' +
         '<span class="spots">' + spots + ' spots left</span>' +
         side +
+      '</div>' +
+      '<div class="event-extra" id="extra-' + esc(uid) + '">' +
+        '<p class="hint" style="margin:0">' + esc(e.desc || '') + '</p>' +
+        '<div class="going-row">' + avas + '<span class="going-label">+' + goingCount + ' going' + (going ? ' · including you' : '') + '</span></div>' +
       '</div>' +
       below +
     '</div>';
@@ -3492,11 +3577,14 @@
       state.checkinPrompt = null;
       focus = '[data-act="checkin-open"]';
     } else if (act === 'checkin-confirm') {
-      // The real app checks the code against the one the host was given, and
-      // only around the event's start time. The demo has no host: 4 digits.
+      // The real app checks the code against the one the host was given, from
+      // an hour before the event, and locks after five wrong tries until the
+      // host lets the member in. The demo has no host, so anything shaped like
+      // a real code passes: 4–8 letters or digits, any case, spaces trimmed.
       var code = card.querySelector('.checkin-code');
-      if (!code || !/^\d{4}$/.test(code.value.trim())) {
-        toast('Enter the 4-digit code from the host');
+      var typed = code ? code.value.trim().toUpperCase() : '';
+      if (!CHECKIN_CODE.test(typed)) {
+        toast('Enter the host’s code — 4 to 8 letters or digits');
         if (code) code.focus();
         return;
       }
@@ -3519,7 +3607,7 @@
     var id = card.getAttribute('data-id');
     state.expandedEvents[id] = !state.expandedEvents[id];
     card.classList.toggle('expanded', state.expandedEvents[id]);
-    card.setAttribute('aria-expanded', String(!!state.expandedEvents[id]));
+    card.querySelector('.event-head').setAttribute('aria-expanded', String(!!state.expandedEvents[id]));
   }
   // Wired once per list, by delegation, so a redraw never has to re-bind.
   function wireEventList(box) {
@@ -3528,25 +3616,23 @@
       if (!card) return;
       var actEl = ev.target.closest('[data-act]');
       if (actEl) { eventAction(actEl.getAttribute('data-act'), card.getAttribute('data-id'), card, box); return; }
-      // Ticking the waiver or typing the code is not a tap on the card.
-      if (ev.target.closest('.event-rsvp')) return;
-      toggleEventCard(card);
+      // Only the header button opens and closes the card. It is a real
+      // <button>, so Enter and Space arrive here as clicks too.
+      if (ev.target.closest('.event-head')) toggleEventCard(card);
     });
     box.addEventListener('keydown', function (ev) {
       if (ev.key === 'Enter' && ev.target.classList.contains('checkin-code')) {
         ev.preventDefault();
         var card = ev.target.closest('.event');
         eventAction('checkin-confirm', card.getAttribute('data-id'), card, box);
-        return;
-      }
-      // The card itself is a button: Enter or Space opens it, as a tap does.
-      if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.classList.contains('event')) {
-        ev.preventDefault();
-        toggleEventCard(ev.target);
       }
     });
+    // A real code is 4–8 letters or digits, stored in capitals: keep the field
+    // to that as it is typed.
     box.addEventListener('input', function (ev) {
-      if (ev.target.classList.contains('checkin-code')) ev.target.value = ev.target.value.replace(/\D/g, '').slice(0, 4);
+      if (ev.target.classList.contains('checkin-code')) {
+        ev.target.value = ev.target.value.toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, CHECKIN_CODE_MAX);
+      }
     });
   }
   wireEventList($('#event-list'));
@@ -3596,11 +3682,14 @@
     var cells = [];
     for (var pi = 0; pi < PHOTO_SLOTS; pi++) {
       if (pi < plist.length) {
-        cells.push('<div class="ptile" data-i="' + pi + '" role="button" tabindex="0" ' +
-          'aria-label="' + (pi === 0 ? 'Main photo' : 'Photo ' + (pi + 1) + ' — tap to make it your main photo') + '" ' +
+        // A plain tile holding two sibling buttons — "make this the main
+        // photo" over the whole tile, and Remove in the corner — never one
+        // control inside another.
+        cells.push('<div class="ptile" data-i="' + pi + '" ' +
           'style="background-image:url(' + plist[pi] + ')">' +
+          '<button class="pmain" type="button" aria-label="' + (pi === 0 ? 'Main photo' : 'Photo ' + (pi + 1) + ' — make it your main photo') + '"></button>' +
           (pi === 0 ? '<span class="ptag">Main</span>' : '') +
-          '<button class="pdel" data-del="' + pi + '" aria-label="Remove photo ' + (pi + 1) + '">×</button>' +
+          '<button class="pdel" type="button" data-del="' + pi + '" aria-label="Remove photo ' + (pi + 1) + '">×</button>' +
         '</div>');
       } else {
         cells.push('<button class="ptile ptile-add' + (pi === plist.length ? ' next' : '') + '" ' +
@@ -3682,7 +3771,7 @@
 
   /* ---------- Settings ---------- */
   function syncSettings() {
-    var modes = (state.user && state.user.modes) || ['date'];
+    var modes = (state.user && state.user.modes) || [DEFAULT_MODE];
     $('#sw-date').setAttribute('aria-checked', String(modes.indexOf('date') !== -1));
     $('#sw-play').setAttribute('aria-checked', String(modes.indexOf('play') !== -1));
     $('#sw-friends').setAttribute('aria-checked', String(modes.indexOf('friends') !== -1));
@@ -3745,7 +3834,7 @@
   // the mode switches and the deck all need redrawing.
   function afterTeamChange() {
     saveUser();
-    if (state.user.modes.indexOf(state.mode) === -1 && state.user.modes.length) state.mode = state.user.modes[0];
+    if (state.user.modes.indexOf(state.mode) === -1 && state.user.modes.length) state.mode = homeMode(state.user);
     teamFormOpen = false;
     syncSettings();
     syncModeUI();
@@ -3888,7 +3977,7 @@
         saveUser();
         // Don't strand them on a deck they just switched off.
         if (state.user.modes.indexOf(state.mode) === -1 && state.user.modes.length) {
-          state.mode = state.user.modes[0];
+          state.mode = homeMode(state.user);
         }
         syncModeUI();
       }
@@ -3933,35 +4022,46 @@
 
   $('#sign-out').addEventListener('click', function () {
     try { localStorage.removeItem(STORE_KEY); } catch (e) { /* nothing to clear */ }
-    state.user = null;
-    state.deckPos = 0;
-    state.likeCount = 0;
-    state.history = [];
-    state.saved = {};
-    state.blocked = {};
-    state.seen = {};
-    // RSVPs, check-ins and the crew belong to whoever just left; the next
-    // person on this device starts on the events, with none of them.
-    state.joined = {};
-    state.expandedEvents = {};
-    state.rsvpPrompt = null;
-    state.checkinPrompt = null;
-    state.checkedIn = {};
-    state.crewAdded = {};
-    state.homeView = 'feed';
-    // ...and none of it stays drawn in the screens behind the welcome page.
-    renderEventLists();
-    renderMatches();
-    state.prefs = { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false };
     try { localStorage.removeItem(PREFS_KEY); } catch (e) { /* nothing to clear */ }
+    // Everything belongs to whoever just left: their matches, their chats and
+    // what they typed into them, who they blocked, reported, saved or passed,
+    // their notifications, RSVPs, check-ins, crew and discovery settings. So
+    // nothing is cleared field by field (the list was always one short) — the
+    // whole state is replaced with the demo as it shipped, and the next person
+    // on this device starts on the events, in Play, with none of it.
+    state = freshState();
+    // A reply still "typing" for the last member is dropped, not delivered.
+    session += 1;
+    chatId = null;
+    sheetCtx = { id: null, from: null };
+    $('#chat-text').value = '';
+    $all('#more-overlay, #psheet-overlay, #match-overlay, #notif-overlay').forEach(function (o) { o.classList.remove('open'); });
     // The tournaments hold the last user's entries ('me') and any bracket they drew.
     TOURNEYS = buildTourneys();
     tourneyOpen = {};
+    placeFilter = 'all';
+    $all('#sw-notif-match, #sw-notif-msg').forEach(function (el) { el.setAttribute('aria-checked', 'true'); });
+    // ...and none of it stays drawn in the screens behind the welcome page.
+    syncModeUI();
+    renderHome();
+    renderEvents();
+    renderMatches();
+    renderThreads();
+    renderChatLog();
+    renderNotifs();
+    renderProfile();
     draftPhoto = null;
     phoneE164 = null;
     phoneOk = false;
     $('#ob-phone').value = '';
+    // The number they verified is written into two hidden lines; it goes too.
+    $('#ob-phone-code').value = '';
+    $('#phone-code-label').textContent = 'Enter the 6-digit code we texted you';
+    $('#phone-verified-num').textContent = '';
     syncPhoneUI();
+    // Their photo, in the match celebration's "you" avatar.
+    applyPhoto($('#match-ava-me'), null);
+    $('#match-ava-me').textContent = '';
     // Clear the whole signup form — otherwise the next person to create a
     // profile on this device inherits the last one's name, city, and partner.
     $('#ob-name').value = '';
@@ -3982,9 +4082,15 @@
     $all('#set-partner-gender .chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
     $all('#ob-partner-gender .chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
     $('#ob-city').value = DEFAULT_CITY;
+    // Back to the signup's own defaults: Play on, Date and Friends off, every
+    // sub-question as it shipped. (The Date ones are cleared above.)
     $('#ob-modes .mode-row[data-mode="date"]').hidden = false;
     $all('#ob-modes .mode-row').forEach(function (r) {
-      r.setAttribute('aria-pressed', String(r.getAttribute('data-mode') === 'date'));
+      r.setAttribute('aria-pressed', String(r.getAttribute('data-mode') === DEFAULT_MODE));
+    });
+    $all('#ob-playgames .chip').forEach(function (c) { c.setAttribute('aria-pressed', 'true'); });
+    $all('#ob-playpref .chip, #ob-friendspref .chip').forEach(function (c) {
+      c.setAttribute('aria-pressed', String(c.getAttribute('data-pref') === 'everyone'));
     });
     syncSeekingBox();
     $('#photo-preview').classList.remove('has');
@@ -4011,7 +4117,7 @@
   if (storedPrefs) state.prefs = storedPrefs;
   if (state.user) {
     $('#btn-continue').textContent = 'Continue as ' + state.user.name;
-    if (state.user.modes && state.user.modes.length) { state.mode = state.user.modes[0]; }
+    if (state.user.modes && state.user.modes.length) { state.mode = homeMode(state.user); }
     syncModeUI();
     syncSettings();
   }
@@ -4082,7 +4188,7 @@
         new MutationObserver(fn.bind(null, el)).observe(el, { attributes: true, attributeFilter: ['class'] });
       }
       watch('screen-home', function (el) { if (el.classList.contains('active')) step('finished_signup'); });
-      watch('screen-conversation', function (el) { if (el.classList.contains('active')) step('opened_chat'); });
+      watch('screen-convo', function (el) { if (el.classList.contains('active')) step('opened_chat'); });
       watch('match-overlay', function (el) { if (el.classList.contains('open')) step('matched'); });
     } catch (e) { /* analytics must never take the page down */ }
   })();

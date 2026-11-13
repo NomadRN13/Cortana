@@ -24,43 +24,50 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 
 ### Promotional text (170 char limit — editable without review)
 
-> Now live in 12 cities. Meet tennis, pickleball, and padel players who'd
-> rather rally than sit through another coffee date. Serve. Rally. Connect.
+> Now live in 12 cities. RSVP to pickleball, tennis and padel socials, show up
+> and play, and keep the people you meet. Serve. Rally. Connect.
 
-142 characters.
+139 characters.
 
 ### Full description
 
-> **Meet on the court, not at a bar.**
+> **RSVP. Show up. Play.**
 >
-> RSVPlay is the dating and social app for people who play racquet sports —
-> tennis, pickleball, padel, racquetball, and squash. Skip the "so, what do
-> you do?" dinner. Your first date has a net in the middle.
+> RSVPlay is the app for paddle and racquet sports — pickleball, tennis,
+> padel, racquetball, and squash. RSVP to a social, a league night, a
+> tournament or a pickup game, show up and play, then keep the people you met.
 >
-> **Three ways to play:**
+> **Events first:**
 >
-> • DATE — match with singles who share your sport. When you both like each
-> other, it's a Match Point.
+> • Socials, league nights, tournaments and pickup games in your city
+> • Check in with the host's code when you arrive
+> • The people you shared a court with become your crew
+> • Ladder leagues and tournament brackets, with the results on the board
+>
+> **Three modes, your choice:**
+>
 > • PLAY — find hitting partners at your level. Real skill talk: NTRP for
 > tennis, DUPR for pickleball, or Beginner through Competitive.
-> • FRIENDS — join local events, socials, and leagues. Some matches aren't
-> romantic. They're doubles.
+> • DATE — opt in if you'd like to. Off by default, and only people who turned
+> it on too can see it on you.
+> • FRIENDS — keep the people you'd play with again.
 >
 > **How it works:**
 >
 > • Build a profile with your sports, skill level, and photos
-> • See compatible players near you — matched by sport, skill, distance, and
-> what you're each looking for
+> • RSVP to an event and accept its waiver; check in when you get there
+> • See players near you — matched by sport, skill, distance, and what you're
+> each looking for
 > • Chat, then propose a court time right in the conversation: venue, day,
 > time. One tap to accept.
-> • RSVP to community events around the city
 >
 > **Built respectfully:**
 >
-> • 18+ only, enforced at signup
+> • 18+ only, and every account is phone-verified
 > • Your exact location never leaves your phone — we only ever see a
 > neighborhood-level approximation (about 1 km)
 > • First names only. No last names, anywhere.
+> • New photos are reviewed before other players see them
 > • Block and report from any profile or conversation; every report is
 > reviewed by a human
 > • No ads, no tracking, and we never sell your data
@@ -68,8 +75,8 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 >
 > **City by city.** RSVPlay is open in Indianapolis, Los Angeles, San Diego,
 > Bakersfield, Phoenix, Seattle, Spokane, Dallas, Houston, Orlando, Miami, and
-> Washington, DC — and you're matched with players in the cities you play
-> in, because a dating app is only as good as who's actually near you.
+> Washington, DC — and you see events and players in the cities you play in,
+> because a game needs people who are actually near you.
 >
 > Questions? hello@rsvplay.app
 
@@ -134,7 +141,7 @@ purposes:
 | Apple data type | What it actually is (code reference) | Linked | Purpose |
 |---|---|---|---|
 | Contact Info → Email Address | Sign-in via one-time email code; no passwords (`signInWithEmail`). May instead arrive from Sign in with Apple (possibly an `@privaterelay.appleid.com` relay address) or Google. Also the waitlist form. | Yes | App Functionality (account) |
-| Contact Info → Phone Number | Verified once by SMS at signup (`startPhoneVerification`); stored in auth, never shown to members, never used for marketing — anti-fake-account / ban enforcement only | Yes | App Functionality (account security) |
+| Contact Info → Phone Number | Verified once by SMS at signup (`startPhoneVerification`); stored in auth, never shown to members, never used for marketing — anti-fake-account / ban enforcement only; a one-way hash is retained after a ban or a delete-while-suspended (`banned_phones`) | Yes | App Functionality (account security) |
 | Contact Info → Name | **First name only** — `profiles.first_name`; last names don't exist in the schema | Yes | App Functionality |
 | Sensitive Info | Gender identity + who the user wants to date (`profiles.gender`, `seeking`) — sexual orientation can be inferred, so declare it | Yes | App Functionality (Date-mode matching) |
 | Location → Coarse Location | ~1 km approximation; the client rounds to 2 decimals **before upload** (`upsertMyProfile`), columns are `numeric(5,2)` — precise location never reaches the server | Yes | App Functionality (distance matching) |
@@ -143,7 +150,8 @@ purposes:
 | User Content → Other User Content | Bio, availability note, chat messages, court-time proposals, reports filed | Yes | App Functionality (chat content may be reviewed by a human when reported — say so in the policy, already done) |
 | Identifiers → User ID | Account UUID (Supabase auth id), plus the provider subject id from Apple/Google sign-in | Yes | App Functionality |
 | Identifiers → Device ID | Push-notification token, only if the user allows notifications (`push_tokens`), plus a random per-install tag and device name in `devices` so the member can see and sign out their own phones. No hardware identifier or IDFA is read. | Yes | App Functionality (notifications, account security) |
-| Usage Data → Product Interaction | Likes/passes/aces, matches, event RSVPs — this is the matching engine, stored server-side (`swipes`, `matches`, `event_rsvps`) | Yes | App Functionality |
+| Usage Data → Product Interaction | Likes/passes/aces, matches, event RSVPs, event check-in time and waiver acceptance (time + version), crew adds, ladder-league membership, challenges and win/loss, membership tier — stored server-side (`swipes`, `matches`, `event_rsvps`, `waiver_acceptances`, `crew_adds`, `league_members`, `league_challenges`, `profiles.tier`) | Yes | App Functionality |
+| Other Data | Device timezone name (`profiles.timezone`) — quiet hours for notifications; not shown to members | Yes | App Functionality |
 | Other Data | Birthdate (`profiles.birthdate`) — 18+ enforcement and age display; never shown raw to other users, only computed age | Yes | App Functionality |
 
 **Not collected** (declare "Data Not Collected" for these): precise location,
@@ -167,36 +175,43 @@ installed), advertising data.
 
 ### Full description
 
-> MEET ON THE COURT, NOT AT A BAR.
+> RSVP. SHOW UP. PLAY.
 >
-> RSVPlay is the dating and social app for people who play racquet sports —
-> tennis, pickleball, padel, racquetball, and squash. Skip the "so, what do
-> you do?" dinner. Your first date has a net in the middle.
+> RSVPlay is the app for paddle and racquet sports — pickleball, tennis,
+> padel, racquetball, and squash. RSVP to a social, a league night, a
+> tournament or a pickup game, show up and play, then keep the people you met.
 >
-> THREE WAYS TO PLAY
+> EVENTS FIRST
 >
-> ❤ Date — match with singles who share your sport. When you both like each
-> other, it's a Match Point.
+> • Socials, league nights, tournaments and pickup games in your city
+> • Check in with the host's code when you arrive
+> • The people you shared a court with become your crew
+> • Ladder leagues and tournament brackets, with the results on the board
+>
+> THREE MODES, YOUR CHOICE
+>
 > ✦ Play — find hitting partners at your level. Real skill talk: NTRP for
 > tennis, DUPR for pickleball, or Beginner through Competitive.
-> ✦ Friends — join local events, socials, and leagues. Some matches aren't
-> romantic. They're doubles.
+> ✦ Date — opt in if you'd like to. Off by default, and only people who turned
+> it on too can see it on you.
+> ✦ Friends — keep the people you'd play with again.
 >
 > HOW IT WORKS
 >
 > • Build a profile with your sports, skill level, and photos
-> • See compatible players near you — matched by sport, skill, distance, and
-> what you're each looking for
+> • RSVP to an event and accept its waiver; check in when you get there
+> • See players near you — matched by sport, skill, distance, and what you're
+> each looking for
 > • Chat, then propose a court time right in the conversation — venue, day,
 > time, one tap to accept
-> • RSVP to community events around the city
 >
 > BUILT RESPECTFULLY
 >
-> • 18+ only, enforced at signup
+> • 18+ only, and every account is phone-verified
 > • Your exact location never leaves your phone — we only see a
 > neighborhood-level approximation (about 1 km)
 > • First names only — no last names, anywhere
+> • New photos are reviewed before other players see them
 > • Block and report from any profile or conversation; every report is
 > reviewed by a human
 > • No ads, no tracking, and we never sell your data
@@ -204,8 +219,8 @@ installed), advertising data.
 >
 > INDIANAPOLIS FIRST
 >
-> We're building RSVPlay city by city so there are real players on the other
-> side of every match — and Indy serves first.
+> We're building RSVPlay city by city so there are real players at every
+> event — and Indy serves first.
 >
 > Questions? hello@rsvplay.app
 
@@ -263,7 +278,7 @@ Per data type (Collected / Shared / Purpose / Optional):
 | Play data type | Collected | Shared | Purpose | Optional? |
 |---|---|---|---|---|
 | Personal info → Email address | Yes | No | Account management (one-time-code sign-in) | No — required to sign in |
-| Personal info → Phone number | Yes (verified once by SMS at signup; never shown to members) | No | Account management / fraud prevention (one-time check that a new member is a real person) | No — required at signup |
+| Personal info → Phone number | Yes (verified once by SMS at signup; never shown to members; a one-way hash is retained after a ban or a delete-while-suspended) | No | Account management / fraud prevention (one-time check that a new member is a real person) | No — required at signup |
 | Personal info → User IDs | Yes (Supabase account UUID; plus the Apple `sub` / Google account id when social sign-in is used) | No | Account management | No |
 | Device or other IDs | Yes (a random per-install tag and the device's own name, for the sign-out-a-device list; plus the push token when notifications are on) | No | Account management / fraud prevention; notifications | No — the device list is core to account security, so answer No overall even though the push token alone is optional |
 | Personal info → Name | Yes (first name only) | No | App functionality (shown on your profile) | No |
@@ -273,7 +288,8 @@ Per data type (Collected / Shared / Purpose / Optional):
 | Location → Precise location | **No** | — | — | — |
 | Photos and videos → Photos | Yes (profile photos) | No | App functionality (your profile; moderated before visible to others) | **Yes** |
 | Messages → Other in-app messages | Yes (chat with matches, court-time proposals) | No | App functionality; reported messages may be reviewed by a human moderator | No — required for chat |
-| App activity → App interactions | Yes (likes/passes, matches, event RSVPs) | No | App functionality (the matching engine) | No |
+| App activity → App interactions | Yes (likes/passes, matches, event RSVPs, event check-in and waiver acceptance, crew adds, ladder-league membership and results, membership tier) | No | App functionality | No |
+| App activity → Other actions | Yes (device timezone name, for notification quiet hours; not shown to members) | No | App functionality | No |
 | App info and performance | **No** (no crash/diagnostics SDK) | — | — | — |
 | Contacts / Calendar / Files / Audio / Health / Financial / Web browsing | **No** | — | — | — |
 
@@ -288,7 +304,7 @@ review notes fields. Same substance for both.
 > (tennis, pickleball, padel, racquetball, squash). 18+ only, enforced at
 > signup by birthdate.
 >
-> **City-by-city launch:** community quality in a dating app depends on
+> **City-by-city launch:** community quality in an events app depends on
 > local density, so RSVPlay operates city by city. It is currently open in
 > 12 US metros: Indianapolis, Los Angeles, San Diego, Bakersfield, Phoenix,
 > Seattle, Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC.

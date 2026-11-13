@@ -77,6 +77,25 @@ const out = (n) => require('path').join(OUT, n);
     await page.click('.tab[data-screen="screen-matches"]');
     await page.waitForSelector('#screen-matches.active', { timeout: 2000 });
   };
+  const setAgeRange = async (lo, hi) => {
+    await openSettings();
+    await page.fill('#age-min', String(lo));
+    await page.dispatchEvent('#age-min', 'change');
+    await page.fill('#age-max', String(hi));
+    await page.dispatchEvent('#age-max', 'change');
+    await backToMatches();
+  };
+  // Anything pressable that sits inside something else pressable — the thing
+  // WCAG 4.1.2 forbids, and what an event card used to be: a role="button"
+  // wrapped around its own RSVP button, waiver tick and code field.
+  const nestedControls = () => page.evaluate(() => {
+    const press = 'button, a[href], input, select, textarea, label, [role="button"], [tabindex]';
+    return [...document.querySelectorAll('#home-event-list, #event-list')].flatMap((list) =>
+      [...list.querySelectorAll('button, a[href], [role="button"]')].flatMap((outer) =>
+        [...outer.querySelectorAll(press)].map((inner) =>
+          (outer.className || outer.tagName) + ' > ' + (inner.className || inner.tagName))));
+  });
+  const pressedModes = () => page.$$eval('#ob-modes .mode-row[aria-pressed="true"]', (els) => els.map((e) => e.getAttribute('data-mode')).join('|'));
 
   await page.goto(site.url('app/index.html'));
 
@@ -88,6 +107,20 @@ const out = (n) => require('path').join(OUT, n);
     const html = await page.content();
     if (/deposit/i.test(html)) throw new Error('the page mentions a deposit');
     if (/40\s*[\/–-]\s*love|first date is a game|love at first serve/i.test(html)) throw new Error('the retired name is back');
+  });
+  await step('what a shared link says is events first: RSVP, show up, play, keep the people you meet', async () => {
+    const said = await page.$$eval('meta[name="description"], meta[property="og:description"], meta[name="twitter:description"]',
+      (els) => els.map((e) => e.getAttribute('content')));
+    if (said.length !== 3) throw new Error(said.length + ' descriptions found');
+    for (const text of said) {
+      if (/swipe/i.test(text)) throw new Error('still sold as swiping: ' + text);
+      if (/\bmatch and chat\b/i.test(text)) throw new Error('still sold as match-and-chat: ' + text);
+    }
+    for (const text of said.slice(1)) {
+      if (!/RSVP to a game/.test(text) || !/show up/.test(text) || !/play/.test(text) || !/keep the people you meet/.test(text)) {
+        throw new Error('not events first: ' + text);
+      }
+    }
   });
   await step('welcome -> create profile', async () => {
     await page.click('#btn-create');
@@ -125,9 +158,20 @@ const out = (n) => require('path').join(OUT, n);
     await page.click('[data-skill="Advanced"]');
     await page.fill('#ob-rating', 'NTRP 4.0');
     await page.click('#ob3-next');
-    await page.click('#ob-modes .mode-row[data-mode="play"]');
+    // Events first: Play is the mode already chosen. Date is off, and its
+    // question is not on screen until Date is turned on.
+    if ((await pressedModes()) !== 'play') throw new Error('pre-selected modes: ' + await pressedModes());
+    if (await page.isVisible('#seeking-box')) throw new Error('"Looking to date" is asked before Date mode is chosen');
+    if (!(await page.isVisible('#play-box'))) throw new Error('Play is on but its questions are hidden');
+    if (await page.isVisible('#friends-box')) throw new Error('Friends questions shown with Friends off');
+    await page.click('#ob-modes .mode-row[data-mode="date"]');   // opt in
+    if ((await pressedModes()) !== 'play|date') throw new Error('after turning Date on: ' + await pressedModes());
     // date mode is on → seeking box visible and required
     if (!(await page.isVisible('#seeking-box'))) throw new Error('seeking box not visible with date mode on');
+    // ...and off again takes the question away with it
+    await page.click('#ob-modes .mode-row[data-mode="date"]');
+    if (await page.isVisible('#seeking-box')) throw new Error('seeking box still showing with Date turned back off');
+    await page.click('#ob-modes .mode-row[data-mode="date"]');
     // pick-one preference chips must actually stick (they live inside the
     // multi-toggling #ob-modes container — regression guard)
     const pressed = (group) => page.$$eval(`#${group} .chip`, (els) =>
@@ -180,6 +224,30 @@ const out = (n) => require('path').join(OUT, n);
     if (mine !== 'Play|Date') throw new Error('modes on the card: ' + mine);
   });
   await shot('home');
+  await step('an event card is a plain container; its header is the button that opens it', async () => {
+    const info = await page.$$eval('#home-event-list .event', (cards) => cards.map((card) => {
+      const head = card.querySelector('.event-head');
+      const extra = head && document.getElementById(head.getAttribute('aria-controls'));
+      return {
+        cardRole: card.getAttribute('role'), cardTab: card.getAttribute('tabindex'), cardExpanded: card.getAttribute('aria-expanded'),
+        headTag: head && head.tagName, headType: head && head.type, expanded: head && head.getAttribute('aria-expanded'),
+        controlsOwnDetails: !!extra && extra.classList.contains('event-extra') && card.contains(extra) && !head.contains(extra),
+        named: !!head && head.textContent.includes(card.querySelector('.event-title').textContent),
+        rsvpOutside: !!card.querySelector('.join-btn') && !head.contains(card.querySelector('.join-btn')),
+      };
+    }));
+    if (!info.length) throw new Error('no event cards');
+    for (const c of info) {
+      if (c.cardRole || c.cardTab !== null || c.cardExpanded !== null) throw new Error('the card still poses as a control: ' + JSON.stringify(c));
+      if (c.headTag !== 'BUTTON' || c.headType !== 'button') throw new Error('the header is not a real button: ' + JSON.stringify(c));
+      if (c.expanded !== 'false') throw new Error('aria-expanded on a closed card: ' + c.expanded);
+      if (!c.controlsOwnDetails) throw new Error('aria-controls does not point at this card’s details');
+      if (!c.named) throw new Error('the header button does not carry the event title');
+      if (!c.rsvpOutside) throw new Error('RSVP is inside the header button');
+    }
+    const nested = await nestedControls();
+    if (nested.length) throw new Error('controls nested in controls: ' + nested.join(', '));
+  });
   await step('RSVP on Home needs the waiver tick before it is accepted', async () => {
     const card = '#home-event-list .event[data-id="e2"]';
     const spotsBefore = (await page.textContent(card + ' .spots')).trim();
@@ -190,6 +258,9 @@ const out = (n) => require('path').join(OUT, n);
     // the tick box is a real, labelled checkbox
     const labelled = await page.$eval(card + ' .waiver-row input', (el) => el.type === 'checkbox' && !!el.labels.length && !el.checked);
     if (!labelled) throw new Error('waiver checkbox is not an unticked, labelled checkbox');
+    // the tick and its label are beside the header button, not inside one
+    const nested = await nestedControls();
+    if (nested.length) throw new Error('with the waiver open, controls nested in controls: ' + nested.join(', '));
     // no tick, no RSVP
     await page.click(card + ' [data-act="rsvp-confirm"]');
     if (await page.$(card + ' .join-btn.going')) throw new Error('RSVP accepted without the waiver tick');
@@ -455,11 +526,33 @@ const out = (n) => require('path').join(OUT, n);
     await page.waitForSelector('#match-overlay.open', { timeout: 3000 });
     await page.click('#match-keep');
   });
-  await step('event card expands with details + attendees', async () => {
+  await step('event card expands with details + attendees: by tap, by Enter and by Space on its header', async () => {
     await page.click('.tab[data-screen="screen-events"]');
-    await page.click('#event-list .event');
+    const card = '#event-list .event[data-id="e1"]';
+    const head = card + ' .event-head';
+    const open = async () => (await page.getAttribute(head, 'aria-expanded')) + '/' + (await page.isVisible(card + ' .going-row'));
+    if ((await open()) !== 'false/false') throw new Error('starts ' + await open());
+    await page.focus(head);
+    await page.keyboard.press('Enter');
+    if ((await open()) !== 'true/true') throw new Error('Enter did not open it: ' + await open());
+    await page.keyboard.press('Space');
+    if ((await open()) !== 'false/false') throw new Error('Space did not close it: ' + await open());
+    // focus has not gone anywhere: the next key press lands on the same button
+    if (!(await page.$eval(head, (el) => el === document.activeElement))) throw new Error('focus left the header button');
+    await page.click(head);
     await page.waitForSelector('#event-list .event.expanded', { timeout: 2000 });
+    if ((await open()) !== 'true/true') throw new Error('a tap did not open it: ' + await open());
     if (!(await page.isVisible('#event-list .event.expanded .going-row'))) throw new Error('attendees row not shown');
+    // the details it opened are the ones aria-controls names
+    const shown = await page.$eval(head, (el) => getComputedStyle(document.getElementById(el.getAttribute('aria-controls'))).display);
+    if (shown === 'none') throw new Error('aria-controls names something still hidden');
+    // pressing things that are not the header leaves it open
+    await page.click(card + ' .going-row');
+    await page.click(card + ' .spots');
+    if ((await open()) !== 'true/true') throw new Error('a tap outside the header toggled the card: ' + await open());
+    // only one card opened
+    const n = await page.locator('#event-list .event.expanded').count();
+    if (n !== 1) throw new Error(n + ' cards expanded');
   });
   await step('RSVP in the expanded event needs the waiver tick too (and keeps it expanded)', async () => {
     const card = '#event-list .event[data-id="e1"]';
@@ -503,26 +596,48 @@ const out = (n) => require('path').join(OUT, n);
     if (await page.$('#match-grid-wrap .crew')) throw new Error('a crew is shown before anyone checked in');
     await page.click('.tab[data-screen="screen-events"]');
   });
-  await step('check in asks for the host code; the demo takes any 4 digits and says so', async () => {
+  await step('check in asks for the host code; the demo takes any 4–8 letters or digits, as a real code is, and says so', async () => {
     const card = '#event-list .event[data-id="e1"]';
+    const field = card + ' .checkin-code';
     await page.click(card + ' [data-act="checkin-open"]');
-    await page.waitForSelector(card + ' .checkin-code', { timeout: 2000 });
-    const labelled = await page.$eval(card + ' .checkin-code', (el) => el.labels.length === 1 && /host/i.test(el.labels[0].textContent));
-    if (!labelled) throw new Error('the code field has no label');
+    await page.waitForSelector(field, { timeout: 2000 });
+    const labelled = await page.$eval(field, (el) => el.labels.length === 1 && /host/i.test(el.labels[0].textContent) && /4–8 letters or digits/.test(el.labels[0].textContent));
+    if (!labelled) throw new Error('the code field has no label saying what a code looks like');
     const hint = (await page.textContent(card + ' .demo-hint')).trim();
-    if (!/^Demo:/.test(hint) || !/any 4 digits/.test(hint)) throw new Error('demo hint: ' + hint);
+    if (!/^Demo:/.test(hint) || !/any 4–8 letters or digits works in this demo/.test(hint)) throw new Error('demo hint: ' + hint);
+    // ...and what the real app does that the demo cannot
+    if (!/opens an hour before the event/.test(hint)) throw new Error('hint does not say when check-in opens: ' + hint);
+    if (!/five wrong codes lock it until the host lets you in/.test(hint)) throw new Error('hint does not mention the lock: ' + hint);
+    if (/4 digits|4-digit/.test(await page.textContent(card))) throw new Error('the card still says codes are 4 digits');
+    const described = await page.$eval(field, (el) => (document.getElementById(el.getAttribute('aria-describedby')) || {}).className || '');
+    if (!/demo-hint/.test(described)) throw new Error('the hint is not tied to the field');
+    // the code field sits beside the header button, never inside a control
+    const nested = await nestedControls();
+    if (nested.length) throw new Error('with the code field open, controls nested in controls: ' + nested.join(', '));
     // not a code: refused
     await page.click(card + ' [data-act="checkin-confirm"]');
     if (await page.$(card + ' .checked-tag')) throw new Error('checked in with no code');
-    await page.fill(card + ' .checkin-code', '12');
-    await page.click(card + ' [data-act="checkin-confirm"]');
-    if (await page.$(card + ' .checked-tag')) throw new Error('checked in with a 2-digit code');
-    if (!/4-digit code/.test(await toastText())) throw new Error('no explanation: ' + await toastText());
-    // letters never make it into the field
-    await page.fill(card + ' .checkin-code', '');
-    await page.type(card + ' .checkin-code', 'ab4821');
-    if ((await page.inputValue(card + ' .checkin-code')) !== '4821') throw new Error('field holds ' + await page.inputValue(card + ' .checkin-code'));
-    await page.press(card + ' .checkin-code', 'Enter');
+    for (const short of ['12', 'ab1']) {
+      await page.fill(field, short);
+      await page.click(card + ' [data-act="checkin-confirm"]');
+      if (await page.$(card + ' .checked-tag')) throw new Error('checked in with "' + short + '"');
+      if (!/4 to 8 letters or digits/.test(await toastText())) throw new Error('no explanation: ' + await toastText());
+    }
+    // letters are part of a code: kept, and capitalised the way codes are stored
+    const typed = async (keys) => {
+      await page.fill(field, '');
+      await page.type(field, keys);
+      return page.inputValue(field);
+    };
+    if ((await typed('court7')) !== 'COURT7') throw new Error('letters: field holds ' + await page.inputValue(field));
+    // spaces and punctuation are not, and nothing runs past 8
+    if ((await typed(' ab-48 21! ')) !== 'AB4821') throw new Error('punctuation: field holds ' + await page.inputValue(field));
+    if ((await typed('abcd12345xyz')) !== 'ABCD1234') throw new Error('length: field holds ' + await page.inputValue(field));
+    if ((await page.getAttribute(field, 'maxlength')) !== '8') throw new Error('maxlength ' + await page.getAttribute(field, 'maxlength'));
+    if ((await page.getAttribute(field, 'inputmode')) === 'numeric') throw new Error('the field still asks for a number pad');
+    // a lowercase, six-character, letters-and-digits code checks in
+    if ((await typed('ab4821')) !== 'AB4821') throw new Error('field holds ' + await page.inputValue(field));
+    await page.press(field, 'Enter');
     await page.waitForSelector(card + ' .checked-tag', { timeout: 2000 });
     if (!/Checked in/.test(await page.textContent(card + ' .checked-tag'))) throw new Error('no checked-in mark');
     const said = await toastText();
@@ -569,6 +684,20 @@ const out = (n) => require('path').join(OUT, n);
     // women looking to date men. Grace & Rosa are a team — never.
     if ((await tagged()) !== 'maya|elena') throw new Error('with Date on: ' + await tagged());
     if ((await page.textContent('#crew .crew-row[data-crew="maya"] .crew-date')).trim() !== 'Also open to dating') throw new Error('tag text');
+    // Age counts too, as it does on the Date deck and in get_my_crew(): Maya is
+    // 31 and Elena 52. Outside his range, the tag goes — the person stays.
+    await setAgeRange(25, 50);
+    if ((await tagged()) !== 'maya') throw new Error('age range 25–50 (Elena is 52): ' + await tagged());
+    if (!(await page.$('#crew .crew-row[data-crew="elena"]'))) throw new Error('Elena left the crew over an age range');
+    await setAgeRange(32, 55);
+    if ((await tagged()) !== 'elena') throw new Error('age range 32–55 (Maya is 31): ' + await tagged());
+    await setAgeRange(35, 45);
+    if ((await tagged()) !== '') throw new Error('age range 35–45 fits neither: ' + await tagged());
+    // the edges are inside the range
+    await setAgeRange(31, 52);
+    if ((await tagged()) !== 'maya|elena') throw new Error('age range 31–52 includes both: ' + await tagged());
+    await setAgeRange(25, 55);
+    if ((await tagged()) !== 'maya|elena') throw new Error('age range restored: ' + await tagged());
     // not mutual any more: he now looks to date men only
     await openSettings();
     await page.click('#set-seeking [data-seek="man"]');
@@ -608,6 +737,77 @@ const out = (n) => require('path').join(OUT, n);
     await page.click('.tab[data-screen="screen-events"]');
     const faces = await page.$$eval('#event-list .event[data-id="e1"] .going-row .ava', (els) => els.map((e) => e.textContent).join('|'));
     if (faces !== 'M|G') throw new Error('going row after the block: ' + faces);
+  });
+  await step('reporting someone from the crew takes them out of it, and out of the going row, as a block does', async () => {
+    await page.click('.tab[data-screen="screen-matches"]');
+    await page.click('#crew .crew-row[data-crew="gracerosa"] .crew-add');
+    await page.click('#crew .crew-row[data-crew="gracerosa"] .crew-more');
+    await page.waitForSelector('#more-overlay.open', { timeout: 2000 });
+    if ((await page.textContent('#sheet-report')).trim() !== 'Report Grace') throw new Error('sheet: ' + await page.textContent('#sheet-report'));
+    await page.click('#sheet-report');
+    await page.waitForFunction(() => !document.querySelector('#crew .crew-row[data-crew="gracerosa"]'), { timeout: 2000 });
+    if (!/safety team will review Grace/.test(await toastText())) throw new Error('toast: ' + await toastText());
+    const names = await page.$$eval('#crew .crew-row .n', (els) => els.map((e) => e.textContent).join('|'));
+    if (names !== 'Maya') throw new Error('crew after the report: ' + names);
+    if (/Rosa/.test(await page.textContent('#match-grid-wrap'))) throw new Error('Grace & Rosa still on Matches after the report');
+    // it holds when the tab is drawn again
+    await page.click('.tab[data-screen="screen-chat"]');
+    await page.click('.tab[data-screen="screen-matches"]');
+    if (await page.$('#crew .crew-row[data-crew="gracerosa"]')) throw new Error('the reported team came back');
+    await page.click('.tab[data-screen="screen-events"]');
+    const faces = await page.$$eval('#event-list .event[data-id="e1"] .going-row .ava', (els) => els.map((e) => e.textContent).join('|'));
+    if (faces !== 'M') throw new Error('going row after the report: ' + faces);
+    // the same faces on Home's copy of the card
+    await homeFeed();
+    const home = await page.$$eval('#home-event-list .event[data-id="e1"] .going-row .ava', (els) => els.map((e) => e.textContent).join('|'));
+    if (home !== 'M') throw new Error('Home going row after the report: ' + home);
+  });
+  await step('someone reported from the deck (Priya, earlier) is not in the crew or the going row either', async () => {
+    // Ladder League Kickoff is Priya, Jordan and Nadia. Check in with a
+    // four-letter code: letters alone are a code too.
+    await page.click('.tab[data-screen="screen-events"]');
+    const card = '#event-list .event[data-id="e6"]';
+    await page.click(card + ' .event-head');
+    const faces = await page.$$eval(card + ' .going-row .ava', (els) => els.map((e) => e.textContent).join('|'));
+    if (faces !== 'J|N') throw new Error('going row with Priya reported: ' + faces);
+    await page.click(card + ' .join-btn');
+    await page.check(card + ' .waiver-row input');
+    await page.click(card + ' [data-act="rsvp-confirm"]');
+    await page.click(card + ' [data-act="checkin-open"]');
+    await page.fill(card + ' .checkin-code', 'host');
+    await page.click(card + ' [data-act="checkin-confirm"]');
+    await page.waitForSelector(card + ' .checked-tag', { timeout: 2000 });
+    await page.click(card + ' [data-act="crew"]');
+    await page.waitForSelector('#screen-matches.active', { timeout: 2000 });
+    const names = await page.$$eval('#crew .crew-row', (els) => els.map((e) => e.getAttribute('data-crew')).join('|'));
+    if (names !== 'maya|jordan|nadia') throw new Error('crew: ' + names);
+    // and she does not come back to the deck when it is reset, as a pass would
+    await homeFeed();
+    await page.click('#open-deck');
+    for (let i = 0; i < 20 && !(await page.$('#reset-deck')); i++) {
+      const before = await cardName();
+      if (/Priya/.test(before)) throw new Error('Priya is in the deck after being reported');
+      await page.click('#act-pass');
+      await page.waitForFunction((prev) => {
+        const el = document.querySelector('#deck-card .card-name');
+        return !el || el.textContent !== prev;
+      }, before, { timeout: 2000 });
+    }
+    await page.click('#reset-deck');
+    await page.waitForSelector('#deck-card', { timeout: 2000 });
+    for (let i = 0; i < 20 && !(await page.$('#reset-deck')); i++) {
+      const before = await cardName();
+      if (/Priya/.test(before)) throw new Error('resetting the deck brought back someone who was reported');
+      if (/Sam|Elena/.test(before)) throw new Error('resetting the deck brought back someone who was blocked: ' + before);
+      await page.click('#act-pass');
+      await page.waitForFunction((prev) => {
+        const el = document.querySelector('#deck-card .card-name');
+        return !el || el.textContent !== prev;
+      }, before, { timeout: 2000 });
+    }
+    if (!(await page.$('#reset-deck'))) throw new Error('never reached the end of the deck');
+    await page.click('#close-deck');
+    await page.click('.tab[data-screen="screen-events"]');   // where the steps that follow expect to be
   });
   await step('a tournament bracket is drawn as rounds: cards, winner in the accent colour, scores at the right', async () => {
     const t = '#tournament-list [data-tourney="t2"]';
@@ -688,6 +888,15 @@ const out = (n) => require('path').join(OUT, n);
     await page.click('#screen-profile .appbar-title');
     if ((await page.locator('#pgrid .ptile[data-i]').count()) !== 1) throw new Error('expected 1 photo tile');
     if (!(await page.isVisible('#ptile-add'))) throw new Error('add-photo tile missing');
+    // No control inside another: the tile is plain, its two actions are sibling buttons.
+    const nestedPhoto = await page.evaluate(() => ({
+      nested: document.querySelectorAll('#pgrid [role="button"] button, #pgrid button button, #pgrid [role="button"] [role="button"]').length,
+      mains: Array.from(document.querySelectorAll('#pgrid .ptile[data-i]')).every((t) => {
+        const m = t.querySelector(':scope > button.pmain'); const d = t.querySelector(':scope > button.pdel');
+        return !!m && !!d && !!m.getAttribute('aria-label') && !!d.getAttribute('aria-label') && !t.hasAttribute('role') && !t.hasAttribute('tabindex');
+      }),
+    }));
+    if (nestedPhoto.nested !== 0 || !nestedPhoto.mains) throw new Error('photo tiles nest one control inside another: ' + JSON.stringify(nestedPhoto));
     // all six slots visible, so the room to add more is obvious
     const slots = await page.locator('#pgrid .ptile').count();
     if (slots !== 6) throw new Error('expected 6 photo slots, got ' + slots);
@@ -708,18 +917,175 @@ const out = (n) => require('path').join(OUT, n);
     if (!(await page.isVisible('#profile-body .ava.has-photo'))) throw new Error('avatar lost its photo');
   });
   await shot('profile');
-  await step('sign out resets, reload fresh', async () => {
-    await page.click('#open-settings');
-    await page.click('#sign-out');
+  // By now Aaron has blocked Sam and Elena, reported Priya and Grace & Rosa,
+  // matched Elena and Jordan, cleared his notifications, widened his radius to
+  // 50, RSVPed, checked in twice and built a crew. Before he goes he also
+  // types into two of the chats the demo ships with.
+  const LEFT_BY_AARON = ['Smoothies are on you then', 'Thursday works, coffee after'];
+  await step('sign out leaves nothing of the last member on screen or in storage', async () => {
+    await page.click('.tab[data-screen="screen-chat"]');
+    await page.click('#thread-list .thread[data-id="maya"]');
+    await page.waitForSelector('#screen-convo.active', { timeout: 2000 });
+    await page.fill('#chat-text', LEFT_BY_AARON[0]);
+    await page.click('#chat-sendbtn');
+    // Maya answers: her thread now holds his message and her reply
+    await page.waitForFunction(() => /Deal\. Saturday/.test(document.querySelector('#chat-log').textContent), { timeout: 4000 });
+    await page.click('#chat-back');
+    await page.click('#thread-list .thread[data-id="priya"]');
+    await page.fill('#chat-text', LEFT_BY_AARON[1]);
+    // Send and sign out in the same breath, so Priya's reply is still on its
+    // way when the account goes. (No hand is this fast; a timer is.)
+    await page.evaluate(() => {
+      document.querySelector('#chat-sendbtn').click();
+      document.querySelector('#sign-out').click();
+    });
     await page.waitForSelector('#screen-welcome.active', { timeout: 2000 });
-    const saved = await page.evaluate(() => localStorage.getItem('rsvplay.profile'));
-    if (saved) throw new Error('profile not cleared');
-    // RSVPs, the check-in and the crew went with the account
+    const stored = await page.evaluate(() => [localStorage.getItem('rsvplay.profile'), localStorage.getItem('rsvplay.prefs')]);
+    if (stored[0] || stored[1]) throw new Error('left in storage: ' + JSON.stringify(stored));
+    // RSVPs, the check-ins and the crew went with the account
     const left = await page.evaluate(() => ({
       going: document.querySelectorAll('.join-btn.going, .checked-tag').length,
       crew: document.querySelectorAll('#crew .crew-row').length,
     }));
     if (left.going || left.crew) throw new Error('left behind for the next person: ' + JSON.stringify(left));
+    // ...and so did what he typed, what he wrote about himself and his photo:
+    // nothing of his is still drawn in the screens behind the welcome page
+    const drawn = await page.evaluate(() => document.querySelector('#phone').textContent + ' ' +
+      [...document.querySelectorAll('#phone input[type="text"], #phone input[type="tel"], #phone input[type="number"], #phone textarea')].map((el) => el.value).join(' '));
+    for (const said of LEFT_BY_AARON.concat(['Great ace earlier', 'Deal. Saturday', 'Riverside regular', 'Aaron', '5550142', 'NTRP 4.0'])) {
+      if (drawn.includes(said)) throw new Error('still on the page after sign-out: "' + said + '"');
+    }
+    if (await page.$('#phone .has-photo, #phone .has')) throw new Error('his photo is still drawn');
+  });
+  await step('the next person signs up to Play, with Date off and nothing of the last member’s answers', async () => {
+    await page.click('#btn-create');
+    await page.waitForSelector('#screen-ob1.active', { timeout: 3000 });
+    if ((await page.inputValue('#ob-name')) !== '' || (await page.$('#ob-gender .chip[aria-pressed="true"]'))) throw new Error('the signup form kept the last answers');
+    await page.fill('#ob-name', 'Blake');
+    await page.fill('#ob-age', '29');
+    await page.click('#ob-gender [data-gender="woman"]');
+    await page.click('#ob1-next');
+    await page.fill('#ob-phone', '317-555-0199');
+    await page.click('#phone-send');
+    await page.fill('#ob-phone-code', '654321');
+    await page.click('#phone-verify');
+    await page.click('#obphone-next');
+    await page.click('[data-sport="Tennis"]');
+    await page.click('#ob2-next');
+    await page.click('[data-skill="Intermediate"]');
+    await page.click('#ob3-next');
+    await page.waitForSelector('#screen-ob4.active', { timeout: 3000 });
+    // Aaron left this step with Play + Date on and "women" chosen
+    if ((await pressedModes()) !== 'play') throw new Error('pre-selected modes after a sign-out: ' + await pressedModes());
+    if (await page.isVisible('#seeking-box')) throw new Error('"Looking to date" is on screen with Date off');
+    const seeking = await page.$$eval('#ob-seeking .chip[aria-pressed="true"]', (els) => els.length);
+    if (seeking) throw new Error('the last member’s "looking to date" answer is still selected');
+    // no Date question to answer: straight in
+    await page.click('#ob4-done');
+    await page.waitForSelector('#screen-home.active', { timeout: 3000 });
+    const mine = await page.$$eval('#find-game-modes .tag', (els) => els.map((e) => e.textContent).join('|'));
+    if (mine !== 'Play') throw new Error('modes on the card: ' + mine);
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('rsvplay.profile')));
+    if (saved.modes.join() !== 'play' || saved.seeking.length) throw new Error('saved as ' + JSON.stringify({ modes: saved.modes, seeking: saved.seeking }));
+    await page.click('#open-deck');
+    await page.waitForSelector('#deck-card', { timeout: 2000 });
+    const on = await page.$$eval('.mode-pill', (els) => els.filter((e) => !e.hidden).map((e) => e.getAttribute('data-mode') + (e.classList.contains('on') ? '*' : '')).join());
+    if (on !== 'play*') throw new Error('mode pills for a Play-only member: ' + on);
+  });
+  await step('...and finds the demo as it shipped: its chats, matches, notifications and people, none of the last member’s', async () => {
+    // the deck: everyone Aaron blocked, reported, passed or liked is back in it
+    const picks = await page.$$eval('#picks-strip .pick .pn', (els) => els.map((e) => e.textContent).join('|'));
+    if (picks !== 'Maya|Diego|Priya|Sam|Elena') throw new Error('top of the deck: ' + picks);
+    if (!(await cardName()).includes('Maya')) throw new Error('first card: ' + await cardName());
+    if (await page.$('#bookmark-btn.saved')) throw new Error('Maya is still saved');
+    // discovery settings are the defaults, not his
+    await page.click('#menu-btn');
+    const prefs = [await page.inputValue('#radius'), await page.inputValue('#age-min'), await page.inputValue('#age-max')].join();
+    if (prefs !== '15,25,55') throw new Error('discovery settings: ' + prefs);
+    await page.click('#settings-back');
+    // notifications: the three the demo ships with, and the dot
+    const dot = await page.$eval('#bell-btn .bell-dot', (el) => getComputedStyle(el).display);
+    if (dot === 'none') throw new Error('the bell has no dot: the last member’s "clear all" survived');
+    await page.click('#bell-btn');
+    const notifs = await page.locator('#notif-list .notif-item').count();
+    if (notifs !== 3) throw new Error(notifs + ' notifications');
+    await page.click('#notif-overlay', { position: { x: 8, y: 8 } });
+    // matches: Maya, Sam, Priya — no Elena or Jordan, no crew, nothing saved
+    await page.click('.tab[data-screen="screen-matches"]');
+    const matches = await page.$$eval('#match-grid-wrap .match-cell', (els) => els.map((e) => e.getAttribute('data-id')).join('|'));
+    if (matches !== 'maya|sam|priya') throw new Error('matches: ' + matches);
+    if (await page.$('#match-grid-wrap .crew, #match-grid-wrap .saved-cell')) throw new Error('a crew or a saved strip is showing');
+    // Priya's reply to Aaron would have landed by now, had it not been dropped
+    await page.waitForTimeout(2200);
+    // chats: the three seed threads, in order, saying what they said at first
+    await page.click('.tab[data-screen="screen-chat"]');
+    const threads = await page.$$eval('#thread-list .thread', (els) => els.map((e) =>
+      e.getAttribute('data-id') + (e.querySelector('.serve-badge') ? '+serve' : '') + (e.querySelector('.unread-dot') ? '+unread' : '')).join('|'));
+    if (threads !== 'maya+serve+unread|sam|priya+serve') throw new Error('threads: ' + threads);
+    const previews = await page.$$eval('#thread-list .thread-prev', (els) => els.map((e) => e.textContent));
+    if (!/^Rematch this weekend\?/.test(previews[0]) || !/^You: Booked it/.test(previews[1]) || !/coffee place two blocks away/.test(previews[2])) {
+      throw new Error('previews: ' + previews.join(' | '));
+    }
+    const logOf = async (id) => {
+      await page.click('#thread-list .thread[data-id="' + id + '"]');
+      await page.waitForSelector('#screen-convo.active', { timeout: 2000 });
+      const log = await page.$eval('#chat-log', (el) => ({ n: el.querySelectorAll('.msg').length, typing: !!el.querySelector('.is-typing'), text: el.textContent }));
+      if ((await page.inputValue('#chat-text')) !== '') throw new Error('the message box still holds text');
+      return log;
+    };
+    const maya = await logOf('maya');
+    if (maya.n !== 3 || maya.typing) throw new Error('Maya’s chat: ' + JSON.stringify(maya));
+    for (const said of LEFT_BY_AARON.concat(['Deal. Saturday'])) {
+      if (maya.text.includes(said)) throw new Error('Maya’s chat still holds "' + said + '"');
+    }
+    await page.click('#chat-back');
+    const priya = await logOf('priya');
+    if (priya.n !== 2 || priya.typing) throw new Error('Priya’s chat: ' + JSON.stringify(priya));
+    if (priya.text.includes(LEFT_BY_AARON[1]) || /Riverside Thursday/.test(priya.text)) throw new Error('Priya’s chat holds the last member’s exchange');
+    // and a chat answers her the once it answers anyone: Aaron used his up, she has hers
+    await page.fill('#chat-text', 'New here — hello!');
+    await page.click('#chat-sendbtn');
+    await page.waitForFunction(() => /Riverside Thursday/.test(document.querySelector('#chat-log').textContent), { timeout: 4000 });
+    await page.click('#chat-back');
+    // events: nobody is missing from the going rows
+    await page.click('.tab[data-screen="screen-events"]');
+    for (const [id, want] of [['e1', 'M|E|G'], ['e6', 'P|J|N']]) {
+      const card = '#event-list .event[data-id="' + id + '"]';
+      if ((await page.getAttribute(card + ' .event-head', 'aria-expanded')) !== 'false') throw new Error(id + ' is still expanded');
+      const faces = await page.$$eval(card + ' .going-row .ava', (els) => els.map((e) => e.textContent).join('|'));
+      if (faces !== want) throw new Error(id + ' going row: ' + faces);
+    }
+  });
+  await step('the deck opens in Play whenever Play is on, whatever order the modes were switched on in', async () => {
+    // Blake turns Date on, then Play off and on again: her saved modes now
+    // read Date first, the way an older profile's do.
+    await openSettings();
+    await page.click('#sw-date');
+    await page.click('#sw-play');
+    await page.click('#sw-play');
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rsvplay.profile')).modes.join());
+    if (stored !== 'date,play') throw new Error('saved modes: ' + stored);
+    await page.reload();
+    await page.waitForSelector('#screen-welcome.active', { timeout: 3000 });
+    await page.click('#btn-continue');
+    await page.waitForSelector('#screen-home.active', { timeout: 3000 });
+    await page.click('#open-deck');
+    await page.waitForSelector('#deck-card', { timeout: 2000 });
+    const on = await page.$$eval('.mode-pill', (els) => els.filter((e) => !e.hidden).map((e) => e.getAttribute('data-mode') + (e.classList.contains('on') ? '*' : '')).join());
+    if (on !== 'play*,date') throw new Error('mode pills: ' + on);
+    await page.click('#close-deck');
+  });
+  await step('signing out again and reloading opens on the welcome page', async () => {
+    await page.click('.tab[data-screen="screen-profile"]');
+    await page.click('#open-settings');
+    await page.click('#sign-out');
+    await page.waitForSelector('#screen-welcome.active', { timeout: 2000 });
+    const saved = await page.evaluate(() => localStorage.getItem('rsvplay.profile'));
+    if (saved) throw new Error('profile not cleared');
+    const drawn = await page.evaluate(() => document.querySelector('#phone').textContent);
+    for (const said of ['New here — hello!', 'Blake', '5550199']) {
+      if (drawn.includes(said)) throw new Error('still on the page after the second sign-out: "' + said + '"');
+    }
     await page.reload();
     await page.waitForSelector('#screen-welcome.active', { timeout: 3000 });
   });

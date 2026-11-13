@@ -175,3 +175,18 @@ revoke all on function public.profiles_phone_ban() from public, anon, authentica
 create trigger profiles_phone_ban
   before insert on public.profiles
   for each row execute function public.profiles_phone_ban();
+
+-- Lifting a ban after the account is gone (unban_member() needs the account,
+-- which delete_account() removed). Database owner / service role only: it is
+-- deliberately not granted to signed-in members, so an admin session cannot
+-- use it to probe whether a number is on the list.
+create or replace function public.unban_phone(p_phone text)
+returns boolean
+language plpgsql security definer set search_path = public
+as $$
+begin
+  delete from banned_phones where phone_hash = public.phone_ban_hash(p_phone);
+  return found;
+end
+$$;
+revoke all on function public.unban_phone(text) from public, anon, authenticated;

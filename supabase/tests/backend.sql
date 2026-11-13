@@ -2821,7 +2821,7 @@ delete from tournaments where id in ('00000000-0000-4000-8000-0000000008a1', '00
 delete from auth.users where id in ('00000000-0000-4000-8000-000000000801', '00000000-0000-4000-8000-000000000802',
                                     '00000000-0000-4000-8000-000000000803', '00000000-0000-4000-8000-000000000804');
 
--- ==== 10. The 2026-11 additions (migrations 33–39, m23) ====
+-- ==== 10. The 2026-11 additions (migrations 33–41) ====
 -- Kit, Lou, Moe, Nia and Sol are members in Phoenix; Oz runs the desk.
 -- Rewritten after the independent review: every stop is asserted from the
 -- side that must be refused, not only the side that must work.
@@ -3148,7 +3148,7 @@ do $$ begin
 end $$;
 reset role;
 
--- ---- 10c. Bans stick to the phone number (migrations 34, m23) ----
+-- ---- 10c. Bans stick to the phone number (migrations 34, 41) ----
 set request.jwt.claim.sub = '';
 update auth.users set phone = '+1 (317) 555-0101', phone_confirmed_at = now() where id = '00000000-0000-4000-8000-000000000902';
 set role authenticated;
@@ -3263,6 +3263,28 @@ reset role;
 set request.jwt.claim.sub = '';
 do $$ begin
   assert (select count(*) from banned_phones) = 1, 'deleting in good standing put a number on the ban list';
+end $$;
+-- The account is gone, so unban_member() has nothing to act on: the owner
+-- lifts the ban by number. Nobody signed in can call it.
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
+do $$ begin
+  begin
+    perform unban_phone('+1 317 555 0142');
+    assert false, 'an admin session can lift a ban by number (and so probe the list)';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+set request.jwt.claim.sub = '';
+do $$
+declare n int := (select count(*) from banned_phones);
+begin
+  assert not unban_phone('+1 317 555 0000'), 'lifting a ban on a number that was never banned said yes';
+  assert (select count(*) from banned_phones) = n, 'lifting a ban on another number removed one';
+  insert into banned_phones (phone_hash) values (phone_ban_hash('+13175550199'));
+  assert unban_phone('+1 (317) 555-0199'), 'the owner could not lift a ban by number, however the number is punctuated';
+  assert (select count(*) from banned_phones) = n, 'lifting a ban by number left it on the list';
 end $$;
 
 -- ---- 10c-ii. A verified phone is required to reach anyone (migration 39) ----
@@ -3681,7 +3703,7 @@ declare
     'is_desk', 'shared_a_court', 'event_rsvps_guard_member_writes', 'phone_ban_hash', 'enforce_phone_ban',
     'profiles_phone_ban', 'rate_limit_take', 'rate_limit_swipes', 'rate_limit_messages', 'in_quiet_hours',
     'profiles_check_timezone', 'league_members_close_up', 'blocks_end_league_challenges',
-    'profiles_suspension_leaves_leagues', 'profiles_guard_tier', 'enforce_event_priority'];
+    'profiles_suspension_leaves_leagues', 'profiles_guard_tier', 'enforce_event_priority', 'unban_phone'];
   bad text;
 begin
   assert (select count(distinct proname) from pg_proc where pronamespace = 'public'::regnamespace and proname = any (rpcs || internal))

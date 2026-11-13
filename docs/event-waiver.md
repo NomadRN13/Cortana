@@ -2,7 +2,10 @@
 
 > **Draft for counsel.** This is the text a member accepts before they can
 > check in to an event (`accept_event_waiver()`, migration `20260806000033`).
-> Every acceptance records the version string above. When counsel changes the
+> Every acceptance records the version string above. The acceptance (event,
+> member, version, time) is kept in `waiver_acceptances` even if the member
+> cancels the RSVP; it is erased only when the member deletes their account.
+> Counsel: confirm that retention is sufficient. When counsel changes the
 > wording, change it here, bump `current_waiver_version()` in a new migration,
 > and members accept the new version at their next event. Open questions for
 > counsel are in `docs/legal-review-2026-11.md` §4 (injury liability).

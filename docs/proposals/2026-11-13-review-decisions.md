@@ -93,3 +93,18 @@ before any league is created.
 Already done from the same finding, because it had no cost: a member's real
 rung is no longer readable (`league_members` is desk-only and `join_league()`
 answers with the visible rung).
+
+## 7. Two small sign-offs
+
+**The safety agent's opening line.** `.claude/agents/safety-support.md` still
+opens "RSVPlay is a dating and social app for racquet sports players". The
+file is safety core, so it was not edited. Proposed replacement, changing no
+rule: "RSVPlay is an events-first social app for paddle and racquet sports
+players, with opt-in dating."
+
+**Store category.** The Play listing draft is filed under the Dating category
+and Apple's questionnaire answers "Is this a dating app? Yes". Both are
+truthful while Date mode exists, and stores penalise an undeclared dating
+feature. The alternative is Social on Play with dating declared in the
+content questionnaire. **Recommendation:** ask the store reviewer contact or
+counsel before filing; until then the draft stays as it is.

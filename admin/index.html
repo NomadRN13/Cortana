@@ -686,9 +686,10 @@
       if (!confirm((banning ? 'Ban ' : 'Suspend ') + who + '?\n\nThey disappear from everyone\u2019s deck, their open '
         + 'conversations close, they\u2019re withdrawn from tournaments and ladders, and they '
         + 'can\u2019t message, swipe or join events. They can still sign in '
-        + 'and delete their own account, and you can undo this.'
+        + 'and delete their own account, and you can undo this while the account exists.'
         + (banning ? '\n\nA ban also blocks their phone number: it can\u2019t be verified on any '
-          + 'account again until you lift the ban.' : ''))) return;
+          + 'account again until you lift the ban. If they delete the account, only the '
+          + 'project owner can lift it (see the backend setup guide).' : ''))) return;
       var reason = prompt('A short note for the record (optional):', '') || '';
       rest('POST', '/rest/v1/rpc/' + (banning ? 'ban_member' : 'suspend_member'), { p_user: target, p_reason: reason })
         .then(function (ok) {

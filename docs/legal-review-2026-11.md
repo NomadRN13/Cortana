@@ -14,7 +14,7 @@
 
 ## What RSVPlay does
 
-- A dating and social app for racquet-sports players, 18 and over, run from Indianapolis.
+- An events-first social app for paddle and racquet sports players, 18 and over, with an opt-in dating mode, run from Indianapolis.
 - Members sign in with an emailed code, Apple or Google, and verify a phone number by text through Twilio.
 - Members can be matched for dating, play or friends, in one or more of 12 US cities in Indiana, California, Arizona, Washington, Texas, Florida and DC.
 - Organisers run free meetup events and free single-elimination tournaments of up to 72 players. Players record their own results, and the organiser can correct them or award a walkover.

@@ -103,3 +103,37 @@ shipped. Agents append; nobody rewrites history.
   cannot be added back (`get_my_crew()`, `crew_add()`); the phone app drops
   them from the list on the spot. The conversation stays, as a record for the
   desk. Harness 10b and `tests/app/checkin.test.js` assert it.
+- **Also fixed (migration 34, unreleased):** a ban on an account that was
+  later deleted could never be lifted, because `unban_member()` needs the
+  account. `unban_phone('<number>')` lifts it by number; it is owner-only and
+  not callable through the API, so it cannot be used to probe the list. The
+  rules doc, the deletion page, the event-night guide and the desk's confirm
+  text now say exactly what is kept and who can lift it.
+- **Also fixed (deployment):** the two migrations named `m22.sql` and
+  `m23_ban_survives_deletion.sql` would have been skipped by `supabase db
+  push`, which only applies files named `<timestamp>_name.sql`. They are now
+  `20260806000040_waitlist_on_delete.sql` and
+  `20260806000041_ban_survives_deletion.sql` (same contents, same order).
+  Earlier entries in this log that say "m23" mean migration 41. Checklist row
+  4.3 now gives the three ways to apply the database and a one-line check.
+- **Also fixed (documents and drafts):** the store listing, the Indianapolis
+  outreach drafts, the legal-review summary and two agent openers still led
+  with "dating and social app"; they now say events-first with opt-in dating,
+  and the health check refuses the old line. The store data tables list what
+  migrations 33–41 store. The privacy policy says who can see a ladder. The
+  waiver draft states how long an acceptance is kept.
+  `outreach/safety/decisions-log.md` exists, so the two places that cite it
+  resolve.
+- **Left for the founder (safety core, not edited):** the same one-sentence
+  opener in `.claude/agents/safety-support.md` — decision 7.
+- **Prototype (the review's seven findings):** sign-out now replaces the whole
+  state, so nothing of the previous member is left; the dating tag uses both
+  age ranges; Play is pre-selected and Date is opt-in; the event card and the
+  photo tiles no longer nest one control inside another; the check-in code
+  accepts 4–8 letters or digits; a report hides the person from the crew, the
+  going row and the deck; the funnel records `opened_chat`. Each has a test
+  that failed when its fix was reverted.
+- **Verified:** `PW_CHROMIUM=/opt/pw-browsers/chromium ./scripts/healthcheck.sh
+  --full` — 96 passed, 0 failed (backend: 41 migrations, ALL BACKEND TESTS
+  PASSED; app: all green; web: prototype 49, admin 12, admin-live 9, waitlist
+  5, events 23, funnel 7, share 13).
