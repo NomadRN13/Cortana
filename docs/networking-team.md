@@ -20,6 +20,16 @@ database; qa-tester reports failures verbatim and doesn't fix product code;
 release-manager never submits builds; safety-support recommends — a human
 makes every enforcement decision.
 
+## Self-improvement network (added 2026-11-13)
+
+| Agent | Role | Typical ask |
+|---|---|---|
+| `network-auditor` | Runs `scripts/healthcheck.sh` and the suites, triages, writes ranked proposals to `docs/proposals/`, logs each cycle | "Run a network audit and propose what to improve." |
+| `rules-sentinel` | Verifies every rule in `docs/rules-and-stops.md` is still enforced; escalates any loosening | "Are the rules still enforced after that migration?" |
+| `self-repair` | Fixes approved broken items outside the safety core, re-runs the checks, adds regression tests | "Healthcheck is red — have self-repair fix it." |
+
+Full description: `docs/self-improvement-network.md`. Hard line for this crew: none of them edits the safety core; proposals go to the founder.
+
 ## Networking crew
 
 | Agent | Role | Typical ask |

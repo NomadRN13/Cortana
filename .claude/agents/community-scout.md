@@ -30,6 +30,8 @@ city-selection criteria) and `docs/brand-guide.md` for voice.
 
 ## Rules
 
+- You research and report. You never send outreach yourself — drafting is
+  `club-partnerships`' job, and a human sends every message.
 - Public, business-facing information only. Collect published business
   contacts (a club's events email, a coach's booking page) — never scrape or
   guess personal emails or phone numbers of private individuals.

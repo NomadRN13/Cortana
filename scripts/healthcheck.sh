@@ -25,7 +25,7 @@ done
 
 echo "── brand"
 # the retired name must not come back anywhere but git history and the proposals/log that mention it by name
-residue=$(git grep -I -n -i -E "40 ?/ ?love|fortylove|40love|40-love" -- . ':!presentations/' ':!docs/proposals/' ':!docs/improvement-log.md' ':!CLAUDE.md' ':!docs/brand-guide.md' ':!docs/rules-and-stops.md' ':!docs/business-plan.md' ':!docs/self-improvement-network.md' ':!netlify.toml' 2>/dev/null | wc -l)
+residue=$(git grep -I -n -i -E "40 ?/ ?love|fortylove|40love|40-love" -- . ':!presentations/' ':!scripts/healthcheck.sh' ':!docs/proposals/' ':!docs/improvement-log.md' ':!CLAUDE.md' ':!docs/brand-guide.md' ':!docs/rules-and-stops.md' ':!docs/business-plan.md' ':!docs/self-improvement-network.md' ':!netlify.toml' 2>/dev/null | wc -l)
 if [ "$residue" = "0" ]; then pass "no 40/Love residue in product, docs, tests or agents"; else fail "40/Love residue: $residue line(s) (git grep -i '40/love|fortylove|40love|40-love')"; fi
 check "wordmark is RSVPlay + ball in the prototype" grep -q "el.innerHTML = 'RSVPlay<span class=\"ball\">" app/index.html
 check "no retired palette hexes in app/landing/admin/mobile" bash -c '! git grep -q -i -E "#(0A0B0D|D6F44F|F4F6F0|17191D|1F2227|101215)" -- app landing admin mobile/src scripts/make-icons.js'
