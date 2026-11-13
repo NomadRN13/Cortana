@@ -645,6 +645,7 @@
             '<button class="btn btn-ghost btn-sm" data-act="reviewed">Dismiss</button>' +
             '<button class="btn btn-ghost btn-sm" data-act="actioned">Actioned elsewhere</button>' +
             '<button class="btn btn-danger btn-sm" data-act="suspend">Suspend ' + esc(r.target) + '</button>' +
+            '<button class="btn btn-danger btn-sm" data-act="ban">Ban ' + esc(r.target) + '</button>' +
           '</div>' +
         '</div></div>';
     }).join('') : '<div class="empty">No open reports. A quiet court is a good court.</div>';
@@ -673,23 +674,30 @@
 
     // Suspending is the one thing here that changes somebody's account, so it
     // asks first, and it says what it does and doesn't do.
-    if (status === 'suspend') {
+    // A ban is a suspension that also sticks to the phone number: the same
+    // person can't come back on a new email with the same phone (ban_member,
+    // migration 20260806000034). Suspend when it might be a misunderstanding;
+    // ban when it isn't.
+    if (status === 'suspend' || status === 'ban') {
+      var banning = status === 'ban';
       var who = item.getAttribute('data-target-name') || 'this member';
       var target = item.getAttribute('data-target');
       if (!target) { alert('This report has no member attached — it may already be deleted.'); return; }
-      if (!confirm('Suspend ' + who + '?\n\nThey disappear from everyone\u2019s deck, their open '
-        + 'conversations close, they\u2019re withdrawn from tournaments still taking entries, and they '
+      if (!confirm((banning ? 'Ban ' : 'Suspend ') + who + '?\n\nThey disappear from everyone\u2019s deck, their open '
+        + 'conversations close, they\u2019re withdrawn from tournaments and ladders, and they '
         + 'can\u2019t message, swipe or join events. They can still sign in '
-        + 'and delete their own account, and you can undo this.')) return;
+        + 'and delete their own account, and you can undo this.'
+        + (banning ? '\n\nA ban also blocks their phone number: it can\u2019t be verified on any '
+          + 'account again until you lift the ban.' : ''))) return;
       var reason = prompt('A short note for the record (optional):', '') || '';
-      rest('POST', '/rest/v1/rpc/suspend_member', { p_user: target, p_reason: reason })
+      rest('POST', '/rest/v1/rpc/' + (banning ? 'ban_member' : 'suspend_member'), { p_user: target, p_reason: reason })
         .then(function (ok) {
           if (ok !== true) throw new Error('the database refused it — is this account on the admin list?');
           return rest('PATCH', '/rest/v1/reports?id=eq.' + encodeURIComponent(id),
             { status: 'actioned' }, { 'Prefer': 'return=minimal' });
         })
         .then(loadReports)
-        .catch(function (e) { alert('Could not suspend: ' + e.message); });
+        .catch(function (e) { alert('Could not ' + (banning ? 'ban' : 'suspend') + ': ' + e.message); });
       return;
     }
 

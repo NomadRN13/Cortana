@@ -258,7 +258,7 @@ const tierOf = (row) => (row && ['free', 'plus', 'club'].includes(row.tier) ? ro
 function serverSaid(e) {
   const code = String((e && e.code) || '');
   const msg = (e && e.message) || '';
-  return /^(22|23|42|P0)/.test(code) && msg ? msg : null;
+  return /^(22|23|42|54|P0)/.test(code) && msg ? msg : null;  // 54000 = a rate limit, in the server's words
 }
 
 function mapMsgRow(row, myId) {

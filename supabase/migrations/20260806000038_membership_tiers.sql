@@ -47,7 +47,7 @@ returns boolean
 language plpgsql security definer set search_path = public
 as $$
 begin
-  if not public.is_admin() then
+  if not public.is_desk() then
     return false;
   end if;
   if p_tier not in ('free', 'plus', 'club') then
@@ -69,8 +69,11 @@ begin
   if new.status not in ('going') then
     return new;
   end if;
-  if tg_op = 'UPDATE' and old.status in ('going', 'checked_in') then
-    return new;  -- already holding a place
+  -- Already holding a place at THIS event (not relying on migration 33's
+  -- guard to stop the row being pointed at another one).
+  if tg_op = 'UPDATE' and old.status in ('going', 'checked_in')
+     and new.event_id = old.event_id and new.user_id = old.user_id then
+    return new;
   end if;
   select general_opens_at into opens from events where id = new.event_id;
   if opens is not null and now() < opens

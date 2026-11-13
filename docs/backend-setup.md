@@ -403,23 +403,35 @@ Dead tokens (app uninstalled) are pruned automatically after a failed send.
 
 ## Running an event night: check-in codes, bans and tiers (added 2026-11-13)
 
-All three are admin-only functions; run them from the Supabase SQL editor
-while signed in as an admin, or from the moderation desk once it grows the
-buttons. Nothing here takes money.
+Run these from the Supabase **SQL editor** (the project owner counts as the
+desk there — no sign-in needed), or call them from the app as someone on the
+admin list. Banning is also a button on the moderation desk (`/admin` →
+Reports → **Ban**). Nothing here takes money.
 
 ```sql
 -- Give tonight's event a code the host reads out (4–8 letters or digits).
 select set_event_checkin_code('<event id>', '4821');
 
+-- Someone locked out after five wrong codes, or with a dead phone: check them
+-- in by hand. They must have RSVP'd and accepted the waiver.
+select admin_check_in('<event id>', '<user id>');
+
 -- Ban someone: suspends the account and blocks its phone number from ever
--- verifying again, on any account. unban_member() reverses both.
+-- verifying again, on any account. unban_member('<user id>') reverses both.
 select ban_member('<user id>', 'why, in a sentence');
 
 -- Give a member Club (or 'plus' / 'free'). A purchase flow will do this later.
 select set_member_tier('<user id>', 'club');
 ```
 
-Priority signup: set `events.general_opens_at`; before that time only Club
-members can RSVP. Quiet hours need nothing from you — the push function asks
-the database, and phones send their timezone when the app opens. Redeploy the
-function after pulling this change: `supabase functions deploy send-push --no-verify-jwt`.
+- **Priority signup:** set `events.general_opens_at`; before that time only
+  Club members can take a place (anyone can join the waitlist).
+- **Quiet hours** need nothing from you: the push function asks the database,
+  and phones send their timezone when the app opens. Redeploy the function
+  after pulling this change: `supabase functions deploy send-push --no-verify-jwt`.
+- **A verified phone is required** to swipe, message, RSVP, enter a tournament
+  or join a ladder (migration 39). A store-review or test account therefore
+  needs a phone verified once, like any member. The switch is
+  `app_settings.require_verified_phone`; leave it on.
+- **Ladders:** create one with
+  `insert into leagues (city, title, venue, sport, starts_at, weeks) values (...)`.

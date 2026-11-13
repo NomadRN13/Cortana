@@ -1,5 +1,32 @@
 # Proposed additions — 2026-11-13 (for the founder's review)
 
+> **Status, 2026-11-13: the founder said "do all 15". All fifteen were acted
+> on the same day**, then independently reviewed and hardened. What "done"
+> means for each:
+>
+> | # | Item | Status |
+> |---|---|---|
+> | 1 | Events-first Home | **Done** — prototype and phone app; Play is the default mode |
+> | 2 | Crew | **Done** — migration 33, prototype, phone app |
+> | 3 | Check-in codes; deposit promise | **Done** — host-code check-in built; every deposit line removed (canvases too). Deposits themselves not built: no payments exist |
+> | 4 | Tournament bracket screens | **Done** — prototype and phone app |
+> | 5 | Ladder league | **Done** — migration 37, phone app; the prototype shows no ladder yet |
+> | 6 | Club tier | **Done as entitlement only** — migration 38, shown in the app; no purchase flow |
+> | 7 | Waiver at RSVP | **Done** — text is a draft for counsel (`docs/event-waiver.md`) |
+> | 8 | Phone-hash ban list | **Done** — migration 34 + m23; Ban button on the desk |
+> | 9 | Rate limits | **Done** — migration 35 |
+> | 10 | Quiet hours | **Done** — migration 36 + push function (needs redeploy) |
+> | 11 | CI on every push | **Done** — `.github/workflows/ci.yml` (first run will confirm it on GitHub's runners) |
+> | 12 | Weekly scheduled audit | **Done** — Mondays 7:47am Indianapolis time |
+> | 13 | Rename live infrastructure | **Yours** — steps in `docs/go-live-rename.md`; cannot be done from the repo |
+> | 14 | Tokens as one file | **Done** — `brand/tokens.json`, checked by the health check |
+> | 15 | Name clearance | **First pass done** — `docs/name-clearance.md`; USPTO, domains, handles and counsel are yours. One name to ask counsel about: RSVPay |
+>
+> Also added beyond the fifteen, because the review showed it was needed:
+> migration 39 (a verified phone is required to swipe, message, RSVP, enter or
+> join). Decisions the review left for you: `2026-11-13-review-decisions.md`.
+> The original proposal text follows unchanged.
+
 First output of the self-improvement network: what I would add or change
 next, ranked. Nothing here has been done. Each item says what, why (with the
 evidence), where, the risk, the effort (S = hours, M = a day or two, L = a

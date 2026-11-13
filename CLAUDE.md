@@ -24,7 +24,7 @@ tournament or a pickup game, show up and play, then keep the people you met as
 partners, friends or, if both people opt in, dates. Dating is a mode, never
 the headline. Tagline: **Serve. Rally. Connect.** Positioning line: *The app
 for paddle and racquet sports.* Launch market: Indianapolis and Hamilton
-County (Fishers, Carmel, Noblesville, Geist); 11 cities in the registry.
+County (Fishers, Carmel, Noblesville, Geist); 12 cities in the registry.
 
 The name "40/Love" is retired. Never reintroduce it, its tagline ("Love at
 first serve"), its score chips ("40 – LOVE") or "the first date is a game".
@@ -46,14 +46,20 @@ headlines:
 1. **Humans send, agents draft.** No agent sends, posts, publishes, submits a
    build, pushes to a store, or runs SQL against production.
 2. **Real people only, 18+.** Phone verification by one-time text before
-   signup completes; birthdate check in the database; teams are two adults.
+   signup completes, and the database refuses swipes, messages, RSVPs,
+   tournament entries and ladder joins without it; a ban sticks to the phone
+   number; birthdate check in the database; teams are two adults.
 3. **Privacy by design.** Coordinates rounded to ~1 km on the phone, set only
    through `set_my_location()`, moves limited to once per 6 hours, distance
    computed between ~2.5-mile grid squares in whole miles. No last names.
    Other members' settings are unreadable. Hard account deletion.
 4. **Safety.** Blocks are absolute and symmetric; reports go to a human desk
    with a 24-hour target; photos are pending until an admin approves (the
-   database enforces it); admin membership is dashboard-only.
+   database enforces it); admin membership is dashboard-only. Events: waiver
+   before check-in, check-in only with the host's code, attendance private,
+   crew = people who checked in with you, "also open to dating" only when
+   mutual. Rate limits on swipes, reports and messages. No payments, no
+   deposits, no pricing by gender.
 5. **Backend changes are migrations with RLS and a passing harness run**, and
    `supabase/setup.sql` is rebuilt from them (`scripts/build-setup-sql.sh`).
 6. **The safety core is never auto-edited by an agent** (the stops above, the
@@ -68,7 +74,8 @@ headlines:
 ./scripts/test-web.sh        # prototype click-through, waitlist, moderation desk, share cards
 ```
 
-All three suites were green before and after the RSVPlay transfer. Set
+`./scripts/healthcheck.sh` (add `--full` for the suites) is the one-command
+check; CI runs it on every push. Set
 `PW_CHROMIUM=/opt/pw-browsers/chromium` in a cloud session.
 
 ## Derived files — regenerate, never hand-edit
@@ -76,17 +83,23 @@ All three suites were green before and after the RSVPlay transfer. Set
 `supabase/setup.sql` (`scripts/build-setup-sql.sh`), `site/`
 (`scripts/build-site.sh`), the ball in every page (`scripts/sync-mark.js`),
 icons, splash, share card and `mobile/assets/ball.png`
-(`node scripts/make-icons.js`, needs `playwright-core` and a Chromium).
+(`node scripts/make-icons.js`, needs `playwright-core` and a Chromium),
+`brand/tokens.json` (`node scripts/build-tokens.js`, from `mobile/src/theme.js`).
 
 ## The agent team
 
-Ten agents in `.claude/agents/`, two crews, described in
+Thirteen agents in `.claude/agents/`: two crews of ten, described in
 `docs/networking-team.md`: networking (`community-scout`,
 `club-partnerships`, `social-content`, `waitlist-community`,
 `mixer-coordinator`, `validation-analyst`) and product & launch
 (`backend-engineer`, `qa-tester`, `release-manager`, `safety-support`). Ask
 for one by name. Every agent reads `docs/brand-guide.md` and works from
-`docs/business-plan.md` (read its 2026-11 positioning note first).
+`docs/business-plan.md` (read its 2026-11 positioning note first). The other
+three are the self-improvement network (`network-auditor`, `rules-sentinel`,
+`self-repair`; `docs/self-improvement-network.md`, the `self-improve` skill):
+they measure with `./scripts/healthcheck.sh`, propose in `docs/proposals/`,
+repair only outside the safety core, and log in `docs/improvement-log.md`.
+A weekly scheduled audit runs the loop on Mondays.
 
 ## Live infrastructure to rename when going live
 

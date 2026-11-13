@@ -35,12 +35,25 @@ as $$
 declare
   v_phone text;
 begin
-  if not public.is_admin() then
+  -- The desk: an admin in the app or on the moderation desk, or the project
+  -- owner in the SQL editor (is_desk, migration 33).
+  if not public.is_desk() then
     return false;
   end if;
-  if not public.suspend_member(p_user, p_reason) then
+  if p_user = auth.uid() then
+    return false;   -- banning yourself locks out the only person who can undo it
+  end if;
+  -- The same two steps as suspend_member(): stop them, and close their open
+  -- conversations so nothing they sent keeps a thread alive.
+  update profiles
+     set suspended_at = coalesce(suspended_at, now()),
+         suspended_reason = nullif(left(coalesce(p_reason, ''), 300), '')
+   where id = p_user;
+  if not found then
     return false;
   end if;
+  update matches set closed_at = now()
+   where closed_at is null and (user_a = p_user or user_b = p_user);
   select phone into v_phone from auth.users where id = p_user;
   if v_phone is not null and btrim(v_phone) <> '' then
     insert into banned_phones (phone_hash, reason)
@@ -59,14 +72,15 @@ as $$
 declare
   v_phone text;
 begin
-  if not public.is_admin() then
+  if not public.is_desk() then
     return false;
   end if;
   select phone into v_phone from auth.users where id = p_user;
   if v_phone is not null then
     delete from banned_phones where phone_hash = public.phone_ban_hash(v_phone);
   end if;
-  return public.unsuspend_member(p_user);
+  update profiles set suspended_at = null, suspended_reason = null where id = p_user;
+  return found;
 end
 $$;
 
@@ -109,3 +123,55 @@ revoke all on function public.unban_member(uuid) from public, anon;
 grant execute on function public.ban_member(uuid, text) to authenticated;
 grant execute on function public.unban_member(uuid) to authenticated;
 grant execute on function public.sync_phone_verification() to authenticated;
+
+-- ---- the ban is enforced where the number becomes known ----
+-- (Added after the independent review.) sync_phone_verification() is a call the
+-- client chooses to make. These two triggers don't wait for it:
+--   (a) an account that attaches a banned, confirmed number is suspended by
+--       auth's own write to auth.users;
+--   (b) a profile created for an account that already holds one starts
+--       suspended. (The name sorts after profiles_guard_member_writes, which
+--       clears suspended_at on a member's insert.)
+-- Neither ever raises, so neither can block a signup.
+create or replace function public.enforce_phone_ban()
+returns trigger
+language plpgsql security definer set search_path = public, auth
+as $$
+begin
+  if new.phone_confirmed_at is not null
+     and new.phone is not null and btrim(new.phone) <> ''
+     and exists (select 1 from public.banned_phones where phone_hash = public.phone_ban_hash(new.phone)) then
+    update public.profiles
+       set suspended_at = coalesce(suspended_at, now()),
+           suspended_reason = coalesce(suspended_reason, 'This phone number is banned.')
+     where id = new.id;
+  end if;
+  return new;
+end
+$$;
+revoke all on function public.enforce_phone_ban() from public, anon, authenticated;
+create trigger users_enforce_phone_ban
+  after insert or update of phone, phone_confirmed_at on auth.users
+  for each row execute function public.enforce_phone_ban();
+
+create or replace function public.profiles_phone_ban()
+returns trigger
+language plpgsql security definer set search_path = public, auth
+as $$
+begin
+  if exists (select 1 from auth.users u
+              where u.id = new.id
+                and u.phone_confirmed_at is not null
+                and u.phone is not null and btrim(u.phone) <> ''
+                and exists (select 1 from public.banned_phones b
+                             where b.phone_hash = public.phone_ban_hash(u.phone))) then
+    new.suspended_at := coalesce(new.suspended_at, now());
+    new.suspended_reason := coalesce(new.suspended_reason, 'This phone number is banned.');
+  end if;
+  return new;
+end
+$$;
+revoke all on function public.profiles_phone_ban() from public, anon, authenticated;
+create trigger profiles_phone_ban
+  before insert on public.profiles
+  for each row execute function public.profiles_phone_ban();

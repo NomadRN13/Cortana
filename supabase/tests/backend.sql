@@ -49,8 +49,19 @@ grant usage on schema public, auth, storage to anon, authenticated;
 alter default privileges in schema public grant all on tables to anon, authenticated;
 alter default privileges in schema public grant all on sequences to anon, authenticated;
 alter default privileges in schema storage grant all on tables to anon, authenticated;
+-- Supabase also grants EXECUTE on every new function in public to anon and
+-- authenticated by default. Without mirroring that, a function whose migration
+-- revoked only from PUBLIC looks locked down here and is callable by anon on
+-- a real project.
+alter default privileges in schema public grant execute on functions to anon, authenticated;
 
 \i :migrations
+
+-- Migration 39 requires a verified phone before a member can swipe, message,
+-- RSVP, enter a tournament or join a ladder. The suites below predate it and
+-- create members without one, so it is switched off here and switched ON for
+-- its own test (10c-ii). Only the database owner can touch this switch.
+update public.app_settings set require_verified_phone = false;
 
 grant all on all tables in schema storage to anon, authenticated;
 grant usage, select on all sequences in schema public to anon, authenticated;
@@ -2810,30 +2821,56 @@ delete from tournaments where id in ('00000000-0000-4000-8000-0000000008a1', '00
 delete from auth.users where id in ('00000000-0000-4000-8000-000000000801', '00000000-0000-4000-8000-000000000802',
                                     '00000000-0000-4000-8000-000000000803', '00000000-0000-4000-8000-000000000804');
 
--- ==== 10. The 2026-11 additions (migrations 33–38) ====
--- Kit, Lou, Moe, Nia are members in Phoenix; Oz runs the desk.
+-- ==== 10. The 2026-11 additions (migrations 33–39, m23) ====
+-- Kit, Lou, Moe, Nia and Sol are members in Phoenix; Oz runs the desk.
+-- Rewritten after the independent review: every stop is asserted from the
+-- side that must be refused, not only the side that must work.
 reset role;
 set request.jwt.claim.sub = '';
 insert into auth.users (id, email) values
   ('00000000-0000-4000-8000-000000000901', 'x-kit@example.com'), ('00000000-0000-4000-8000-000000000902', 'x-lou@example.com'), ('00000000-0000-4000-8000-000000000903', 'x-moe@example.com'),
-  ('00000000-0000-4000-8000-000000000904', 'x-nia@example.com'), ('00000000-0000-4000-8000-000000000905', 'x-oz@example.com');
-insert into profiles (id, first_name, birthdate, city, gender, seeking, modes) values
-  ('00000000-0000-4000-8000-000000000901', 'Kit', '1990-01-01', 'phoenix', 'woman', '{man}',   '{date,play}'),
-  ('00000000-0000-4000-8000-000000000902', 'Lou', '1990-01-01', 'phoenix', 'man',   '{woman}', '{date,play}'),
-  ('00000000-0000-4000-8000-000000000903', 'Moe', '1990-01-01', 'phoenix', 'man',   '{woman}', '{play}'),
-  ('00000000-0000-4000-8000-000000000904', 'Nia', '1990-01-01', 'phoenix', 'woman', '{man}',   '{date,play}'),
-  ('00000000-0000-4000-8000-000000000905', 'Oz',  '1990-01-01', 'phoenix', 'man',   '{woman}', '{play}');
+  ('00000000-0000-4000-8000-000000000904', 'x-nia@example.com'), ('00000000-0000-4000-8000-000000000905', 'x-oz@example.com'), ('00000000-0000-4000-8000-000000000909', 'x-sol@example.com');
+insert into profiles (id, first_name, birthdate, city, gender, seeking, modes, phone_verified_at) values
+  ('00000000-0000-4000-8000-000000000901', 'Kit', '1990-01-01', 'phoenix', 'woman', '{man}',   '{date,play}', now()),
+  ('00000000-0000-4000-8000-000000000902', 'Lou', '1990-01-01', 'phoenix', 'man',   '{woman}', '{date,play}', now()),
+  ('00000000-0000-4000-8000-000000000903', 'Moe', '1990-01-01', 'phoenix', 'man',   '{woman}', '{play}',      now()),
+  ('00000000-0000-4000-8000-000000000904', 'Nia', '1990-01-01', 'phoenix', 'woman', '{man}',   '{date,play}', now()),
+  ('00000000-0000-4000-8000-000000000905', 'Oz',  '1990-01-01', 'phoenix', 'man',   '{woman}', '{play}',      now()),
+  ('00000000-0000-4000-8000-000000000909', 'Sol', '1990-01-01', 'phoenix', 'man',   '{woman}', '{play}',      now());
 insert into admins (user_id) values ('00000000-0000-4000-8000-000000000905') on conflict do nothing;
 insert into events (id, title, venue, starts_at, sport, capacity, city) values
-  ('00000000-0000-4000-8000-0000000009e1', 'Crew Night', 'Test Courts', now() + interval '30 minutes', 'pickleball', 8, 'phoenix');
+  ('00000000-0000-4000-8000-0000000009e1', 'Crew Night',  'Test Courts', now() + interval '30 minutes', 'pickleball', 8, 'phoenix'),
+  ('00000000-0000-4000-8000-0000000009e3', 'Other Night', 'Test Courts', now() + interval '20 minutes', 'pickleball', 8, 'phoenix'),
+  ('00000000-0000-4000-8000-0000000009e4', 'Next Week',   'Test Courts', now() + interval '3 days',     'pickleball', 8, 'phoenix'),
+  ('00000000-0000-4000-8000-0000000009e5', 'Long Over',   'Test Courts', now() - interval '9 hours',    'pickleball', 8, 'phoenix');
+insert into event_rsvps (event_id, user_id, waiver_accepted_at) values ('00000000-0000-4000-8000-0000000009e5', '00000000-0000-4000-8000-000000000901', now());
 
 -- ---- 10a. Waiver and check-in (migration 33) ----
 set role authenticated;
-set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
-select set_event_checkin_code('00000000-0000-4000-8000-0000000009e1', '4821');
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
 do $$
 begin
+  begin
+    perform set_event_checkin_code('00000000-0000-4000-8000-0000000009e1', '1111');
+    assert false, 'a member set a check-in code';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into event_checkin_codes (event_id, code) values ('00000000-0000-4000-8000-0000000009e1', '1111');
+    assert false, 'a member wrote a check-in code';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
+select set_event_checkin_code('00000000-0000-4000-8000-0000000009e1', '4821');
+select set_event_checkin_code('00000000-0000-4000-8000-0000000009e3', '7777');
+select set_event_checkin_code('00000000-0000-4000-8000-0000000009e4', '5555');
+select set_event_checkin_code('00000000-0000-4000-8000-0000000009e5', '6666');
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
+do $$
+declare ans jsonb;
+begin
+  assert (select count(*) from event_checkin_codes) = 0, 'a member can read check-in codes';
   begin
     insert into event_rsvps (event_id, user_id, status) values ('00000000-0000-4000-8000-0000000009e1', '00000000-0000-4000-8000-000000000901', 'checked_in');
     assert false, 'a member checked themselves in by writing the row';
@@ -2841,49 +2878,149 @@ begin
   end;
   insert into event_rsvps (event_id, user_id, status, waiver_accepted_at, checked_in_at)
   values ('00000000-0000-4000-8000-0000000009e1', '00000000-0000-4000-8000-000000000901', 'going', now(), now());
-  assert (select waiver_accepted_at is null and checked_in_at is null from event_rsvps
-           where event_id = '00000000-0000-4000-8000-0000000009e1' and user_id = '00000000-0000-4000-8000-000000000901'),
+  assert (select waiver_accepted_at is null and checked_in_at is null
+            from get_my_event_stamps() where event_id = '00000000-0000-4000-8000-0000000009e1'),
     'a member forged a waiver or check-in time on insert';
-  assert (select count(*) from event_checkin_codes) = 0, 'a member can read check-in codes';
+  begin
+    perform checked_in_at from event_rsvps where event_id = '00000000-0000-4000-8000-0000000009e1';
+    assert false, 'members can read who checked in, and when';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform waiver_accepted_at from event_rsvps where event_id = '00000000-0000-4000-8000-0000000009e1';
+    assert false, 'members can read when others accepted the waiver';
+  exception when insufficient_privilege then null;
+  end;
   begin
     perform check_in_event('00000000-0000-4000-8000-0000000009e1', '4821');
     assert false, 'checked in without accepting the waiver';
   exception when insufficient_privilege then
     assert sqlerrm like '%waiver%', sqlerrm;
   end;
-  perform accept_event_waiver('00000000-0000-4000-8000-0000000009e1');
-  assert (select waiver_version = current_waiver_version() from event_rsvps
-           where event_id = '00000000-0000-4000-8000-0000000009e1' and user_id = '00000000-0000-4000-8000-000000000901'), 'waiver version not recorded';
   begin
-    perform check_in_event('00000000-0000-4000-8000-0000000009e1', '0000');
-    assert false, 'a wrong code checked someone in';
-  exception when invalid_parameter_value then
-    assert sqlerrm like '%code%', sqlerrm;
+    update event_rsvps set waiver_accepted_at = now() where event_id = '00000000-0000-4000-8000-0000000009e1' and user_id = '00000000-0000-4000-8000-000000000901';
+    assert false, 'a member forged a waiver by updating the row';
+  exception when insufficient_privilege then null;
+  end;
+  perform accept_event_waiver('00000000-0000-4000-8000-0000000009e1');
+  begin
+    update event_rsvps set checked_in_at = now() where event_id = '00000000-0000-4000-8000-0000000009e1' and user_id = '00000000-0000-4000-8000-000000000901';
+    assert false, 'a member forged a check-in time by updating the row';
+  exception when insufficient_privilege then null;
   end;
   begin
     update event_rsvps set status = 'checked_in' where event_id = '00000000-0000-4000-8000-0000000009e1' and user_id = '00000000-0000-4000-8000-000000000901';
     assert false, 'a member checked themselves in by updating the row';
   exception when insufficient_privilege then null;
   end;
-  perform check_in_event('00000000-0000-4000-8000-0000000009e1', ' 4821 ');
-  assert (select status = 'checked_in' and checked_in_at is not null from event_rsvps
-           where event_id = '00000000-0000-4000-8000-0000000009e1' and user_id = '00000000-0000-4000-8000-000000000901'), 'the right code did not check in';
-  perform check_in_event('00000000-0000-4000-8000-0000000009e1', '4821');  -- twice is fine
+  ans := check_in_event('00000000-0000-4000-8000-0000000009e1', '0000');
+  assert not (ans ->> 'ok')::boolean and (ans ->> 'tries_left')::int = 4 and ans ->> 'message' like '%code%',
+    format('a wrong code answered %s', ans);
+  assert (select checked_in_at is null from get_my_event_stamps() where event_id = '00000000-0000-4000-8000-0000000009e1'), 'a wrong code checked someone in';
+  ans := check_in_event('00000000-0000-4000-8000-0000000009e1', ' 4821 ');
+  assert (ans ->> 'ok')::boolean, format('the right code answered %s', ans);
+  assert (select checked_in_at is not null from get_my_event_stamps() where event_id = '00000000-0000-4000-8000-0000000009e1'), 'the right code did not check in';
+  assert (check_in_event('00000000-0000-4000-8000-0000000009e1', 'nonsense') ->> 'ok')::boolean, 'checking in twice is an error';
+  -- Attendance is a record: it can't be moved, demoted or deleted by its owner.
+  begin
+    update event_rsvps set event_id = '00000000-0000-4000-8000-0000000009e3' where event_id = '00000000-0000-4000-8000-0000000009e1' and user_id = '00000000-0000-4000-8000-000000000901';
+    assert false, 'a checked-in RSVP was moved to another event';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update event_rsvps set status = 'waitlist' where event_id = '00000000-0000-4000-8000-0000000009e1' and user_id = '00000000-0000-4000-8000-000000000901';
+    assert false, 'a checked-in RSVP was demoted';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    delete from event_rsvps where event_id = '00000000-0000-4000-8000-0000000009e1' and user_id = '00000000-0000-4000-8000-000000000901';
+    assert false, 'a checked-in RSVP was deleted by its owner';
+  exception when insufficient_privilege then null;
+  end;
+  -- The window: not days early, not after it has closed.
+  insert into event_rsvps (event_id, user_id) values ('00000000-0000-4000-8000-0000000009e4', '00000000-0000-4000-8000-000000000901');
+  perform accept_event_waiver('00000000-0000-4000-8000-0000000009e4');
+  begin
+    perform check_in_event('00000000-0000-4000-8000-0000000009e4', '5555');
+    assert false, 'checked in three days early';
+  exception when invalid_parameter_value then
+    assert sqlerrm like '%opens%', sqlerrm;
+  end;
+  begin
+    perform check_in_event('00000000-0000-4000-8000-0000000009e5', '6666');
+    assert false, 'checked in nine hours after the start';
+  exception when invalid_parameter_value then
+    assert sqlerrm like '%closed%', sqlerrm;
+  end;
+  -- An RSVP that hasn't checked in can still be cancelled, and moved it cannot be.
+  begin
+    update event_rsvps set event_id = '00000000-0000-4000-8000-0000000009e3' where event_id = '00000000-0000-4000-8000-0000000009e4' and user_id = '00000000-0000-4000-8000-000000000901';
+    assert false, 'an RSVP was moved to another event';
+  exception when insufficient_privilege then null;
+  end;
+  delete from event_rsvps where event_id = '00000000-0000-4000-8000-0000000009e4' and user_id = '00000000-0000-4000-8000-000000000901';
+  begin
+    perform accept_event_waiver('00000000-0000-4000-8000-0000000009e4');
+    assert false, 'accepted a waiver for an event with no RSVP';
+  exception when no_data_found then null;
+  end;
+  assert not admin_check_in('00000000-0000-4000-8000-0000000009e1', '00000000-0000-4000-8000-000000000904'), 'a member used the host''s check-in';
 end $$;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000902';
 insert into event_rsvps (event_id, user_id) values ('00000000-0000-4000-8000-0000000009e1', '00000000-0000-4000-8000-000000000902');
-select accept_event_waiver('00000000-0000-4000-8000-0000000009e1'); select check_in_event('00000000-0000-4000-8000-0000000009e1', '4821');
+select accept_event_waiver('00000000-0000-4000-8000-0000000009e1');
+do $$ begin assert (check_in_event('00000000-0000-4000-8000-0000000009e1', '4821') ->> 'ok')::boolean; end $$;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000903';
 insert into event_rsvps (event_id, user_id) values ('00000000-0000-4000-8000-0000000009e1', '00000000-0000-4000-8000-000000000903');
-select accept_event_waiver('00000000-0000-4000-8000-0000000009e1'); select check_in_event('00000000-0000-4000-8000-0000000009e1', '4821');
+select accept_event_waiver('00000000-0000-4000-8000-0000000009e1');
+do $$ begin assert (check_in_event('00000000-0000-4000-8000-0000000009e1', '4821') ->> 'ok')::boolean; end $$;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000904';
 insert into event_rsvps (event_id, user_id) values ('00000000-0000-4000-8000-0000000009e1', '00000000-0000-4000-8000-000000000904');  -- RSVP'd, never turned up
+-- Five wrong codes lock check-in; then even the right code is refused, and
+-- only the host can let them in.
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
+insert into event_rsvps (event_id, user_id) values ('00000000-0000-4000-8000-0000000009e1', '00000000-0000-4000-8000-000000000905');
+select accept_event_waiver('00000000-0000-4000-8000-0000000009e1');
 do $$
+declare ans jsonb; i int;
 begin
+  for i in 1..5 loop ans := check_in_event('00000000-0000-4000-8000-0000000009e1', 'bad' || i); end loop;
+  assert (ans ->> 'tries_left')::int = 0 and ans ->> 'message' like 'Too many%', format('fifth wrong code answered %s', ans);
+  ans := check_in_event('00000000-0000-4000-8000-0000000009e1', '4821');
+  assert not (ans ->> 'ok')::boolean, 'the right code worked after the lock';
+  assert (select checked_in_at is null from get_my_event_stamps() where event_id = '00000000-0000-4000-8000-0000000009e1'), 'a locked-out member was checked in';
+  assert admin_check_in('00000000-0000-4000-8000-0000000009e1', '00000000-0000-4000-8000-000000000905'), 'the host could not check someone in by hand';
+  assert (select checked_in_at is not null from get_my_event_stamps() where event_id = '00000000-0000-4000-8000-0000000009e1'), 'the host''s check-in did not take';
+  assert not admin_check_in('00000000-0000-4000-8000-0000000009e1', '00000000-0000-4000-8000-000000000904'), 'the host checked in someone who never accepted the waiver';
+end $$;
+
+-- The waiver stays on record after an RSVP is cancelled, and nobody reads it
+-- through the API.
+reset role;
+set request.jwt.claim.sub = '';
+do $$ begin
+  assert exists (select 1 from waiver_acceptances
+                  where event_id = '00000000-0000-4000-8000-0000000009e4'
+                    and user_id = '00000000-0000-4000-8000-000000000901'),
+    'cancelling an RSVP erased the waiver record';
+  -- The project owner in the SQL editor is the desk; no admin row, no session.
+  assert is_desk(), 'the SQL editor is not treated as the desk';
+  perform set_event_checkin_code('00000000-0000-4000-8000-0000000009e4', '9090');
+  assert set_member_tier('00000000-0000-4000-8000-000000000909', 'plus'), 'the owner could not set a tier from the SQL editor';
+  assert set_member_tier('00000000-0000-4000-8000-000000000909', 'free');
+end $$;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
+do $$ begin
   begin
-    perform accept_event_waiver('00000000-0000-4000-8000-0000000009ff');
-    assert false, 'accepted a waiver for an event with no RSVP';
-  exception when no_data_found then null;
+    perform count(*) from waiver_acceptances;
+    assert false, 'a member can read the waiver record';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform is_desk();
+    assert false, 'a member can ask whether they are the desk';
+  exception when insufficient_privilege then null;
   end;
 end $$;
 
@@ -2893,7 +3030,7 @@ do $$
 declare ids uuid[];
 begin
   select array_agg(user_id order by first_name) into ids from get_my_crew();
-  assert ids = array['00000000-0000-4000-8000-000000000902', '00000000-0000-4000-8000-000000000903']::uuid[], format('crew is %s', ids);  -- not Nia: she never checked in
+  assert ids = array['00000000-0000-4000-8000-000000000902', '00000000-0000-4000-8000-000000000903', '00000000-0000-4000-8000-000000000905']::uuid[], format('crew is %s', ids);  -- not Nia: she never checked in
   assert (select also_open_to_dating from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000902'),
     'two people both open to dating, and fitting, were not told';
   assert not (select also_open_to_dating from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000903'),
@@ -2910,12 +3047,41 @@ begin
     assert false, 'a member wrote crew_adds directly';
   exception when insufficient_privilege then null;
   end;
+  begin
+    perform count(*) from crew_adds;
+    assert false, 'a member can read crew_adds directly';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000902';
+do $$ begin
+  assert (select also_open_to_dating from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000901'), 'the dating flag is not mutual from the other side';
+  assert not (select added from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000901'), 'someone else''s add shows as mine';
+end $$;
+-- Each half of "mutual" matters: take one away at a time, from either side.
 reset role;
+update profiles set seeking = '{man}' where id = '00000000-0000-4000-8000-000000000902';            -- Lou no longer looking for women
+set role authenticated;
+do $$ begin assert not (select also_open_to_dating from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000901'), 'flag true though I am not looking for them'; end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
+do $$ begin assert not (select also_open_to_dating from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000902'), 'flag true though they are not looking for me'; end $$;
+reset role;
+update profiles set seeking = '{woman}', age_min = 18, age_max = 20 where id = '00000000-0000-4000-8000-000000000902';   -- Kit is outside Lou's age range
+set role authenticated;
+do $$ begin assert not (select also_open_to_dating from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000902'), 'flag true outside their age range'; end $$;
+reset role;
+update profiles set age_min = 25, age_max = 55, modes = '{play}' where id = '00000000-0000-4000-8000-000000000902';        -- Lou turns Date mode off
+set role authenticated;
+do $$ begin assert not (select also_open_to_dating from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000902'), 'flag true with their Date mode off'; end $$;
+reset role;
+update profiles set modes = '{date,play}' where id = '00000000-0000-4000-8000-000000000902';
+set request.jwt.claim.sub = '';
 insert into blocks (blocker_id, blocked_id) values ('00000000-0000-4000-8000-000000000903', '00000000-0000-4000-8000-000000000901');  -- Moe blocks Kit
 set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
 do $$
 begin
+  assert (select also_open_to_dating from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000902'), 'restoring the fit did not restore the flag';
   assert not exists (select 1 from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000903'),
     'someone who blocked me is still in my crew';
   begin
@@ -2923,10 +3089,6 @@ begin
     assert false, 'added someone who blocked me';
   exception when invalid_parameter_value then null;
   end;
-end $$;
-set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000902';
-do $$ begin
-  assert (select count(*) from crew_adds) = 0, 'a member can read someone else''s crew list';
 end $$;
 reset role;
 set role anon;
@@ -2936,10 +3098,16 @@ do $$ begin
     assert false, 'anon can call get_my_crew';
   exception when insufficient_privilege then null;
   end;
+  begin
+    perform check_in_event('00000000-0000-4000-8000-0000000009e1', '4821');
+    assert false, 'anon can call check_in_event';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
 reset role;
 
--- ---- 10c. Bans stick to the phone number (migration 34) ----
+-- ---- 10c. Bans stick to the phone number (migrations 34, m23) ----
+set request.jwt.claim.sub = '';
 update auth.users set phone = '+1 (317) 555-0101', phone_confirmed_at = now() where id = '00000000-0000-4000-8000-000000000902';
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
@@ -2955,10 +3123,32 @@ set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
 do $$ begin
   assert ban_member('00000000-0000-4000-8000-000000000902', 'harassment'), 'an admin could not ban';
 end $$;
+-- Suspended means stopped, everywhere the new functions reach.
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000902';
+do $$
+begin
+  assert (select count(*) from get_my_crew()) = 0, 'a suspended member still sees a crew';
+  begin
+    perform crew_add('00000000-0000-4000-8000-000000000901');
+    assert false, 'a suspended member added to their crew';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform check_in_event('00000000-0000-4000-8000-0000000009e1', '4821');
+    assert false, 'a suspended member used check-in';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
+do $$ begin
+  assert not exists (select 1 from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000902'), 'a suspended member is still in my crew';
+  assert not unban_member('00000000-0000-4000-8000-000000000902'), 'a non-admin lifted a ban';
+end $$;
 reset role;
+set request.jwt.claim.sub = '';
 do $$ begin
   assert (select suspended_at is not null from profiles where id = '00000000-0000-4000-8000-000000000902'), 'a ban did not suspend';
-  assert (select count(*) from banned_phones) = 1, 'a ban did not record the number';
+  assert (select count(*) from banned_phones) = 1, 'a ban did not record the number, or a non-admin lifted it';
   assert not exists (select 1 from banned_phones where phone_hash like '%555%'), 'the ban list holds a raw number';
 end $$;
 -- The same number, a new email, a new account.
@@ -2974,35 +3164,146 @@ do $$ begin
   assert (select phone_verified_at is null and suspended_at is not null from profiles where id = '00000000-0000-4000-8000-000000000906'),
     'a banned number''s new account was not stopped';
 end $$;
--- An honest number still verifies.
-update auth.users set phone = '+13175550199', phone_confirmed_at = now() where id = '00000000-0000-4000-8000-000000000904';
+-- A banned number on a new account that never calls sync_phone_verification():
+-- the database suspends it the moment the number is attached.
+set request.jwt.claim.sub = '';
+insert into auth.users (id, email) values ('00000000-0000-4000-8000-00000000090b', 'x-wes@example.com');
 set role authenticated;
-set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000904';
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000090b';
+insert into profiles (id, first_name, birthdate, city, gender, seeking, modes)
+values ('00000000-0000-4000-8000-00000000090b', 'Wes', '1990-01-01', 'phoenix', 'man', '{woman}', '{play}');
 do $$ begin
-  assert sync_phone_verification(), 'an unbanned number no longer verifies';
+  assert not i_am_suspended(), 'a new account with no phone started suspended';
 end $$;
 reset role;
+update auth.users set phone = '+1 317 555 0101', phone_confirmed_at = now() where id = '00000000-0000-4000-8000-00000000090b';
+set role authenticated;
+do $$ begin
+  assert i_am_suspended(), 'a banned number attached without the sync call was not suspended';
+  assert (select count(*) from get_discovery_deck('play', 100)) = 0, 'a banned number can still read the deck';
+end $$;
+reset role;
+set request.jwt.claim.sub = '';
+delete from auth.users where id = '00000000-0000-4000-8000-00000000090b';
+-- An admin can lift it, and then the number verifies again.
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
+do $$ begin assert unban_member('00000000-0000-4000-8000-000000000902'), 'an admin could not lift a ban'; end $$;
+reset role;
+do $$ begin assert (select count(*) from banned_phones) = 0, 'lifting a ban left the number on the list'; end $$;
+-- Suspended (not banned), then deletes the account: the number is kept.
+set request.jwt.claim.sub = '';
+insert into auth.users (id, email, phone, phone_confirmed_at) values ('00000000-0000-4000-8000-000000000907', 'x-quin@example.com', '+13175550142', now());
+insert into profiles (id, first_name, birthdate, city, phone_verified_at) values ('00000000-0000-4000-8000-000000000907', 'Quin', '1990-01-01', 'phoenix', now());
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
+select suspend_member('00000000-0000-4000-8000-000000000907', 'test');
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000907';
+select delete_account();
+reset role;
+set request.jwt.claim.sub = '';
+do $$ begin
+  assert not exists (select 1 from auth.users where id = '00000000-0000-4000-8000-000000000907'), 'delete_account left the account';
+  assert (select count(*) from banned_phones) = 1, 'a suspended member shed the suspension by deleting';
+end $$;
+-- A member in good standing leaves nothing behind.
+insert into auth.users (id, email, phone, phone_confirmed_at) values ('00000000-0000-4000-8000-000000000907', 'x-quin2@example.com', '+13175550143', now());
+insert into profiles (id, first_name, birthdate, city, phone_verified_at) values ('00000000-0000-4000-8000-000000000907', 'Quin', '1990-01-01', 'phoenix', now());
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000907';
+select delete_account();
+reset role;
+set request.jwt.claim.sub = '';
+do $$ begin
+  assert (select count(*) from banned_phones) = 1, 'deleting in good standing put a number on the ban list';
+end $$;
+
+-- ---- 10c-ii. A verified phone is required to reach anyone (migration 39) ----
+insert into auth.users (id, email) values ('00000000-0000-4000-8000-000000000908', 'x-rae@example.com');
+insert into profiles (id, first_name, birthdate, city) values ('00000000-0000-4000-8000-000000000908', 'Rae', '1990-01-01', 'phoenix');
+insert into tournaments (id, city, title, starts_at, max_entries) values ('00000000-0000-4000-8000-0000000009c1', 'phoenix', 'Gate Cup', now() + interval '3 days', 8);
+insert into leagues (id, city, title, starts_at) values ('00000000-0000-4000-8000-0000000009c2', 'phoenix', 'Gate Ladder', now() + interval '2 days');
+update app_settings set require_verified_phone = true;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000908';
+do $$
+begin
+  begin
+    perform count(*) from app_settings;
+    assert false, 'a member can read the settings';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update app_settings set require_verified_phone = false;
+    assert false, 'a member switched the phone requirement off';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000908', '00000000-0000-4000-8000-000000000901', 'play', 'like');
+    assert false, 'an unverified account swiped';
+  exception when insufficient_privilege then assert sqlerrm like 'Verify%', sqlerrm;
+  end;
+  begin
+    insert into event_rsvps (event_id, user_id) values ('00000000-0000-4000-8000-0000000009e3', '00000000-0000-4000-8000-000000000908');
+    assert false, 'an unverified account took a place at an event';
+  exception when insufficient_privilege then assert sqlerrm like 'Verify%', sqlerrm;
+  end;
+  begin
+    perform join_tournament('00000000-0000-4000-8000-0000000009c1');
+    assert false, 'an unverified account entered a tournament';
+  exception when insufficient_privilege then assert sqlerrm like 'Verify%', sqlerrm;
+  end;
+  begin
+    perform join_league('00000000-0000-4000-8000-0000000009c2');
+    assert false, 'an unverified account joined a ladder';
+  exception when insufficient_privilege then assert sqlerrm like 'Verify%', sqlerrm;
+  end;
+  -- Asking for help and leaving never need a phone.
+  perform report_member('00000000-0000-4000-8000-000000000901', 'still allowed');
+  perform block_member('00000000-0000-4000-8000-000000000901');
+end $$;
+reset role;
+set request.jwt.claim.sub = '';
+update auth.users set phone = '+13175550177', phone_confirmed_at = now() where id = '00000000-0000-4000-8000-000000000908';
+delete from blocks where blocker_id = '00000000-0000-4000-8000-000000000908';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000908';
+do $$ begin
+  assert sync_phone_verification(), 'an honest number no longer verifies';
+  insert into event_rsvps (event_id, user_id) values ('00000000-0000-4000-8000-0000000009e3', '00000000-0000-4000-8000-000000000908');
+  perform join_league('00000000-0000-4000-8000-0000000009c2');
+end $$;
+reset role;
+set request.jwt.claim.sub = '';
+update app_settings set require_verified_phone = false;
+delete from tournaments where id = '00000000-0000-4000-8000-0000000009c1';
+delete from leagues where id = '00000000-0000-4000-8000-0000000009c2';
+delete from auth.users where id = '00000000-0000-4000-8000-000000000908';
+delete from reports where target_id = '00000000-0000-4000-8000-000000000901';
 
 -- ---- 10d. Rate limits (migration 35) ----
-set request.jwt.claim.sub = '';
-insert into reports (reporter_id, target_id, reason) select '00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000904', 'r' || g from generate_series(1, 20) g;
 insert into matches (id, user_a, user_b, mode) values ('00000000-0000-4000-8000-0000000009b1', '00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000904', 'play');
-insert into messages (match_id, sender_id, body) select '00000000-0000-4000-8000-0000000009b1', '00000000-0000-4000-8000-000000000901', 'm' || g from generate_series(1, 60) g;
-insert into auth.users (id, email)
-  select ('00000000-0000-4000-8000-0000000a' || lpad(g::text, 4, '0'))::uuid, 'rl' || g || '@example.com' from generate_series(1, 170) g;
-insert into profiles (id, first_name, birthdate, city)
-  select ('00000000-0000-4000-8000-0000000a' || lpad(g::text, 4, '0'))::uuid, 'R' || g, '1990-01-01', 'phoenix' from generate_series(1, 170) g;
-insert into swipes (actor_id, target_id, mode, action)
-  select '00000000-0000-4000-8000-000000000901', ('00000000-0000-4000-8000-0000000a' || lpad(g::text, 4, '0'))::uuid, m.mode, 'pass'
-    from generate_series(1, 167) g cross join (values ('date'::app_mode), ('play'), ('friends')) m(mode)
-   limit 500;
+insert into rate_events (user_id, kind) select '00000000-0000-4000-8000-000000000901', 'report'  from generate_series(1, 20);
+insert into rate_events (user_id, kind) select '00000000-0000-4000-8000-000000000901', 'message' from generate_series(1, 60);
+insert into rate_events (user_id, kind) select '00000000-0000-4000-8000-000000000901', 'swipe'   from generate_series(1, 500);
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
 do $$
 begin
   begin
+    perform count(*) from rate_events;
+    assert false, 'a member can read the rate log';
+  exception when insufficient_privilege then null;
+  end;
+  begin
     perform report_member('00000000-0000-4000-8000-000000000905', 'one too many');
     assert false, 'a 21st report in a day went through';
+  exception when program_limit_exceeded then null;
+  end;
+  -- At the limit, an account that doesn't exist answers exactly the same.
+  begin
+    perform report_member('00000000-0000-4000-8000-0000000009ff', 'nobody');
+    assert false, 'at the limit, a missing account answers differently from a real one';
   exception when program_limit_exceeded then null;
   end;
   begin
@@ -3011,20 +3312,35 @@ begin
   exception when program_limit_exceeded then null;
   end;
   begin
-    insert into swipes (actor_id, target_id, mode, action)
-    values ('00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-0000000a0170', 'play', 'pass');
+    insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000909', 'play', 'pass');
     assert false, 'a 501st swipe in a day went through';
   exception when program_limit_exceeded then null;
   end;
 end $$;
--- Someone under the limits is untouched.
+-- Someone under the limits is untouched; a backdated row is stamped by the
+-- server and counted; undoing a swipe doesn't give the swipe back.
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000904';
-insert into messages (match_id, sender_id, body) values ('00000000-0000-4000-8000-0000000009b1', '00000000-0000-4000-8000-000000000904', 'hello');
+insert into messages (match_id, sender_id, body, sent_at) values ('00000000-0000-4000-8000-0000000009b1', '00000000-0000-4000-8000-000000000904', 'hello', now() - interval '3 days');
+insert into swipes (actor_id, target_id, mode, action, created_at) values ('00000000-0000-4000-8000-000000000904', '00000000-0000-4000-8000-000000000909', 'play', 'pass', now() - interval '3 days');
+select undo_swipe('00000000-0000-4000-8000-000000000909', 'play');
+insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000904', '00000000-0000-4000-8000-000000000909', 'play', 'pass');
 select report_member('00000000-0000-4000-8000-000000000905', 'fine');
+select report_member('00000000-0000-4000-8000-0000000009ff', 'nobody home');  -- under the limit: silent
 reset role;
 set request.jwt.claim.sub = '';
-delete from auth.users where email like 'rl%@example.com';
+do $$ begin
+  assert (select sent_at > now() - interval '1 minute' from messages where match_id = '00000000-0000-4000-8000-0000000009b1' and sender_id = '00000000-0000-4000-8000-000000000904'),
+    'a backdated message kept its own timestamp';
+  assert (select created_at > now() - interval '1 minute' from swipes where actor_id = '00000000-0000-4000-8000-000000000904' and target_id = '00000000-0000-4000-8000-000000000909'),
+    'a backdated swipe kept its own timestamp';
+  assert (select count(*) from rate_events where user_id = '00000000-0000-4000-8000-000000000904' and kind = 'swipe') = 2, 'undoing a swipe gave the swipe back';
+  assert (select count(*) from rate_events where user_id = '00000000-0000-4000-8000-000000000904' and kind = 'message') = 1, 'a message was not counted';
+  assert (select count(*) from rate_events where user_id = '00000000-0000-4000-8000-000000000904' and kind = 'report') = 2, 'a report about a missing account was not counted';
+  assert (select count(*) from reports where reporter_id = '00000000-0000-4000-8000-000000000904') = 1, 'a report about a missing account was stored';
+end $$;
+delete from rate_events;
 delete from reports where reporter_id in ('00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000904');
+delete from swipes where actor_id = '00000000-0000-4000-8000-000000000904';
 delete from matches where id = '00000000-0000-4000-8000-0000000009b1';
 
 -- ---- 10e. Quiet hours (migration 36) ----
@@ -3048,6 +3364,11 @@ begin
     assert false, 'a member can ask about someone''s quiet hours';
   exception when insufficient_privilege then null;
   end;
+  begin
+    perform timezone from profiles where id = '00000000-0000-4000-8000-000000000904';
+    assert false, 'a member can read someone else''s timezone';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
 reset role;
 do $$ begin
@@ -3055,6 +3376,8 @@ do $$ begin
   assert in_quiet_hours('00000000-0000-4000-8000-000000000901', '2026-11-13 12:30:00+00'), '7:30am in Indianapolis is not quiet';
   assert not in_quiet_hours('00000000-0000-4000-8000-000000000901', '2026-11-13 13:00:00+00'), '8am in Indianapolis is quiet';
   assert not in_quiet_hours('00000000-0000-4000-8000-000000000901', '2026-11-13 18:00:00+00'), '1pm in Indianapolis is quiet';
+  assert in_quiet_hours('00000000-0000-4000-8000-000000000901', '2026-07-01 02:30:00+00'), '10:30pm in July (daylight time) is not quiet';
+  assert not in_quiet_hours('00000000-0000-4000-8000-000000000901', '2026-07-01 01:30:00+00'), '9:30pm in July (daylight time) is quiet';
   assert not in_quiet_hours('00000000-0000-4000-8000-000000000904', '2026-11-13 04:00:00+00'), 'no timezone on file was treated as quiet';
 end $$;
 
@@ -3071,8 +3394,11 @@ end $$;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
 insert into leagues (id, city, title, starts_at) values ('00000000-0000-4000-8000-0000000009a1', 'phoenix', 'Test Ladder', now() + interval '2 days');
 select join_league('00000000-0000-4000-8000-0000000009a1');                                  -- Oz 1
-set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000904'; select join_league('00000000-0000-4000-8000-0000000009a1'); -- Nia 2
-set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000903'; select join_league('00000000-0000-4000-8000-0000000009a1'); -- Moe 3
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000909'; select join_league('00000000-0000-4000-8000-0000000009a1'); -- Sol 2
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000904'; select join_league('00000000-0000-4000-8000-0000000009a1'); -- Nia 3
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000903'; select join_league('00000000-0000-4000-8000-0000000009a1'); -- Moe 4 (he has blocked Kit)
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
+select suspend_member('00000000-0000-4000-8000-000000000902', 'test');  -- Lou's ban was lifted in 10c; suspend him again
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000902';
 do $$ begin
   begin
@@ -3080,13 +3406,19 @@ do $$ begin
     assert false, 'a suspended member joined a league';
   exception when insufficient_privilege then null;
   end;
+  assert (select count(*) from get_league_standings('00000000-0000-4000-8000-0000000009a1')) = 0, 'a suspended member can read the standings';
 end $$;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
 do $$
 declare c uuid;
 begin
-  assert join_league('00000000-0000-4000-8000-0000000009a1') = 4, 'a new member did not take the bottom rung';
-  assert join_league('00000000-0000-4000-8000-0000000009a1') = 4, 'joining twice moved the rung';
+  assert join_league('00000000-0000-4000-8000-0000000009a1') = 5, 'a new member did not take the bottom rung';
+  assert join_league('00000000-0000-4000-8000-0000000009a1') = 5, 'joining twice moved the rung';
+  -- Kit's ladder has no Moe on it and no gap where he would be.
+  assert (select array_agg(first_name order by rung) from get_league_standings('00000000-0000-4000-8000-0000000009a1'))
+         = array['Oz', 'Sol', 'Nia', 'Kit'], 'the ladder shows someone hidden, or a masked row';
+  assert (select array_agg(rung order by rung) from get_league_standings('00000000-0000-4000-8000-0000000009a1')) = array[1, 2, 3, 4],
+    'the ladder a member sees has a gap';
   begin
     perform league_challenge('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000905');
     assert false, 'challenged three rungs up';
@@ -3097,15 +3429,19 @@ begin
     assert false, 'challenged someone who blocked me';
   exception when invalid_parameter_value then null;
   end;
-  c := league_challenge('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000904');
+  -- Two rungs up on the ladder Kit can see (three on the real one, past Moe).
+  c := league_challenge('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000909');
   begin
-    perform league_challenge('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000904');
+    perform league_challenge('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000909');
     assert false, 'two open challenges between the same pair';
   exception when unique_violation then null;
   end;
-  assert (select first_name = 'Player' and user_id is null from get_league_standings('00000000-0000-4000-8000-0000000009a1') where rung = 3),
-    'someone who blocked me is named in the standings';
   assert (select count(*) from league_members) = 1, 'a member can read other members'' rows';
+  begin
+    insert into league_members (league_id, user_id, rung) values ('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000901', 1);
+    assert false, 'a member wrote a ladder row';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
 do $$ begin
@@ -3124,33 +3460,80 @@ do $$ begin
   end;
   perform report_league_result((select id from league_challenges where league_id = '00000000-0000-4000-8000-0000000009a1'), '00000000-0000-4000-8000-000000000901');
   begin
-    perform report_league_result((select id from league_challenges where league_id = '00000000-0000-4000-8000-0000000009a1'), '00000000-0000-4000-8000-000000000904');
+    perform report_league_result((select id from league_challenges where league_id = '00000000-0000-4000-8000-0000000009a1'), '00000000-0000-4000-8000-000000000909');
     assert false, 'a result was recorded twice';
   exception when invalid_parameter_value then null;
   end;
 end $$;
 reset role;
+set request.jwt.claim.sub = '';
 do $$ begin
+  -- Kit was three real rungs below Sol; a win moves her up two, not three.
   assert (select array_agg(user_id order by rung) from league_members where league_id = '00000000-0000-4000-8000-0000000009a1')
-         = array['00000000-0000-4000-8000-000000000905', '00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000904', '00000000-0000-4000-8000-000000000903']::uuid[], 'the ladder did not move as it should';
+         = array['00000000-0000-4000-8000-000000000905', '00000000-0000-4000-8000-000000000909', '00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000904', '00000000-0000-4000-8000-000000000903']::uuid[], 'the ladder did not move as it should';
   assert (select wins = 1 from league_members where league_id = '00000000-0000-4000-8000-0000000009a1' and user_id = '00000000-0000-4000-8000-000000000901')
-     and (select losses = 1 from league_members where league_id = '00000000-0000-4000-8000-0000000009a1' and user_id = '00000000-0000-4000-8000-000000000904'), 'records wrong';
+     and (select losses = 1 from league_members where league_id = '00000000-0000-4000-8000-0000000009a1' and user_id = '00000000-0000-4000-8000-000000000909'), 'records wrong';
 end $$;
+-- A block ends an open challenge between the two.
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
+select league_challenge('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000909');
+reset role;
+set request.jwt.claim.sub = '';
+insert into blocks (blocker_id, blocked_id) values ('00000000-0000-4000-8000-000000000909', '00000000-0000-4000-8000-000000000901');
+do $$ begin
+  assert (select count(*) from league_challenges where league_id = '00000000-0000-4000-8000-0000000009a1' and decided_at is null) = 0,
+    'a challenge survived a block between the two players';
+end $$;
+delete from blocks where blocker_id = '00000000-0000-4000-8000-000000000909' and blocked_id = '00000000-0000-4000-8000-000000000901';
+-- Suspension, a deleted account and leaving all close the ladder up.
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
 select suspend_member('00000000-0000-4000-8000-000000000904', 'test');
 reset role;
 do $$ begin
   assert (select array_agg(user_id order by rung) from league_members where league_id = '00000000-0000-4000-8000-0000000009a1')
-         = array['00000000-0000-4000-8000-000000000905', '00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000903']::uuid[], 'a suspended member stayed on the ladder';
-  assert (select max(rung) from league_members where league_id = '00000000-0000-4000-8000-0000000009a1') = 3, 'the ladder has a gap';
+         = array['00000000-0000-4000-8000-000000000905', '00000000-0000-4000-8000-000000000909', '00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000903']::uuid[], 'a suspended member stayed on the ladder';
+  assert (select max(rung) from league_members where league_id = '00000000-0000-4000-8000-0000000009a1') = 4, 'suspension left a gap';
+end $$;
+set request.jwt.claim.sub = '';
+delete from auth.users where id = '00000000-0000-4000-8000-000000000909';
+do $$ begin
+  assert (select array_agg(user_id order by rung) from league_members where league_id = '00000000-0000-4000-8000-0000000009a1')
+         = array['00000000-0000-4000-8000-000000000905', '00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000903']::uuid[], 'a deleted account stayed on the ladder';
+  assert (select array_agg(rung order by rung) from league_members where league_id = '00000000-0000-4000-8000-0000000009a1') = array[1, 2, 3],
+    'a deleted account left a gap';
 end $$;
 set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
+select leave_league('00000000-0000-4000-8000-0000000009a1');
 select unsuspend_member('00000000-0000-4000-8000-000000000904');
+reset role;
+do $$ begin
+  assert (select array_agg(rung order by rung) from league_members where league_id = '00000000-0000-4000-8000-0000000009a1') = array[1, 2],
+    'leaving left a gap';
+end $$;
+set role anon;
+do $$ begin
+  begin
+    perform * from get_league_standings('00000000-0000-4000-8000-0000000009a1');
+    assert false, 'anon can read standings';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
 
 -- ---- 10g. Tiers and priority signup (migration 38) ----
+set request.jwt.claim.sub = '';
+insert into auth.users (id, email) values ('00000000-0000-4000-8000-00000000090a', 'x-tia@example.com');
 insert into events (id, title, venue, starts_at, sport, capacity, city, general_opens_at, price_cents, club_discount_pct) values
   ('00000000-0000-4000-8000-0000000009e2', 'Priority Night', 'Test Courts', now() + interval '5 days', 'pickleball', 8, 'phoenix', now() + interval '1 day', 1500, 20);
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-00000000090a';
+insert into profiles (id, first_name, birthdate, city, tier) values ('00000000-0000-4000-8000-00000000090a', 'Tia', '1990-01-01', 'phoenix', 'club');
+do $$ begin
+  assert (get_my_profile() ->> 'tier') = 'free', 'a member signed up straight into Club';
+end $$;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
 do $$
 begin
@@ -3165,23 +3548,35 @@ begin
     assert false, 'a free member took a priority-signup place';
   exception when insufficient_privilege then null;
   end;
+  -- The waitlist is open to everyone; stepping from it into a place is not.
+  insert into event_rsvps (event_id, user_id, status) values ('00000000-0000-4000-8000-0000000009e2', '00000000-0000-4000-8000-000000000901', 'waitlist');
+  begin
+    update event_rsvps set status = 'going' where event_id = '00000000-0000-4000-8000-0000000009e2' and user_id = '00000000-0000-4000-8000-000000000901';
+    assert false, 'a free member stepped from the waitlist into a priority place';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
 do $$ begin
   assert set_member_tier('00000000-0000-4000-8000-000000000901', 'club'), 'an admin could not set a tier';
 end $$;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
-insert into event_rsvps (event_id, user_id) values ('00000000-0000-4000-8000-0000000009e2', '00000000-0000-4000-8000-000000000901');
+update event_rsvps set status = 'going' where event_id = '00000000-0000-4000-8000-0000000009e2' and user_id = '00000000-0000-4000-8000-000000000901';
 do $$ begin
   assert (get_my_profile() ->> 'tier') = 'club', 'my tier is not in my profile';
-  assert (select count(*) from event_rsvps where event_id = '00000000-0000-4000-8000-0000000009e2' and user_id = '00000000-0000-4000-8000-000000000901') = 1, 'a Club member could not RSVP early';
+  assert (select status = 'going' from event_rsvps where event_id = '00000000-0000-4000-8000-0000000009e2' and user_id = '00000000-0000-4000-8000-000000000901'), 'a Club member could not RSVP early';
+  begin
+    perform tier from profiles where id = '00000000-0000-4000-8000-000000000904';
+    assert false, 'a member can read someone else''s tier';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
 reset role;
 set request.jwt.claim.sub = '';
 delete from leagues where id = '00000000-0000-4000-8000-0000000009a1';
-delete from events where id in ('00000000-0000-4000-8000-0000000009e1', '00000000-0000-4000-8000-0000000009e2');
+delete from events where id in ('00000000-0000-4000-8000-0000000009e1', '00000000-0000-4000-8000-0000000009e2', '00000000-0000-4000-8000-0000000009e3', '00000000-0000-4000-8000-0000000009e4', '00000000-0000-4000-8000-0000000009e5');
 delete from banned_phones;
 delete from admins where user_id = '00000000-0000-4000-8000-000000000905';
-delete from auth.users where id in ('00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000902', '00000000-0000-4000-8000-000000000903', '00000000-0000-4000-8000-000000000904', '00000000-0000-4000-8000-000000000905', '00000000-0000-4000-8000-000000000906');
+delete from auth.users where id in ('00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000902', '00000000-0000-4000-8000-000000000903', '00000000-0000-4000-8000-000000000904', '00000000-0000-4000-8000-000000000905', '00000000-0000-4000-8000-000000000906', '00000000-0000-4000-8000-00000000090a');
 
 select 'ALL BACKEND TESTS PASSED' as result;

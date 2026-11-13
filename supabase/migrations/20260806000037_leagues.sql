@@ -17,6 +17,19 @@
 -- blocked you, and their name is not shown to you in the standings.
 -- Standings come from a function that decides what to hand over; the tables
 -- themselves show a member only their own rows.
+--
+-- Hardened after the independent review of 2026-11-13:
+--   · The ladder you see leaves out anyone hidden from you and numbers the
+--     rest 1, 2, 3 — there is no masked row to give a block away. "Two rungs
+--     above" is counted on that same ladder, so what you can challenge is
+--     exactly what you can see.
+--   · Whenever a member leaves, is suspended or deletes their account, the
+--     ladder closes up in one place (a statement trigger), so it can never
+--     keep a gap that the two-rung rule would turn into a wall.
+--   · A block ends any open challenge between the two people, and a result
+--     can't be recorded against someone hidden from you.
+--   · A win moves the challenger up at most two rungs, however far the
+--     ladder shifted while the challenge was open.
 
 create table public.leagues (
   id uuid primary key default gen_random_uuid(),
@@ -103,38 +116,57 @@ begin
 end
 $$;
 
--- Leaving closes the gap: everyone below moves up one. Open challenges go.
+-- Whoever leaves a ladder, and however — leave_league(), a suspension, a
+-- deleted account — the ladder closes up and their open challenges go.
+create or replace function public.league_members_close_up()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  delete from league_challenges c
+   using gone g
+   where c.league_id = g.league_id and c.decided_at is null
+     and g.user_id in (c.challenger_id, c.challenged_id);
+  update league_members m
+     set rung = r.rn
+    from (select league_id, user_id,
+                 row_number() over (partition by league_id order by rung) as rn
+            from league_members
+           where league_id in (select distinct league_id from gone)) r
+   where m.league_id = r.league_id and m.user_id = r.user_id and m.rung <> r.rn;
+  return null;
+end
+$$;
+revoke all on function public.league_members_close_up() from public, anon, authenticated;
+create trigger league_members_close_up
+  after delete on public.league_members
+  referencing old table as gone
+  for each statement execute function public.league_members_close_up();
+
 create or replace function public.leave_league(p_league uuid)
 returns void
 language plpgsql security definer set search_path = public
 as $$
-declare
-  me uuid := auth.uid();
-  v_rung int;
 begin
   perform 1 from leagues where id = p_league for update;
-  delete from league_members where league_id = p_league and user_id = me returning rung into v_rung;
-  if v_rung is null then
-    return;
-  end if;
-  delete from league_challenges
-   where league_id = p_league and decided_at is null and me in (challenger_id, challenged_id);
-  update league_members set rung = rung - 1 where league_id = p_league and rung > v_rung;
+  delete from league_members where league_id = p_league and user_id = auth.uid();
 end
 $$;
 
+-- The ladder as the caller sees it: nobody hidden from them, numbered from 1.
 create or replace function public.get_league_standings(p_league uuid)
 returns table (rung int, user_id uuid, first_name text, wins int, losses int, is_me boolean)
 language sql stable security definer set search_path = public
 as $$
-  select m.rung,
-         -- Someone hidden from you keeps their rung but not their identity.
-         case when public.hidden_from_me(m.user_id) then null else m.user_id end,
-         case when public.hidden_from_me(m.user_id) then 'Player' else p.first_name end,
+  select (row_number() over (order by m.rung))::int, m.user_id, p.first_name,
          m.wins, m.losses, m.user_id = auth.uid()
     from league_members m
     join profiles p on p.id = m.user_id
-   where m.league_id = p_league and auth.uid() is not null
+   where m.league_id = p_league
+     and auth.uid() is not null
+     and not public.i_am_suspended()
+     and exists (select 1 from profiles me where me.id = auth.uid())
+     and not public.hidden_from_me(m.user_id)
    order by m.rung
 $$;
 
@@ -163,7 +195,12 @@ begin
   if their_rung is null or p_target = me or public.hidden_from_me(p_target) then
     raise exception 'That isn''t someone you can challenge.' using errcode = '22023';
   end if;
-  if their_rung > my_rung or my_rung - their_rung > 2 then
+  -- Counted on the ladder the challenger can see: people hidden from them
+  -- don't take up a rung, so the rule never points at someone invisible.
+  if their_rung > my_rung
+     or (select count(*) from league_members m
+          where m.league_id = p_league and m.rung >= their_rung and m.rung < my_rung
+            and not public.hidden_from_me(m.user_id)) > 2 then
     raise exception 'You can challenge up to two rungs above you.' using errcode = '22023';
   end if;
   begin
@@ -202,6 +239,11 @@ begin
   if c.decided_at is not null then
     raise exception 'This result is already in.' using errcode = '22023';
   end if;
+  -- Blocked since the challenge was made (the block normally removes it; this
+  -- is the belt to that brace). Same words as a challenge that never existed.
+  if public.hidden_from_me(case when me = c.challenger_id then c.challenged_id else c.challenger_id end) then
+    raise exception 'That challenge doesn''t exist.' using errcode = 'P0002';
+  end if;
   if p_winner is null or p_winner not in (c.challenger_id, c.challenged_id) then
     raise exception 'The winner has to be one of the two players.' using errcode = '22023';
   end if;
@@ -218,8 +260,11 @@ begin
    where league_id = c.league_id
      and user_id = case when p_winner = c.challenger_id then c.challenged_id else c.challenger_id end;
 
-  -- The challenger won from below: take that rung, everyone between drops one.
+  -- The challenger won from below: take that rung, everyone between drops
+  -- one. Never more than two rungs, even if the ladder moved while the
+  -- challenge was open.
   if p_winner = c.challenger_id and lo > hi then
+    hi := greatest(hi, lo - 2);
     update league_members set rung = rung + 1
      where league_id = c.league_id and rung >= hi and rung < lo;
     update league_members set rung = hi
@@ -232,16 +277,9 @@ $$;
 create or replace function public.profiles_suspension_leaves_leagues()
 returns trigger language plpgsql security definer set search_path = public
 as $$
-declare
-  r record;
 begin
   if new.suspended_at is not null and old.suspended_at is null then
-    for r in select league_id, rung from league_members where user_id = new.id order by league_id loop
-      delete from league_members where league_id = r.league_id and user_id = new.id;
-      delete from league_challenges
-       where league_id = r.league_id and decided_at is null and new.id in (challenger_id, challenged_id);
-      update league_members set rung = rung - 1 where league_id = r.league_id and rung > r.rung;
-    end loop;
+    delete from league_members where user_id = new.id;
   end if;
   return new;
 end
@@ -249,6 +287,23 @@ $$;
 create trigger profiles_suspension_leaves_leagues
   after update on public.profiles
   for each row execute function public.profiles_suspension_leaves_leagues();
+
+-- A block ends any open challenge between the two.
+create or replace function public.blocks_end_league_challenges()
+returns trigger language plpgsql security definer set search_path = public
+as $$
+begin
+  delete from league_challenges
+   where decided_at is null
+     and ((challenger_id = new.blocker_id and challenged_id = new.blocked_id)
+       or (challenger_id = new.blocked_id and challenged_id = new.blocker_id));
+  return new;
+end
+$$;
+revoke all on function public.blocks_end_league_challenges() from public, anon, authenticated;
+create trigger blocks_end_league_challenges
+  after insert on public.blocks
+  for each row execute function public.blocks_end_league_challenges();
 
 revoke all on function public.join_league(uuid) from public, anon;
 revoke all on function public.leave_league(uuid) from public, anon;

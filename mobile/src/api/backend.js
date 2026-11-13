@@ -435,19 +435,54 @@ export function subscribeToMessages(matchId, onEvent) {
 // nothing rather than quietly falling back to every city in the country.
 // Each row carries price_cents (null when there is nothing to pay),
 // club_discount_pct and general_opens_at (before it, only Club members can
-// RSVP), and each RSVP its waiver_accepted_at / checked_in_at — stamps only
-// the server can write (accept_event_waiver, check_in_event).
+// RSVP), and its RSVPs as { user_id, status }.
+//
+// Whether someone actually turned up, and when they accepted the waiver, is
+// not readable from the RSVP list (migration 20260806000033) — only your own,
+// through get_my_event_stamps(). Those are merged onto your own RSVP rows here
+// as waiver_accepted_at / checked_in_at, stamps only the server can write.
+//
+// Events stay listed for eight hours after they start: that is how long
+// check-in stays open, and an event that vanished at its start time could
+// never be checked in to.
 export async function listEvents(cities) {
   const list = (Array.isArray(cities) ? cities : [cities]).filter(Boolean);
   if (!list.length) return [];
+  const since = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from('events')
-    .select('*, event_rsvps(user_id, status, waiver_accepted_at, checked_in_at)')
-    .gte('starts_at', new Date().toISOString())
+    .select('*, event_rsvps(user_id, status)')
+    .gte('starts_at', since)
     .in('city', list)
     .order('starts_at', { ascending: true });
   if (error) throw error;
-  return data;
+  // The stamps are a nicety on top of the list: if they can't be read the
+  // events still show, just without "waiver accepted" / "checked in".
+  let stamps = [];
+  let me = null;
+  try {
+    const [{ data: mine }, { data: auth }] = await Promise.all([
+      supabase.rpc('get_my_event_stamps'),
+      supabase.auth.getUser(),
+    ]);
+    stamps = mine || [];
+    me = auth && auth.user ? auth.user.id : null;
+  } catch (e) {
+    stamps = [];
+  }
+  if (!me || !stamps.length) return data;
+  const byEvent = {};
+  stamps.forEach((st) => { byEvent[st.event_id] = st; });
+  return (data || []).map((ev) => {
+    const st = byEvent[ev.id];
+    if (!st) return ev;
+    return {
+      ...ev,
+      event_rsvps: (ev.event_rsvps || []).map((r) => (r.user_id === me
+        ? { ...r, waiver_accepted_at: st.waiver_accepted_at, checked_in_at: st.checked_in_at }
+        : r)),
+    };
+  });
 }
 
 // Places to play for the given cities. The table is the source of truth — the
@@ -556,9 +591,19 @@ export async function acceptEventWaiver(eventId) {
 // "Accept the event waiver first.", "RSVP before you check in.", "Check-in
 // opens an hour before the event." A member cannot mark themselves checked in
 // any other way.
+// A wrong code is answered, not raised — { ok: false, message, tries_left } —
+// so the server can count it: five wrong codes lock check-in for that event
+// and only the host can let the member in. It is thrown here like every other
+// refusal, with the server's words as the message.
 export async function checkInToEvent(eventId, code) {
-  const { error } = await supabase.rpc('check_in_event', { p_event: eventId, p_code: code });
+  const { data, error } = await supabase.rpc('check_in_event', { p_event: eventId, p_code: code });
   if (error) throw error;
+  if (data && data.ok === false) {
+    const refused = new Error(data.message || 'That code isn\u2019t right.');
+    refused.code = 'P0001';  // a deliberate refusal, like a raise from the database
+    refused.triesLeft = data.tries_left;
+    throw refused;
+  }
 }
 
 // The people who checked in to the same event as me — never the RSVP list.
