@@ -84,6 +84,9 @@ async function purgeMyPhotoFiles() {
 // table by anyone — see migration 20260806000018. Row-level security decides
 // which ROWS you may read, never which columns, so `select=birthdate` on any
 // row you were allowed to see returned it.
+// The row also carries `tier` ('free' | 'plus' | 'club') and `timezone`; a
+// member can read both and write neither directly (tier is the desk's, and the
+// timezone goes through setMyTimezone below).
 export async function getMyProfile() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -131,6 +134,14 @@ export async function setMyLocation(lat, lng) {
   });
   if (error) throw error;
   return data || null;
+}
+
+// The phone's timezone, as an IANA name ("America/Indiana/Indianapolis"). The
+// server uses it for one thing: holding push notifications back during quiet
+// hours, 10pm to 8am where the member is. It refuses a name it doesn't know.
+export async function setMyTimezone(tz) {
+  const { error } = await supabase.rpc('set_my_timezone', { p_tz: tz });
+  if (error) throw error;
 }
 
 // A new profile starts with no position (the database clears one if sent);
@@ -422,12 +433,16 @@ export function subscribeToMessages(matchId, onEvent) {
 // Meetups for the given cities — the ones on the member's profile. Each city
 // runs its own calendar, so cities are required: asking without any returns
 // nothing rather than quietly falling back to every city in the country.
+// Each row carries price_cents (null when there is nothing to pay),
+// club_discount_pct and general_opens_at (before it, only Club members can
+// RSVP), and each RSVP its waiver_accepted_at / checked_in_at — stamps only
+// the server can write (accept_event_waiver, check_in_event).
 export async function listEvents(cities) {
   const list = (Array.isArray(cities) ? cities : [cities]).filter(Boolean);
   if (!list.length) return [];
   const { data, error } = await supabase
     .from('events')
-    .select('*, event_rsvps(user_id, status)')
+    .select('*, event_rsvps(user_id, status, waiver_accepted_at, checked_in_at)')
     .gte('starts_at', new Date().toISOString())
     .in('city', list)
     .order('starts_at', { ascending: true });
@@ -525,6 +540,112 @@ export async function rsvp(eventId, going) {
     const { error } = await supabase.from('event_rsvps').delete().eq('event_id', eventId).eq('user_id', user.id);
     if (error) throw error;
   }
+}
+
+// ---------- Waiver, check-in and the crew ----------
+
+// Stamps the member's own RSVP with the event waiver they just accepted. The
+// RSVP has to exist first, and check-in is refused until this has been called.
+export async function acceptEventWaiver(eventId) {
+  const { error } = await supabase.rpc('accept_event_waiver', { p_event: eventId });
+  if (error) throw error;
+}
+
+// Check in at the event with the code the host reads out. The server decides
+// everything and says why in words meant to be shown: "That code isn't right.",
+// "Accept the event waiver first.", "RSVP before you check in.", "Check-in
+// opens an hour before the event." A member cannot mark themselves checked in
+// any other way.
+export async function checkInToEvent(eventId, code) {
+  const { error } = await supabase.rpc('check_in_event', { p_event: eventId, p_code: code });
+  if (error) throw error;
+}
+
+// The people who checked in to the same event as me — never the RSVP list.
+//   → [{ user_id, first_name, event_id, event_title, event_starts_at, added,
+//        also_open_to_dating }]
+// also_open_to_dating is worked out by the server and is true only when it is
+// mutual. The app shows it as given and never works it out for itself.
+export async function fetchCrew() {
+  const { data, error } = await supabase.rpc('get_my_crew');
+  if (error) throw error;
+  return data || [];
+}
+
+// Keep someone from an event on my crew list. Only works for a person I
+// really shared a court with; the server refuses anyone else.
+export async function addToCrew(userId) {
+  const { error } = await supabase.rpc('crew_add', { p_member: userId });
+  if (error) throw error;
+}
+
+// Take someone back off my crew list.
+export async function removeFromCrew(userId) {
+  const { error } = await supabase.rpc('crew_remove', { p_member: userId });
+  if (error) throw error;
+}
+
+// ---------- Leagues (ladders) ----------
+
+// Ladder leagues, soonest first. Every city's are readable; the app shows the
+// ones in the member's cities.
+export async function fetchLeagues() {
+  const { data, error } = await supabase
+    .from('leagues')
+    .select('id, city, title, sport, level_range, starts_at, weeks, venue')
+    .order('starts_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// Join a ladder: the newest member takes the bottom rung.
+export async function joinLeague(leagueId) {
+  const { error } = await supabase.rpc('join_league', { p_league: leagueId });
+  if (error) throw error;
+}
+
+// Leave a ladder: everyone below moves up one, and open challenges are dropped.
+export async function leaveLeague(leagueId) {
+  const { error } = await supabase.rpc('leave_league', { p_league: leagueId });
+  if (error) throw error;
+}
+
+// The ladder, top rung first.
+//   → [{ rung, user_id, first_name, wins, losses, is_me }]
+// Someone hidden from me (a block either way) keeps their rung but comes back
+// with no user_id and the name "Player".
+export async function fetchLeagueStandings(leagueId) {
+  const { data, error } = await supabase.rpc('get_league_standings', { p_league: leagueId });
+  if (error) throw error;
+  return data || [];
+}
+
+// Challenge someone at most two rungs above me. Returns the challenge's id,
+// which is what a result is recorded against.
+export async function challengeInLeague(leagueId, targetId) {
+  const { data, error } = await supabase.rpc('league_challenge', { p_league: leagueId, p_target: targetId });
+  if (error) throw error;
+  return data;
+}
+
+// Either player in a challenge records who won. If the challenger won, the
+// server moves them up to the challenged player's rung.
+export async function reportLeagueResult(challengeId, winnerId) {
+  const { error } = await supabase.rpc('report_league_result', { p_challenge: challengeId, p_winner: winnerId });
+  if (error) throw error;
+}
+
+// My challenges still to be played, in every ladder — the ones I made and the
+// ones made against me. Row-level security returns only challenges I am one of
+// the two players in. This is how a challenge made against me, or one I made
+// before the app was last closed, can still have its result recorded.
+export async function fetchMyLeagueChallenges() {
+  const { data, error } = await supabase
+    .from('league_challenges')
+    .select('id, league_id, challenger_id, challenged_id')
+    .is('decided_at', null);
+  if (error) throw error;
+  return data || [];
 }
 
 // ---------- Safety ----------

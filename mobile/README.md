@@ -17,11 +17,17 @@ prototype, as a real native app:
 - 4-step onboarding (name/birthdate — 18+ enforced — photo, sports, skill,
   modes); when the backend is live, finishing onboarding writes the profile,
   sports, and photo to Supabase
-- Home: greeting, Date/Play/Friends mode pills, Top Match banner, discover
-  deck with rewind / pass / like / ace, report & block, notifications panel
-- Matches grid + Saved-for-later strip
+- Home, events first: "This week on the courts" with the next three events
+  in your cities and their RSVP, then "Find a game" — Play/Date/Friends mode
+  pills (always in that order), top picks and the discover deck with rewind /
+  pass / like / ace, report & block; notifications panel
+- RSVP with the event waiver, check-in with the host's code, and **Your crew**
+  (the people who checked in to the same event) at the top of the Matches tab,
+  above the matches grid + Saved-for-later strip
 - Chat with court-time proposal cards and demo replies
-- Events with RSVP, Profile with photo + bio, Settings with working
+- Events with RSVP, tournaments drawn as a bracket by rounds, ladder leagues
+  (join, standings, challenge up to two rungs above, record the result) and
+  places to play; Profile with photo + bio + membership tier; Settings with working
   discovery filters, sign-out, and in-app **account deletion** (a store
   requirement — calls the backend's `delete_account` when live)
 

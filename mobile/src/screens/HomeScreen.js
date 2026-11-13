@@ -6,7 +6,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors, type, gradientFor, initials } from '../theme';
 import { Wordmark, Avatar, Btn, Tag } from '../components/ui';
 import { SwipeableCard, Confetti, useReduceMotion } from '../components/motion';
+import { EventCard } from '../components/events';
 import { useApp } from '../state';
+import { cityLabel } from '../data/cities';
 import { distanceLabel, distanceShort } from '../lib/distance';
 
 const GAME_LABELS = { singles: 'Singles', doubles: 'Doubles', mixed_doubles: 'Mixed doubles' };
@@ -23,6 +25,11 @@ function genderText(p) {
   return theirs ? `${mine} & ${theirs}` : '';
 }
 
+// How many events Home leads with. The whole calendar is one tap away.
+const HOME_EVENTS = 3;
+
+// One order, everywhere: Play, Date, Friends. Dating is a mode you opt into,
+// never the headline.
 const MODE_META = {
   play: { label: 'Play Mode', icon: 'tennisball-outline', likeVerb: 'Request to hit' },
   date: { label: 'Date Mode', icon: 'heart-outline', likeVerb: 'Like' },
@@ -34,7 +41,12 @@ export default function HomeScreen({ navigation }) {
   const [matchWith, setMatchWith] = useState(null);
   const [notifOpen, setNotifOpen] = useState(false);
   const [sheetP, setSheetP] = useState(null);
+  const [expanded, setExpanded] = useState({});
   const reducedMotion = useReduceMotion();
+  // The next few events in the member's cities — the list is already soonest
+  // first, and already scoped to the cities on their profile.
+  const upcoming = app.events.slice(0, HOME_EVENTS);
+  const cityText = app.eventCities.length === 1 ? cityLabel(app.eventCities[0]) : `your ${app.eventCities.length} cities`;
   const p = app.currentProfile();
   const nextP = app.peekNext();
 
@@ -105,48 +117,88 @@ export default function HomeScreen({ navigation }) {
         </Pressable>
       </View>
 
-      <View style={{ paddingHorizontal: 18 }}>
-        <Text style={[type.display, { fontSize: 24 }]}>{greeting()}</Text>
-        <Text style={[type.hint, { marginTop: 3 }]}>Ready to rally?</Text>
-      </View>
+      {/* RSVPlay is events first: Home leads with what's on, then the people. */}
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 18, paddingTop: 4, gap: 14 }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+        <View>
+          <Text style={type.hint}>{greeting()}</Text>
+          <Text style={[type.display, { fontSize: 24, marginTop: 2 }]} accessibilityRole="header">This week on the courts</Text>
+          <Text style={[type.hint, { marginTop: 3 }]}>RSVP, show up and play — in {cityText}.</Text>
+        </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.pills}>
-        {Object.keys(MODE_META).filter((m) => !app.user || !app.user.modes || app.user.modes.includes(m)).map((m) => {
-          const on = app.mode === m;
-          return (
-            <Pressable key={m} onPress={() => app.setMode(m)} style={[styles.pill, on && styles.pillOn]}>
-              <Ionicons name={MODE_META[m].icon} size={16} color={on ? colors.ink : colors.text} />
-              <Text style={[styles.pillLabel, on && { color: colors.ink }]}>{MODE_META[m].label}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+        <View>
+          {upcoming.map((e) => (
+            <EventCard
+              key={e.id}
+              app={app}
+              e={e}
+              expanded={!!expanded[e.id]}
+              onToggle={() => setExpanded((x) => ({ ...x, [e.id]: !x[e.id] }))}
+              showCity={app.eventCities.length > 1}
+              onSeeCrew={() => navigation.navigate('Matches')}
+            />
+          ))}
+          {upcoming.length === 0 && app.eventsLoading && (
+            <Text style={[type.hint, styles.eventsNote]}>Loading what’s on…</Text>
+          )}
+          {upcoming.length === 0 && app.eventsError && (
+            <View style={[styles.eventsNote, { alignItems: 'center', gap: 10 }]}>
+              <Text style={[type.hint, { textAlign: 'center' }]}>Couldn’t load what’s on — check your connection and try again.</Text>
+              <Pressable style={styles.retryBtn} onPress={() => app.retryEvents()} accessibilityRole="button">
+                <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 13.5 }}>Try again</Text>
+              </Pressable>
+            </View>
+          )}
+          {upcoming.length === 0 && !app.eventsLoading && !app.eventsError && (
+            <Text style={[type.hint, styles.eventsNote]}>Nothing on in {cityText} yet — check back soon. 🎾</Text>
+          )}
+          <Pressable onPress={() => navigation.navigate('Events')} accessibilityRole="button" hitSlop={6} style={{ alignSelf: 'flex-start', marginTop: 2 }}>
+            <Text style={{ color: colors.optic, fontWeight: '800', fontSize: 13.5 }}>
+              {app.events.length > upcoming.length ? `See all ${app.events.length} events →` : 'Events, tournaments and ladders →'}
+            </Text>
+          </Pressable>
+        </View>
 
-      {/* The same-sport filter lives here, above the deck it changes, rather
-          than at the bottom of Settings where nobody found it. */}
-      <View style={styles.filterRow}>
-        <Pressable
-          onPress={() => app.updatePrefs({ ...app.prefs, mySportsOnly: !app.prefs.mySportsOnly })}
-          accessibilityRole="switch"
-          accessibilityState={{ checked: !!app.prefs.mySportsOnly }}
-          accessibilityLabel="Only show players who share my sports"
-          style={[styles.filterChip, app.prefs.mySportsOnly && styles.filterChipOn]}
-        >
-          <Ionicons
-            name={app.prefs.mySportsOnly ? 'checkmark-circle' : 'ellipse-outline'}
-            size={17}
-            color={app.prefs.mySportsOnly ? colors.optic : colors.dim}
-          />
-          <Text style={[styles.filterLabel, app.prefs.mySportsOnly && { color: colors.optic }]}>Only my sports</Text>
-        </Pressable>
-        <Text style={[type.hint, { fontSize: 12, flex: 1 }]} numberOfLines={1}>
-          {app.prefs.mySportsOnly && app.user && app.user.sports && app.user.sports.length
-            ? `Showing ${app.user.sports.join(' & ')} players`
-            : 'Showing players of every sport'}
-        </Text>
-      </View>
+        <View style={styles.sectionHead}>
+          <Text style={[type.display, { fontSize: 20 }]} accessibilityRole="header">Find a game</Text>
+          <Text style={[type.hint, { marginTop: 3 }]}>Between events: players near you. Pick what you’re here for.</Text>
+        </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 18, gap: 14 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.pills}>
+          {Object.keys(MODE_META).filter((m) => !app.user || !app.user.modes || app.user.modes.includes(m)).map((m) => {
+            const on = app.mode === m;
+            return (
+              <Pressable key={m} onPress={() => app.setMode(m)} style={[styles.pill, on && styles.pillOn]} accessibilityRole="button" accessibilityState={{ selected: on }}>
+                <Ionicons name={MODE_META[m].icon} size={16} color={on ? colors.ink : colors.text} />
+                <Text style={[styles.pillLabel, on && { color: colors.ink }]}>{MODE_META[m].label}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        {/* The same-sport filter lives here, above the deck it changes, rather
+            than at the bottom of Settings where nobody found it. */}
+        <View style={styles.filterRow}>
+          <Pressable
+            onPress={() => app.updatePrefs({ ...app.prefs, mySportsOnly: !app.prefs.mySportsOnly })}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: !!app.prefs.mySportsOnly }}
+            accessibilityLabel="Only show players who share my sports"
+            style={[styles.filterChip, app.prefs.mySportsOnly && styles.filterChipOn]}
+          >
+            <Ionicons
+              name={app.prefs.mySportsOnly ? 'checkmark-circle' : 'ellipse-outline'}
+              size={17}
+              color={app.prefs.mySportsOnly ? colors.optic : colors.dim}
+            />
+            <Text style={[styles.filterLabel, app.prefs.mySportsOnly && { color: colors.optic }]}>Only my sports</Text>
+          </Pressable>
+          <Text style={[type.hint, { fontSize: 12, flex: 1 }]} numberOfLines={1}>
+            {app.prefs.mySportsOnly && app.user && app.user.sports && app.user.sports.length
+              ? `Showing ${app.user.sports.join(' & ')} players`
+              : 'Showing players of every sport'}
+          </Text>
+        </View>
+
         {app.topPicks.length > 0 ? (
           <View style={styles.picks}>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
@@ -493,7 +545,10 @@ function ActionBtn({ icon, label, onPress, big }) {
 const styles = StyleSheet.create({
   appbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 12 },
   bellDot: { position: 'absolute', top: -1, right: -1, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.optic },
-  pills: { gap: 8, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 4 },
+  // Inside the page's own padding now that the pills scroll with it.
+  pills: { gap: 8 },
+  sectionHead: { paddingTop: 10, borderTopWidth: 2, borderTopColor: colors.line },
+  eventsNote: { textAlign: 'center', paddingVertical: 18 },
   pill: {
     flexDirection: 'row', alignItems: 'center', gap: 7,
     paddingVertical: 10, paddingHorizontal: 14,
@@ -501,7 +556,7 @@ const styles = StyleSheet.create({
   },
   pillOn: { backgroundColor: colors.optic, borderColor: colors.optic },
   pillLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
-  filterRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 18, paddingTop: 10 },
+  filterRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   filterChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 7, paddingHorizontal: 12,

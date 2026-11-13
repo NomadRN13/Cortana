@@ -2,7 +2,8 @@
 // stubs in ./stubs. The point is to run the REAL state layer — the file the
 // app ships — not a copy of its logic.
 //
-//   node tests/app/build.mjs   → tests/app/.build/state.cjs
+//   node tests/app/build.mjs   → tests/app/.build/state.cjs       (backend configured: live mode)
+//                                tests/app/.build/state.demo.cjs  (no backend: the demo build)
 //
 // It lives outside mobile/ on purpose: a nested node_modules inside the Expo
 // project confuses Metro's module map and gets uploaded to EAS builds.
@@ -19,6 +20,11 @@ const out = path.join(here, '.build');
 const byPackage = {
   'react-native': path.join(stubs, 'react-native.js'),
   '@react-native-async-storage/async-storage': path.join(stubs, 'async-storage.js'),
+  // What the screens import on top of the state layer (see stubs/ui.js).
+  'react-native-safe-area-context': path.join(stubs, 'ui.js'),
+  '@expo/vector-icons': path.join(stubs, 'ui.js'),
+  'expo-linear-gradient': path.join(stubs, 'ui.js'),
+  'expo-image-picker': path.join(stubs, 'ui.js'),
 };
 const byBasename = {
   supabase: path.join(stubs, 'supabase.js'),
@@ -26,6 +32,7 @@ const byBasename = {
   device: path.join(stubs, 'native.js'),
   push: path.join(stubs, 'native.js'),
   location: path.join(stubs, 'native.js'),
+  motion: path.join(stubs, 'ui.js'),   // animation and gestures; the screens render without them
   backend: 'api-stub',            // generated below
 };
 
@@ -37,7 +44,7 @@ const SUBSCRIPTIONS = ['subscribeToMessages', 'subscribeToNotifications'];
 const apiStub = `
 export const impl = {};
 export const calls = [];
-const ARRAYS = new Set(['listMatches','listMessages','listNotifications','listEvents','listMyPhotos','listDevices','fetchDeck','getProfilesByIds']);
+const ARRAYS = new Set(['listMatches','listMessages','listNotifications','listEvents','listMyPhotos','listDevices','fetchDeck','getProfilesByIds','fetchCrew','fetchLeagues','fetchLeagueStandings','fetchMyLeagueChallenges']);
 function call(name, args) {
   calls.push({ name, args });
   if (impl[name]) return Promise.resolve().then(() => impl[name](...args));
@@ -59,16 +66,25 @@ export { impl, calls } from './api/backend.js';
 export { nativeImpl } from ${JSON.stringify(path.join(stubs, 'native.js'))};
 export { alerts } from 'react-native';
 export { reset as resetStorage } from '@react-native-async-storage/async-storage';
+// The screens that draw the events-first flow, rendered by screens.test.js
+// against the same provider. A screen that no longer bundles fails the build.
+export { default as HomeScreen } from ${JSON.stringify(path.join(src, 'screens', 'HomeScreen.js'))};
+export { default as EventsScreen } from ${JSON.stringify(path.join(src, 'screens', 'EventsScreen.js'))};
+export { default as MatchesScreen } from ${JSON.stringify(path.join(src, 'screens', 'MatchesScreen.js'))};
+export { default as ProfileScreen } from ${JSON.stringify(path.join(src, 'screens', 'ProfileScreen.js'))};
 `;
 
-const swap = {
+// `overrides` swaps individual stubs for one bundle — the demo build is the
+// same state layer with a Supabase stub that says no backend is configured.
+const swap = (overrides = {}) => ({
   name: 'swap-native',
   setup(build) {
     build.onResolve({ filter: /.*/ }, (a) => {
       if (a.path === 'test-entry') return { path: 'test-entry', namespace: 'gen' };
       if (byPackage[a.path]) return { path: byPackage[a.path] };
       if (!a.path.startsWith('.')) return null;
-      const target = byBasename[path.basename(a.path, '.js')];
+      const base = path.basename(a.path, '.js');
+      const target = overrides[base] || byBasename[base];
       if (target === 'api-stub') return { path: 'api-stub', namespace: 'gen' };
       if (target) return { path: target };
       // Relative imports inside the generated entry resolve against src/.
@@ -81,11 +97,10 @@ const swap = {
       loader: 'js',
     }));
   },
-};
+});
 
-fs.mkdirSync(out, { recursive: true });
-await esbuild.build({
-  entryPoints: [{ in: 'test-entry', out: 'state' }],
+const bundle = (name, overrides) => esbuild.build({
+  entryPoints: [{ in: 'test-entry', out: name }],
   bundle: true,
   format: 'cjs',
   platform: 'node',
@@ -94,6 +109,12 @@ await esbuild.build({
   loader: { '.js': 'jsx', '.png': 'dataurl' },
   jsx: 'automatic',
   external: ['react', 'react/jsx-runtime'],
-  plugins: [swap],
+  plugins: [swap(overrides)],
 });
+
+fs.mkdirSync(out, { recursive: true });
+await bundle('state');
 console.log(`built ${path.relative(process.cwd(), path.join(out, 'state.cjs'))} (${names.length} backend calls stubbed)`);
+// The demo build: no backend, so every action runs on the seeded local data.
+await bundle('state.demo', { supabase: path.join(stubs, 'supabase.demo.js') });
+console.log(`built ${path.relative(process.cwd(), path.join(out, 'state.demo.cjs'))} (demo mode: no backend configured)`);

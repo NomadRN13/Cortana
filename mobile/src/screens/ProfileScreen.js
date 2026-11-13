@@ -8,6 +8,10 @@ import { Avatar, Tag } from '../components/ui';
 import { CountUpText } from '../components/motion';
 import { useApp } from '../state';
 
+// The member's tier, as the desk set it. Shown, never sold: there is no
+// purchase flow in the app.
+const TIER_LABELS = { free: 'Free member', plus: 'Plus member', club: 'Club member' };
+
 // One main photo plus five more. Matches profile_photos.position 0..5.
 const PHOTO_SLOTS = 6;
 
@@ -73,6 +77,15 @@ export default function ProfileScreen({ navigation }) {
             {u.sports.map((s) => <Tag key={s} label={s} accent />)}
             <Tag label={u.rating ? `${u.skill} · ${u.rating}` : u.skill} />
           </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }} accessibilityLabel={`Membership: ${TIER_LABELS[app.tier] || TIER_LABELS.free}`}>
+            <Ionicons name={app.tier === 'free' ? 'person-circle-outline' : 'ribbon-outline'} size={15} color={app.tier === 'free' ? colors.dim : colors.optic} />
+            <Text style={{ fontSize: 12.5, fontWeight: '700', color: app.tier === 'free' ? colors.dim : colors.optic }}>
+              {TIER_LABELS[app.tier] || TIER_LABELS.free}
+            </Text>
+          </View>
+          {app.tier === 'club' && (
+            <Text style={[type.hint, { fontSize: 12, textAlign: 'center' }]}>Club members get early RSVPs and save on events that offer a Club price.</Text>
+          )}
           {u.phoneVerified && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               <Ionicons name="checkmark-circle" size={15} color={colors.ok} />

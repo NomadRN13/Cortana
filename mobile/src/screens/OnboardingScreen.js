@@ -53,7 +53,8 @@ export default function OnboardingScreen({ navigation, route }) {
   const [sports, setSports] = useState([]);
   const [skill, setSkill] = useState(null);
   const [rating, setRating] = useState('');
-  const [modes, setModes] = useState(['date']);
+  // Play is the one mode ticked to begin with. Dating is something you opt in to.
+  const [modes, setModes] = useState(['play']);
   // A team profile is never a dating profile — drop Date the moment it's on.
   const teamModes = (list) => list.filter((m) => m !== 'date');
   const [gender, setGender] = useState(null);

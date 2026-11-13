@@ -36,6 +36,16 @@ echo
 node distance.test.js
 echo
 node location.test.js
+echo
+node timezone.test.js
+echo
+node checkin.test.js
+echo
+node leagues.test.js
+echo
+node demo.test.js
+echo
+node screens.test.js
 
 echo
 echo "✅ App suites passed."

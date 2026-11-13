@@ -22,6 +22,18 @@ with the native modules (React Native, AsyncStorage, Supabase, push, location)
 swapped for the stubs in `stubs/`. Nothing here reimplements app logic, so a
 regression in `state.js` fails here rather than on someone's phone.
 
+`build.mjs` makes two bundles of it: `.build/state.cjs`, with a backend
+configured (live mode — every test below unless it says otherwise), and
+`.build/state.demo.cjs`, with none (`stubs/supabase.demo.js`), which is the
+demo build running on the seeded data. Both also carry the Home, Events,
+Matches and Profile screens, with React Native's components reduced to plain
+host elements (`stubs/react-native.js`, `stubs/ui.js`) so `screens.test.js`
+can render and press them.
+
+`npm test` in this folder builds and runs every `*.test.js`.
+`scripts/test-app.sh` names its suites one by one, so a new test file has to
+be added there too.
+
 - `chat.test.js` — a message the server refuses must never sit in the thread
   looking sent, must survive a thread refresh, and must be retryable.
 - `safety.test.js` — block, report, and RSVP either happen or say they didn't,
@@ -41,9 +53,33 @@ regression in `state.js` fails here rather than on someone's phone.
   (`nativeImpl.coarseLocation` in `stubs/native.js` sets the phone's location.)
 - `distance.test.js` — distances read in whole miles, 1 as "nearby", and null
   shows nothing (`mobile/src/lib/distance.js`).
+- `timezone.test.js` — the phone's timezone goes through `set_my_timezone`
+  when the app opens and after signup, never the profile row; a refusal, a
+  failure or a call that never answers is silent and blocks neither.
+  (`nativeImpl.timezone` in `stubs/native.js` sets the phone's zone.)
+- `checkin.test.js` — RSVP, then the waiver, then check-in with the host's
+  code: nothing is sent before the waiver is on record, a refused code shows
+  the server's own message, the crew appears after check-in, and "Also open to
+  dating" follows the server's flag and nothing else. Also: Add / Added, the
+  tier, and that none of it is written to a row directly.
+- `leagues.test.js` — ladder leagues: the list follows the member's cities,
+  rungs come from the server's standings, "Challenge" is offered only up to two
+  rungs above, results and refusals; plus the ladder rules the demo uses
+  (`mobile/src/lib/ladder.js`).
+- `demo.test.js` — the demo build (no backend): the same RSVP → waiver →
+  check-in → crew flow and the ladders work on seeded data, by the same rules,
+  without one backend call.
+- `screens.test.js` — the screens themselves: Home leads with "This week on
+  the courts" and its events, then "Find a game" with the mode pills in the
+  order Play, Date, Friends and a deck that still works; the event card walks
+  waiver → check-in → crew; "Your crew" sits above the matches; a drawn
+  tournament is a bracket by rounds with the winner's row lit and the score
+  right-aligned; the tier shows on the profile.
 
 The backend stub is generated at build time from whatever `state.js` actually
-calls, so adding an `api.something()` doesn't break the build.
+calls, so adding an `api.something()` doesn't break the build. Every call is
+recorded in `calls` and answered by `impl.<name>` when a test sets one; calls
+that return a list (named in `ARRAYS` in `build.mjs`) answer `[]` by default.
 
 First run installs react, react-test-renderer and esbuild here (a few seconds).
 It deliberately sits outside `mobile/` — a nested `node_modules` inside the Expo

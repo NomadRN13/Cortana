@@ -8,14 +8,15 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS, EVENTS, TOURNAMENTS, TOURNAMENT_PLAYERS } from './data/seed';
+import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS, EVENTS, TOURNAMENTS, TOURNAMENT_PLAYERS, LEAGUES, DEMO_DATE_MODE_ON } from './data/seed';
 import { buildBracket, bracketRecord, bracketShuffle } from './lib/bracket';
+import { ladderJoin, ladderLeave, ladderChallengeProblem, ladderRecord, LADDER_REACH } from './lib/ladder';
 import { supabase, isBackendConfigured } from './lib/supabase';
 import * as api from './api/backend';
 import * as social from './lib/socialAuth';
 import { CITIES, DEFAULT_CITY, cityBySlug, cityLabel, nearestCity } from './data/cities';
 import { COURTS_BY_CITY } from './data/courts';
-import { getDeviceKey, getDeviceName, getPlatform } from './lib/device';
+import { getDeviceKey, getDeviceName, getPlatform, getDeviceTimezone } from './lib/device';
 import { registerForPush } from './lib/push';
 import { getCoarseLocation } from './lib/location';
 import { distanceReason } from './lib/distance';
@@ -187,6 +188,79 @@ function buildDemoTournaments() {
   });
 }
 
+// A row of get_my_crew — someone who checked in to the same event as the
+// member. `alsoOpenToDating` is the server's answer, copied and nothing more:
+// it is true only when the server said true. The app never works it out from
+// modes, genders or anything else it happens to know.
+function mapCrewRow(row) {
+  const d = row.event_starts_at ? new Date(row.event_starts_at) : null;
+  return {
+    id: row.user_id,
+    name: row.first_name || 'Player',
+    eventId: row.event_id || null,
+    eventTitle: row.event_title || '',
+    eventWhen: d && !Number.isNaN(d.getTime()) ? d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) : '',
+    added: row.added === true,
+    alsoOpenToDating: row.also_open_to_dating === true,
+  };
+}
+
+// A league row plus its standings, in the one shape the screen draws — the
+// same shape the demo leagues are built in. `challenges` are the member's own
+// challenges still to be played on this ladder.
+function mapLeagueRow(row, standings, challenges) {
+  const d = new Date(row.starts_at);
+  const ladder = (Array.isArray(standings) ? standings : []).map((r) => ({
+    rung: r.rung,
+    // No id for someone hidden from the member: they keep their rung, not their identity.
+    id: r.user_id || null,
+    name: r.first_name || 'Player',
+    wins: r.wins || 0,
+    losses: r.losses || 0,
+    isMe: r.is_me === true,
+  })).sort((a, b) => a.rung - b.rung);
+  const me = ladder.find((r) => r.isMe) || null;
+  return {
+    id: row.id,
+    city: row.city,
+    title: row.title,
+    venue: row.venue || '',
+    sport: cap(row.sport),
+    level: row.level_range || 'All levels',
+    when: Number.isNaN(d.getTime()) ? '' : `Starts ${d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}`,
+    weeks: row.weeks || 0,
+    standings: ladder,
+    joined: !!me,
+    myRung: me ? me.rung : null,
+    challenges: challenges || [],
+  };
+}
+
+// The demo ladders, built once: sample players on the rungs, each with a
+// made-up record. Nothing here is anyone's real result.
+function buildDemoLeagues() {
+  return LEAGUES.map((l, li) => ({
+    id: l.id, city: l.city, title: l.title, venue: l.venue, sport: l.sport, level: l.level, when: l.when, weeks: l.weeks,
+    standings: TOURNAMENT_PLAYERS.slice(li * 7, li * 7 + l.players).map((pl, i) => ({
+      id: pl.id, name: pl.name, rung: i + 1, wins: Math.max(0, l.players - i - 1), losses: i, isMe: false,
+    })),
+    joined: false, myRung: null, challenges: [],
+  }));
+}
+
+// The membership tier on a profile row. Set by the desk and read-only here;
+// anything the app doesn't recognise is treated as free rather than guessed at.
+const tierOf = (row) => (row && ['free', 'plus', 'club'].includes(row.tier) ? row.tier : 'free');
+
+// What the database said, when it refused something on purpose. Functions
+// raise with an SQLSTATE (22023, 42501, P0002, 23505…) and a sentence written
+// to be shown; a dropped connection has neither, and gets our own words.
+function serverSaid(e) {
+  const code = String((e && e.code) || '');
+  const msg = (e && e.message) || '';
+  return /^(22|23|42|P0)/.test(code) && msg ? msg : null;
+}
+
 function mapMsgRow(row, myId) {
   const cp = row.court_payload || {};
   const base = { id: row.id, who: row.sender_id === myId ? 'me' : 'them', when: fmtWhen(row.sent_at), read: !!row.read_at };
@@ -217,7 +291,11 @@ function phoneError(e, fallback) {
 }
 
 const NOTIF_ICONS = { match: 'heart', message: 'chatbubble', court_time: 'tennisball', event_reminder: 'calendar', system: 'notifications' };
+// The one order modes appear in, everywhere: Play, Date, Friends. Dating is a
+// mode you opt into, so it is never the one the app opens on by default.
 const ALL_MODES = ['play', 'date', 'friends'];
+// The mode to open on: the first of the member's modes, in that order.
+const firstMode = (modes) => ALL_MODES.find((m) => (modes || []).includes(m)) || (modes && modes[0]) || 'play';
 const ALL_GAMES = ['singles', 'doubles', 'mixed_doubles'];
 
 const prefOk = (pref, g) =>
@@ -231,7 +309,7 @@ export function AppStateProvider({ children }) {
   const [user, setUser] = useState(null);
   const [hydrated, setHydrated] = useState(false);
   const [session, setSession] = useState(null);
-  const [mode, setMode] = useState('date');
+  const [mode, setMode] = useState('play');
 
   // demo deck state
   const [deckPos, setDeckPos] = useState(0);
@@ -278,6 +356,28 @@ export function AppStateProvider({ children }) {
   // so it would go on naming someone after a block in either direction.
   const [tournamentNames, setTournamentNames] = useState({});
   const tournamentSeqRef = useRef(0); // only the latest tournament refresh may land
+  // The crew: people who checked in to the same event as the member. Live it is
+  // whatever get_my_crew returns (null until it has answered); in the demo it
+  // is made up from the sample players once the member "checks in".
+  const [liveCrew, setLiveCrew] = useState(null);
+  const crewSeqRef = useRef(0);
+  // Demo stand-ins for what only the server can write: the waiver stamp, the
+  // check-in, and who has been added to the crew.
+  const [demoWaivers, setDemoWaivers] = useState({});
+  const [demoCheckins, setDemoCheckins] = useState({});
+  const [demoCrewAdded, setDemoCrewAdded] = useState({});
+  // A waiver accepted a moment ago, before the event list has re-rendered with
+  // it — so "accept, then check in" works without waiting on a render.
+  const waiverRef = useRef({});
+  // Ladder leagues: from the database when live ({ key, rows }, stamped with
+  // the city selection like tournaments); built locally in the demo.
+  const [liveLeagues, setLiveLeagues] = useState(null);
+  const [demoLeagues, setDemoLeagues] = useState(buildDemoLeagues);
+  const leagueSeqRef = useRef(0);
+  // Challenges this phone has made this session, by id — kept so a result can
+  // still be recorded if the list of open challenges can't be read.
+  const madeChallengesRef = useRef([]);
+  const demoChallengeSeqRef = useRef(0);
   // Meetups belong to one city each, and a member sees the meetups for the
   // cities on their profile — one city or several — and no others. There is no
   // nationwide list; choosing cities in Settings is what changes it. Kept in a
@@ -330,7 +430,7 @@ export function AppStateProvider({ children }) {
           const u = JSON.parse(rawUser);
           if (u && typeof u.name === 'string') {
             setUser(u);
-            if (u.modes && u.modes.length) setMode(u.modes[0]);
+            if (u.modes && u.modes.length) setMode(firstMode(u.modes));
           }
         }
         if (rawSaved) {
@@ -459,6 +559,10 @@ export function AppStateProvider({ children }) {
         const d = new Date(e.starts_at);
         const rsvps = e.event_rsvps || [];
         const going = rsvps.filter((r) => r.status === 'going' || r.status === 'checked_in');
+        // The member's own RSVP: it carries the waiver and check-in stamps,
+        // which only the server writes.
+        const mine = rsvps.find((r) => r.user_id === myId) || null;
+        const discount = Math.round(Number(e.club_discount_pct));
         return {
           id: e.id,
           week: week(e.starts_at),
@@ -474,6 +578,16 @@ export function AppStateProvider({ children }) {
           going: going.some((r) => r.user_id === myId),
           goingCount: going.length,
           desc: '',
+          startsAt: e.starts_at,
+          // null: nothing to pay, or the organiser hasn't said.
+          priceCents: typeof e.price_cents === 'number' ? e.price_cents : null,
+          clubDiscountPct: discount > 0 ? discount : 0,
+          // Before this moment only Club members can RSVP; null means open to all.
+          generalOpensAt: e.general_opens_at || null,
+          // On record with the server — or accepted a moment ago on this phone,
+          // while this list was already on its way back without it.
+          waiverAccepted: !!mine && (!!mine.waiver_accepted_at || !!waiverRef.current[e.id]),
+          checkedIn: !!(mine && (mine.status === 'checked_in' || mine.checked_in_at)),
         };
       }));
     } catch (e) {
@@ -542,6 +656,50 @@ export function AppStateProvider({ children }) {
     }
   };
 
+  // The crew: everyone who checked in to the same event as the member, as the
+  // server lists them. A failure keeps the last list rather than emptying it.
+  const refreshCrew = async () => {
+    const seq = ++crewSeqRef.current;
+    try {
+      const rows = await api.fetchCrew();
+      if (seq !== crewSeqRef.current) return;
+      setLiveCrew((Array.isArray(rows) ? rows : []).filter((r) => r && r.user_id).map(mapCrewRow));
+    } catch (e) { /* keep what we have; the next check-in or launch asks again */ }
+  };
+
+  // Ladder leagues for the member's cities, each with its standings. Whether
+  // the member is on a ladder, and on which rung, is read from the standings
+  // (the row the server marks is_me) — nothing is worked out here.
+  const refreshLeagues = async () => {
+    const asked = eventCityRef.current;
+    const seq = ++leagueSeqRef.current;
+    const stale = () => seq !== leagueSeqRef.current || asked.key !== eventCityRef.current.key;
+    try {
+      const rows = await api.fetchLeagues();
+      if (stale()) return;
+      if (!Array.isArray(rows)) throw new Error('no list');
+      const mine = rows.filter((r) => asked.list.includes(r.city));
+      const [standings, open] = await Promise.all([
+        Promise.all(mine.map((r) => api.fetchLeagueStandings(r.id).catch(() => null))),
+        // Open challenges are a nicety on top of the ladder: if they can't be
+        // read, the ones made on this phone this session still stand.
+        api.fetchMyLeagueChallenges().catch(() => null),
+      ]);
+      if (stale()) return;
+      const challenges = Array.isArray(open)
+        ? open.map((c) => ({ id: c.id, leagueId: c.league_id, challengerId: c.challenger_id, challengedId: c.challenged_id }))
+        : madeChallengesRef.current;
+      if (Array.isArray(open)) madeChallengesRef.current = challenges;
+      setLiveLeagues({
+        key: asked.key,
+        rows: mine.map((r, i) => mapLeagueRow(r, standings[i], challenges.filter((c) => c.leagueId === r.id))),
+      });
+    } catch (e) {
+      if (stale()) return;
+      setLiveLeagues((cur) => (cur && cur.key === asked.key ? cur : null));
+    }
+  };
+
   // Changing cities swaps the whole list: the old selection's meetups are
   // cleared at once rather than left on screen until the new ones arrive, so
   // nothing from a city you dropped is ever shown — or joinable — afterwards.
@@ -551,8 +709,27 @@ export function AppStateProvider({ children }) {
     refreshEvents();
     refreshCourts();
     refreshTournaments();
+    refreshLeagues();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventCityKey, live]);
+
+  // Quietly: never an alert, never awaited by boot or signup. Skipped when the
+  // profile already holds this zone, and when the phone can't name one.
+  const sendTimezone = (known) => {
+    let tz = null;
+    try { tz = getDeviceTimezone(); } catch (e) { tz = null; }
+    if (!tz || tz === known) return;
+    try {
+      Promise.resolve(api.setMyTimezone(tz)).then(() => {
+        setUser((u) => {
+          if (!u || u.timezone === tz) return u;
+          const next = { ...u, timezone: tz };
+          AsyncStorage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
+          return next;
+        });
+      }).catch(() => {});
+    } catch (e) { /* next launch tries again */ }
+  };
 
   const refreshNotifs = async () => {
     try {
@@ -582,6 +759,10 @@ export function AppStateProvider({ children }) {
     setLiveCourts(null);
     setLiveTournaments(null);
     setTournamentNames({});
+    setLiveCrew(null);
+    setLiveLeagues(null);
+    waiverRef.current = {};
+    madeChallengesRef.current = [];
     api.updateMyProfile({ last_active_at: new Date().toISOString() }).catch(() => {});
     getDeviceKey().then((key) => registerForPush((t, p) => api.registerPushToken(t, p, key))).catch(() => {});
     // Refresh coarse (~1 km) location so distances and the radius filter work;
@@ -596,7 +777,13 @@ export function AppStateProvider({ children }) {
           .catch(() => {});
       }
     }).catch(() => {});
+    // And the phone's timezone, so the server can keep notifications quiet
+    // from 10pm to 8am where the member actually is. Same posture as the
+    // position: a refusal or a failure is never surfaced and never holds
+    // anything up — the old timezone (or none) just stands until next launch.
+    sendTimezone(user && user.timezone);
     refreshMatchesAndThreads().then(refreshNotifs);
+    refreshCrew();
     refreshEvents();
     refreshDeck(mode);
     refreshMyPhotos();
@@ -616,6 +803,27 @@ export function AppStateProvider({ children }) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live]);
+
+  // A profile cached on the phone is not fetched again at launch, so the one
+  // thing on it that only the desk changes — the membership tier — would stay
+  // as it was at the last sign-in, and a member just made Club would still be
+  // held out of Club early access. Read it again, quietly; a failure leaves
+  // the cached tier standing. (With no cached profile, boot fetches the whole
+  // row anyway.) Its own effect because it needs the cache to have been read:
+  // the session can be known before local storage is.
+  useEffect(() => {
+    if (!live || !hydrated || !user) return;
+    api.getMyProfile().then((remote) => {
+      if (!remote) return;
+      setUser((u) => {
+        if (!u || u.tier === tierOf(remote)) return u;
+        const next = { ...u, tier: tierOf(remote) };
+        AsyncStorage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
+        return next;
+      });
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live, hydrated]);
 
   useEffect(() => {
     if (live) refreshDeck(mode);
@@ -874,7 +1082,8 @@ export function AppStateProvider({ children }) {
     const prev = user;
     const prevMode = mode;
     saveUser(next);
-    if (next.modes.indexOf(mode) === -1 && next.modes.length) setMode(next.modes[0]);
+    const nextMode = next.modes.indexOf(mode) === -1 && next.modes.length ? firstMode(next.modes) : mode;
+    if (nextMode !== mode) setMode(nextMode);
     if (live) {
       saveSetting({
         is_team: next.isTeam,
@@ -884,7 +1093,7 @@ export function AppStateProvider({ children }) {
         modes: next.modes,
       }, () => { saveUser(prev); setMode(prevMode); }, 'Your team profile');
       if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
-      prefsTimerRef.current = setTimeout(() => refreshDeck(next.modes[0] || mode), 700);
+      prefsTimerRef.current = setTimeout(() => refreshDeck(nextMode), 700);
     }
   };
 
@@ -906,7 +1115,7 @@ export function AppStateProvider({ children }) {
     // write fail leaves you in strangers' dating decks with the app telling
     // you otherwise, which is the one version of this that really matters.
     saveSetting({ modes }, () => { saveUser(prev); setMode(prevMode); }, 'What you\u2019re here for');
-    if (!modes.includes(mode) && modes.length) setMode(modes[0]);
+    if (!modes.includes(mode) && modes.length) setMode(firstMode(modes));
   };
 
   const updatePrefs = (next) => {
@@ -942,7 +1151,7 @@ export function AppStateProvider({ children }) {
     AsyncStorage.removeItem(STORE_KEY).catch(() => {});
     AsyncStorage.removeItem(SAVED_KEY).catch(() => {});
     setUser(null);
-    setMode('date');
+    setMode('play');
     setDeckPos(0);
     setHistory([]);
     setLikeCount(0);
@@ -962,6 +1171,17 @@ export function AppStateProvider({ children }) {
     setLiveTournaments(null);
     setTournamentNames({});
     tournamentSeqRef.current += 1; // a refresh still in flight belongs to the old account
+    setLiveCrew(null);
+    crewSeqRef.current += 1;
+    setLiveLeagues(null);
+    leagueSeqRef.current += 1;
+    setDemoWaivers({});
+    setDemoCheckins({});
+    setDemoCrewAdded({});
+    setDemoLeagues(buildDemoLeagues());
+    setJoined({});
+    waiverRef.current = {};
+    madeChallengesRef.current = [];
     cacheRef.current = {};
     matchIdsRef.current = {};
   };
@@ -1033,6 +1253,8 @@ export function AppStateProvider({ children }) {
       phoneVerified: !!remote.phone_verified_at,
       suspendedAt: remote.suspended_at || null,
       suspendedReason: remote.suspended_reason || '',
+      tier: tierOf(remote),
+      timezone: remote.timezone || null,
       city: remote.city || DEFAULT_CITY,
       cities: [remote.city || DEFAULT_CITY].concat(remote.extra_cities || []),
       isTeam: !!remote.is_team,
@@ -1047,7 +1269,7 @@ export function AppStateProvider({ children }) {
       bio: remote.bio,
     };
     saveUser(localUser);
-    if (remote.modes && remote.modes.length) setMode(remote.modes[0]);
+    if (remote.modes && remote.modes.length) setMode(firstMode(remote.modes));
     setPrefs({ radius: remote.radius_mi, ageMin: remote.age_min, ageMax: remote.age_max, mySportsOnly: remote.same_sports_only });
     return { hasProfile: true };
   };
@@ -1103,6 +1325,9 @@ export function AppStateProvider({ children }) {
       if (loc) {
         try { await api.setMyLocation(loc.lat, loc.lng); } catch (e) { /* retried at next launch */ }
       }
+      // The timezone too, now there is a row to hold it. Not awaited: quiet
+      // hours are never a reason to hold up, or fail, a signup.
+      sendTimezone();
       await api.setMySports(
         draft.sports.map((s) => ({ sport: s.toLowerCase(), level: draft.skill.toLowerCase(), ratingLabel: draft.rating || '' }))
       );
@@ -1129,7 +1354,7 @@ export function AppStateProvider({ children }) {
       // Live: photos come from the server, never from the local file the picker
       // handed us — that URI exists on this phone and nowhere else.
       saveUser({ ...draft, photo: null });
-      setMode(draft.modes[0]);
+      setMode(firstMode(draft.modes));
       refreshMyPhotos();
       if (photoTrouble === 'failed') {
         Alert.alert(
@@ -1145,7 +1370,7 @@ export function AppStateProvider({ children }) {
       return;
     }
     saveUser(draft);
-    setMode(draft.modes[0]);
+    setMode(firstMode(draft.modes));
   };
 
   // ---------- deck ----------
@@ -1502,10 +1727,13 @@ export function AppStateProvider({ children }) {
       });
   };
 
-  const report = (id, fromDeck) => {
+  // `where`: true (or 'deck') from the deck, 'event' for someone met at an
+  // event (the crew list), anything else from a conversation.
+  const report = (id, where) => {
+    const fromDeck = where === true || where === 'deck';
     if (fromDeck) setSeen((s) => ({ ...s, [id]: true }));
     if (!live) return;
-    api.reportUser(id, 'Reported in-app', fromDeck ? 'deck' : 'chat')
+    api.reportUser(id, 'Reported in-app', fromDeck ? 'deck' : where === 'event' ? 'event' : 'chat')
       .catch(() => {
         Alert.alert(
           'Couldn’t send the report',
@@ -1633,6 +1861,12 @@ export function AppStateProvider({ children }) {
     going: !!joined[e.id],
     goingCount: 3 + ((idx * 5) % 7) + (joined[e.id] ? 1 : 0),
     desc: e.desc || '',
+    startsAt: null,
+    priceCents: typeof e.priceCents === 'number' ? e.priceCents : null,
+    clubDiscountPct: e.clubDiscountPct > 0 ? e.clubDiscountPct : 0,
+    generalOpensAt: null,
+    waiverAccepted: !!joined[e.id] && !!demoWaivers[e.id],
+    checkedIn: !!joined[e.id] && !!demoCheckins[e.id],
   }));
 
   // Demo-only attendee preview for expanded event cards (live shows counts).
@@ -1644,34 +1878,277 @@ export function AppStateProvider({ children }) {
   };
   const events = live ? (liveEvents || []) : demoEvents;
 
+  // One event in the live list, patched in place. A list that has been cleared
+  // meanwhile (a city change) stays cleared.
+  const patchEvent = (id, fn) => setLiveEvents((list) => (list ? list.map((e) => (e.id === id ? fn(e) : e)) : list));
+
+  // Set the member's RSVP and say whether it landed. The button flips at once
+  // so it feels instant, but the server has the last word — an event can fill
+  // up between loading the list and tapping. Swallowing the failure used to
+  // leave the card saying "Going" for an RSVP that was refused, which is how
+  // someone shows up to an event they were never on the list for.
+  const setRsvp = (id, going) => {
+    if (!liveEvents) return Promise.resolve(false);
+    const ev = liveEvents.find((e) => e.id === id);
+    if (!ev) return Promise.resolve(false);
+    if (ev.going === going) return Promise.resolve(true);
+    const hadWaiver = ev.waiverAccepted;
+    // Leaving deletes the RSVP row, and the waiver stamp goes with it.
+    const apply = (g, waiver) => patchEvent(id, (e) => ({
+      ...e, going: g, spotsLeft: Math.max(0, e.spotsLeft + (g ? -1 : 1)), waiverAccepted: waiver,
+    }));
+    apply(going, going ? hadWaiver : false);
+    if (!going) delete waiverRef.current[id];
+    return api.rsvp(id, going).then(() => true, (err) => {
+      apply(!going, hadWaiver);
+      const full = /full/i.test((err && err.message) || '');
+      Alert.alert(
+        full ? 'That event just filled up' : 'Couldn’t update your RSVP',
+        full
+          ? 'Someone took the last spot first. Nothing was booked — try another event, or check back in case a spot opens.'
+          // The database's own reason when it refused on purpose (Club early
+          // access, a suspension); otherwise it was the connection.
+          : serverSaid(err) || 'Check your connection and try again.'
+      );
+      return false;
+    });
+  };
+
   const toggleJoin = (id) => {
     if (live) {
-      if (!liveEvents) return;
-      const ev = liveEvents.find((e) => e.id === id);
-      if (!ev) return;
-      const going = !ev.going;
-      const apply = (g) => setLiveEvents((list) => list.map((e) => (e.id === id
-        ? { ...e, going: g, spotsLeft: Math.max(0, e.spotsLeft + (g ? -1 : 1)) }
-        : e)));
-      apply(going);
-      // The button flips immediately so it feels instant, but the server has
-      // the last word — an event can fill up between loading the list and
-      // tapping. Swallowing the failure used to leave the card saying "Going"
-      // for an RSVP that was refused, which is how someone shows up to an
-      // event they were never on the list for.
-      api.rsvp(id, going).catch((err) => {
-        apply(!going);
-        const full = /full/i.test((err && err.message) || '');
-        Alert.alert(
-          full ? 'That event just filled up' : 'Couldn’t update your RSVP',
-          full
-            ? 'Someone took the last spot first. Nothing was booked — try another event, or check back in case a spot opens.'
-            : 'Check your connection and try again.'
-        );
-      });
+      const ev = liveEvents && liveEvents.find((e) => e.id === id);
+      // Checked in is a record that you were there; it isn't un-RSVP'd.
+      if (!ev || ev.checkedIn) return;
+      setRsvp(id, !ev.going);
       return;
     }
+    if (demoCheckins[id]) return;
+    if (joined[id]) {
+      // As live: leaving takes the waiver acceptance with it.
+      setDemoWaivers((w) => ({ ...w, [id]: false }));
+    }
     setJoined((j) => ({ ...j, [id]: !j[id] }));
+  };
+
+  // ---------- waiver, check-in, crew ----------
+
+  // The member has read and accepted the event waiver. The stamp is the
+  // server's to write (accept_event_waiver); check-in is refused without it.
+  // Resolves true once it is on record.
+  const acceptWaiver = async (id) => {
+    if (!live) {
+      setDemoWaivers((w) => ({ ...w, [id]: true }));
+      waiverRef.current[id] = true;
+      return true;
+    }
+    try {
+      await api.acceptEventWaiver(id);
+    } catch (e) {
+      Alert.alert(
+        'Couldn’t save your waiver',
+        serverSaid(e) || 'It didn’t reach us, so it isn’t on record. You’ll be asked again before you check in.'
+      );
+      return false;
+    }
+    waiverRef.current[id] = true;
+    patchEvent(id, (e) => ({ ...e, waiverAccepted: true }));
+    return true;
+  };
+
+  // RSVP, having accepted the waiver on screen: the RSVP first (the waiver is
+  // stamped onto it), then the waiver. If the RSVP lands and the waiver
+  // doesn't, the member is still going — and is asked again at check-in.
+  // Resolves true when the member is on the list.
+  const rsvpWithWaiver = async (id) => {
+    if (!live) {
+      setJoined((j) => ({ ...j, [id]: true }));
+      await acceptWaiver(id);
+      return true;
+    }
+    const ok = await setRsvp(id, true);
+    if (!ok) return false;
+    await acceptWaiver(id);
+    return true;
+  };
+
+  // Check in with the code the host reads out. Resolves true once checked in.
+  // The waiver comes first: without it on record nothing is sent, because the
+  // server would only refuse. Anything the server does refuse is shown in its
+  // own words — "That code isn't right.", "Check-in opens an hour before the
+  // event." — rather than blamed on the connection.
+  const checkIn = async (id, code) => {
+    const title = 'Couldn’t check you in';
+    const ev = (live ? (liveEvents || []) : demoEvents).find((e) => e.id === id);
+    if (!ev) return false;
+    if (ev.checkedIn) return true;
+    if (!ev.going) { Alert.alert(title, 'RSVP before you check in.'); return false; }
+    if (!ev.waiverAccepted && !waiverRef.current[id]) { Alert.alert(title, 'Accept the event waiver first.'); return false; }
+    const clean = String(code || '').trim().toUpperCase();
+    if (!clean) { Alert.alert(title, 'Enter the code the host reads out.'); return false; }
+    if (!live) {
+      // Demo: there is no host and no real code, so any 4 to 8 letters or
+      // digits stands in for one. Nothing is recorded anywhere.
+      if (!/^[0-9A-Z]{4,8}$/.test(clean)) { Alert.alert(title, 'That code isn’t right.'); return false; }
+      setDemoCheckins((c) => ({ ...c, [id]: true }));
+      return true;
+    }
+    try {
+      await api.checkInToEvent(id, clean);
+    } catch (e) {
+      const said = serverSaid(e);
+      // The server has no waiver on record after all: ask for it again next time.
+      if (said && /waiver/i.test(said)) {
+        delete waiverRef.current[id];
+        patchEvent(id, (x) => ({ ...x, waiverAccepted: false }));
+      }
+      Alert.alert(title, said || 'Check your connection and try again.');
+      return false;
+    }
+    patchEvent(id, (e) => ({ ...e, checkedIn: true, going: true }));
+    // Now there is a crew to show: everyone else who checked in.
+    refreshCrew();
+    return true;
+  };
+
+  // Demo crew: for each event the member has "checked in" to, the sample
+  // players shown as attending it, in the shape get_my_crew returns. There is
+  // no server in the demo, so this plays its part — including its rule for the
+  // dating flag: both people in Date mode and each what the other is looking
+  // for, or false. Everything downstream (mapCrewRow, the screens) only ever
+  // reads the flag, exactly as it does live.
+  const demoCrew = (() => {
+    const mutual = (p) => (
+      !!user && !user.isTeam && (user.modes || []).includes('date') && !!user.gender
+      && DEMO_DATE_MODE_ON[p.id] === true && !!p.gender
+      && (user.seeking || []).includes(p.gender) && (p.seeking || []).includes(user.gender)
+    );
+    const rows = [];
+    const taken = {};
+    EVENTS.forEach((e) => {
+      if (!joined[e.id] || !demoCheckins[e.id]) return;
+      eventAttendees(e.id).forEach((p) => {
+        if (taken[p.id]) return;
+        taken[p.id] = true;
+        rows.push({
+          user_id: p.id, first_name: p.name, event_id: e.id, event_title: e.title, event_starts_at: null,
+          added: !!demoCrewAdded[p.id],
+          also_open_to_dating: mutual(p),
+        });
+      });
+    });
+    return rows.map(mapCrewRow);
+  })();
+
+  // Someone you block leaves the list at once, before the next refresh.
+  const crew = (live ? (liveCrew || []) : demoCrew).filter((c) => !blocked[c.id]);
+
+  // Keep someone on the crew list, or take them off. Shown at once; put back,
+  // with the reason, if the server refuses.
+  const setCrewAdded = (id, added) => {
+    if (!live) { setDemoCrewAdded((a) => ({ ...a, [id]: added })); return; }
+    const flip = (v) => setLiveCrew((list) => (list ? list.map((c) => (c.id === id ? { ...c, added: v } : c)) : list));
+    flip(added);
+    (added ? api.addToCrew(id) : api.removeFromCrew(id)).catch((e) => {
+      flip(!added);
+      Alert.alert(
+        added ? 'Couldn’t add them to your crew' : 'Couldn’t take them off your crew',
+        serverSaid(e) || 'Check your connection and try again.'
+      );
+    });
+  };
+  const addToCrew = (id) => setCrewAdded(id, true);
+  const removeFromCrew = (id) => setCrewAdded(id, false);
+
+  // ---------- leagues ----------
+
+  const leagues = live
+    ? (liveLeagues && liveLeagues.key === eventCityKey ? liveLeagues.rows : [])
+    // Like the live list, the member's cities' ladders only. (Unlike
+    // tournaments, a ladder in a city you have dropped is not listed even if
+    // you are still on it: the server has no "my ladders" list to ask. Add the
+    // city back and it is there, rung intact.)
+    : demoLeagues.filter((l) => eventCities.includes(l.city));
+
+  const leagueError = (err, fallback) => {
+    Alert.alert(fallback, serverSaid(err) || 'Check your connection and try again.');
+  };
+
+  // The member's open challenge with this player on this ladder, if any.
+  const leagueChallengeWith = (league, row) => (
+    (row && row.id && (league.challenges || []).find((c) => c.challengerId === row.id || c.challengedId === row.id)) || null
+  );
+
+  // Whether "Challenge" belongs on this row: you're on the ladder, they're
+  // above you by no more than two rungs, they aren't hidden from you, and the
+  // two of you don't already have a challenge to play. The server checks all
+  // of it again.
+  const canChallenge = (league, row) => (
+    !!league && !!row && league.joined && !row.isMe && !!row.id
+    && row.rung < league.myRung && league.myRung - row.rung <= LADDER_REACH
+    && !leagueChallengeWith(league, row)
+  );
+
+  const demoMe = () => (user && user.name) || 'You';
+  const patchDemoLeague = (id, fn) => setDemoLeagues((list) => list.map((l) => {
+    if (l.id !== id) return l;
+    const next = fn(l);
+    const standings = next.standings.map((r) => ({ ...r, isMe: r.id === 'me', name: r.id === 'me' ? demoMe() : r.name }));
+    const me = standings.find((r) => r.isMe) || null;
+    return { ...next, standings, joined: !!me, myRung: me ? me.rung : null };
+  }));
+
+  const joinLeague = (id) => {
+    if (live) {
+      api.joinLeague(id).then(refreshLeagues).catch((e) => { leagueError(e, 'Couldn’t add you to the ladder'); refreshLeagues(); });
+      return;
+    }
+    patchDemoLeague(id, (l) => ({ ...l, standings: ladderJoin(l.standings, 'me', demoMe()) }));
+  };
+
+  const leaveLeague = (id) => {
+    if (live) {
+      api.leaveLeague(id).then(refreshLeagues).catch((e) => { leagueError(e, 'Couldn’t take you off the ladder'); refreshLeagues(); });
+      return;
+    }
+    // As the server: open challenges go with you.
+    patchDemoLeague(id, (l) => ({ ...l, standings: ladderLeave(l.standings, 'me'), challenges: [] }));
+  };
+
+  const challengeInLeague = (leagueId, targetId) => {
+    if (live) {
+      api.challengeInLeague(leagueId, targetId).then((challengeId) => {
+        if (challengeId) {
+          madeChallengesRef.current = madeChallengesRef.current
+            .filter((c) => c.id !== challengeId)
+            .concat([{ id: challengeId, leagueId, challengerId: myId, challengedId: targetId }]);
+        }
+        return refreshLeagues();
+      }).catch((e) => { leagueError(e, 'Couldn’t send that challenge'); refreshLeagues(); });
+      return;
+    }
+    const league = demoLeagues.find((l) => l.id === leagueId);
+    if (!league) return;
+    const problem = ladderChallengeProblem(league.standings, 'me', targetId, league.challenges);
+    if (problem) { Alert.alert('Couldn’t send that challenge', problem); return; }
+    const cid = `demo-challenge-${(demoChallengeSeqRef.current += 1)}`;
+    patchDemoLeague(leagueId, (l) => ({ ...l, challenges: [...l.challenges, { id: cid, leagueId, challengerId: 'me', challengedId: targetId }] }));
+  };
+
+  // Either player records who won; the server moves the rungs.
+  const reportLeagueResult = (leagueId, challengeId, winnerId) => {
+    if (live) {
+      api.reportLeagueResult(challengeId, winnerId).then(() => {
+        madeChallengesRef.current = madeChallengesRef.current.filter((c) => c.id !== challengeId);
+        return refreshLeagues();
+      }).catch((e) => { leagueError(e, 'Couldn’t record that result'); refreshLeagues(); });
+      return;
+    }
+    const league = demoLeagues.find((l) => l.id === leagueId);
+    const ch = league && league.challenges.find((c) => c.id === challengeId);
+    if (!ch) return;
+    const res = ladderRecord(league.standings, ch.challengerId, ch.challengedId, winnerId);
+    if (res.problem) { Alert.alert('Couldn’t record that result', res.problem); return; }
+    patchDemoLeague(leagueId, (l) => ({ ...l, standings: res.list, challenges: l.challenges.filter((c) => c.id !== challengeId) }));
   };
 
   // ---------- notifications ----------
@@ -1762,7 +2239,13 @@ export function AppStateProvider({ children }) {
     matches, threads: visibleThreads, profileById, ensureThread,
     sendMessage, retryMessage, discardMessage, subscribeThread, respondCourt, markRead,
     pendingMatch, clearPendingMatch: () => setPendingMatch(null),
-    events, toggleJoin, joined, eventAttendees, eventCities, courtsFor, suggestedCourt, reloadCourts: () => { if (live) { refreshCourts(); refreshTournaments(); } },
+    events, toggleJoin, joined, eventAttendees, eventCities, courtsFor, suggestedCourt,
+    reloadCourts: () => { if (live) { refreshCourts(); refreshTournaments(); refreshLeagues(); } },
+    rsvpWithWaiver, acceptWaiver, checkIn,
+    crew, addToCrew, removeFromCrew, reloadCrew: () => { if (live) refreshCrew(); },
+    leagues, joinLeague, leaveLeague, challengeInLeague, reportLeagueResult, canChallenge, leagueChallengeWith,
+    // 'free' | 'plus' | 'club'. Read-only: the desk sets it, the app shows it.
+    tier: (user && user.tier) || 'free',
     tournaments, playerName, isMe, joinTournament, leaveTournament, drawTournament, canReportMatch, reportMatch,
     eventsLoading: live && liveEvents === null && !eventsError, eventsError: live && eventsError, retryEvents: () => refreshEvents(),
     notifs, clearNotifs, prefs,

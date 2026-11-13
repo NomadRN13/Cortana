@@ -48,3 +48,16 @@ export function getDeviceName() {
 export function getPlatform() {
   return Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'unknown';
 }
+
+// The phone's timezone as an IANA name ("America/Indiana/Indianapolis"), or
+// null when the JS engine can't say. Used for one thing: the server holds push
+// notifications back during quiet hours (10pm to 8am) where the member is.
+// A timezone is a region, not a position — it never stands in for location.
+export function getDeviceTimezone() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return typeof tz === 'string' && tz.length > 0 && tz.length <= 64 ? tz : null;
+  } catch (e) {
+    return null;
+  }
+}

@@ -20,9 +20,9 @@ export const PROFILES = [
 export const EVENTS = [
   { id: 'e1', city: 'indianapolis', week: 'This week', dow: 'Fri', dom: '7', title: 'Sunset Doubles Social', venue: 'Riverside Park Tennis Complex', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6, desc: "Round-robin doubles as the sun goes down — partners rotate every 20 minutes, so you'll play with everyone." },
   { id: 'e2', city: 'indianapolis', week: 'This week', dow: 'Sat', dom: '8', title: 'Beginner Pickleball Mixer', venue: 'Broad Ripple Park', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12, desc: "Never held a paddle? Perfect. Loaner paddles, patient people, and zero judgment." },
-  { id: 'e3', city: 'indianapolis', week: 'This week', dow: 'Sun', dom: '9', title: 'RSVPlay Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3, desc: "The signature RSVPlay format: short sets, rotating partners, and a built-in social break." },
+  { id: 'e3', city: 'indianapolis', week: 'This week', dow: 'Sun', dom: '9', title: 'RSVPlay Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3, priceCents: 1200, clubDiscountPct: 15, desc: "The signature RSVPlay format: short sets, rotating partners, and a built-in social break." },
   { id: 'e4', city: 'indianapolis', week: 'Next week', dow: 'Wed', dom: '12', title: 'Pickleball Under the Lights', venue: 'Ellenberger Park', time: '7:30 PM', sport: 'Pickleball', level: 'All levels', spots: 8, desc: "Indy's biggest public pickleball site, under the lights. Music on, stakes low." },
-  { id: 'e5', city: 'indianapolis', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Tarkington Park', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10, desc: "45 minutes of cardio tennis, then coffee at the Tarkington café — the date part is optional." },
+  { id: 'e5', city: 'indianapolis', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Tarkington Park', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10, priceCents: 800, clubDiscountPct: 10, desc: "45 minutes of cardio tennis, then coffee at the Tarkington café — the date part is optional." },
   { id: 'e6', city: 'indianapolis', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Indy Pickleball Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5, desc: "Season kickoff for the ladder league. Come claim a rung." },
   // Other cities, so choosing one (or several) visibly changes the list in the demo.
   { id: 'e7', city: 'seattle', week: 'This week', dow: 'Sat', dom: '8', title: 'Green Lake Pickleball Social', venue: 'Green Lake Courts', time: '11:00 AM', sport: 'Pickleball', level: 'All levels', spots: 9, desc: 'Rotating doubles by the lake, coffee after at the boathouse.' },
@@ -94,6 +94,22 @@ export const TOURNAMENTS = [
   { id: 't2', city: 'indianapolis', title: 'Broad Ripple Open', venue: 'Broad Ripple Park', sport: 'Pickleball', level: 'DUPR 3.0+', when: 'Sun · 1:00 PM', max: 16, status: 'in_progress', entrants: 12, played: 4 },
   { id: 't3', city: 'seattle', title: 'Green Lake Doubles Cup', venue: 'Green Lake Courts', sport: 'Tennis', level: 'NTRP 3.5+', when: 'Next Sat · 10:00 AM', max: 8, status: 'registration', entrants: 5, played: 0 },
 ];
+
+// Demo ladder leagues. `players` of the sample players above stand on the
+// ladder, top rung first, each with a made-up record. Joining puts the member
+// on the bottom rung, exactly as the server does.
+export const LEAGUES = [
+  { id: 'l1', city: 'indianapolis', title: 'Indy Pickleball Ladder', venue: 'Indy Pickleball Club', sport: 'Pickleball', level: 'DUPR 3.0+', when: 'Starts Sun · 1:00 PM', weeks: 8, players: 7 },
+  { id: 'l2', city: 'indianapolis', title: 'Tarkington Tennis Ladder', venue: 'Tarkington Park', sport: 'Tennis', level: 'NTRP 3.0–4.0', when: 'Starts Wed · 6:30 PM', weeks: 6, players: 5 },
+  { id: 'l3', city: 'seattle', title: 'Green Lake Ladder', venue: 'Green Lake Courts', sport: 'Pickleball', level: 'All levels', when: 'Starts Sat · 10:00 AM', weeks: 8, players: 6 },
+];
+
+// Which sample players have Date mode on, for the demo's stand-in for the
+// server's "also open to dating" answer. Live, the server works that out (it is
+// mutual or it is nothing) and the app only shows what it is told. In the demo
+// there is no server, so the demo plays its part with the same rule: both
+// people in Date mode, and each what the other is looking for.
+export const DEMO_DATE_MODE_ON = { maya: true, priya: true, jordan: true, grace: true, chris: true, theo: true, lena: true };
 
 export const COURTS = ['Riverside Park Tennis Complex', 'Tarkington Park', 'Broad Ripple Park'];
 export const SPORTS = ['Tennis', 'Pickleball', 'Padel', 'Racquetball', 'Squash'];

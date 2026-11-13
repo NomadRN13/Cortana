@@ -3,7 +3,8 @@ import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, type } from '../theme';
-import { Tag, Avatar } from '../components/ui';
+import { Tag } from '../components/ui';
+import { EventCard } from '../components/events';
 import { useApp } from '../state';
 import { cityLabel } from '../data/cities';
 import { ACCESS_LABELS } from '../data/courts';
@@ -29,9 +30,10 @@ function CityBadge({ cities }) {
   );
 }
 
-// One line of a match: a player, highlighted if they won, with a button to
-// record them as the winner when this member is allowed to.
-function BracketPlayer({ app, t, m, side }) {
+// One row of a match card: a player. The winner's row is lit in optic with the
+// score at its right-hand edge; the member's own row carries a "You" tag; and
+// when this member is allowed to record the match, a button to say this player won.
+function BracketRow({ app, t, m, side }) {
   const id = side === 'a' ? m.a : m.b;
   const won = !!m.winner && m.winner === id;
   const lost = !!m.winner && m.winner !== id;
@@ -46,14 +48,19 @@ function BracketPlayer({ app, t, m, side }) {
     );
   };
   return (
-    <View style={styles.brPlayer}>
+    <View style={[styles.brRow, won && styles.brRowWon]}>
       <Text
         style={[styles.brName, won && { color: colors.optic, fontWeight: '800' }, (lost || !id) && { color: colors.dim }]}
         numberOfLines={1}
       >
-        {name}{id && app.isMe(id) ? '  (you)' : ''}
+        {name}
       </Text>
-      {won && <Ionicons name="checkmark-circle" size={16} color={colors.optic} />}
+      {!!id && app.isMe(id) && (
+        <View style={styles.youTag}><Text style={styles.youTagLabel}>You</Text></View>
+      )}
+      {won && (m.score
+        ? <Text style={styles.brScore} numberOfLines={1} accessibilityLabel={`Won ${m.score}`}>{m.score}</Text>
+        : <Ionicons name="checkmark-circle" size={16} color={colors.optic} accessibilityLabel="Won" />)}
       {!!id && app.canReportMatch(m) && (
         <Pressable onPress={record} style={styles.brWon} accessibilityRole="button" accessibilityLabel={`Record ${app.playerName(id)} as the winner`}>
           <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 11.5 }}>Won</Text>
@@ -63,9 +70,25 @@ function BracketPlayer({ app, t, m, side }) {
   );
 }
 
-// The bracket, round by round, top to bottom — the shape that fits a phone.
-// Every round is there from the moment of the draw; later rounds fill in as
-// results come in.
+// One match: two rows, one per player. The member's own matches are outlined.
+function BracketMatch({ app, t, m }) {
+  const mine = app.isMe(m.a) || app.isMe(m.b);
+  return (
+    <View style={[styles.brMatch, mine && { borderColor: colors.optic }]}>
+      <BracketRow app={app} t={t} m={m} side="a" />
+      <View style={styles.brRule} />
+      <BracketRow app={app} t={t} m={m} side="b" />
+      {/* Played, but the winner has since left: the score still stands. */}
+      {!!m.score && !m.winner && <Text style={[styles.brScore, { paddingHorizontal: 10, paddingBottom: 6 }]}>{m.score}</Text>}
+    </View>
+  );
+}
+
+// The bracket, drawn as a bracket: one column per round, left to right, each
+// headed by the round's name, with every match a two-row card. Later rounds
+// spread down the column so a match sits between the two that feed it. Every
+// round is there from the moment of the draw; later rounds fill in as results
+// come in. It scrolls sideways — a draw of 64 doesn't fit a phone any other way.
 function Bracket({ app, t }) {
   const rounds = [];
   for (let r = 1; r <= t.rounds; r += 1) rounds.push(r);
@@ -73,23 +96,41 @@ function Bracket({ app, t }) {
   // there are 56 of them — so they are counted in one line, not listed.
   const byes = t.matches.filter((m) => m.round === 1 && m.bye).length;
   return (
-    <View style={{ marginTop: 8, gap: 6 }}>
-      {rounds.map((r) => (
-        <View key={r}>
-          <Text style={[type.eyebrow, { marginTop: 8, marginBottom: 6 }]}>{bracketRoundName(r, t.rounds)}</Text>
-          {r === 1 && byes > 0 && (
-            <Text style={[type.hint, { fontSize: 12, marginBottom: 6 }]}>{bracketByeLine(byes, t.rounds)}</Text>
-          )}
-          {t.matches.filter((m) => m.round === r && !m.bye).map((m) => (
-            <View key={m.id} style={[styles.brMatch, (app.isMe(m.a) || app.isMe(m.b)) && { borderColor: colors.optic }]}>
-              <BracketPlayer app={app} t={t} m={m} side="a" />
-              <View style={styles.brRule} />
-              <BracketPlayer app={app} t={t} m={m} side="b" />
-              {!!m.score && <Text style={[type.hint, { fontSize: 11.5, marginTop: 4 }]}>{m.score}</Text>}
+    <View style={{ marginTop: 8 }}>
+      {byes > 0 && (
+        <Text style={[type.hint, { fontSize: 12, marginBottom: 6 }]}>{bracketByeLine(byes, t.rounds)}</Text>
+      )}
+      {rounds.length > 1 && (
+        <Text style={[type.hint, { fontSize: 11.5, marginBottom: 2 }]}>Swipe sideways to follow the rounds.</Text>
+      )}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 4 }}>
+        {rounds.map((r) => {
+          const matches = t.matches.filter((m) => m.round === r && !m.bye);
+          return (
+            <View key={r} style={styles.brRound}>
+              <Text style={[type.eyebrow, { marginTop: 8, marginBottom: 6 }]}>{bracketRoundName(r, t.rounds)}</Text>
+              <View style={{ flex: 1, justifyContent: 'space-around', gap: 8 }}>
+                {matches.map((m) => <BracketMatch key={m.id} app={app} t={t} m={m} />)}
+                {matches.length === 0 && <Text style={[type.hint, { fontSize: 12 }]}>No matches in this round.</Text>}
+              </View>
             </View>
-          ))}
-        </View>
-      ))}
+          );
+        })}
+        {t.status === 'completed' && !!t.championId && (
+          <View style={styles.brRound}>
+            <Text style={[type.eyebrow, { marginTop: 8, marginBottom: 6 }]}>Champion</Text>
+            <View style={{ flex: 1, justifyContent: 'space-around' }}>
+              <View style={[styles.brMatch, { borderColor: colors.optic }]}>
+                <View style={[styles.brRow, styles.brRowWon]}>
+                  <Ionicons name="trophy" size={15} color={colors.optic} />
+                  <Text style={[styles.brName, { color: colors.optic, fontWeight: '800' }]} numberOfLines={1}>{app.playerName(t.championId)}</Text>
+                  {app.isMe(t.championId) && <View style={styles.youTag}><Text style={styles.youTagLabel}>You</Text></View>}
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -163,6 +204,124 @@ function Tournaments({ app }) {
               </View>
             )}
             {isOpen && t.status !== 'registration' && <Bracket app={app} t={t} />}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+// One rung of a ladder: the rung number, the player, their record at the
+// right, and whatever this member can do about them — challenge them, or record
+// the result of a challenge the two of them still have to play.
+function LadderRow({ app, l, row }) {
+  const me = l.standings.find((r) => r.isMe) || null;
+  const open = me && !row.isMe ? app.leagueChallengeWith(l, row) : null;
+  const result = (iWon) => {
+    const winner = iWon ? me : row;
+    Alert.alert(
+      iWon ? `You beat ${row.name}?` : `${row.name} won?`,
+      'This goes straight onto the ladder. If the challenger won, they take the other player’s rung and everyone between moves down one. '
+        + 'It can’t be changed afterwards, so only record a match that has been played.',
+      [{ text: 'Cancel', style: 'cancel' }, { text: 'Record result', onPress: () => app.reportLeagueResult(l.id, open.id, winner.id) }]
+    );
+  };
+  const challenge = () => {
+    Alert.alert(
+      `Challenge ${row.name}?`,
+      `They’re on rung ${row.rung}; you’re on rung ${l.myRung}. Win and you take their rung. Arrange the match between you, then either of you records who won.`,
+      [{ text: 'Cancel', style: 'cancel' }, { text: 'Challenge', onPress: () => app.challengeInLeague(l.id, row.id) }]
+    );
+  };
+  return (
+    <View style={[styles.ladderRow, row.isMe && styles.ladderRowMe]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Text style={styles.rung}>{row.rung}</Text>
+        <Text style={[styles.brName, row.isMe && { color: colors.optic, fontWeight: '800' }, !row.id && !row.isMe && { color: colors.dim }]} numberOfLines={1}>
+          {row.name}
+        </Text>
+        {row.isMe && <View style={styles.youTag}><Text style={styles.youTagLabel}>You</Text></View>}
+        <Text style={styles.record} accessibilityLabel={`${row.wins} wins, ${row.losses} losses`}>{row.wins}–{row.losses}</Text>
+        {!open && app.canChallenge(l, row) && (
+          <Pressable onPress={challenge} style={styles.brWon} accessibilityRole="button" accessibilityLabel={`Challenge ${row.name}`}>
+            <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 11.5 }}>Challenge</Text>
+          </Pressable>
+        )}
+      </View>
+      {!!open && (
+        <View style={styles.challengeBar}>
+          <Text style={[type.hint, { fontSize: 12, flex: 1 }]}>
+            {open.challengedId === row.id ? 'You challenged them' : 'They challenged you'} — played it?
+          </Text>
+          <Pressable onPress={() => result(true)} style={styles.brWon} accessibilityRole="button" accessibilityLabel={`Record that you beat ${row.name}`}>
+            <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 11.5 }}>I won</Text>
+          </Pressable>
+          <Pressable onPress={() => result(false)} style={styles.lost} accessibilityRole="button" accessibilityLabel={`Record that ${row.name} won`}>
+            <Text style={{ color: colors.text, fontWeight: '800', fontSize: 11.5 }}>They won</Text>
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// Ladder leagues in the member's cities: join and take the bottom rung,
+// challenge anyone up to two rungs above, and record the result. The server
+// keeps the ladder; this draws it.
+function Leagues({ app }) {
+  const [open, setOpen] = useState({});
+  const list = app.leagues;
+  if (!list.length) return null;
+  const many = app.eventCities.length > 1;
+  const leave = (l) => Alert.alert(
+    `Leave ${l.title}?`,
+    'You give up your rung — everyone below you moves up one — and any challenge you still have to play is dropped. If you join again you start from the bottom.',
+    [{ text: 'Stay', style: 'cancel' }, { text: 'Leave the ladder', style: 'destructive', onPress: () => app.leaveLeague(l.id) }]
+  );
+  return (
+    <View style={{ marginTop: 22 }}>
+      <Text style={[type.display, { fontSize: 18 }]}>Ladder leagues</Text>
+      {!app.live && (
+        <Text style={[type.hint, { fontSize: 11.5, marginTop: 4 }]}>Demo: sample players and made-up records. You record both sides’ results yourself.</Text>
+      )}
+      {list.map((l) => {
+        const isOpen = !!open[l.id];
+        const count = l.standings.length;
+        return (
+          <View key={l.id} style={[styles.tourney, isOpen && { borderColor: colors.optic }]}>
+            <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{l.title}</Text>
+            <Text style={[type.hint, { fontSize: 12.5 }]}>
+              {[l.venue, l.when, l.weeks ? `${l.weeks} weeks` : ''].filter(Boolean).join(' · ')}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 5, flexWrap: 'wrap', marginTop: 2 }}>
+              <Tag label={l.sport} accent />
+              <Tag label={l.level} />
+              <Tag label={l.joined ? `You’re on rung ${l.myRung} of ${count}` : `${count} on the ladder`} />
+              {many && <Tag label={cityLabel(l.city)} />}
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+              {l.joined ? (
+                <Pressable style={[styles.join, styles.joinGoing]} onPress={() => leave(l)} accessibilityRole="button" accessibilityLabel={`On the ladder for ${l.title}. Tap to leave`}>
+                  <Text style={{ fontWeight: '800', fontSize: 13, color: colors.optic }}>On the ladder ✓</Text>
+                </Pressable>
+              ) : (
+                <Pressable style={styles.join} onPress={() => { app.joinLeague(l.id); setOpen((o) => ({ ...o, [l.id]: true })); }} accessibilityRole="button" accessibilityLabel={`Join ${l.title}`}>
+                  <Text style={{ fontWeight: '800', fontSize: 13, color: colors.ink }}>Join</Text>
+                </Pressable>
+              )}
+              <Pressable onPress={() => setOpen((o) => ({ ...o, [l.id]: !o[l.id] }))} accessibilityRole="button" accessibilityState={{ expanded: isOpen }}>
+                <Text style={{ color: colors.optic, fontWeight: '800', fontSize: 13 }}>{isOpen ? 'Hide the ladder' : 'See the ladder'}</Text>
+              </Pressable>
+            </View>
+            {isOpen && (
+              <View style={{ marginTop: 8, gap: 6 }}>
+                {count === 0 && <Text style={[type.hint, { fontSize: 12.5 }]}>Nobody on the ladder yet — join and take the top rung.</Text>}
+                {l.standings.map((row) => <LadderRow key={`${row.rung}-${row.id || 'hidden'}`} app={app} l={l} row={row} />)}
+                <Text style={[type.hint, { fontSize: 11.5, marginTop: 4 }]}>
+                  Join and you take the bottom rung. You can challenge anyone up to two rungs above you: win and you take their rung, lose and nothing moves. Either player records the result. There are no prizes, and you play at your own risk.
+                </Text>
+              </View>
+            )}
           </View>
         );
       })}
@@ -261,7 +420,7 @@ export default function EventsScreen({ navigation }) {
         <Text style={[type.display, { fontSize: 18 }]}>Events</Text>
         <CityBadge cities={app.eventCities} />
       </View>
-      <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 4 }}>
+      <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 4 }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
         {app.events.length === 0 && app.eventsLoading && (
           <Text style={[type.hint, { textAlign: 'center', paddingVertical: 30 }]}>Loading meetups…</Text>
         )}
@@ -285,60 +444,21 @@ export default function EventsScreen({ navigation }) {
         {weeks.map((w) => (
           <View key={w}>
             <Text style={[type.eyebrow, { marginTop: 14, marginBottom: 8 }]}>{w}</Text>
-            {app.events.filter((e) => e.week === w).map((e) => {
-              const open = !!expanded[e.id];
-              const attendees = open ? app.eventAttendees(e.id) : [];
-              return (
-                <Pressable
-                  key={e.id}
-                  style={[styles.event, open && { borderColor: colors.optic }]}
-                  onPress={() => setExpanded((x) => ({ ...x, [e.id]: !x[e.id] }))}
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: open }}
-                >
-                  <View style={styles.date}>
-                    <Text style={{ fontSize: 10, fontWeight: '800', color: colors.dim, letterSpacing: 0.6 }}>{e.dow.toUpperCase()}</Text>
-                    <Text style={{ fontSize: 20, fontWeight: '900', color: colors.optic }}>{e.dom}</Text>
-                  </View>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{e.title}</Text>
-                    <Text style={[type.hint, { fontSize: 12.5 }]}>{e.venue} · {e.time}</Text>
-                    <View style={{ flexDirection: 'row', gap: 5, flexWrap: 'wrap' }}>
-                      <Tag label={e.sport} accent />
-                      <Tag label={e.level} />
-                      {/* which city, once the list spans more than one */}
-                      {app.eventCities.length > 1 && !!e.city && <Tag label={cityLabel(e.city)} />}
-                    </View>
-                    {open && (
-                      <View style={{ gap: 8, marginTop: 6 }}>
-                        {!!e.desc && <Text style={[type.hint, { fontSize: 12.5 }]}>{e.desc}</Text>}
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          {attendees.map((a, i) => (
-                            <View key={a.id} style={{ marginLeft: i ? -10 : 0 }}>
-                              <Avatar id={a.id} name={a.name} size={26} />
-                            </View>
-                          ))}
-                          <Text style={[type.hint, { fontSize: 12, marginLeft: 6 }]}>
-                            +{e.goingCount || 0} going{e.going ? ' · including you' : ''}
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-                  </View>
-                  <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', gap: 8 }}>
-                    <Text style={[type.hint, { fontSize: 11 }]}>{e.spotsLeft} spots left</Text>
-                    <Pressable style={[styles.join, e.going && styles.joinGoing]} onPress={() => app.toggleJoin(e.id)}>
-                      <Text style={{ fontWeight: '800', fontSize: 13, color: e.going ? colors.optic : colors.ink }}>
-                        {e.going ? 'Going ✓' : 'Join'}
-                      </Text>
-                    </Pressable>
-                  </View>
-                </Pressable>
-              );
-            })}
+            {app.events.filter((e) => e.week === w).map((e) => (
+              <EventCard
+                key={e.id}
+                app={app}
+                e={e}
+                expanded={!!expanded[e.id]}
+                onToggle={() => setExpanded((x) => ({ ...x, [e.id]: !x[e.id] }))}
+                showCity={app.eventCities.length > 1}
+                onSeeCrew={() => navigation.navigate('Matches')}
+              />
+            ))}
           </View>
         ))}
         <Tournaments app={app} />
+        <Leagues app={app} />
         <PlacesToPlay cities={app.eventCities} courtsFor={app.courtsFor} />
       </ScrollView>
     </SafeAreaView>
@@ -366,25 +486,36 @@ const styles = StyleSheet.create({
     gap: 3, padding: 13, marginTop: 10,
     backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line, borderRadius: 16,
   },
+  brRound: { width: 214 },
   brMatch: {
-    padding: 10, marginBottom: 8,
+    overflow: 'hidden',
     backgroundColor: colors.card2, borderWidth: 2, borderColor: colors.line, borderRadius: 12,
   },
-  brPlayer: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 26 },
+  brRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 36,
+    paddingVertical: 5, paddingHorizontal: 10,
+    borderLeftWidth: 3, borderLeftColor: 'transparent',
+  },
+  // The winner's row: lit in optic.
+  brRowWon: { backgroundColor: colors.opticDim, borderLeftColor: colors.optic },
   brName: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600' },
-  brRule: { height: 1, backgroundColor: colors.line, marginVertical: 5 },
+  brScore: { color: colors.optic, fontSize: 12.5, fontWeight: '800', textAlign: 'right', fontVariant: ['tabular-nums'] },
+  brRule: { height: 1, backgroundColor: colors.line },
   brWon: { backgroundColor: colors.optic, borderRadius: 999, paddingVertical: 4, paddingHorizontal: 10 },
+  youTag: { borderWidth: 2, borderColor: colors.optic, borderRadius: 999, paddingVertical: 1, paddingHorizontal: 7 },
+  youTagLabel: { color: colors.optic, fontSize: 10.5, fontWeight: '800' },
+  ladderRow: {
+    gap: 6, paddingVertical: 7, paddingHorizontal: 10,
+    backgroundColor: colors.card2, borderWidth: 2, borderColor: colors.line, borderRadius: 12,
+  },
+  ladderRowMe: { borderColor: colors.optic },
+  rung: { width: 22, color: colors.optic, fontSize: 15, fontWeight: '900', textAlign: 'center' },
+  record: { color: colors.dim, fontSize: 12.5, fontWeight: '700', textAlign: 'right', fontVariant: ['tabular-nums'] },
+  challengeBar: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  lost: { borderWidth: 2, borderColor: colors.line, borderRadius: 999, paddingVertical: 2, paddingHorizontal: 10 },
   place: {
     gap: 3, padding: 13, marginBottom: 10,
     backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line, borderRadius: 16,
-  },
-  event: {
-    flexDirection: 'row', gap: 12, padding: 13, marginBottom: 10,
-    backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line, borderRadius: 16,
-  },
-  date: {
-    width: 52, borderWidth: 2, borderColor: colors.optic, borderRadius: 12,
-    alignItems: 'center', justifyContent: 'center', paddingVertical: 8,
   },
   join: { backgroundColor: colors.optic, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 14 },
   joinGoing: { backgroundColor: 'transparent', borderWidth: 2, borderColor: colors.optic },
