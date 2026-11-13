@@ -1,4 +1,4 @@
-# 40/LOVE — Landing Page
+# RSVPlay — Landing Page
 
 `index.html` is the complete waitlist site: one self-contained file, no
 build step. It runs in two modes:
@@ -15,7 +15,7 @@ build step. It runs in two modes:
    the bottom:
 
    ```js
-   window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
+   window.RSVPLAY = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
    ```
 
    Paste your Supabase project URL and **anon public** key (Dashboard →
@@ -39,7 +39,7 @@ build step. It runs in two modes:
    (Step 1's Supabase keys go into `landing/index.html` — commit and push
    on the connected flow, or rebuild + re-drag on the manual flow.)
 
-3. **Custom domain** (recommended before promoting it): buy `40love.app`
+3. **Custom domain** (recommended before promoting it): buy `rsvplay.app`
    or similar (~$15/yr) and point it at the host. Update the Instagram/
    TikTok bio links to it.
 

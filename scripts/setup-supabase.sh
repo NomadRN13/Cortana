@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 40/LOVE — one-shot Supabase provisioning.
+# RSVPlay — one-shot Supabase provisioning.
 # Run from the repo root ON YOUR OWN COMPUTER after:
 #   1) creating a project at https://supabase.com (free tier)
 #   2) npm install -g supabase
@@ -41,7 +41,7 @@ Three clicks left in the dashboard (https://supabase.com/dashboard/project/$PROJ
 
 3) KEYS — Settings → API: copy "Project URL" and the "anon public" key into:
      mobile/.env                (copy mobile/.env.example first)
-     landing/index.html         (the window.FORTYLOVE block near the bottom)
+     landing/index.html         (the window.RSVPLAY block near the bottom)
    The anon key is public by design — safe in the landing page.
    NEVER copy the service_role key anywhere.
 

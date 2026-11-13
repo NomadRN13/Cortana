@@ -206,7 +206,7 @@ export default function ConversationScreen({ route, navigation }) {
             value={text}
             onChangeText={setText}
             placeholder="Your serve…"
-            placeholderTextColor="rgba(244,246,240,0.35)"
+            placeholderTextColor="rgba(245,244,238,0.35)"
             onSubmitEditing={send}
             returnKeyType="send"
           />

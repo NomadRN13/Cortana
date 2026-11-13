@@ -14,11 +14,11 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     // Say what we mean rather than relying on the repo being un-wired: after
     // go-live.sh these files carry real keys, and this step would break the
     // day the project went live.
-    await page.evaluate(() => { window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' }; });
+    await page.evaluate(() => { window.RSVPLAY = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' }; });
     await page.fill('#hero-email', 'demo@example.com');
     await page.click('#hero-form button');
     await page.waitForSelector('#hero-success', { state: 'visible', timeout: 2000 });
-    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('40love.waitlist')));
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rsvplay.waitlist')));
     if (!stored.includes('demo@example.com')) throw new Error('email not stored locally');
     await page.close();
   });
@@ -36,7 +36,7 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
       route.fulfill({ status: 204, body: '' });
     });
     await page.goto(URL);
-    await page.evaluate((cfg) => { window.FORTYLOVE = cfg; }, CFG);
+    await page.evaluate((cfg) => { window.RSVPLAY = cfg; }, CFG);
     await page.fill('#hero-email', 'Player@Example.com');
     await page.selectOption('#hero-city', 'seattle');
     await page.click('#hero-form button');
@@ -59,7 +59,7 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     const page = await browser.newPage();
     await page.route('**/rest/v1/rpc/join_waitlist', (route) => route.fulfill({ status: 204, body: '' }));
     await page.goto(URL);
-    await page.evaluate((cfg) => { window.FORTYLOVE = cfg; }, CFG);
+    await page.evaluate((cfg) => { window.RSVPLAY = cfg; }, CFG);
     await page.fill('#join-email', 'repeat@example.com');
     await page.click('#join-form button');
     await page.waitForSelector('#join-success', { state: 'visible', timeout: 3000 });
@@ -74,7 +74,7 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     const page = await browser.newPage();
     await page.route('**/rest/v1/rpc/join_waitlist', (route) => route.fulfill({ status: 500, body: 'boom' }));
     await page.goto(URL);
-    await page.evaluate((cfg) => { window.FORTYLOVE = cfg; }, CFG);
+    await page.evaluate((cfg) => { window.RSVPLAY = cfg; }, CFG);
     await page.fill('#hero-email', 'unlucky@example.com');
     await page.click('#hero-form button');
     await page.waitForFunction(() => document.getElementById('hero-error').textContent.length > 0, { timeout: 3000 });
@@ -99,20 +99,20 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     // and the step would quietly start testing something else.
     const unconfigured = require('fs')
       .readFileSync(require('path').join(REPO, 'landing/index.html'), 'utf8')
-      .replace(/window\.FORTYLOVE = \{[^}]*\};/,
-        "window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };");
-    await page.route('https://40love.app/', (route) =>
+      .replace(/window\.RSVPLAY = \{[^}]*\};/,
+        "window.RSVPLAY = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };");
+    await page.route('https://rsvplay.app/', (route) =>
       route.fulfill({ status: 200, contentType: 'text/html', body: unconfigured }));
-    await page.goto('https://40love.app/');
+    await page.goto('https://rsvplay.app/');
     await page.fill('#hero-email', 'stranger@example.com');
     await page.click('#hero-form button');
     await page.waitForFunction(() => document.getElementById('hero-error').textContent.length > 0, { timeout: 3000 });
     const err = await page.textContent('#hero-error');
     if (!/waitlist isn/i.test(err)) throw new Error('wrong copy: ' + err);
-    if (!/hello@40love\.app/.test(await page.innerHTML('#hero-error'))) throw new Error('no way to reach us offered');
+    if (!/hello@rsvplay\.app/.test(await page.innerHTML('#hero-error'))) throw new Error('no way to reach us offered');
     const shown = await page.$eval('#hero-success', (e) => getComputedStyle(e).display !== 'none');
     if (shown) throw new Error('claimed success with no backend on a real host');
-    const stored = await page.evaluate(() => localStorage.getItem('40love.waitlist'));
+    const stored = await page.evaluate(() => localStorage.getItem('rsvplay.waitlist'));
     if (stored && stored.includes('stranger@example.com')) throw new Error('quietly stored the address in the visitor browser');
     await page.close();
   });

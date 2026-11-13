@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-# 40/LOVE — run everything.
+# RSVPlay — run everything.
 #
 #   ./scripts/test.sh
 #

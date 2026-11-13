@@ -1,4 +1,4 @@
--- 40/LOVE — close the waitlist membership oracle
+-- RSVPlay — close the waitlist membership oracle
 --
 -- The landing page POSTed straight to the waitlist table with the anon key,
 -- which is public by design — it ships in the page source. The email column is

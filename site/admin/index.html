@@ -4,21 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>40/LOVE — Admin</title>
+<title>RSVPlay — Admin</title>
 <link rel="icon" type="image/png" href="/favicon.png">
 <style>
   :root {
-    --night: #0A0B0D;
-    --panel: #101215;
-    --card: #17191D;
-    --card2: #1F2227;
-    --optic: #D6F44F;
-    --text: #F4F6F0;
-    --dim: rgba(244, 246, 240, 0.62);
-    --line: rgba(244, 246, 240, 0.13);
+    --night: #14161C;
+    --panel: #1A1D24;
+    --card: #1E2128;
+    --card2: #272B33;
+    --optic: #C8F04A;
+    --text: #F5F4EE;
+    --dim: rgba(245, 244, 238, 0.62);
+    --line: rgba(245, 244, 238, 0.13);
     --ok: #3DC96B;
     --danger: #E15A72;
-    --ink: #0A0B0D;
+    --ink: #14161C;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -31,14 +31,14 @@
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0 18px; }
   .mark { font-weight: 900; font-size: 20px; letter-spacing: 0.2px; }
   .mark .o { color: var(--optic); }
-  .mark .ball { display: inline-block; width: 0.80em; height: 0.80em; vertical-align: -0.04em; margin: 0 0.015em; }
+  .mark .ball { display: inline-block; width: 0.46em; height: 0.46em; vertical-align: 0; margin: 0 0 0 0.06em; }
   .mark .ball svg { width: 100%; height: 100%; display: block; }
   .mark .sub { display: block; font-size: 11px; font-weight: 700; color: var(--dim); letter-spacing: 2.2px; text-transform: uppercase; margin-top: 2px; }
   .who { font-size: 12.5px; color: var(--dim); text-align: right; }
   .who button { background: none; border: 0; color: var(--optic); font-weight: 800; font-size: 12.5px; cursor: pointer; padding: 4px 0 0; }
 
   .banner {
-    border: 2px solid var(--optic); background: rgba(214, 244, 79, 0.07);
+    border: 2px solid var(--optic); background: rgba(200, 240, 74, 0.07);
     color: var(--text); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;
   }
   .banner b { color: var(--optic); }
@@ -73,7 +73,7 @@
     background: var(--card); border: 2px solid var(--line); color: var(--dim);
     border-radius: 999px; padding: 10px 18px; font-weight: 800; font-size: 13.5px; cursor: pointer; font-family: inherit;
   }
-  .tabs button.on { border-color: var(--optic); color: var(--optic); background: rgba(214, 244, 79, 0.07); }
+  .tabs button.on { border-color: var(--optic); color: var(--optic); background: rgba(200, 240, 74, 0.07); }
   .tabs button .n { display: inline-block; min-width: 18px; margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--optic); color: var(--ink); font-size: 11.5px; }
   .tabs button .n:empty { display: none; }
 
@@ -99,7 +99,7 @@
   .br-p { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; padding: 7px 9px; background: none; border: 0; border-bottom: 1px solid var(--line); color: var(--text); font: inherit; font-size: 13px; text-align: left; }
   .br-p:last-of-type { border-bottom: 0; }
   button.br-p { cursor: pointer; }
-  button.br-p:hover { background: rgba(214, 244, 79, 0.10); }
+  button.br-p:hover { background: rgba(200, 240, 74, 0.10); }
   .br-p.won { color: var(--optic); font-weight: 800; }
   .br-p.lost, .br-p.empty-slot { color: var(--dim); }
   .br-score { padding: 3px 9px 6px; font-size: 11.5px; color: var(--dim); }
@@ -149,7 +149,7 @@
 <!--/mark:defs-->
 <div class="wrap">
   <header>
-    <div class="mark">40<span class="o">/</span>L<span class="ball"><!--mark:ball--><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg><!--/mark:ball--></span>VE<span class="sub">Admin · Moderation Desk</span></div>
+    <div class="mark">RSVPlay<span class="ball"><!--mark:ball--><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg><!--/mark:ball--></span><span class="sub">Admin · Moderation Desk</span></div>
     <div class="who" id="who" hidden>
       <span id="who-email"></span>
       <button id="sign-out" type="button">Sign out</button>
@@ -239,7 +239,7 @@
     <div class="card" id="pane-events" hidden>
       <h1>Create an event</h1>
       <div class="grid2">
-        <div><label for="ev-title">Title</label><input id="ev-title" maxlength="80" placeholder="40/LOVE Social Mixer"></div>
+        <div><label for="ev-title">Title</label><input id="ev-title" maxlength="80" placeholder="RSVPlay Social Mixer"></div>
         <div><label for="ev-venue">Venue</label><input id="ev-venue" maxlength="80" placeholder="Broad Ripple Courts"></div>
         <div><label for="ev-date">Date</label><input id="ev-date" type="date"></div>
         <div><label for="ev-time">Start time (local to the city)</label><input id="ev-time" type="time" value="18:00"></div>
@@ -388,7 +388,7 @@
   </div>
 
   <footer>
-    40/LOVE moderation desk ·
+    RSVPlay moderation desk ·
     This page is safe to deploy publicly: every action is checked against the admin list by the
     database itself, not by this page.
   </footer>
@@ -399,16 +399,16 @@
      Dashboard → Settings → API). The anon key is designed to be public;
      admin powers come from your signed-in account being on the admins list,
      never from this page. NEVER put the service_role key here. */
-  window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
+  window.RSVPLAY = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
 </script>
 <script>
 (function () {
   'use strict';
 
-  var cfg = window.FORTYLOVE || {};
+  var cfg = window.RSVPLAY || {};
   var LIVE = !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
   var BASE = LIVE ? cfg.SUPABASE_URL.replace(/\/+$/, '') : '';
-  var TOKEN_KEY = '40love.admin.session';
+  var TOKEN_KEY = 'rsvplay.admin.session';
 
   function $(s) { return document.querySelector(s); }
   function esc(s) {
@@ -472,7 +472,7 @@
     ],
     funnel: { landed: 42, start_signup: 24, phone_verified: 18, sports_picked: 17, skill_picked: 16, finished_signup: 14, swiped: 11, matched: 4, opened_chat: 3 },
     photos: [
-      { id: 'd1', user: 'Maya', created_at: new Date(Date.now() - 42 * 60000).toISOString(), grad: 'linear-gradient(135deg,#2E5A45,#D6F44F)' },
+      { id: 'd1', user: 'Maya', created_at: new Date(Date.now() - 42 * 60000).toISOString(), grad: 'linear-gradient(135deg,#2E5A45,#C8F04A)' },
       { id: 'd2', user: 'Diego', created_at: new Date(Date.now() - 3 * 3600000).toISOString(), grad: 'linear-gradient(135deg,#24424f,#7fd0e8)' },
       { id: 'd3', user: 'Priya', created_at: new Date(Date.now() - 26 * 3600000).toISOString(), grad: 'linear-gradient(135deg,#4f2438,#e87fb0)' }
     ],
@@ -488,7 +488,7 @@
       { id: 'p2', city: 'bakersfield', name: 'Dignity Health Sports Complex — GSA Pickleball', address: '3101 Gilmore Ave, Suite 100', sport: 'pickleball', setting: 'indoor', access: 'paid', courts: null, lights: true, note: 'Indoor open play three days a week.', sort_order: 110 }
     ],
     events: [
-      { id: 'e1', title: '40/LOVE Social Mixer', venue: 'Broad Ripple Courts', starts_at: new Date(Date.now() + 6 * 86400000).toISOString(), sport: 'pickleball', level_range: 'All levels', capacity: 24, city: 'indianapolis' }
+      { id: 'e1', title: 'RSVPlay Social Mixer', venue: 'Broad Ripple Courts', starts_at: new Date(Date.now() + 6 * 86400000).toISOString(), sport: 'pickleball', level_range: 'All levels', capacity: 24, city: 'indianapolis' }
     ]
   };
 
@@ -678,7 +678,8 @@
       var target = item.getAttribute('data-target');
       if (!target) { alert('This report has no member attached — it may already be deleted.'); return; }
       if (!confirm('Suspend ' + who + '?\n\nThey disappear from everyone\u2019s deck, their open '
-        + 'conversations close, and they can\u2019t message, swipe or join events. They can still sign in '
+        + 'conversations close, they\u2019re withdrawn from tournaments still taking entries, and they '
+        + 'can\u2019t message, swipe or join events. They can still sign in '
         + 'and delete their own account, and you can undo this.')) return;
       var reason = prompt('A short note for the record (optional):', '') || '';
       rest('POST', '/rest/v1/rpc/suspend_member', { p_user: target, p_reason: reason })

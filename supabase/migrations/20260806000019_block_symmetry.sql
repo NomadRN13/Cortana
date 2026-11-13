@@ -1,4 +1,4 @@
--- 40/LOVE — make blocking mean what the docs say it means
+-- RSVPlay — make blocking mean what the docs say it means
 --
 -- "Blocking makes two people invisible to each other everywhere, enforced at
 -- the database layer" (docs/backend-setup.md). Two tables were not doing that:

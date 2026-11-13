@@ -1,4 +1,4 @@
-# 40/LOVE — Pitch Deck
+# RSVPlay — Pitch Deck
 
 Twelve slides, written to be read aloud in eight minutes. On-slide copy is
 what the audience sees; speaker notes are what you say. `[FILL IN]` marks
@@ -9,13 +9,13 @@ current SFIA / USA Pickleball / industry reports before presenting.
 
 ## Slide 1 — Title
 
-> # 40/LOVE
-> ### *Love at first serve.*
+> # RSVPlay
+> ### *Serve. Rally. Connect.*
 >
-> The dating app for racquet sports people — where the first date is a game
+> The app for paddle and racquet sports — where the first date is a game
 > instead of dinner.
 
-**Speaker notes:** Open with the name. "In tennis, 'love' means zero — 40/love
+**Speaker notes:** Open with the name. "In tennis, 'love' means zero — RSVPlay
 is match point. We think meeting someone should feel like that: a game you're
 excited to play, not an interview you have to sit through."
 
@@ -53,7 +53,7 @@ layer on it.
 > - Propose a **court time** right in the chat
 > - Three modes: ❤️ **Date** · 🎾 **Play** · 👥 **Friends**
 
-**Speaker notes:** 40/LOVE matches people who play the same sport at a
+**Speaker notes:** RSVPlay matches people who play the same sport at a
 compatible level nearby, then turns the awkward "so… drinks?" into a one-tap
 court-time proposal. And it's more than dating: Play mode finds hitting
 partners, Friends mode covers leagues and socials. That's strategic, not
@@ -105,8 +105,8 @@ playbook.
 
 > ## Community before code. One city at a time.
 > - **City #1: Indianapolis** — 65+ public pickleball courts, deep indoor scene
-> - @fortylove content: racquet culture × dating humor
-> - Club partnerships + **40/LOVE Social Mixers**
+> - @rsvplay content: racquet culture × dating humor
+> - Club partnerships + **RSVPlay Social Mixers**
 > - Waitlist with city voting → invite-only soft launch
 > - Expand to city #2 only on proven retention marks
 
@@ -125,7 +125,7 @@ Indy Parks) is already in the repo.
 > |  | Play-focused | Dating-focused |
 > |---|---|---|
 > | **Generic** | Meetup, gym apps | Tinder, Hinge, Bumble |
-> | **Racquet-specific** | Playtomic, PicklePlay | **40/LOVE** |
+> | **Racquet-specific** | Playtomic, PicklePlay | **RSVPlay** |
 
 **Speaker notes:** Draw the 2×2: horizontal axis play↔dating, vertical
 generic↔racquet-specific. Mainstream apps have scale but no activity mechanic;
@@ -168,10 +168,10 @@ social — make yours undeniable here.
 > **[FILL IN — pick one:]**
 > - *Pre-seed:* raising **$[X]k** for 18 months of runway —
 >   ~50% product · ~30% community & events · ~20% ops
-> - *Partners:* clubs & organizers — co-host a 40/LOVE Mixer
-> - *Everyone:* join the waitlist — **40love.app**
+> - *Partners:* clubs & organizers — co-host a RSVPlay Mixer
+> - *Everyone:* join the waitlist — **rsvplay.app**
 >
-> ### hello@40love.app
+> ### hello@rsvplay.app
 
 **Speaker notes:** Tune the ask to the room — investors get the raise slide,
 clubs get the partnership slide, a demo-day crowd gets the waitlist. End the

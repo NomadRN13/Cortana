@@ -134,7 +134,7 @@ export default function OnboardingScreen({ navigation, route }) {
       const iso = parseBirthdate(birthdateText);
       const a = iso ? ageFromBirthdate(iso) : null;
       if (!iso) return Alert.alert('Almost there', 'Enter your birthdate as MM/DD/YYYY.');
-      if (a < 18) return Alert.alert('40/LOVE is 18+', 'You must be 18 or older to join.');
+      if (a < 18) return Alert.alert('RSVPlay is 18+', 'You must be 18 or older to join.');
       if (a > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
       if (!gender) return Alert.alert('Almost there', 'Tell us who you are so matching works.');
       if (!cities.length) return Alert.alert('Almost there', 'Pick at least one city you play in.');
@@ -143,13 +143,13 @@ export default function OnboardingScreen({ navigation, route }) {
         const piso = parseBirthdate(partnerBirthdateText);
         if (!piso) return Alert.alert('Almost there', 'Enter your partner’s birthdate as MM/DD/YYYY.');
         const pa = ageFromBirthdate(piso);
-        if (pa < 18) return Alert.alert('40/LOVE is 18+', 'Both people on a team must be 18 or older.');
+        if (pa < 18) return Alert.alert('RSVPlay is 18+', 'Both people on a team must be 18 or older.');
         if (pa > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
         if (!partnerGender) return Alert.alert('Almost there', 'Tell us your partner’s gender so matching works.');
       }
     }
     if (step === 1 && !phoneVerified) {
-      return Alert.alert('Almost there', 'Verify your phone number to continue — it keeps 40/LOVE real people only.');
+      return Alert.alert('Almost there', 'Verify your phone number to continue — it keeps RSVPlay real people only.');
     }
     if (step === 2 && !sports.length) return Alert.alert('Almost there', 'Pick at least one sport.');
     if (step === 3 && !skill) return Alert.alert('Almost there', 'Pick your skill level.');
@@ -221,10 +221,10 @@ export default function OnboardingScreen({ navigation, route }) {
         {step === 0 && (
           <>
             <Field label="First name">
-              <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="e.g. Aaron" placeholderTextColor="rgba(244,246,240,0.35)" />
+              <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="e.g. Aaron" placeholderTextColor="rgba(245,244,238,0.35)" />
             </Field>
             <Field label="Birthdate">
-              <TextInput style={styles.input} value={birthdateText} onChangeText={(t) => setBirthdateText(formatBirthdateInput(t))} keyboardType="number-pad" placeholder="MM/DD/YYYY" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={10} />
+              <TextInput style={styles.input} value={birthdateText} onChangeText={(t) => setBirthdateText(formatBirthdateInput(t))} keyboardType="number-pad" placeholder="MM/DD/YYYY" placeholderTextColor="rgba(245,244,238,0.35)" maxLength={10} />
             </Field>
             <Field label="I am">
               <View style={styles.chips}>
@@ -272,8 +272,8 @@ export default function OnboardingScreen({ navigation, route }) {
             {isTeam && (
               <View style={styles.seekingBox}>
                 <Text style={styles.boxLabel}>Your partner</Text>
-                <TextInput style={styles.input} value={partnerName} onChangeText={setPartnerName} placeholder="Their first name" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={40} />
-                <TextInput style={[styles.input, { marginTop: 8 }]} value={partnerBirthdateText} onChangeText={(t) => setPartnerBirthdateText(formatBirthdateInput(t))} keyboardType="number-pad" placeholder="Their birthdate — MM/DD/YYYY" placeholderTextColor="rgba(244,246,240,0.35)" maxLength={10} />
+                <TextInput style={styles.input} value={partnerName} onChangeText={setPartnerName} placeholder="Their first name" placeholderTextColor="rgba(245,244,238,0.35)" maxLength={40} />
+                <TextInput style={[styles.input, { marginTop: 8 }]} value={partnerBirthdateText} onChangeText={(t) => setPartnerBirthdateText(formatBirthdateInput(t))} keyboardType="number-pad" placeholder="Their birthdate — MM/DD/YYYY" placeholderTextColor="rgba(245,244,238,0.35)" maxLength={10} />
                 <Text style={[styles.boxLabel, { marginTop: 12 }]}>They are</Text>
                 <View style={styles.chips}>
                   {GENDERS.map((g) => (
@@ -293,7 +293,7 @@ export default function OnboardingScreen({ navigation, route }) {
               </View>
               {cityDetected && !cities.length && (
                 <Text style={[type.hint, { marginTop: 8 }]}>
-                  We're not open where you are yet — pick any cities you'd travel to, or join the waitlist at 40love.app and we'll tell you when yours opens.
+                  We're not open where you are yet — pick any cities you'd travel to, or join the waitlist at rsvplay.app and we'll tell you when yours opens.
                 </Text>
               )}
               {cityDetected && cities.length > 0 && (
@@ -320,7 +320,7 @@ export default function OnboardingScreen({ navigation, route }) {
                     onChangeText={setPhoneText}
                     keyboardType="phone-pad"
                     placeholder="(317) 555-0142"
-                    placeholderTextColor="rgba(244,246,240,0.35)"
+                    placeholderTextColor="rgba(245,244,238,0.35)"
                     editable={!phoneE164}
                   />
                 </Field>
@@ -335,7 +335,7 @@ export default function OnboardingScreen({ navigation, route }) {
                         onChangeText={setPhoneCode}
                         keyboardType="number-pad"
                         placeholder="••••••"
-                        placeholderTextColor="rgba(244,246,240,0.35)"
+                        placeholderTextColor="rgba(245,244,238,0.35)"
                         maxLength={6}
                       />
                     </Field>
@@ -358,7 +358,7 @@ export default function OnboardingScreen({ navigation, route }) {
               </View>
             )}
             <Text style={type.hint}>
-              A one-time text keeps 40/LOVE real people only. Your number is never shown to other members and never used for marketing.
+              A one-time text keeps RSVPlay real people only. Your number is never shown to other members and never used for marketing.
             </Text>
             {!app.isBackendConfigured && (
               <Text style={[type.hint, { color: colors.optic }]}>Demo mode: no text is actually sent — enter any 6-digit code.</Text>
@@ -385,9 +385,9 @@ export default function OnboardingScreen({ navigation, route }) {
               ))}
             </View>
             <Field label="Official rating (optional)">
-              <TextInput style={styles.input} value={rating} onChangeText={setRating} placeholder="e.g. NTRP 3.5 or DUPR 4.0" placeholderTextColor="rgba(244,246,240,0.35)" />
+              <TextInput style={styles.input} value={rating} onChangeText={setRating} placeholder="e.g. NTRP 3.5 or DUPR 4.0" placeholderTextColor="rgba(245,244,238,0.35)" />
             </Field>
-            <Text style={type.hint}>Honest levels make better matches — nobody enjoys a 6–0, 6–0 first date.</Text>
+            <Text style={type.hint}>Honest levels make better matches — nobody enjoys a 6–0, 6–0 first match.</Text>
           </>
         )}
 

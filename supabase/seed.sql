@@ -1,22 +1,22 @@
--- 40/LOVE — development seed (local/dev only; never run against production)
+-- RSVPlay — development seed (local/dev only; never run against production)
 -- The 12 demo players from the prototype plus a demo account "Aaron",
 -- pre-seeded matches/threads, and the Indianapolis event calendar.
 
 -- Demo auth users (Supabase local dev allows direct inserts into auth.users)
 insert into auth.users (id, email) values
-  ('00000000-0000-4000-8000-00000000000a', 'aaron@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000001', 'maya@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000002', 'diego@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000003', 'priya@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000004', 'sam@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000005', 'elena@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000006', 'marcus@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000007', 'jordan@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000008', 'grace@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000009', 'theo@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000010', 'nadia@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000011', 'chris@demo.40love.app'),
-  ('00000000-0000-4000-8000-000000000012', 'lena@demo.40love.app');
+  ('00000000-0000-4000-8000-00000000000a', 'aaron@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000001', 'maya@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000002', 'diego@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000003', 'priya@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000004', 'sam@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000005', 'elena@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000006', 'marcus@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000007', 'jordan@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000008', 'grace@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000009', 'theo@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000010', 'nadia@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000011', 'chris@demo.rsvplay.app'),
+  ('00000000-0000-4000-8000-000000000012', 'lena@demo.rsvplay.app');
 
 insert into public.profiles
   (id, first_name, birthdate, bio, approx_lat, approx_lng, availability_note, modes, gender, seeking, verified_at, created_at) values
@@ -99,7 +99,7 @@ from m where '00000000-0000-4000-8000-000000000003' in (m.user_a, m.user_b);
 insert into public.events (title, venue, starts_at, sport, level_range, capacity) values
   ('Sunset Doubles Social',      'Riverside Park Tennis Complex', now() + interval '2 days',  'tennis',     'All levels',    24),
   ('Beginner Pickleball Mixer',  'Broad Ripple Park',             now() + interval '3 days',  'pickleball', 'Beginner–Int.', 24),
-  ('40/LOVE Round Robin',        'Tarkington Park',               now() + interval '4 days',  'tennis',     'NTRP 3.0–4.0',  16),
+  ('RSVPlay Round Robin',        'Tarkington Park',               now() + interval '4 days',  'tennis',     'NTRP 3.0–4.0',  16),
   ('Pickleball Under the Lights','Ellenberger Park',              now() + interval '7 days',  'pickleball', 'All levels',    32),
   ('Cardio Tennis + Coffee',     'Tarkington Park',               now() + interval '10 days', 'tennis',     'Int. and up',   16),
   ('Ladder League Kickoff',      'Indy Pickleball Club',          now() + interval '11 days', 'pickleball', 'DUPR 3.0+',     20);

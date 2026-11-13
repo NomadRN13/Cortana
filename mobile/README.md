@@ -1,4 +1,4 @@
-# 40/LOVE — Mobile App (iOS + Android)
+# RSVPlay — Mobile App (iOS + Android)
 
 The store-bound React Native app, built with [Expo](https://expo.dev). One
 codebase → both the Apple App Store and Google Play. The design implements
@@ -57,7 +57,7 @@ eas submit --platform ios
 eas submit --platform android
 ```
 
-Store identifiers are already configured: `com.fortylove.app` on both
+Store identifiers are already configured: `com.rsvplay.app` on both
 platforms. Fill in the placeholders in `eas.json` (Apple ID, App Store
 Connect app ID, Play service-account key) before `eas submit`.
 

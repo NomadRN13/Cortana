@@ -45,8 +45,8 @@ async function serve() {
       // demo mode mid-suite — so blank the config on the way out rather than
       // depending on the repo never having been wired.
       const html = fs.readFileSync(file, 'utf8').replace(
-        /window\.FORTYLOVE\s*=\s*\{[^}]*\};/,
-        "window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };"
+        /window\.RSVPLAY\s*=\s*\{[^}]*\};/,
+        "window.RSVPLAY = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };"
       );
       res.writeHead(200, { 'content-type': type });
       res.end(html);

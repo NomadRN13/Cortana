@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   stampText: {
     fontSize: 20, fontWeight: '900', letterSpacing: 1.2,
     borderWidth: 3, borderRadius: 10, paddingVertical: 4, paddingHorizontal: 12,
-    backgroundColor: 'rgba(10,11,13,0.5)', overflow: 'hidden',
+    backgroundColor: 'rgba(20,22,28,0.5)', overflow: 'hidden',
   },
   typing: {
     flexDirection: 'row', gap: 4, padding: 14, alignSelf: 'flex-start',

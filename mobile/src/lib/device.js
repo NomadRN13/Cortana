@@ -8,7 +8,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-const DEVICE_KEY = '40love.device';
+const DEVICE_KEY = 'rsvplay.device';
 
 let cachedKey = null;
 

@@ -1,4 +1,4 @@
-// What a link to 40/LOVE looks like when someone pastes it into a message.
+// What a link to RSVPlay looks like when someone pastes it into a message.
 // Facebook, LinkedIn and iMessage don't resolve a relative og:image, so a site
 // built without an absolute one has no preview card anywhere — and the failure
 // is invisible until someone shares a link and gets a grey box.
@@ -49,11 +49,11 @@ const PAGES = ['index.html', 'demo/index.html'];
   // these live in a markdown file nobody rebuilds. Check every site URL the
   // launch docs hand a reviewer actually resolves to a page in the build.
   const DOCS = ['outreach/launch/store-listing.md', 'docs/google-play.md', 'docs/launch-runbook.html'];
-  const SITE_ORIGIN = 'https://40-love.netlify.app';
+  const SITE_ORIGIN = 'https://rsvplay.netlify.app';
   const claimed = new Map();
   for (const doc of DOCS) {
     const text = fs.readFileSync(path.join(REPO, doc), 'utf8');
-    for (const m of text.matchAll(/https:\/\/40-?love[a-z0-9.-]*\.(?:netlify\.app|app)(\/[a-z0-9/-]*)?/gi)) {
+    for (const m of text.matchAll(/https:\/\/rsvplay[a-z0-9.-]*\.(?:netlify\.app|app)(\/[a-z0-9/-]*)?/gi)) {
       if (!claimed.has(m[0])) claimed.set(m[0], doc);
     }
   }

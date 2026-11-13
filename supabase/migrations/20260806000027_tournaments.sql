@@ -1,4 +1,4 @@
--- 40/LOVE — tournaments with brackets that build and fill themselves
+-- RSVPlay — tournaments with brackets that build and fill themselves
 --
 -- A tournament is a single-elimination bracket for 2 to 24 entries in one
 -- city. The founder creates it on the moderation desk; members join from the

@@ -3,34 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>40/LOVE — App Prototype</title>
-<meta name="description" content="Clickable prototype of 40/LOVE, the dating and social app for racquet sports players. Serve. Rally. Connect.">
+<title>RSVPlay — App Prototype</title>
+<meta name="description" content="Clickable prototype of RSVPlay, the events-first social app for paddle and racquet sports players, with opt-in dating. Serve. Rally. Connect.">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/favicon.png">
-<meta property="og:title" content="40/LOVE — Try the app">
-<meta property="og:description" content="A clickable demo of 40/LOVE: sign up, swipe, match and chat. Runs in your browser; nothing is saved.">
-<meta property="og:image" content="https://40-love.netlify.app/og.png">
+<meta property="og:title" content="RSVPlay — Try the app">
+<meta property="og:description" content="A clickable demo of RSVPlay: sign up, swipe, match and chat. Runs in your browser; nothing is saved.">
+<meta property="og:image" content="https://rsvplay.netlify.app/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="40/LOVE">
+<meta property="og:site_name" content="RSVPlay">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="40/LOVE — Try the app">
-<meta name="twitter:description" content="A clickable demo of 40/LOVE: sign up, swipe, match and chat. Runs in your browser; nothing is saved.">
-<meta name="twitter:image" content="https://40-love.netlify.app/og.png">
+<meta name="twitter:title" content="RSVPlay — Try the app">
+<meta name="twitter:description" content="A clickable demo of RSVPlay: sign up, swipe, match and chat. Runs in your browser; nothing is saved.">
+<meta name="twitter:image" content="https://rsvplay.netlify.app/og.png">
 <style>
   :root {
-    --night: #0A0B0D;
-    --panel: #101215;
-    --card: #17191D;
-    --card2: #1F2227;
-    --line: rgba(244, 246, 240, 0.13);
-    --text: #F4F6F0;
-    --dim: rgba(244, 246, 240, 0.62);
-    --optic: #D6F44F;
-    --optic-dim: rgba(214, 244, 79, 0.16);
+    --night: #14161C;
+    --panel: #1A1D24;
+    --card: #1E2128;
+    --card2: #272B33;
+    --line: rgba(245, 244, 238, 0.13);
+    --text: #F5F4EE;
+    --dim: rgba(245, 244, 238, 0.62);
+    --optic: #C8F04A;
+    --optic-dim: rgba(200, 240, 74, 0.16);
     --ok: #3DC96B;
-    --ink: #0A0B0D;
+    --ink: #14161C;
   }
 
   * { box-sizing: border-box; }
@@ -52,8 +52,8 @@
     gap: 72px;
     padding: 40px 24px;
     background:
-      radial-gradient(560px 560px at 88% 4%, rgba(214, 244, 79, 0.16), transparent 65%),
-      radial-gradient(700px 500px at 8% 100%, rgba(214, 244, 79, 0.05), transparent 60%),
+      radial-gradient(560px 560px at 88% 4%, rgba(200, 240, 74, 0.16), transparent 65%),
+      radial-gradient(700px 500px at 8% 100%, rgba(200, 240, 74, 0.05), transparent 60%),
       var(--night);
   }
 
@@ -107,9 +107,9 @@
   }
   .wordmark .ball {
     display: inline-block;
-    width: 0.80em; height: 0.80em;
-    vertical-align: -0.04em;
-    margin: 0 0.015em;
+    width: 0.46em; height: 0.46em;
+    vertical-align: 0;
+    margin: 0 0 0 0.06em;
   }
   .wordmark .ball svg { width: 100%; height: 100%; display: block; }
 
@@ -121,7 +121,7 @@
     background: var(--night);
     border-radius: 38px;
     border: 10px solid #1B1D21;
-    box-shadow: 0 0 0 2px rgba(214,244,79,0.10), 0 34px 70px rgba(0, 0, 0, 0.65);
+    box-shadow: 0 0 0 2px rgba(200,240,74,0.10), 0 34px 70px rgba(0, 0, 0, 0.65);
     overflow: hidden;
     position: relative;
     display: flex;
@@ -178,13 +178,13 @@
     border: 2px solid var(--line);
     border-radius: 12px;
   }
-  input::placeholder, textarea::placeholder { color: rgba(244,246,240,0.35); }
+  input::placeholder, textarea::placeholder { color: rgba(245,244,238,0.35); }
   input:focus, textarea:focus { border-color: var(--optic); outline: none; }
   label { display: block; font-size: 13px; font-weight: 700; margin: 0 0 6px; color: var(--dim); }
 
   /* ---------- Welcome ---------- */
   #screen-welcome { justify-content: space-between; padding: 54px 28px 36px;
-    background: radial-gradient(420px 420px at 100% 0%, rgba(214,244,79,0.14), transparent 65%), var(--night); }
+    background: radial-gradient(420px 420px at 100% 0%, rgba(200,240,74,0.14), transparent 65%), var(--night); }
   .welcome-top { display: flex; flex-direction: column; gap: 14px; }
   .welcome-top .tagline {
     font-size: 12px; font-weight: 800; letter-spacing: 0.24em;
@@ -410,7 +410,7 @@
   .card-photo {
     height: 330px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 84px; font-weight: 900; color: rgba(10,11,13,0.55);
+    font-size: 84px; font-weight: 900; color: rgba(20,22,28,0.55);
     letter-spacing: 0.02em;
   }
   .badge-new {
@@ -422,7 +422,7 @@
   .bookmark {
     position: absolute; top: 10px; right: 10px;
     width: 42px; height: 42px; border-radius: 50%;
-    background: rgba(10, 11, 13, 0.55);
+    background: rgba(20, 22, 28, 0.55);
     display: inline-flex; align-items: center; justify-content: center;
   }
   .bookmark svg { width: 19px; height: 19px; }
@@ -437,7 +437,7 @@
   .card-like svg { width: 26px; height: 26px; }
   .card-info {
     padding: 14px 16px 16px;
-    background: linear-gradient(180deg, rgba(23,25,29,0.2), var(--card) 30%);
+    background: linear-gradient(180deg, rgba(30,33,40,0.2), var(--card) 30%);
     display: flex; flex-direction: column; gap: 7px;
   }
   .card-name { font-size: 23px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
@@ -455,7 +455,7 @@
     border: 3px solid; border-radius: 10px;
     font-size: 20px; font-weight: 900; letter-spacing: 0.06em;
     transform: rotate(-12deg); opacity: 0; pointer-events: none;
-    background: rgba(10,11,13,0.5); z-index: 3;
+    background: rgba(20,22,28,0.5); z-index: 3;
   }
   .stamp-like { left: 16px; border-color: var(--optic); color: var(--optic); }
   .stamp-pass { right: 16px; border-color: #E15A72; color: #E15A72; transform: rotate(12deg); }
@@ -486,7 +486,7 @@
   }
   .match-photo {
     height: 120px; display: flex; align-items: center; justify-content: center;
-    font-size: 38px; font-weight: 900; color: rgba(10,11,13,0.55);
+    font-size: 38px; font-weight: 900; color: rgba(20,22,28,0.55);
   }
   .match-meta { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; }
   .match-meta .n { font-weight: 800; font-size: 15px; }
@@ -502,7 +502,7 @@
   .ava {
     flex: 0 0 auto; width: 52px; height: 52px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center;
-    color: rgba(10,11,13,0.6); font-weight: 900; font-size: 18px;
+    color: rgba(20,22,28,0.6); font-weight: 900; font-size: 18px;
   }
   .thread-mid { flex: 1; min-width: 0; }
   .thread-name { font-weight: 800; font-size: 15px; }
@@ -719,7 +719,7 @@
   .card-more {
     position: absolute; top: 10px; right: 58px;
     width: 42px; height: 42px; border-radius: 50%;
-    background: rgba(10, 11, 13, 0.55);
+    background: rgba(20, 22, 28, 0.55);
     display: inline-flex; align-items: center; justify-content: center;
   }
   .card-more svg { width: 19px; height: 19px; }
@@ -760,7 +760,7 @@
   .ptag { position: absolute; bottom: 5px; left: 5px; background: var(--optic); color: var(--ink); font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
   .pdel {
     position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; padding: 0;
-    background: rgba(10, 11, 13, 0.78); color: var(--text); font-size: 15px; display: flex; align-items: center; justify-content: center;
+    background: rgba(20, 22, 28, 0.78); color: var(--text); font-size: 15px; display: flex; align-items: center; justify-content: center;
   }
 
   /* ---------- Interactivity & motion ---------- */
@@ -827,7 +827,7 @@
   .overlay.open .profile-sheet { animation: sheetUp 0.25s ease; }
   .psheet-photo {
     height: 190px; display: flex; align-items: center; justify-content: center;
-    font-size: 64px; font-weight: 900; color: rgba(10, 11, 13, 0.55);
+    font-size: 64px; font-weight: 900; color: rgba(20, 22, 28, 0.55);
   }
   .psheet-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
   .psheet-actions { display: flex; justify-content: center; gap: 14px; padding: 6px 0 2px; }
@@ -894,8 +894,8 @@
       <div class="welcome-top">
         <span class="tagline">Serve. Rally. Connect.</span>
         <div class="wordmark welcome-mark" id="mark-welcome"></div>
-        <p class="welcome-line">Meet the racquet-sports people near you — the first date is a game, not dinner.</p>
-        <span class="welcome-score">40 – LOVE</span>
+        <p class="welcome-line">Racquet and paddle socials near you. Show up, play, and keep the people you meet.</p>
+        <span class="welcome-score">RSVP · PLAY</span>
       </div>
       <div class="welcome-modes">
         <div class="wm-row">
@@ -1007,7 +1007,7 @@
           <span aria-hidden="true">✓</span>
           <span>Phone verified &mdash; <span id="phone-verified-num"></span></span>
         </div>
-        <p class="hint">A one-time text keeps 40/LOVE real people only. Your number is never shown to other members and never used for marketing.</p>
+        <p class="hint">A one-time text keeps RSVPlay real people only. Your number is never shown to other members and never used for marketing.</p>
         <p class="hint" style="color:var(--optic)">Demo: no text is actually sent &mdash; enter any 6-digit code.</p>
       </div>
       <div class="ob-foot">
@@ -1055,7 +1055,7 @@
           <label for="ob-rating">Official rating <span style="font-weight:400">(optional)</span></label>
           <input type="text" id="ob-rating" placeholder="e.g. NTRP 3.5 or DUPR 4.0">
         </div>
-        <p class="hint">Honest levels make better matches — nobody enjoys a 6–0, 6–0 first date.</p>
+        <p class="hint">Honest levels make better matches — nobody enjoys a 6–0, 6–0 first match.</p>
       </div>
       <div class="ob-foot">
         <button class="btn btn-ghost btn-back" data-back="screen-ob2">Back</button>
@@ -1182,10 +1182,10 @@
           </div>
           <div class="topmatch-art" aria-hidden="true">
             <svg viewBox="0 0 84 84" fill="none">
-              <circle cx="42" cy="42" r="26" fill="#D6F44F"></circle>
-              <path d="M24 24c10 10 10 26 0 36" stroke="#0A0B0D" stroke-width="2.5" fill="none"></path>
-              <path d="M60 24c-10 10-10 26 0 36" stroke="#0A0B0D" stroke-width="2.5" fill="none"></path>
-              <path d="M42 50s-7-4.4-7-9.2c0-2.3 1.8-4.1 4-4.1 1.2 0 2.3.6 3 1.5.7-.9 1.8-1.5 3-1.5 2.2 0 4 1.8 4 4.1 0 4.8-7 9.2-7 9.2z" fill="#0A0B0D"></path>
+              <circle cx="42" cy="42" r="26" fill="#C8F04A"></circle>
+              <path d="M24 24c10 10 10 26 0 36" stroke="#14161C" stroke-width="2.5" fill="none"></path>
+              <path d="M60 24c-10 10-10 26 0 36" stroke="#14161C" stroke-width="2.5" fill="none"></path>
+              <path d="M42 50s-7-4.4-7-9.2c0-2.3 1.8-4.1 4-4.1 1.2 0 2.3.6 3 1.5.7-.9 1.8-1.5 3-1.5 2.2 0 4 1.8 4 4.1 0 4.8-7 9.2-7 9.2z" fill="#14161C"></path>
             </svg>
           </div>
         </div>
@@ -1412,7 +1412,7 @@
           <a class="set-row" href="/privacy/" target="_blank" rel="noopener"><div><div class="lab">Privacy Policy</div></div></a>
         </div>
         <button class="danger" id="sign-out">Sign out</button>
-        <p class="hint" style="text-align:center; margin-top:12px;" id="settings-footer">40/LOVE prototype · not a real account</p>
+        <p class="hint" style="text-align:center; margin-top:12px;" id="settings-footer">RSVPlay prototype · not a real account</p>
       </div>
     </section>
 
@@ -1467,7 +1467,7 @@
     <!-- Match modal -->
     <div class="overlay" id="match-overlay">
       <div class="match-modal" role="dialog" aria-modal="true" aria-labelledby="match-title">
-        <div class="score">40 – LOVE</div>
+        <div class="score">RSVP · PLAY</div>
         <h2 id="match-title">It's a <span class="hl">Match Point!</span></h2>
         <div class="match-avas">
           <span class="ava" id="match-ava-me"></span>
@@ -1537,7 +1537,7 @@
      to be public; the only thing this page uses it for is record_demo_step,
      which takes a fixed vocabulary of step names and stores no person. Left
      empty, the prototype runs exactly as before and reports nothing. */
-  window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
+  window.RSVPLAY = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
 </script>
 <script>
 (function () {
@@ -1548,7 +1548,7 @@
   var BALL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg>';
   /*/mark:ball*/
   function renderMark(el) {
-    el.innerHTML = '40/L<span class="ball">' + BALL_SVG + '</span>VE';
+    el.innerHTML = 'RSVPlay<span class="ball">' + BALL_SVG + '</span>';
   }
   ['mark-welcome', 'mark-home', 'mark-promo'].forEach(function (id) {
     var el = document.getElementById(id);
@@ -1557,9 +1557,9 @@
 
   /* ---------- Data ---------- */
   var GRADS = [
-    ['#D6F44F', '#6E8F2C'], ['#8FD14F', '#2C6E4F'], ['#F2E86D', '#8F6E2C'],
-    ['#B7E04A', '#3D6E2C'], ['#D6F44F', '#4A7A6E'], ['#E0D24A', '#6E4F2C'],
-    ['#A3E04A', '#2C5A6E'], ['#D6F44F', '#7A5A2C'], ['#C9E858', '#3F5A20'],
+    ['#C8F04A', '#6E8F2C'], ['#8FD14F', '#2C6E4F'], ['#F2E86D', '#8F6E2C'],
+    ['#B7E04A', '#3D6E2C'], ['#C8F04A', '#4A7A6E'], ['#E0D24A', '#6E4F2C'],
+    ['#A3E04A', '#2C5A6E'], ['#C8F04A', '#7A5A2C'], ['#C9E858', '#3F5A20'],
     ['#EAF48F', '#5A6E2C'], ['#B0D93F', '#2C4A3D'], ['#DDE84A', '#4F3D6E']
   ];
 
@@ -1615,7 +1615,7 @@
   var EVENTS = [
     { id: 'e1', city: 'indianapolis', week: 'This week', dow: 'Fri', dom: '7',  title: 'Sunset Doubles Social', venue: 'Riverside Park Tennis Complex', time: '6:00 PM', sport: 'Tennis', level: 'All levels', spots: 6, desc: 'Round-robin doubles as the sun goes down — partners rotate every 20 minutes, so you\'ll play with everyone.' },
     { id: 'e2', city: 'indianapolis', week: 'This week', dow: 'Sat', dom: '8',  title: 'Beginner Pickleball Mixer', venue: 'Broad Ripple Park', time: '10:00 AM', sport: 'Pickleball', level: 'Beginner–Int.', spots: 12, desc: 'Never held a paddle? Perfect. Loaner paddles, patient people, and zero judgment.' },
-    { id: 'e3', city: 'indianapolis', week: 'This week', dow: 'Sun', dom: '9',  title: '40/LOVE Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3, desc: 'The signature 40/LOVE format: short sets, rotating partners, and a built-in social break.' },
+    { id: 'e3', city: 'indianapolis', week: 'This week', dow: 'Sun', dom: '9',  title: 'RSVPlay Round Robin', venue: 'Tarkington Park', time: '2:00 PM', sport: 'Tennis', level: 'NTRP 3.0–4.0', spots: 3, desc: 'The signature RSVPlay format: short sets, rotating partners, and a built-in social break.' },
     { id: 'e4', city: 'indianapolis', week: 'Next week', dow: 'Wed', dom: '12', title: 'Pickleball Under the Lights', venue: 'Ellenberger Park', time: '7:30 PM', sport: 'Pickleball', level: 'All levels', spots: 8, desc: 'Indy\'s biggest public pickleball site, under the lights. Music on, stakes low.' },
     { id: 'e5', city: 'indianapolis', week: 'Next week', dow: 'Sat', dom: '15', title: 'Cardio Tennis + Coffee', venue: 'Tarkington Park', time: '9:00 AM', sport: 'Tennis', level: 'Int. and up', spots: 10, desc: '45 minutes of cardio tennis, then coffee at the Tarkington café — the date part is optional.' },
     { id: 'e6', city: 'indianapolis', week: 'Next week', dow: 'Sun', dom: '16', title: 'Ladder League Kickoff', venue: 'Indy Pickleball Club', time: '1:00 PM', sport: 'Pickleball', level: 'DUPR 3.0+', spots: 5, desc: 'Season kickoff for the ladder league. Come claim a rung.' },
@@ -1658,7 +1658,7 @@
   }
 
   /* ---------- State ---------- */
-  var STORE_KEY = '40love.profile';
+  var STORE_KEY = 'rsvplay.profile';
   var state = {
     user: null,
     mode: 'date',
@@ -1698,7 +1698,7 @@
   /* Discovery preferences persist too. They used to live only in memory, so
      a member set their age range and distance, reopened the app, and found
      them back at the defaults. */
-  var PREFS_KEY = '40love.prefs';
+  var PREFS_KEY = 'rsvplay.prefs';
   function savePrefs() {
     try { localStorage.setItem(PREFS_KEY, JSON.stringify(state.prefs)); } catch (e) { /* memory-only fallback */ }
   }
@@ -1841,7 +1841,7 @@
     reader.readAsDataURL(file);
     $('#photo-input').value = ''; // same file can be picked again
   });
-  /* Cities 40/LOVE is open in — mirrors public.cities in the migration. */
+  /* Cities RSVPlay is open in — mirrors public.cities in the migration. */
   var CITIES = [
     { slug: 'indianapolis',  name: 'Indianapolis', state: 'IN' },
     { slug: 'los-angeles',   name: 'Los Angeles',  state: 'CA' },
@@ -2082,7 +2082,7 @@
     if (shared.length > 1) return 'Plays ' + shared[0] + ' and ' + shared[1] + ' like you';
     if (shared.length) return 'Also plays ' + shared[0];
     if (p.dist != null && p.dist <= 3) return distReason(p.dist);
-    if (p.isNew) return 'New to 40/LOVE this week';
+    if (p.isNew) return 'New to RSVPlay this week';
     if (p.verified) return 'Verified player nearby';
     return 'Worth a look';
   }
@@ -3083,7 +3083,7 @@
         (rows || '<p class="hint" style="padding:8px 0">' + (placeFilter === 'indoor' ? 'No indoor courts listed here yet.' : 'No outdoor courts listed here yet.') + '</p>');
     }).join('');
     box.innerHTML = '<h3 class="places-head">Places to play</h3><div class="place-filters" role="group" aria-label="Indoor or outdoor">' + filters + '</div>' +
-      sections + '<p class="places-foot">Courts change \u2014 hours, fees and nets are the venue\u2019s call. Check before you make the drive. 40/LOVE isn’t affiliated with any venue listed.</p>';
+      sections + '<p class="places-foot">Courts change \u2014 hours, fees and nets are the venue\u2019s call. Check before you make the drive. RSVPlay isn’t affiliated with any venue listed.</p>';
     $all('#places-list .place-filter').forEach(function (b) {
       b.addEventListener('click', function () { placeFilter = b.getAttribute('data-filter'); renderPlaces(userCities()); });
     });
@@ -3392,7 +3392,7 @@
     $('#set-city-hint').textContent = mine.length > 1
       ? 'You match with players and see meetups in all ' + mine.length + ' of your cities. Tap a city to add or drop it — your matches and messages stay either way.'
       : 'You match with players and see meetups in your city. Split your time between two or more? Tap every city you play in.';
-    $('#settings-footer').textContent = '40/LOVE prototype · ' + citiesSummary(mine) + ' · not a real account';
+    $('#settings-footer').textContent = 'RSVPlay prototype · ' + citiesSummary(mine) + ' · not a real account';
   }
   $('#set-city').addEventListener('click', function (ev) {
     var btn = ev.target.closest('.chip');
@@ -3603,7 +3603,7 @@
      are set. */
   (function () {
     try {
-      var cfg = window.FORTYLOVE || {};
+      var cfg = window.RSVPLAY || {};
       if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return;
       var base = cfg.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/rpc/record_demo_step';
       var visit = (window.crypto && crypto.randomUUID && crypto.randomUUID()) ||

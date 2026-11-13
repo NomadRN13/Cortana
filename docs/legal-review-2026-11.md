@@ -1,6 +1,6 @@
 # Legal review packet: November 2026
 
-**For:** the attorney reviewing 40/LOVE before public launch.
+**For:** the attorney reviewing RSVPlay before public launch.
 **Drafted by:** the founder (with an AI assistant). **Not legal advice.** Every item below is a question for counsel, not a conclusion.
 
 ## What to review
@@ -12,7 +12,7 @@
 | Safety tips | `landing/safety.html` → `/safety/` | New page |
 | In-app consent | Last signup step, plus links in Settings | New: "By tapping Step on court you confirm you're 18 or older and agree to…" |
 
-## What 40/LOVE does
+## What RSVPlay does
 
 - A dating and social app for racquet-sports players, 18 and over, run from Indianapolis.
 - Members sign in with an emailed code, Apple or Google, and verify a phone number by text through Twilio.
@@ -49,7 +49,7 @@
    - Should it add binding arbitration, a class-action waiver and a small-claims carve-out?
    - Mass-arbitration fees are a known risk for consumer apps.
    - Is the Indiana choice-of-law clause enforceable against California members?
-4. **Liability for injuries.** Does §7 do anything useful for member-arranged games and organiser-run tournaments? Should events and tournaments have a separate liability waiver at sign-up, especially if 40/LOVE ever books courts or collects fees?
+4. **Liability for injuries.** Does §7 do anything useful for member-arranged games and organiser-run tournaments? Should events and tournaments have a separate liability waiver at sign-up, especially if RSVPlay ever books courts or collects fees?
 5. **Tournaments.** If a tournament ever has a prize or an entry fee, which contest or sweepstakes rules apply? Is "the organiser's decision is final" fine as written?
 6. **Copyright (DMCA).** For the copyright safe harbor we'd need to register a designated agent with the US Copyright Office and publish the full notice process. Worth doing before launch?
 7. **Text messages.** Is a single verification text sent at the member's request covered by the TCPA, and is the §10 disclosure enough? Twilio and the carriers may want their own consent wording.

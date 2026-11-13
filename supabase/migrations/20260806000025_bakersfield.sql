@@ -1,4 +1,4 @@
--- 40/LOVE — open Bakersfield, CA
+-- RSVPlay — open Bakersfield, CA
 --
 -- City #12. Bakersfield sits about 110 miles north of Los Angeles, so its
 -- 30-mile metro does not touch LA's 60: a member in either is placed in their

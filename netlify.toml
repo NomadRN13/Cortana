@@ -1,4 +1,4 @@
-# 40/LOVE — Netlify configuration
+# RSVPlay — Netlify configuration
 # With the repo linked to Netlify, every push rebuilds and deploys the site:
 #   /                 landing page + waitlist
 #   /demo             clickable prototype
@@ -11,7 +11,7 @@
 #
 # WHICH BRANCH: the whole app lives on
 #
-#     claude/40-love-dating-app-1io0yq
+#     claude/rsvplay-scripts-formatting-a15dow
 #
 # NOT on this repo's default branch, which holds an unrelated presentations
 # project and contains no site at all. Netlify builds whichever branch is set
@@ -29,4 +29,4 @@
 # and a link with no card is the difference between a tap and a scroll past.
 # Change this when a custom domain replaces the netlify.app one.
 [build.environment]
-  SITE_URL = "https://40-love.netlify.app"
+  SITE_URL = "https://rsvplay.netlify.app"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 40/LOVE — connect the apps to your Supabase project.
+# RSVPlay — connect the apps to your Supabase project.
 #
 # Run this AFTER creating the project and applying the database
 # (scripts/setup-supabase.sh, or pasting supabase/setup.sql in the SQL editor).
@@ -102,10 +102,10 @@ echo "==> Wrote $ENV_FILE"
 python3 - "$URL" "$KEY" <<'PY'
 import re, sys
 url, key = sys.argv[1], sys.argv[2]
-line = "  window.FORTYLOVE = { SUPABASE_URL: '%s', SUPABASE_ANON_KEY: '%s' };" % (url, key)
+line = "  window.RSVPLAY = { SUPABASE_URL: '%s', SUPABASE_ANON_KEY: '%s' };" % (url, key)
 for path in ("landing/index.html", "admin/index.html", "app/index.html"):
     s = open(path).read()
-    new, n = re.subn(r"^\s*window\.FORTYLOVE\s*=\s*\{[^}]*\};", line, s, count=1, flags=re.M)
+    new, n = re.subn(r"^\s*window\.RSVPLAY\s*=\s*\{[^}]*\};", line, s, count=1, flags=re.M)
     if n != 1:
         print("!! could not find the config line in %s — set it by hand" % path)
         continue

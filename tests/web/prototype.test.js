@@ -390,7 +390,7 @@ const out = (n) => require('path').join(OUT, n);
     await page.click('#open-settings');
     await page.click('#sign-out');
     await page.waitForSelector('#screen-welcome.active', { timeout: 2000 });
-    const saved = await page.evaluate(() => localStorage.getItem('40love.profile'));
+    const saved = await page.evaluate(() => localStorage.getItem('rsvplay.profile'));
     if (saved) throw new Error('profile not cleared');
     await page.reload();
     await page.waitForSelector('#screen-welcome.active', { timeout: 3000 });

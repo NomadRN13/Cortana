@@ -1,4 +1,4 @@
--- 40/LOVE — multi-city launch
+-- RSVPlay — multi-city launch
 --
 -- "Indianapolis" was a hardcoded default in four places. This replaces it
 -- with a real registry so opening a new city is a row, not a code change.

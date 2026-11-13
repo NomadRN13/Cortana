@@ -1,4 +1,4 @@
-# 40/LOVE — Beta Test Plan, v0.1 "First Serve" (Round 1)
+# RSVPlay — Beta Test Plan, v0.1 "First Serve" (Round 1)
 
 **Date:** August 2026 · **Build:** first TestFlight / Google Play beta, LIVE
 mode (real accounts, real matching — this is not the demo)
@@ -6,7 +6,7 @@ mode (real accounts, real matching — this is not the demo)
 **Written for:** the founder and mixer volunteers. No tech background needed —
 if you can play a tiebreak, you can do this.
 
-Thank you for testing. You are the first real players to touch 40/LOVE.
+Thank you for testing. You are the first real players to touch RSVPlay.
 Nothing you do here can break anything permanent — worst case you find a bug,
 which is exactly the point.
 
@@ -20,7 +20,7 @@ When something doesn't match what the plan says you *should see*:
    volume up. Android: power + volume down).
 2. Note **the test number** (e.g. "Test 9"), **what you tapped last**, and
    **your phone model** (e.g. "iPhone 13", "Pixel 7").
-3. Email it to **stjones6746@gmail.com** with the subject **"40/LOVE beta"**
+3. Email it to **stjones6746@gmail.com** with the subject **"RSVPlay beta"**
    — or drop it in the testers' group chat if one is set up.
 
 Small, weird, or "probably just me" problems count too. Report everything;
@@ -52,7 +52,7 @@ sorting it out is our job, not yours.
       onboarding, set "Looking to date" so it **includes your partner's
       gender**, and have your partner do the same — otherwise you two will
       correctly never see each other in Date mode. Any pairing works:
-      40/LOVE treats woman–woman and man–man matching exactly the same as
+      RSVPlay treats woman–woman and man–man matching exactly the same as
       woman–man. If your pair doesn't want to set that, do the matching
       tests in **Play mode** instead (Play ignores dating preference), and
       note that on your results sheet. Bonus check while you're there: with
@@ -149,7 +149,7 @@ The app is 18+ — this must be impossible to get around.
    test, use the date exactly **18 years ago tomorrow** (e.g. if today is
    August 7, 2026, type 08/08/2008 — that person turns 18 *tomorrow*). Tap
    **Next**.
-3. **You should see:** a pop-up saying **"40/LOVE is 18+ — You must be 18 or
+3. **You should see:** a pop-up saying **"RSVPlay is 18+ — You must be 18 or
    older to join."** It must NOT let you continue — not even one day early.
 4. Now type an impossible date: **02/30/1990**. Tap **Next**.
 5. **You should see:** *"Enter your birthdate as MM/DD/YYYY."* — the fake
@@ -626,7 +626,7 @@ Real, known, and accepted for round 1. Reporting them costs triage time:
    thread, newest match wins — merge is deferred).
 8. **The sign-out pop-up mentions a "local demo profile."** Wording leftover
    — your real account is fine.
-9. **City votes on the 40love website count per visitor/browser**, not per
+9. **City votes on the rsvplay website count per visitor/browser**, not per
    account. Website quirks aren't part of this app test.
 10. **Events only appear when the founder has published them.** An empty
     Events tab on day one is a setup note for the founder, not an app bug.

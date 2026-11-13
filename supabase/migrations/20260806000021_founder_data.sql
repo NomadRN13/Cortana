@@ -1,4 +1,4 @@
--- 40/LOVE — let the founder see their own numbers
+-- RSVPlay — let the founder see their own numbers
 --
 -- Two things the product collects but nobody can currently read:
 --

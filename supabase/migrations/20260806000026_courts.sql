@@ -1,4 +1,4 @@
--- 40/LOVE — places to play live in the database
+-- RSVPlay — places to play live in the database
 --
 -- The Bakersfield places-to-play list shipped inside the app (and the
 -- prototype) as a hardcoded array. That made the one thing that changes most

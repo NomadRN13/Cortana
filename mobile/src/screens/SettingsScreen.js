@@ -96,7 +96,7 @@ export default function SettingsScreen({ navigation }) {
     const iso = parseBirthdate(pBirth);
     if (!iso) return Alert.alert('Almost there', 'Enter your partner’s birthdate as MM/DD/YYYY.');
     const age = ageFromBirthdate(iso);
-    if (age < 18) return Alert.alert('40/LOVE is 18+', 'Both people on a team must be 18 or older.');
+    if (age < 18) return Alert.alert('RSVPlay is 18+', 'Both people on a team must be 18 or older.');
     if (age > 99) return Alert.alert('Almost there', 'Check that birthdate — that can’t be right.');
     if (!pGender) return Alert.alert('Almost there', 'Tell us your partner’s gender so matching works.');
     const apply = () => {
@@ -149,7 +149,7 @@ export default function SettingsScreen({ navigation }) {
   const confirmSignOutDevice = (d) => {
     Alert.alert(
       `Sign out ${d.name || 'this device'}?`,
-      'It stops receiving your notifications immediately, and is signed out the next time it opens 40/LOVE.',
+      'It stops receiving your notifications immediately, and is signed out the next time it opens RSVPlay.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -362,7 +362,7 @@ export default function SettingsScreen({ navigation }) {
                   onPress={() => {
                     const res = app.toggleCity(c.slug);
                     if (res === 'unknown-city') {
-                      Alert.alert('Update 40/LOVE to change cities', 'One of your cities is newer than this version of the app. Update the app and you can change them here.');
+                      Alert.alert('Update RSVPlay to change cities', 'One of your cities is newer than this version of the app. Update the app and you can change them here.');
                     } else if (!res) {
                       Alert.alert('Keep at least one city', 'Pick another city first, then you can drop this one.');
                     }
@@ -401,7 +401,7 @@ export default function SettingsScreen({ navigation }) {
                   value={pName}
                   onChangeText={setPName}
                   placeholder="Their first name"
-                  placeholderTextColor="rgba(244,246,240,0.35)"
+                  placeholderTextColor="rgba(245,244,238,0.35)"
                   maxLength={40}
                   accessibilityLabel="Partner's first name"
                 />
@@ -411,7 +411,7 @@ export default function SettingsScreen({ navigation }) {
                   onChangeText={(t) => setPBirth(formatBirthdateInput(t))}
                   keyboardType="number-pad"
                   placeholder="Their birthdate — MM/DD/YYYY"
-                  placeholderTextColor="rgba(244,246,240,0.35)"
+                  placeholderTextColor="rgba(245,244,238,0.35)"
                   maxLength={10}
                   accessibilityLabel="Partner's birthdate"
                 />
@@ -521,7 +521,7 @@ export default function SettingsScreen({ navigation }) {
           <Text style={{ color: colors.dim, fontWeight: '700', fontSize: 13 }}>Delete my account</Text>
         </Pressable>
         <Text style={[type.hint, { textAlign: 'center' }]}>
-          {`40/LOVE · ${citiesOf(u).length > 1 ? `${citiesOf(u).length} cities` : app.cityLabel((u && u.city) || DEFAULT_CITY)} · ${app.live ? 'beta' : 'demo build — not a real account'}`}
+          {`RSVPlay · ${citiesOf(u).length > 1 ? `${citiesOf(u).length} cities` : app.cityLabel((u && u.city) || DEFAULT_CITY)} · ${app.live ? 'beta' : 'demo build — not a real account'}`}
         </Text>
       </ScrollView>
     </SafeAreaView>

@@ -1,4 +1,4 @@
--- 40/LOVE — stop events being oversubscribed
+-- RSVPlay — stop events being oversubscribed
 --
 -- `capacity` was only ever a check on the number itself (between 2 and 500).
 -- Nothing counted RSVPs against it, so a member could join a full mixer through

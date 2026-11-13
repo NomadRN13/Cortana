@@ -3,34 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>40/LOVE — The dating app for racquet sports people</title>
-<meta name="description" content="40/LOVE connects active singles through tennis, pickleball and more — the first date is a game instead of dinner. Now opening in 12 US cities. Join the waitlist.">
+<title>RSVPlay — The app for paddle and racquet sports</title>
+<meta name="description" content="RSVPlay is the app for paddle and racquet sports: socials, leagues and pickup games, and the people you meet there. Now opening in 12 US cities. Join the waitlist.">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/favicon.png">
-<meta property="og:title" content="40/LOVE — The dating app for racquet sports people">
-<meta property="og:description" content="Meet active singles through tennis, pickleball, padel, racquetball and squash. The first date is a game, not dinner. Now opening in 11 US cities.">
+<meta property="og:title" content="RSVPlay — The app for paddle and racquet sports">
+<meta property="og:description" content="Pickleball, tennis and padel socials near you. RSVP to a game, show up, play, and keep the people you meet. Now opening in 11 US cities.">
 <meta property="og:image" content="/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="40/LOVE">
+<meta property="og:site_name" content="RSVPlay">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="40/LOVE — The dating app for racquet sports people">
-<meta name="twitter:description" content="Meet active singles through tennis, pickleball, padel, racquetball and squash. The first date is a game, not dinner. Now opening in 11 US cities.">
+<meta name="twitter:title" content="RSVPlay — The app for paddle and racquet sports">
+<meta name="twitter:description" content="Pickleball, tennis and padel socials near you. RSVP to a game, show up, play, and keep the people you meet. Now opening in 11 US cities.">
 <meta name="twitter:image" content="/og.png">
 <style>
   :root {
     /* Night Court — matches the app (brand guide §8) */
-    --court: #0A0B0D;
+    --court: #14161C;
     --court-deep: #121418;
-    --ink: #0A0B0D;
-    --chalk: #F4F6F0;
-    --optic: #D6F44F;
+    --ink: #14161C;
+    --chalk: #F5F4EE;
+    --optic: #C8F04A;
     --rose: #E15A72;
     --blue: #3E7C9B;
     --rose-deep: #C23B55;
-    --chalk-dim: rgba(244, 246, 240, 0.62);
-    --chalk-line: rgba(244, 246, 240, 0.14);
+    --chalk-dim: rgba(245, 244, 238, 0.62);
+    --chalk-line: rgba(245, 244, 238, 0.14);
     --serif: Georgia, 'Times New Roman', serif;
   }
 
@@ -63,7 +63,7 @@
   .mark { font-weight: 900; letter-spacing: -0.03em; white-space: nowrap; }
   .mark .slash { color: var(--optic); font-weight: 800; }
   .mark .love { font-weight: 900; color: var(--chalk); }
-  .ballo { display: inline-block; width: 0.80em; height: 0.80em; vertical-align: -0.04em; margin: 0 0.015em; }
+  .ballo { display: inline-block; width: 0.46em; height: 0.46em; vertical-align: 0; margin: 0 0 0 0.06em; }
   .ballo svg { width: 100%; height: 100%; display: block; }
 
   button, .btn { font: inherit; cursor: pointer; }
@@ -78,7 +78,7 @@
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgba(10, 11, 13, 0.92);
+    background: rgba(20, 22, 28, 0.92);
     border-bottom: 2px solid var(--chalk-line);
     backdrop-filter: blur(6px);
   }
@@ -192,7 +192,7 @@
   .waitlist button:hover { background: #DCEE55; }
   .form-note { font-size: 13px; color: var(--chalk-dim); margin-top: 12px; }
   .demo-cta { margin-top: 8px; font-size: 14px; }
-  .demo-cta a { color: var(--optic); font-weight: 800; text-decoration: none; border-bottom: 2px solid rgba(214, 244, 79, 0.35); padding-bottom: 1px; }
+  .demo-cta a { color: var(--optic); font-weight: 800; text-decoration: none; border-bottom: 2px solid rgba(200, 240, 74, 0.35); padding-bottom: 1px; }
   .demo-cta a:hover { border-bottom-color: var(--optic); }
   .form-error { font-size: 14px; color: var(--rose); font-weight: 600; margin-top: 10px; min-height: 1.2em; }
   .form-success {
@@ -209,10 +209,10 @@
   .mini-phone {
     justify-self: center;
     width: 250px;
-    background: #17191D;
+    background: #1E2128;
     border-radius: 26px;
     border: 8px solid #1B1D21;
-    box-shadow: 0 0 0 2px rgba(214, 244, 79, 0.12), 0 24px 50px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 0 0 2px rgba(200, 240, 74, 0.12), 0 24px 50px rgba(0, 0, 0, 0.55);
     overflow: hidden;
     color: var(--chalk);
     transform: rotate(3deg);
@@ -223,7 +223,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(10, 11, 13, 0.55);
+    color: rgba(20, 22, 28, 0.55);
     font-size: 44px;
     font-weight: 900;
   }
@@ -250,7 +250,7 @@
     align-items: center;
     justify-content: center;
     font-size: 17px;
-    background: #1F2227;
+    background: #272B33;
   }
   .mp-act.like { border-color: var(--optic); background: var(--optic); }
 
@@ -513,7 +513,7 @@
 
 <header>
   <div class="nav">
-    <span class="mark" role="img" aria-label="40/LOVE">40<span class="slash">/</span>L<span class="ballo" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg></span>VE</span>
+    <span class="mark" role="img" aria-label="RSVPlay">RSVPlay<span class="ballo" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg></span></span>
     <a class="nav-cta" href="#join">Join the waitlist</a>
   </div>
 </header>
@@ -521,9 +521,9 @@
 <section class="hero" id="top">
   <div class="wrap hero-grid">
     <div>
-      <p class="eyebrow">A dating app for racquet sports people</p>
-      <h1>The first date is a game.<span class="serve">Love at first serve.</span></h1>
-      <p class="hero-sub">40/LOVE connects active singles through the racquet sports they already love — tennis, pickleball, padel, racquetball, and squash. Match on sport, skill, and vibe, then meet on the court instead of across a table.</p>
+      <p class="eyebrow">The app for paddle and racquet sports</p>
+      <h1>Find a game. Find your people.<span class="serve">Serve. Rally. Connect.</span></h1>
+      <p class="hero-sub">RSVPlay is the app for paddle and racquet sports — pickleball, tennis, padel, racquetball, and squash. RSVP to a social, a league night or a pickup game, show up and play, then keep the people you meet: as partners, friends, or dates if you both opt in.</p>
       <form class="waitlist" id="hero-form" novalidate>
         <input type="email" id="hero-email" placeholder="you@example.com" aria-label="Email address" autocomplete="email">
         <select id="hero-city" aria-label="Your city">
@@ -569,11 +569,11 @@
 
 <div class="scorestrip" aria-hidden="true">
   <div class="scorestrip-in">
-    <span class="score-chip">40 – LOVE</span>
+    <span class="score-chip">RSVP · PLAY</span>
     <span class="score-chip is-date">❤️ DATE</span>
     <span class="score-chip is-play">🎾 PLAY</span>
     <span class="score-chip is-friends">👥 FRIENDS</span>
-    <span class="score-chip">15 – 30 – 40 – ❤</span>
+    <span class="score-chip">SERVE · RALLY · CONNECT</span>
   </div>
 </div>
 
@@ -641,7 +641,7 @@
         <span class="arg-score">15–0</span>
         <div>
           <h3>You already share something you love</h3>
-          <p>The hardest part of a first date is finding common ground. Yours is literally painted on the court before you say a word.</p>
+          <p>The hardest part of meeting anyone new is finding common ground. Yours is literally painted on the court before you say a word.</p>
         </div>
       </div>
       <div class="arg reveal">
@@ -655,7 +655,7 @@
         <span class="arg-score">40–0</span>
         <div>
           <h3>Public courts, low pressure</h3>
-          <p>Daylight, public places, a natural end time, and an easy "same time next week?" if it clicks. First dates the comfortable way.</p>
+          <p>Daylight, public places, a natural end time, and an easy "same time next week?" if it clicks. Meeting people the comfortable way.</p>
         </div>
       </div>
     </div>
@@ -671,7 +671,7 @@
     </div>
     <div class="perks reveal">
       <div class="perk"><span class="tick" aria-hidden="true">✓</span> Free premium for your first 6 months</div>
-      <div class="perk"><span class="tick" aria-hidden="true">✓</span> First invites to 40/LOVE Social Mixers and round robins</div>
+      <div class="perk"><span class="tick" aria-hidden="true">✓</span> First invites to RSVPlay Social Mixers and round robins</div>
       <div class="perk"><span class="tick" aria-hidden="true">✓</span> A vote on which cities we launch next</div>
     </div>
   </div>
@@ -682,7 +682,7 @@
     <div class="section-head reveal">
       <p class="eyebrow">City by city</p>
       <h2>Open in 12 cities. Yours next?</h2>
-      <p>A dating app only works when the people on it live near you, so 40/LOVE builds one local community at a time — you're matched with players in your own city, not three states away. Here's where we're open:</p>
+      <p>An app like this only works when the people on it live near you, so RSVPlay builds one local community at a time — you're matched with players in your own city, not three states away. Here's where we're open:</p>
     </div>
     <div class="cities reveal" id="city-list">
       <span class="city city-launch">🎾 Indianapolis <span class="badge">First city</span></span>
@@ -719,7 +719,7 @@
     </div>
     <div class="faq reveal">
       <details>
-        <summary>Is 40/LOVE only for dating?</summary>
+        <summary>Is RSVPlay only for dating?</summary>
         <p class="faq-a">No — dating is one of three modes. Play mode finds you hitting partners and Friends mode is for leagues and social play. Plenty of members will never use Date mode, and that's the plan.</p>
       </details>
       <details>
@@ -732,7 +732,7 @@
       </details>
       <details>
         <summary>When does it launch?</summary>
-        <p class="faq-a">40/LOVE is open in Indianapolis, Los Angeles, San Diego, Bakersfield, Phoenix, Seattle, Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC. You're matched with players in your own city — or cities, if you play in more than one — a dating app is only as good as who's actually near you. Not on the list? Vote above and we'll go where the players are; waitlist members hear first.</p>
+        <p class="faq-a">RSVPlay is open in Indianapolis, Los Angeles, San Diego, Bakersfield, Phoenix, Seattle, Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC. You're matched with players in your own city — or cities, if you play in more than one — the app is only as good as who's actually near you. Not on the list? Vote above and we'll go where the players are; waitlist members hear first.</p>
       </details>
       <details>
         <summary>How much will it cost?</summary>
@@ -773,18 +773,18 @@
 
 <footer>
   <div class="foot">
-    <span class="mark" role="img" aria-label="40/LOVE">40<span class="slash">/</span>L<span class="ballo" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg></span>VE</span>
+    <span class="mark" role="img" aria-label="RSVPlay">RSVPlay<span class="ballo" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg></span></span>
     <div class="foot-links">
       <a href="/demo/">Try the demo</a>
-      <a href="mailto:hello@40love.app">hello@40love.app</a>
-      <a href="#top">Instagram @fortylove</a>
-      <a href="#top">TikTok @fortylove</a>
+      <a href="mailto:hello@rsvplay.app">hello@rsvplay.app</a>
+      <a href="#top">Instagram @rsvplay</a>
+      <a href="#top">TikTok @rsvplay</a>
       <a href="/privacy/">Privacy</a>
       <a href="/terms/">Terms</a>
       <a href="/safety/">Safety</a>
       <a href="/delete-account/">Delete account</a>
     </div>
-    <span>© 2026 40/LOVE</span>
+    <span>© 2026 RSVPlay</span>
   </div>
 </footer>
 
@@ -794,14 +794,14 @@
      is designed to be public; the database only lets it INSERT emails —
      never read them. Left empty, the form runs in demo mode and saves to
      the visitor's own browser. */
-  window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
+  window.RSVPLAY = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };
 </script>
 <script>
 (function () {
   'use strict';
 
-  var LIST_KEY = '40love.waitlist';
-  var VOTE_KEY = '40love.cityvotes';
+  var LIST_KEY = 'rsvplay.waitlist';
+  var VOTE_KEY = 'rsvplay.cityvotes';
 
   function readJson(key, fallback) {
     try {
@@ -815,7 +815,7 @@
 
   /* Waitlist forms — POST to Supabase when configured, browser-only demo otherwise */
   function backendReady() {
-    var cfg = window.FORTYLOVE || {};
+    var cfg = window.RSVPLAY || {};
     return !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
   }
 
@@ -832,7 +832,7 @@
   // these two apart would let anyone test whether a given person had signed up
   // for a dating app, one address at a time or from a list.
   function joinRemote(email, city) {
-    var cfg = window.FORTYLOVE;
+    var cfg = window.RSVPLAY;
     return fetch(cfg.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/rpc/join_waitlist', {
       method: 'POST',
       headers: {
@@ -892,7 +892,7 @@
       // lost. Say so, and give them a way to reach us that actually works.
       if (!localPreview()) {
         error.innerHTML = 'The waitlist isn’t open yet — email '
-          + '<a href="mailto:hello@40love.app?subject=Waitlist">hello@40love.app</a>'
+          + '<a href="mailto:hello@rsvplay.app?subject=Waitlist">hello@rsvplay.app</a>'
           + ' and we’ll add you by hand.';
         return;
       }

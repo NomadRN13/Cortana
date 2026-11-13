@@ -1,4 +1,4 @@
-# 40/LOVE — Backend Setup (Supabase)
+# RSVPlay — Backend Setup (Supabase)
 
 The backend lives in this repo as code: `supabase/migrations/` is the entire
 database (tables, security rules, the matching engine), and `supabase/seed.sql`
@@ -84,7 +84,7 @@ Then, on either path:
    your data.
 
    Prefer to do it by hand? Then it's three places: `mobile/.env` (copy
-   `mobile/.env.example`), and the `window.FORTYLOVE = { ... }` line near the
+   `mobile/.env.example`), and the `window.RSVPLAY = { ... }` line near the
    top of both `landing/index.html` and `admin/index.html` — then
    `bash scripts/build-site.sh`.
 
@@ -116,12 +116,12 @@ a *different* test account, so don't judge it there.
 ### Apple (~20 minutes, needs the paid Apple Developer account)
 
 1. Apple Developer → Certificates, Identifiers & Profiles → Identifiers →
-   `com.fortylove.app` → tick **Sign In with Apple** → Save.
+   `com.rsvplay.app` → tick **Sign In with Apple** → Save.
 2. Create a **Services ID** (Identifiers → + → Services IDs), e.g.
-   `com.fortylove.web`, and a **Key** with Sign in with Apple enabled —
+   `com.rsvplay.web`, and a **Key** with Sign in with Apple enabled —
    download the `.p8` file, and note the Key ID and your Team ID.
 3. Supabase Dashboard → Authentication → Sign In / Up → **Apple**: enable it.
-   In **Client IDs** put `com.fortylove.app` (the app) — add the Services ID
+   In **Client IDs** put `com.rsvplay.app` (the app) — add the Services ID
    too if you ever add web sign-in, and put the Services ID *first* if so.
    Fill the secret fields from the `.p8` key.
 4. If you email your members, register your sending domain under Apple
@@ -131,7 +131,7 @@ a *different* test account, so don't judge it there.
    dropped if your domain isn't registered.
 5. **Deploy the revocation function.** Apple requires (Guideline 5.1.1(v))
    that deleting an account also revokes the Apple tokens issued for it —
-   otherwise 40/LOVE keeps showing up under the member's *Apps Using Apple ID*
+   otherwise RSVPlay keeps showing up under the member's *Apps Using Apple ID*
    for an account that no longer exists. **Reviewers check this**, so an iOS
    build with Sign in with Apple and without it can be rejected.
 
@@ -140,7 +140,7 @@ a *different* test account, so don't judge it there.
    supabase secrets set \
      APPLE_TEAM_ID=YOUR_TEAM_ID \
      APPLE_KEY_ID=YOUR_KEY_ID \
-     APPLE_CLIENT_ID=com.fortylove.app \
+     APPLE_CLIENT_ID=com.rsvplay.app \
      APPLE_PRIVATE_KEY="$(cat AuthKey_YOUR_KEY_ID.p8)"
    ```
 
@@ -166,9 +166,9 @@ a *different* test account, so don't judge it there.
    - **Web** — this one's ID is the token audience on Android. Add
      `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback` as an authorized
      redirect URI.
-   - **Android** — package name `com.fortylove.app` plus the SHA-1
+   - **Android** — package name `com.rsvplay.app` plus the SHA-1
      fingerprint from `eas credentials` → Android → Keystore.
-   - **iOS** — bundle ID `com.fortylove.app`.
+   - **iOS** — bundle ID `com.rsvplay.app`.
 3. Supabase Dashboard → Authentication → Sign In / Up → **Google**: enable,
    paste the **Web** client ID and secret, and add the **iOS** client ID to
    the additional Client IDs field. Turn **Skip nonce check** ON (the native
@@ -208,7 +208,7 @@ fingerprints there.
 
 ## Opening a city
 
-40/LOVE is open in 12 metros: Indianapolis, Los Angeles, San Diego, Bakersfield, Phoenix,
+RSVPlay is open in 12 metros: Indianapolis, Los Angeles, San Diego, Bakersfield, Phoenix,
 Seattle, Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC.
 Members pick one or more cities at signup (the first is their home city,
 pre-selected from their approximate location; any others are stored in

@@ -1,4 +1,4 @@
-// Write the 40/LOVE mark into every page that shows it.
+// Write the RSVPlay mark into every page that shows it.
 //
 //   node scripts/sync-mark.js
 //

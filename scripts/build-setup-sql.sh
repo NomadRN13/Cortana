@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 40/LOVE — regenerate supabase/setup.sql from supabase/migrations/.
+# RSVPlay — regenerate supabase/setup.sql from supabase/migrations/.
 #
 #   ./scripts/build-setup-sql.sh           # write it
 #   ./scripts/build-setup-sql.sh --check   # fail if it's stale
@@ -20,7 +20,7 @@ TMP="$(mktemp)"
 trap 'rm -f "$TMP"' EXIT
 
 cat > "$TMP" <<'HEADER'
--- 40/LOVE — complete backend in one paste
+-- RSVPlay — complete backend in one paste
 -- Generated from supabase/migrations/ by scripts/build-setup-sql.sh — don't edit by hand.
 -- Use: Supabase Dashboard → SQL Editor → New query → paste ALL of this → Run.
 -- Safe to run once on a fresh project. Do NOT also run 'supabase db push' afterwards — pick one path.

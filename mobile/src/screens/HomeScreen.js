@@ -259,7 +259,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.overlay}>
           {!reducedMotion && <Confetti />}
           <View style={styles.matchModal}>
-            <Text style={{ color: colors.optic, fontWeight: '800', letterSpacing: 2, fontSize: 13 }}>40 – LOVE</Text>
+            <Text style={{ color: colors.optic, fontWeight: '800', letterSpacing: 2, fontSize: 13 }}>RSVP · PLAY</Text>
             <Text style={[type.display, { fontSize: 27 }]}>
               It's a <Text style={{ color: colors.optic }}>Match Point!</Text>
             </Text>
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 10, left: 12, right: 12,
     flexDirection: 'row', gap: 4,
   },
-  shotDot: { flex: 1, height: 3, borderRadius: 2, backgroundColor: 'rgba(244,246,240,0.35)' },
+  shotDot: { flex: 1, height: 3, borderRadius: 2, backgroundColor: 'rgba(245,244,238,0.35)' },
   shotDotOn: { backgroundColor: colors.optic },
   shotTap: { position: 'absolute', top: 0, bottom: 0, width: '32%' },
   picks: {
@@ -550,11 +550,11 @@ const styles = StyleSheet.create({
   },
   sheetActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, paddingTop: 8 },
   cardPhoto: { height: 330, alignItems: 'center', justifyContent: 'center' },
-  cardInitials: { fontSize: 84, fontWeight: '900', color: 'rgba(10,11,13,0.55)' },
+  cardInitials: { fontSize: 84, fontWeight: '900', color: 'rgba(20,22,28,0.55)' },
   badgeNew: { position: 'absolute', top: 14, left: 14, backgroundColor: colors.optic, paddingVertical: 6, paddingHorizontal: 11, borderRadius: 999 },
   roundBtn: {
     position: 'absolute', top: 10, width: 42, height: 42, borderRadius: 21,
-    backgroundColor: 'rgba(10,11,13,0.55)', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(20,22,28,0.55)', alignItems: 'center', justifyContent: 'center',
   },
   cardLike: {
     position: 'absolute', right: 14, top: 296, width: 56, height: 56, borderRadius: 28,

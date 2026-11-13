@@ -1,4 +1,4 @@
--- 40/LOVE — an admin can actually remove someone
+-- RSVPlay — an admin can actually remove someone
 --
 -- The moderation desk could mark a report "actioned", which set a status and
 -- did nothing else. There was no way to stop a reported member using the app

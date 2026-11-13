@@ -1,4 +1,4 @@
--- 40/LOVE — admin & moderation
+-- RSVPlay — admin & moderation
 -- A tiny, explicit admin layer so moderation happens on a real page
 -- (site /admin) instead of the Supabase dashboard. Admins can:
 --   · see every profile photo (any moderation status) and approve/reject it

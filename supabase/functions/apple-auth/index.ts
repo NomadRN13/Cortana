@@ -1,4 +1,4 @@
-// 40/LOVE — Sign in with Apple token custody
+// RSVPlay — Sign in with Apple token custody
 //
 // App Store Guideline 5.1.1(v): if you offer Sign in with Apple, deleting an
 // account must also revoke the tokens Apple issued for it. This function is
@@ -15,7 +15,7 @@
 // Secrets: supabase secrets set \
 //            APPLE_TEAM_ID=ABCDE12345 \
 //            APPLE_KEY_ID=XYZ9876543 \
-//            APPLE_CLIENT_ID=com.fortylove.app \
+//            APPLE_CLIENT_ID=com.rsvplay.app \
 //            APPLE_PRIVATE_KEY="$(cat AuthKey_XYZ9876543.p8)"
 //
 // Until those secrets are set the function reports "not configured" with a

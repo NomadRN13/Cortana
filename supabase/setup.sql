@@ -1,10 +1,10 @@
--- 40/LOVE — complete backend in one paste
+-- RSVPlay — complete backend in one paste
 -- Generated from supabase/migrations/ by scripts/build-setup-sql.sh — don't edit by hand.
 -- Use: Supabase Dashboard → SQL Editor → New query → paste ALL of this → Run.
 -- Safe to run once on a fresh project. Do NOT also run 'supabase db push' afterwards — pick one path.
 -- (Development seed data is separate and optional: supabase/seed.sql — never on the launch project.)
 
--- 40/LOVE — initial schema
+-- RSVPlay — initial schema
 -- Implements docs/system-architecture.md §3–§7 for Supabase (Postgres 15+).
 -- Apply with: supabase db push   (see docs/backend-setup.md)
 
@@ -509,7 +509,7 @@ grant execute on function public.respond_court_time(bigint, boolean) to authenti
 grant execute on function public.delete_account() to authenticated;
 grant execute on function public.miles_between(numeric, numeric, numeric, numeric) to authenticated;
 
--- 40/LOVE — push notification tokens
+-- RSVPlay — push notification tokens
 -- One row per device token. The send-push edge function (supabase/functions/
 -- send-push) reads these with the service role when a notifications row is
 -- inserted; clients can only manage their own tokens.
@@ -529,7 +529,7 @@ create policy push_tokens_own on public.push_tokens
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
--- 40/LOVE — enable realtime delivery for chat
+-- RSVPlay — enable realtime delivery for chat
 -- postgres_changes subscriptions only fire for tables in the
 -- supabase_realtime publication; without this, the app's live chat channel
 -- subscribes cleanly but never receives an event (QA finding B-07).
@@ -549,7 +549,7 @@ begin
 end
 $$;
 
--- 40/LOVE — provision the photos storage bucket + policies
+-- RSVPlay — provision the photos storage bucket + policies
 -- QA found nothing in the repo creates the bucket uploadProfilePhoto targets
 -- (test-plan gap #1): on a fresh project the upload fails silently. This
 -- migration makes `supabase db push` provision it. Guarded so it no-ops on
@@ -603,7 +603,7 @@ begin
 end
 $outer$;
 
--- 40/LOVE — gender identity + dating preference matching
+-- RSVPlay — gender identity + dating preference matching
 -- Adds who-I-am and who-I'm-looking-to-date to profiles, and makes the
 -- Date-mode deck a MUTUAL filter: you see only people who fit what you're
 -- looking for AND who are looking for someone like you. All pairings are
@@ -706,7 +706,7 @@ as $$
   limit p_limit
 $$;
 
--- 40/LOVE — Play-mode game matching + Friends-mode preference
+-- RSVPlay — Play-mode game matching + Friends-mode preference
 -- Play mode: players say which game types they want (singles, doubles,
 -- mixed doubles) and, for singles/doubles, whether they want to play with
 -- women, men, or everyone. The deck shows only compatible players: a shared
@@ -833,7 +833,7 @@ as $$
   limit p_limit
 $$;
 
--- 40/LOVE — privacy hardening (release-review findings)
+-- RSVPlay — privacy hardening (release-review findings)
 -- 1) delete_account now also purges the user's photo objects from storage,
 --    making the privacy policy's hard-delete promise true end to end.
 -- 2) Photo reads are gated: you can always read your own objects; anyone
@@ -883,7 +883,7 @@ begin
 end
 $outer$;
 
--- 40/LOVE — phone (SMS) verification
+-- RSVPlay — phone (SMS) verification
 -- Sign-in stays email-OTP; onboarding additionally verifies a phone number
 -- by text. The number lives in auth.users (attached via Supabase phone-change
 -- OTP, so the SMS round-trip is handled by auth itself); profiles carries
@@ -917,7 +917,7 @@ $$;
 
 grant execute on function public.sync_phone_verification() to authenticated;
 
--- 40/LOVE — admin & moderation
+-- RSVPlay — admin & moderation
 -- A tiny, explicit admin layer so moderation happens on a real page
 -- (site /admin) instead of the Supabase dashboard. Admins can:
 --   · see every profile photo (any moderation status) and approve/reject it
@@ -981,7 +981,7 @@ begin
 end
 $outer$;
 
--- 40/LOVE — multi-photo management + moderation hardening
+-- RSVPlay — multi-photo management + moderation hardening
 -- Members manage up to 6 photos (positions 0–5; 0 is the main photo).
 --
 -- 1) SECURITY FIX: photos_write let a member write any moderation_status —
@@ -1074,7 +1074,7 @@ $$;
 grant execute on function public.make_photo_primary(int) to authenticated;
 grant execute on function public.delete_photo(int) to authenticated;
 
--- 40/LOVE — rewind (undo last swipe)
+-- RSVPlay — rewind (undo last swipe)
 -- Takes back the caller's swipe on one person in one mode so the card can
 -- return to their deck. If the swipe had just created a match, the match
 -- dissolves (the other side's like still stands, so re-liking re-matches
@@ -1117,7 +1117,7 @@ $$;
 
 grant execute on function public.undo_swipe(uuid, public.app_mode) to authenticated;
 
--- 40/LOVE — chat polish: read receipts + live match/message signal
+-- RSVPlay — chat polish: read receipts + live match/message signal
 --
 -- 1) Read receipts (QA B-14). Marking messages read becomes a scoped RPC.
 --    This also FIXES A SECURITY HOLE: the old messages_mark_read policy
@@ -1173,7 +1173,7 @@ begin
 end
 $$;
 
--- 40/LOVE — matching correctness fixes
+-- RSVPlay — matching correctness fixes
 --
 -- 1) Nonbinary members were undiscoverable to anyone who narrowed their
 --    Play or Friends preference. Date mode already lets you say you're
@@ -1206,7 +1206,7 @@ as $$
       or (pref::text = 'nonbinary' and g::text = 'nonbinary')
 $$;
 
--- 40/LOVE — doubles team profiles (two people, one profile)
+-- RSVPlay — doubles team profiles (two people, one profile)
 --
 -- A pair who always play together can share a single profile: both names on
 -- the card, one inbox, one set of preferences. Deliberate limits:
@@ -1380,7 +1380,7 @@ as $$
   limit p_limit
 $$;
 
--- 40/LOVE — multi-city launch
+-- RSVPlay — multi-city launch
 --
 -- "Indianapolis" was a hardcoded default in four places. This replaces it
 -- with a real registry so opening a new city is a row, not a code change.
@@ -1570,7 +1570,7 @@ as $$
   limit p_limit
 $$;
 
--- 40/LOVE — remembered devices
+-- RSVPlay — remembered devices
 --
 -- Two things members expect and a dating app needs:
 --
@@ -1685,11 +1685,11 @@ $$;
 grant execute on function public.touch_device(text, text, text) to authenticated;
 grant execute on function public.revoke_device(uuid) to authenticated;
 
--- 40/LOVE — Apple sign-in tokens, kept only so the account can be revoked
+-- RSVPlay — Apple sign-in tokens, kept only so the account can be revoked
 --
 -- App Store Guideline 5.1.1(v): an app that offers Sign in with Apple must,
 -- when the member deletes their account, also tell Apple to revoke the tokens
--- it issued. Otherwise the member's Apple ID still lists 40/LOVE under
+-- it issued. Otherwise the member's Apple ID still lists RSVPlay under
 -- "Apps Using Apple ID" for an account that no longer exists.
 --
 -- Revoking requires a token Apple will accept, and the only chance to get one
@@ -1715,7 +1715,7 @@ alter table public.apple_identities enable row level security;
 
 revoke all on public.apple_identities from anon, authenticated;
 
--- 40/LOVE — close the waitlist membership oracle
+-- RSVPlay — close the waitlist membership oracle
 --
 -- The landing page POSTed straight to the waitlist table with the anon key,
 -- which is public by design — it ships in the page source. The email column is
@@ -1759,7 +1759,7 @@ $$;
 
 grant execute on function public.join_waitlist(text, text, text) to anon, authenticated;
 
--- 40/LOVE — stop handing every member everyone else's birthdate and coordinates
+-- RSVPlay — stop handing every member everyone else's birthdate and coordinates
 --
 -- profiles_select lets any signed-in member read any profile row that hasn't
 -- blocked them. Row-level security is row-level: it says WHICH rows, never
@@ -1853,7 +1853,7 @@ $$;
 grant execute on function public.get_my_profile() to authenticated;
 grant execute on function public.get_profile_cards(uuid[]) to authenticated;
 
--- 40/LOVE — make blocking mean what the docs say it means
+-- RSVPlay — make blocking mean what the docs say it means
 --
 -- "Blocking makes two people invisible to each other everywhere, enforced at
 -- the database layer" (docs/backend-setup.md). Two tables were not doing that:
@@ -1884,7 +1884,7 @@ create policy user_sports_select on public.user_sports
   for select to authenticated
   using (user_id = auth.uid() or not public.is_blocked(auth.uid(), user_id));
 
--- 40/LOVE — stop events being oversubscribed
+-- RSVPlay — stop events being oversubscribed
 --
 -- `capacity` was only ever a check on the number itself (between 2 and 500).
 -- Nothing counted RSVPs against it, so a member could join a full mixer through
@@ -1935,7 +1935,7 @@ create trigger event_capacity_guard
   before insert or update on public.event_rsvps
   for each row execute function public.enforce_event_capacity();
 
--- 40/LOVE — let the founder see their own numbers
+-- RSVPlay — let the founder see their own numbers
 --
 -- Two things the product collects but nobody can currently read:
 --
@@ -2020,7 +2020,7 @@ $$;
 
 grant execute on function public.demo_funnel(int) to authenticated;
 
--- 40/LOVE — an admin can actually remove someone
+-- RSVPlay — an admin can actually remove someone
 --
 -- The moderation desk could mark a report "actioned", which set a status and
 -- did nothing else. There was no way to stop a reported member using the app
@@ -2265,7 +2265,7 @@ grant execute on function public.unsuspend_member(uuid) to authenticated;
 -- whole, so the app can tell them.
 revoke select (suspended_at, suspended_reason) on public.profiles from authenticated;
 
--- 40/LOVE — a member can play in more than one city
+-- RSVPlay — a member can play in more than one city
 --
 -- Until now a profile had exactly one city, and both matching and meetups hung
 -- off it. Plenty of players split their time — Seattle and Spokane, LA and San
@@ -2494,7 +2494,7 @@ $$;
 
 grant execute on function public.get_discovery_deck(public.app_mode, int) to authenticated;
 
--- 40/LOVE — open Bakersfield, CA
+-- RSVPlay — open Bakersfield, CA
 --
 -- City #12. Bakersfield sits about 110 miles north of Los Angeles, so its
 -- 30-mile metro does not touch LA's 60: a member in either is placed in their
@@ -2508,7 +2508,7 @@ insert into public.cities (slug, name, state, lat, lng, metro_radius_mi, launche
 values ('bakersfield', 'Bakersfield', 'CA', 35.373, -119.019, 30, true, 35)
 on conflict (slug) do nothing;
 
--- 40/LOVE — places to play live in the database
+-- RSVPlay — places to play live in the database
 --
 -- The Bakersfield places-to-play list shipped inside the app (and the
 -- prototype) as a hardcoded array. That made the one thing that changes most
@@ -2608,7 +2608,7 @@ insert into public.courts (city, name, address, setting, access, courts, lights,
    'Courts inside a gated community — residents and their guests only.', 240)
 on conflict do nothing;
 
--- 40/LOVE — tournaments with brackets that build and fill themselves
+-- RSVPlay — tournaments with brackets that build and fill themselves
 --
 -- A tournament is a single-elimination bracket for 2 to 24 entries in one
 -- city. The founder creates it on the moderation desk; members join from the
@@ -2986,7 +2986,7 @@ grant execute on function public.start_tournament(uuid) to authenticated;
 grant execute on function public.report_match_result(uuid, uuid, text) to authenticated;
 grant execute on function public.bracket_seed_order(int) to authenticated;
 
--- 40/LOVE — tournaments take up to 72 entries
+-- RSVPlay — tournaments take up to 72 entries
 --
 -- The first version stopped at 24. A club open day or a city championship
 -- wants more, so the ceiling is now 72 — which plays in a bracket of 128 over
@@ -3019,7 +3019,7 @@ alter table public.tournament_matches
   drop constraint tournament_matches_slot_check,
   add constraint tournament_matches_slot_check check (slot between 0 and 63);
 
--- 40/LOVE — tournament fixes from an independent review
+-- RSVPlay — tournament fixes from an independent review
 --
 -- 1. A player who deletes their account mid-tournament no longer stalls the
 --    bracket. Their side of every match is cleared (ON DELETE SET NULL), and so
@@ -3310,7 +3310,7 @@ grant execute on function public.report_match_result(uuid, uuid, text) to authen
 revoke all on function public.leave_tournament(uuid) from public, anon;
 grant execute on function public.leave_tournament(uuid) to authenticated;
 
--- 40/LOVE — closing the two privacy gaps logged on 2026-11-11
+-- RSVPlay — closing the two privacy gaps logged on 2026-11-11
 --
 -- GAP 1. Other members' settings were readable through the API.
 --   Migration 18 hid birthdates and coordinates but left 22 other profile
@@ -3488,7 +3488,7 @@ begin
   -- so changing it at will would let a member read other people's age ranges
   -- off the deck.
   if new.birthdate is distinct from old.birthdate then
-    raise exception 'Your birthdate can''t be changed in the app. If it''s wrong, email hello@40love.app and we''ll fix it.'
+    raise exception 'Your birthdate can''t be changed in the app. If it''s wrong, email hello@rsvplay.app and we''ll fix it.'
       using errcode = '42501';
   end if;
 
@@ -3500,7 +3500,7 @@ begin
        and old.created_at < now() - interval '1 hour'
        and old.gender_updated_at is not null
        and old.gender_updated_at > now() - interval '30 days' then
-      raise exception 'You can change this once every 30 days. If it''s wrong, email hello@40love.app and we''ll fix it.'
+      raise exception 'You can change this once every 30 days. If it''s wrong, email hello@rsvplay.app and we''ll fix it.'
         using errcode = '42501';
     end if;
     if old.gender is not null and old.created_at < now() - interval '1 hour' then
@@ -3751,7 +3751,7 @@ $$;
 revoke all on function public.get_discovery_deck(public.app_mode, int) from public, anon;
 grant execute on function public.get_discovery_deck(public.app_mode, int) to authenticated;
 
--- 40/LOVE — the two privacy follow-ups logged with migration 30
+-- RSVPlay — the two privacy follow-ups logged with migration 30
 --
 -- 1. is_blocked(a, b) and is_suspended(user) answered for ANY ids.
 --    Row policies call them, and a policy's functions run as the member
@@ -3973,7 +3973,7 @@ begin
   -- so changing it at will would let a member read other people's age ranges
   -- off the deck.
   if new.birthdate is distinct from old.birthdate then
-    raise exception 'Your birthdate can''t be changed in the app. If it''s wrong, email hello@40love.app and we''ll fix it.'
+    raise exception 'Your birthdate can''t be changed in the app. If it''s wrong, email hello@rsvplay.app and we''ll fix it.'
       using errcode = '42501';
   end if;
 
@@ -3987,7 +3987,7 @@ begin
     if settled
        and old.gender_updated_at is not null
        and old.gender_updated_at > now() - interval '30 days' then
-      raise exception 'You can change this once every 30 days. If it''s wrong, email hello@40love.app and we''ll fix it.'
+      raise exception 'You can change this once every 30 days. If it''s wrong, email hello@rsvplay.app and we''ll fix it.'
         using errcode = '42501';
     end if;
     if settled then
@@ -4002,7 +4002,7 @@ begin
     if settled
        and old.team_updated_at is not null
        and old.team_updated_at > now() - interval '30 days' then
-      raise exception 'You can add or change a doubles partner once every 30 days. Removing one is always fine — email hello@40love.app if you need a hand.'
+      raise exception 'You can add or change a doubles partner once every 30 days. Removing one is always fine — email hello@rsvplay.app if you need a hand.'
         using errcode = '42501';
     end if;
     if settled then
@@ -4147,7 +4147,7 @@ drop policy if exists reports_insert on public.reports;
 revoke insert on public.blocks from anon, authenticated;
 revoke insert on public.reports from anon, authenticated;
 
--- 40/LOVE — tournaments no longer tell a block apart from a suspension
+-- RSVPlay — tournaments no longer tell a block apart from a suspension
 --
 -- The residual logged with migration 31. A tournament's entry count is the
 -- true count (migration 29), but a member's entry list leaves out anyone
@@ -4214,7 +4214,7 @@ delete from public.tournament_entries e
  where t.id = e.tournament_id and t.status = 'registration'
    and p.id = e.user_id and p.suspended_at is not null;
 
--- 40/LOVE — deleting an account also takes the address off the waitlist
+-- RSVPlay — deleting an account also takes the address off the waitlist
 --
 -- delete_account() works by deleting the auth.users row and letting foreign
 -- keys cascade. That reaches every table keyed on the member's id, which is

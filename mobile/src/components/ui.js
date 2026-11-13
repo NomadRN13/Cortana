@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors, radii, gradientFor, initials } from '../theme';
 import { Bouncy } from './motion';
 
-// The O in 40/LOVE is a pickleball, rendered from the same source as the
+// The period after RSVPlay is a pickleball, rendered from the same source as the
 // website's wordmark (scripts/lib/ball.js → scripts/make-icons.js) so the two
 // can't drift apart. It arrives as an image rather than a stack of Views
 // because the modelling that makes it read as a ball — nineteen holes, each
@@ -20,16 +20,15 @@ export function Pickleball({ size = 20 }) {
 
 export function Wordmark({ size = 24, bounce = false }) {
   const ball = (
-    <View style={{ marginHorizontal: 1 }}>
-      <Pickleball size={size * 0.80} />
+    <View style={{ marginLeft: 2, marginTop: size * 0.42 }}>
+      <Pickleball size={size * 0.46} />
     </View>
   );
   const letter = { fontSize: size, fontWeight: '800', color: colors.text, letterSpacing: -0.5 };
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <Text style={letter}>40/L</Text>
+      <Text style={letter}>RSVPlay</Text>
       {bounce ? <Bouncy>{ball}</Bouncy> : ball}
-      <Text style={letter}>VE</Text>
     </View>
   );
 }
@@ -49,7 +48,7 @@ export function Avatar({ id, name, photo, size = 52, borderColor }) {
   if (photo) return <Image source={{ uri: photo }} style={base} />;
   return (
     <LinearGradient colors={tints} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={base}>
-      <Text style={{ fontSize: size * 0.36, fontWeight: '900', color: 'rgba(10,11,13,0.6)' }}>
+      <Text style={{ fontSize: size * 0.36, fontWeight: '900', color: 'rgba(20,22,28,0.6)' }}>
         {initials(name || '?')}
       </Text>
     </LinearGradient>

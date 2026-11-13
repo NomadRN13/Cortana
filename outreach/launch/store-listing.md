@@ -1,4 +1,4 @@
-# 40/LOVE — Store Submission Copy Pack
+# RSVPlay — Store Submission Copy Pack
 
 Everything the consoles ask for, drafted in the brand voice
 (`docs/brand-guide.md` §7 — one pun per field, controls say what they do) and
@@ -12,20 +12,20 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 
 ### Name (30 char limit)
 
-> **40/LOVE: Racquet Sports Dating**
+> **RSVPlay: Racquet Sport Socials**
 
-30 characters exactly. (The playbook's em-dash version is 31 — one over.)
+30 characters exactly. (The positioning note of 2026-11 keeps "Dating" out of the title.)
 
 ### Subtitle (30 char limit)
 
-> **The first date is a game.**
+> **Serve. Rally. Connect.**
 
-25 characters.
+22 characters.
 
 ### Promotional text (170 char limit — editable without review)
 
 > Now live in 12 cities. Meet tennis, pickleball, and padel players who'd
-> rather rally than sit through another coffee date. Love at first serve.
+> rather rally than sit through another coffee date. Serve. Rally. Connect.
 
 142 characters.
 
@@ -33,7 +33,7 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 
 > **Meet on the court, not at a bar.**
 >
-> 40/LOVE is the dating and social app for people who play racquet sports —
+> RSVPlay is the dating and social app for people who play racquet sports —
 > tennis, pickleball, padel, racquetball, and squash. Skip the "so, what do
 > you do?" dinner. Your first date has a net in the middle.
 >
@@ -66,18 +66,18 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 > • No ads, no tracking, and we never sell your data
 > • Delete your account any time, right in Settings
 >
-> **City by city.** 40/LOVE is open in Indianapolis, Los Angeles, San Diego,
+> **City by city.** RSVPlay is open in Indianapolis, Los Angeles, San Diego,
 > Bakersfield, Phoenix, Seattle, Spokane, Dallas, Houston, Orlando, Miami, and
 > Washington, DC — and you're matched with players in the cities you play
 > in, because a dating app is only as good as who's actually near you.
 >
-> Questions? hello@40love.app
+> Questions? hello@rsvplay.app
 
 ### Keywords (100 char limit, comma-separated, no spaces)
 
 > `pickleball,tennis,padel,squash,racquetball,hitting,partner,singles,court,doubles,social,meet`
 
-93 characters. Dropped the city name now that 40/LOVE spans 12 metros —
+93 characters. Dropped the city name now that RSVPlay spans 12 metros —
 per-city keywords belong in localized listings, not the base one. Deliberately excludes words Apple already indexes from the
 name/subtitle (racquet, sports, dating, date, game).
 
@@ -157,19 +157,19 @@ installed), advertising data.
 
 ### Title (30 char limit)
 
-> **40/LOVE: Racquet Sports Dating**
+> **RSVPlay: Racquet Sport Socials**
 
 ### Short description (80 char limit)
 
-> Meet tennis, pickleball & padel players. Date, play, make friends.
+> Pickleball, tennis & padel socials. Play, make friends, date if you like.
 
-66 characters (per playbook §4).
+73 characters.
 
 ### Full description
 
 > MEET ON THE COURT, NOT AT A BAR.
 >
-> 40/LOVE is the dating and social app for people who play racquet sports —
+> RSVPlay is the dating and social app for people who play racquet sports —
 > tennis, pickleball, padel, racquetball, and squash. Skip the "so, what do
 > you do?" dinner. Your first date has a net in the middle.
 >
@@ -204,10 +204,10 @@ installed), advertising data.
 >
 > INDIANAPOLIS FIRST
 >
-> We're building 40/LOVE city by city so there are real players on the other
+> We're building RSVPlay city by city so there are real players on the other
 > side of every match — and Indy serves first.
 >
-> Questions? hello@40love.app
+> Questions? hello@rsvplay.app
 
 ### Category
 
@@ -244,8 +244,8 @@ Global answers:
 - **Users can request data deletion:** Yes — in-app, Settings → Delete
   account.
 - **Account deletion URL** (Play requires a web page, not just the in-app
-  button): `https://40-love.netlify.app/delete-account/`
-  — the live site. `40love.app` is not registered; paste a URL that 404s and
+  button): `https://rsvplay.netlify.app/delete-account/`
+  — the live site. `rsvplay.app` is not registered; paste a URL that 404s and
   the submission is rejected. Update this and the privacy URL below together
   if the site ever moves to a custom domain.
   (source: `landing/delete-account.html`, deployed by `scripts/build-site.sh`).
@@ -284,12 +284,12 @@ Per data type (Collected / Shared / Purpose / Optional):
 Paste into App Review notes (Apple) and the Play Console "App access" +
 review notes fields. Same substance for both.
 
-> **About 40/LOVE:** a dating and social app for racquet sports players
+> **About RSVPlay:** an events-first social app for paddle and racquet sports players, with opt-in dating
 > (tennis, pickleball, padel, racquetball, squash). 18+ only, enforced at
 > signup by birthdate.
 >
 > **City-by-city launch:** community quality in a dating app depends on
-> local density, so 40/LOVE operates city by city. It is currently open in
+> local density, so RSVPlay operates city by city. It is currently open in
 > 12 US metros: Indianapolis, Los Angeles, San Diego, Bakersfield, Phoenix,
 > Seattle, Spokane, Dallas, Houston, Orlando, Miami, and Washington, DC.
 > Members choose one or more cities at signup (the first is pre-selected
@@ -304,7 +304,7 @@ review notes fields. Same substance for both.
 > **Review account:** [FILL IN — email + fixed one-time code, once the
 > review account is seeded]
 >
-> **Sign-in note:** 40/LOVE offers three ways in, all passwordless: an
+> **Sign-in note:** RSVPlay offers three ways in, all passwordless: an
 > emailed one-time code, Sign in with Apple, and Continue with Google.
 > Sign in with Apple is offered wherever Google is, per Guideline 4.8. So that you don't need access to a live inbox, the review
 > account above accepts the fixed code listed with the credentials at the
@@ -335,7 +335,7 @@ review notes fields. Same substance for both.
 > the product), birthdate, sports/skill, photos, and an approximate location
 > rounded to ~1 km on the device — exact coordinates never reach our
 > servers. No ads, no tracking SDKs, no data sale. Privacy policy:
-> https://40-love.netlify.app/privacy/ · Support: hello@40love.app
+> https://rsvplay.netlify.app/privacy/ · Support: hello@rsvplay.app
 
 ---
 
@@ -343,7 +343,7 @@ review notes fields. Same substance for both.
 
 For both stores' "What's new" field:
 
-> Our first serve. 40/LOVE v0.1 brings:
+> Our first serve. RSVPlay v0.1 brings:
 >
 > • Three modes — Play, Date, and Friends
 > • Matching by sport, skill (NTRP / DUPR), and distance
@@ -371,7 +371,7 @@ For both stores' "What's new" field:
    any new data type: **both privacy forms must be re-filed before the
    next release.**
    - Not triggered by the website. Netlify Analytics (server logs, on
-     40-love.netlify.app) and the demo funnel (`record_demo_step`, in the web
+     rsvplay.netlify.app) and the demo funnel (`record_demo_step`, in the web
      prototype) are both **website-only** — neither ships in the app binary,
      and `mobile/` contains no analytics call of any kind. Verified by grep,
      not assumed. Both store forms describe the app, so both stay as filed.

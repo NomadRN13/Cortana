@@ -1,4 +1,4 @@
--- 40/LOVE — tournament fixes from an independent review
+-- RSVPlay — tournament fixes from an independent review
 --
 -- 1. A player who deletes their account mid-tournament no longer stalls the
 --    bracket. Their side of every match is cleared (ON DELETE SET NULL), and so

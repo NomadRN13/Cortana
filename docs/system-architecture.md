@@ -1,4 +1,4 @@
-# 40/LOVE — System Architecture
+# RSVPlay — System Architecture
 
 The technical blueprint for turning the prototype (`app/index.html`) into the
 real product. Written for the founder and for whoever builds the MVP — a

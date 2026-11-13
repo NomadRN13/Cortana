@@ -1,4 +1,4 @@
-# Getting 40/LOVE onto Google Play
+# Getting RSVPlay onto Google Play
 
 Play is the cheaper and faster of the two stores — $25 once, no annual fee, and
 no equivalent of Apple's review queue for test builds. The one thing that will
@@ -77,8 +77,8 @@ Everything the listing asks for, and where it is:
 | Category | Dating |
 | Content rating questionnaire | Answer honestly: user-to-user communication, user-generated photos, dating. Expect **Mature 17+** |
 | Target audience | **18 and over only.** Do not tick any minor band |
-| Privacy policy URL | `https://40-love.netlify.app/privacy/` |
-| **Account deletion URL** | `https://40-love.netlify.app/delete-account/` |
+| Privacy policy URL | `https://rsvplay.netlify.app/privacy/` |
+| **Account deletion URL** | `https://rsvplay.netlify.app/delete-account/` |
 | Data safety form | `outreach/launch/store-listing.md` § Data Safety, filled in per data type |
 
 ### Screenshots are the one asset nobody can generate for you

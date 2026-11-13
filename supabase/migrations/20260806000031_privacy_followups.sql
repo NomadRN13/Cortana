@@ -1,4 +1,4 @@
--- 40/LOVE — the two privacy follow-ups logged with migration 30
+-- RSVPlay — the two privacy follow-ups logged with migration 30
 --
 -- 1. is_blocked(a, b) and is_suspended(user) answered for ANY ids.
 --    Row policies call them, and a policy's functions run as the member
@@ -220,7 +220,7 @@ begin
   -- so changing it at will would let a member read other people's age ranges
   -- off the deck.
   if new.birthdate is distinct from old.birthdate then
-    raise exception 'Your birthdate can''t be changed in the app. If it''s wrong, email hello@40love.app and we''ll fix it.'
+    raise exception 'Your birthdate can''t be changed in the app. If it''s wrong, email hello@rsvplay.app and we''ll fix it.'
       using errcode = '42501';
   end if;
 
@@ -234,7 +234,7 @@ begin
     if settled
        and old.gender_updated_at is not null
        and old.gender_updated_at > now() - interval '30 days' then
-      raise exception 'You can change this once every 30 days. If it''s wrong, email hello@40love.app and we''ll fix it.'
+      raise exception 'You can change this once every 30 days. If it''s wrong, email hello@rsvplay.app and we''ll fix it.'
         using errcode = '42501';
     end if;
     if settled then
@@ -249,7 +249,7 @@ begin
     if settled
        and old.team_updated_at is not null
        and old.team_updated_at > now() - interval '30 days' then
-      raise exception 'You can add or change a doubles partner once every 30 days. Removing one is always fine — email hello@40love.app if you need a hand.'
+      raise exception 'You can add or change a doubles partner once every 30 days. Removing one is always fine — email hello@rsvplay.app if you need a hand.'
         using errcode = '42501';
     end if;
     if settled then

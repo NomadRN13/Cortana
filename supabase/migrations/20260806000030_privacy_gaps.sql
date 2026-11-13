@@ -1,4 +1,4 @@
--- 40/LOVE — closing the two privacy gaps logged on 2026-11-11
+-- RSVPlay — closing the two privacy gaps logged on 2026-11-11
 --
 -- GAP 1. Other members' settings were readable through the API.
 --   Migration 18 hid birthdates and coordinates but left 22 other profile
@@ -176,7 +176,7 @@ begin
   -- so changing it at will would let a member read other people's age ranges
   -- off the deck.
   if new.birthdate is distinct from old.birthdate then
-    raise exception 'Your birthdate can''t be changed in the app. If it''s wrong, email hello@40love.app and we''ll fix it.'
+    raise exception 'Your birthdate can''t be changed in the app. If it''s wrong, email hello@rsvplay.app and we''ll fix it.'
       using errcode = '42501';
   end if;
 
@@ -188,7 +188,7 @@ begin
        and old.created_at < now() - interval '1 hour'
        and old.gender_updated_at is not null
        and old.gender_updated_at > now() - interval '30 days' then
-      raise exception 'You can change this once every 30 days. If it''s wrong, email hello@40love.app and we''ll fix it.'
+      raise exception 'You can change this once every 30 days. If it''s wrong, email hello@rsvplay.app and we''ll fix it.'
         using errcode = '42501';
     end if;
     if old.gender is not null and old.created_at < now() - interval '1 hour' then

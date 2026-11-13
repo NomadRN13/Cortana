@@ -1,4 +1,4 @@
-# Opening 40/LOVE in Xcode
+# Opening RSVPlay in Xcode
 
 ```bash
 ./scripts/xcode.sh

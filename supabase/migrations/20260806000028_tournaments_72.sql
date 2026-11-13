@@ -1,4 +1,4 @@
--- 40/LOVE — tournaments take up to 72 entries
+-- RSVPlay — tournaments take up to 72 entries
 --
 -- The first version stopped at 24. A club open day or a city championship
 -- wants more, so the ceiling is now 72 — which plays in a bracket of 128 over

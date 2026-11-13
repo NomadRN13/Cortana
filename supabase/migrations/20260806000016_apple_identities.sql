@@ -1,8 +1,8 @@
--- 40/LOVE — Apple sign-in tokens, kept only so the account can be revoked
+-- RSVPlay — Apple sign-in tokens, kept only so the account can be revoked
 --
 -- App Store Guideline 5.1.1(v): an app that offers Sign in with Apple must,
 -- when the member deletes their account, also tell Apple to revoke the tokens
--- it issued. Otherwise the member's Apple ID still lists 40/LOVE under
+-- it issued. Otherwise the member's Apple ID still lists RSVPlay under
 -- "Apps Using Apple ID" for an account that no longer exists.
 --
 -- Revoking requires a token Apple will accept, and the only chance to get one

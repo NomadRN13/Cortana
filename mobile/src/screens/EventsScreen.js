@@ -235,7 +235,7 @@ function PlacesToPlay({ cities, courtsFor }) {
         );
       })}
       <Text style={[type.hint, { fontSize: 11.5, marginTop: 6 }]}>
-        Courts change — hours, fees and nets are the venue's call. Check before you make the drive. 40/LOVE isn't affiliated with any venue listed.
+        Courts change — hours, fees and nets are the venue's call. Check before you make the drive. RSVPlay isn't affiliated with any venue listed.
       </Text>
     </View>
   );

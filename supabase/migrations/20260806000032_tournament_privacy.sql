@@ -1,4 +1,4 @@
--- 40/LOVE — tournaments no longer tell a block apart from a suspension
+-- RSVPlay — tournaments no longer tell a block apart from a suspension
 --
 -- The residual logged with migration 31. A tournament's entry count is the
 -- true count (migration 29), but a member's entry list leaves out anyone

@@ -15,11 +15,11 @@ const CFG = { SUPABASE_URL: 'https://fake.supabase.co', SUPABASE_ANON_KEY: 'anon
 
 // Served with real-looking keys so the page takes its live path.
 const PAGE = fs.readFileSync(path.join(REPO, 'admin/index.html'), 'utf8').replace(
-  /window\.FORTYLOVE\s*=\s*\{[^}]*\};/,
-  `window.FORTYLOVE = { SUPABASE_URL: '${CFG.SUPABASE_URL}', SUPABASE_ANON_KEY: '${CFG.SUPABASE_ANON_KEY}' };`
+  /window\.RSVPLAY\s*=\s*\{[^}]*\};/,
+  `window.RSVPLAY = { SUPABASE_URL: '${CFG.SUPABASE_URL}', SUPABASE_ANON_KEY: '${CFG.SUPABASE_ANON_KEY}' };`
 );
 
-const TOKEN_KEY = '40love.admin.session';
+const TOKEN_KEY = 'rsvplay.admin.session';
 
 // Sign in the way the page does, then hand it whatever is_admin should answer.
 async function open(browser, { isAdmin, signedIn = true }) {

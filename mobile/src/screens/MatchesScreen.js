@@ -64,7 +64,7 @@ export default function MatchesScreen({ navigation }) {
                   }}
                 >
                   <LinearGradient colors={gradientFor(p.id)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cellPhoto}>
-                    <Text style={{ fontSize: 38, fontWeight: '900', color: 'rgba(10,11,13,0.55)' }}>{initials(p.name)}</Text>
+                    <Text style={{ fontSize: 38, fontWeight: '900', color: 'rgba(20,22,28,0.55)' }}>{initials(p.name)}</Text>
                   </LinearGradient>
                   <View style={{ padding: 12, gap: 3 }}>
                     <Text style={{ color: colors.text, fontWeight: '800', fontSize: 15 }}>{p.name}, {p.age}</Text>

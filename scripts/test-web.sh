@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-# 40/LOVE — run the browser suites against the website and the demo.
+# RSVPlay — run the browser suites against the website and the demo.
 #
 #   ./scripts/test-web.sh            # everything
 #   ./scripts/test-web.sh admin      # one suite

@@ -1,6 +1,14 @@
-# 40/LOVE — Business Plan
+# RSVPlay — Business Plan
 
-*Love at first serve.* A dating and social app for racquet sports players.
+> **Positioning update (2026-11-13).** The product is now **RSVPlay**: an
+> events-first social app for paddle and racquet sports — you RSVP to a social,
+> league night or pickup game, then use the app to find those people again as
+> partners, friends or, for people who opt in, dates. Dating is an opt-in mode,
+> never the headline. The plan below predates that shift; read its dating-first
+> framing through the positioning map ("40/Love — Positioning & Competitor
+> Map", 2026-11-12). Numbers, interview questions and go/no-go criteria still apply.
+
+*Serve. Rally. Connect.* An events-first social app for paddle and racquet sports players, with opt-in dating.
 
 > **A note on numbers.** Market figures in this plan are directional estimates
 > from public reporting, included to size the opportunity — verify them against
@@ -12,7 +20,7 @@
 
 ## 1. Executive summary
 
-40/LOVE connects active singles through the racquet sports they already love,
+RSVPlay connects active singles through the racquet sports they already love,
 making the first date a game instead of dinner. Members build a player profile
 (sports, skill, availability), match with nearby players, and propose a court
 time right in the chat.
@@ -46,7 +54,7 @@ memberships, then event tickets and club partnerships.
 
 ## 3. Solution & positioning
 
-**One-liner:** 40/LOVE connects active singles through the racquet sports they
+**One-liner:** RSVPlay connects active singles through the racquet sports they
 already love, making the first date a game instead of dinner.
 
 The core loop: player profile → match on sport, skill, and vibe → propose a
@@ -91,12 +99,12 @@ beachhead strategy, not a national land-grab.
 
 ## 6. Competition
 
-| Player | What they are | Gap 40/LOVE fills |
+| Player | What they are | Gap RSVPlay fills |
 |---|---|---|
 | Tinder / Hinge / Bumble | Massive generic dating pools | No shared activity, no skill matching, no "first date = game" mechanic; niche intent gets lost |
 | Fitafy and fitness-dating apps | Dating for gym/fitness people | Fitness-broad, not racquet-specific; no court scheduling, no events, thin US liquidity |
 | Playtomic, PicklePlay, court apps | Booking and partner-finding utilities | Explicitly not dating; no romantic intent layer, no profiles built for chemistry |
-| Meetup / club leagues | Offline social infrastructure | No matching, no intent signaling; 40/LOVE partners with these rather than competing |
+| Meetup / club leagues | Offline social infrastructure | No matching, no intent signaling; RSVPlay partners with these rather than competing |
 
 **Positioning:** on a 2×2 of *generic ↔ racquet-specific* and *dating ↔ play*,
 the dating × racquet-specific quadrant is empty. That's the lane.
@@ -122,7 +130,7 @@ Meetup racquet groups.
 - ≥40% of singles interviewed say they would try it
 - ≥60% say they'd rather meet through a game than a standard first date
 - ≥15% of visitors to the landing page join the waitlist
-- ≥1 club or organizer willing to co-host a "40/LOVE Social Mixer"
+- ≥1 club or organizer willing to co-host a "RSVPlay Social Mixer"
 
 If the numbers land: proceed to MVP. If they miss: the interviews will say
 whether the fix is positioning (lead with Play mode?) or premise.
@@ -130,9 +138,9 @@ whether the fix is positioning (lead with Play mode?) or premise.
 ## 8. Go-to-market
 
 **Community before code:**
-- Instagram + TikTok (@fortylove): racquet culture content, dating-fatigue
+- Instagram + TikTok (@rsvplay): racquet culture content, dating-fatigue
   humor, court-date ideas, local player spotlights.
-- Partner with clubs and organizers to co-host **40/LOVE Social Mixers** —
+- Partner with clubs and organizers to co-host **RSVPlay Social Mixers** —
   round robins engineered for meeting people. The mixer is the product demo.
 - Waitlist landing page (built — `landing/index.html`) collecting emails and
   city votes.
@@ -218,7 +226,7 @@ Plan the no-code exit: keep the brand, data export, and domain portable.
   clubs, 50+ indoor tennis courts) via club partnerships, and indoor event
   programming November–March.
 - **Success churn** — couples leave dating apps. Mitigate: Play/Friends modes
-  are the retention layer; "met on 40/LOVE" stories are marketing gold, not
+  are the retention layer; "met on RSVPlay" stories are marketing gold, not
   losses.
 - **Copycats** — a Match Group experiment could clone the concept. Mitigate:
   own the offline layer (mixers, club relationships) that platforms won't

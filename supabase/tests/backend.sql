@@ -1,4 +1,4 @@
--- 40/LOVE backend verification suite.
+-- RSVPlay backend verification suite.
 --
 --   ./scripts/test-backend.sh
 --
@@ -679,8 +679,8 @@ begin
   assert (select status from reports where id = v_report) = 'reviewed', 'admin report triage did not stick';
   -- creates an event
   insert into events (title, venue, starts_at, sport, capacity)
-  values ('40/LOVE Social Mixer', 'Broad Ripple Courts', now() + interval '7 days', 'pickleball', 24);
-  select count(*) into c from events where title = '40/LOVE Social Mixer';
+  values ('RSVPlay Social Mixer', 'Broad Ripple Courts', now() + interval '7 days', 'pickleball', 24);
+  select count(*) into c from events where title = 'RSVPlay Social Mixer';
   assert c = 1, 'admin could not create event';
 end $$;
 -- admins table itself stays invisible even to admins via the API
@@ -1950,7 +1950,7 @@ insert into event_rsvps (event_id, user_id)
 select id, '00000000-0000-4000-8000-000000000012' from events limit 1;
 
 -- Joined the waitlist before making an account, which is the ordinary order of
--- events for anyone who found 40/LOVE through the website.
+-- events for anyone who found RSVPlay through the website.
 insert into waitlist (email, city, source)
 values ((select lower(email) from auth.users where id = '00000000-0000-4000-8000-000000000012'), 'indianapolis', 'delete-test');
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 40/LOVE — run every test suite in Docker, from macOS or Linux.
+# RSVPlay — run every test suite in Docker, from macOS or Linux.
 # (On Windows use scripts/test-in-docker.ps1, which does the same thing.)
 #
 #   ./scripts/test-in-docker.sh              # all three suites

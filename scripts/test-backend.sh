@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 40/LOVE — run the backend verification suite.
+# RSVPlay — run the backend verification suite.
 #
 #   ./scripts/test-backend.sh
 #
@@ -65,10 +65,10 @@ cp supabase/seed.sql "$WORK/seed.sql"
 chmod -R a+rX "$WORK"
 
 export PGHOST="$WORK" PGPORT="$PORT" PGUSER=postgres
-run "$BIN/createdb -h $WORK -p $PORT -U postgres fortylove"
+run "$BIN/createdb -h $WORK -p $PORT -U postgres rsvplay"
 
 echo "==> Applying $(ls supabase/migrations/*.sql | wc -l | tr -d ' ') migrations + seed, then asserting"
-if run "$BIN/psql -h $WORK -p $PORT -U postgres -d fortylove -q -v ON_ERROR_STOP=1 \
+if run "$BIN/psql -h $WORK -p $PORT -U postgres -d rsvplay -q -v ON_ERROR_STOP=1 \
       -v migrations=$WORK/migrations.sql -v seed=$WORK/seed.sql \
       -f $(pwd)/supabase/tests/backend.sql" > "$WORK/out.log" 2>&1; then
   grep -E "NOTICE|PASSED" "$WORK/out.log" || true

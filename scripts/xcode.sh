@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-# 40/LOVE — generate the iOS project and open it in Xcode.
+# RSVPlay — generate the iOS project and open it in Xcode.
 #
 #   ./scripts/xcode.sh              # generate + open
 #   ./scripts/xcode.sh --clean      # throw the old one away first
@@ -86,7 +86,7 @@ In Xcode:
      A simulator needs no Apple account and costs nothing.
 
   2. To run on your own iPhone you need a signing team:
-     select the 40/LOVE target → Signing & Capabilities → Team.
+     select the RSVPlay target → Signing & Capabilities → Team.
      A free Apple ID works for 7 days at a time, BUT it cannot enable
      Sign in with Apple — so a device build needs the $99/year
      Apple Developer account, or remove "expo-apple-authentication"

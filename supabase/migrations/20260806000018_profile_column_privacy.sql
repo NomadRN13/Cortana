@@ -1,4 +1,4 @@
--- 40/LOVE — stop handing every member everyone else's birthdate and coordinates
+-- RSVPlay — stop handing every member everyone else's birthdate and coordinates
 --
 -- profiles_select lets any signed-in member read any profile row that hasn't
 -- blocked them. Row-level security is row-level: it says WHICH rows, never

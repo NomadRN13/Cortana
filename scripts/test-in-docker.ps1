@@ -1,4 +1,4 @@
-# 40/LOVE - run every test suite in Docker, from Windows.
+# RSVPlay - run every test suite in Docker, from Windows.
 #
 #   .\scripts\test-in-docker.ps1                 # all three suites
 #   .\scripts\test-in-docker.ps1 -Only backend   # just one (backend | app | web)

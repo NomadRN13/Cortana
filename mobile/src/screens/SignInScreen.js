@@ -131,7 +131,7 @@ export default function SignInScreen({ navigation }) {
                 value={email}
                 onChangeText={(t) => { setEmail(t); setError(''); }}
                 placeholder="you@example.com"
-                placeholderTextColor="rgba(244,246,240,0.35)"
+                placeholderTextColor="rgba(245,244,238,0.35)"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -158,7 +158,7 @@ export default function SignInScreen({ navigation }) {
                       accessibilityRole="button"
                       accessibilityLabel="Sign in with Apple"
                     >
-                      <Ionicons name="logo-apple" size={19} color="#0A0B0D" />
+                      <Ionicons name="logo-apple" size={19} color="#14161C" />
                       <Text style={styles.socialAppleLabel}>Sign in with Apple</Text>
                     </Pressable>
                   )}
@@ -202,7 +202,7 @@ export default function SignInScreen({ navigation }) {
                 value={code}
                 onChangeText={(t) => { setCode(t.replace(/[^0-9]/g, '').slice(0, 6)); setError(''); }}
                 placeholder="••••••"
-                placeholderTextColor="rgba(244,246,240,0.35)"
+                placeholderTextColor="rgba(245,244,238,0.35)"
                 keyboardType="number-pad"
                 maxLength={6}
                 onSubmitEditing={verify}
@@ -240,7 +240,7 @@ function friendly(e, method) {
   const msg = (e && e.message) || '';
   const code = (e && e.code) || '';
   const onEmail = method === 'email';
-  const ours = 'That’s on us, not you — email hello@40love.app and we’ll get you in.';
+  const ours = 'That’s on us, not you — email hello@rsvplay.app and we’ll get you in.';
   // Supabase's built-in mailer allows only a handful of codes an hour, so
   // "wait a minute" would be wrong advice for the one people actually hit.
   if (/email rate limit/i.test(msg)) {
@@ -253,7 +253,7 @@ function friendly(e, method) {
   }
   if (/provider is not enabled|not enabled|signups not allowed/i.test(msg)) {
     return onEmail
-      ? `Email sign-in isn’t switched on for 40/LOVE yet. ${ours}`
+      ? `Email sign-in isn’t switched on for RSVPlay yet. ${ours}`
       : 'That sign-in method isn’t switched on yet. Use an email code for now.';
   }
   // Supabase says this when there's no mail provider behind the code.
@@ -282,8 +282,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9,
     height: 52, borderRadius: 12,
   },
-  socialApple: { backgroundColor: '#F4F6F0' },
-  socialAppleLabel: { color: '#0A0B0D', fontWeight: '800', fontSize: 15.5 },
+  socialApple: { backgroundColor: '#F5F4EE' },
+  socialAppleLabel: { color: '#14161C', fontWeight: '800', fontSize: 15.5 },
   socialGoogle: { backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line },
   socialGoogleLabel: { color: colors.text, fontWeight: '800', fontSize: 15.5 },
   resend: { color: colors.optic, fontWeight: '800', fontSize: 13.5, paddingVertical: 4 },

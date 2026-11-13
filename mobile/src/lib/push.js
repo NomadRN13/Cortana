@@ -15,7 +15,7 @@ export async function registerForPush(registerToken) {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'Matches & messages',
         importance: Notifications.AndroidImportance.HIGH,
-        lightColor: '#D6F44F',
+        lightColor: '#C8F04A',
       });
     }
 

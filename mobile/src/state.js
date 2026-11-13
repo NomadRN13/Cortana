@@ -20,11 +20,11 @@ import { registerForPush } from './lib/push';
 import { getCoarseLocation } from './lib/location';
 import { distanceReason } from './lib/distance';
 
-const STORE_KEY = '40love.profile';
-const SAVED_KEY = '40love.saved';
+const STORE_KEY = 'rsvplay.profile';
+const SAVED_KEY = 'rsvplay.saved';
 // Discovery prefs used to live only in memory, so a member set their age
 // range and distance, reopened the app, and found the defaults again.
-const PREFS_KEY = '40love.prefs';
+const PREFS_KEY = 'rsvplay.prefs';
 const DEFAULT_PREFS = { radius: 15, ageMin: 25, ageMax: 55, mySportsOnly: false };
 const AppState = createContext(null);
 
@@ -207,7 +207,7 @@ const PHOTO_TIMEOUT_MS = 30000;
 // apart so the failure reaches the person who can actually fix it.
 const RATE_LIMITED = /rate limit|too many|only request this after|429/i;
 const PROVIDER_FAULT = /provider|not enabled|disabled|unsupported|configur|sending sms|sending confirmation|twilio|messagebird|vonage/i;
-const NOT_CONFIGURED = 'Text messages aren’t switched on for 40/LOVE yet — that’s on us, not your number. Email hello@40love.app and we’ll get you in.';
+const NOT_CONFIGURED = 'Text messages aren’t switched on for RSVPlay yet — that’s on us, not your number. Email hello@rsvplay.app and we’ll get you in.';
 
 function phoneError(e, fallback) {
   const text = `${(e && (e.message || e.msg)) || ''} ${(e && (e.code || e.error_code)) || ''}`;
@@ -564,7 +564,7 @@ export function AppStateProvider({ children }) {
           : n.kind === 'message' ? `Your serve — ${name} sent you a message.`
           : n.kind === 'court_time' ? `${name} proposed a court time.`
           : n.kind === 'event_reminder' ? 'An event you joined is coming up.'
-          : 'Update from 40/LOVE.';
+          : 'Update from RSVPlay.';
         return { ico: NOTIF_ICONS[n.kind] || 'notifications', txt, sub: fmtWhen(n.sent_at) };
       }));
     } catch (e) { /* keep current state */ }
@@ -1497,7 +1497,7 @@ export function AppStateProvider({ children }) {
         refreshMatchesAndThreads();
         Alert.alert(
           'Couldn’t block them',
-          'Nothing was saved, so they can still see you. Check your connection and try again — if it keeps failing, email hello@40love.app and we’ll do it for you.'
+          'Nothing was saved, so they can still see you. Check your connection and try again — if it keeps failing, email hello@rsvplay.app and we’ll do it for you.'
         );
       });
   };
@@ -1509,7 +1509,7 @@ export function AppStateProvider({ children }) {
       .catch(() => {
         Alert.alert(
           'Couldn’t send the report',
-          'It didn’t reach us, so nobody has seen it. Try again, or email hello@40love.app — include their name and we’ll take it from there.'
+          'It didn’t reach us, so nobody has seen it. Try again, or email hello@rsvplay.app — include their name and we’ll take it from there.'
         );
       });
     // B-04: permanently hide a reported profile from the reporter's deck.
@@ -1697,7 +1697,7 @@ export function AppStateProvider({ children }) {
     if (shared.length) return `Also plays ${shared[0]}`;
     const near = distanceReason(p.dist);
     if (near) return near;
-    if (p.isNew) return 'New to 40/LOVE this week';
+    if (p.isNew) return 'New to RSVPlay this week';
     if (p.verified) return 'Verified player nearby';
     return 'Worth a look';
   };

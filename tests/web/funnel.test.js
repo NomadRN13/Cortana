@@ -28,8 +28,8 @@ async function walk(page) {
   // own config script would overwrite anything injected before load.
   const fs = require('fs');
   const html = fs.readFileSync(require('path').join(REPO, 'app/index.html'), 'utf8')
-    .replace(/window\.FORTYLOVE = \{[^}]*\};/,
-      `window.FORTYLOVE = { SUPABASE_URL: '${CFG.SUPABASE_URL}', SUPABASE_ANON_KEY: '${CFG.SUPABASE_ANON_KEY}' };`);
+    .replace(/window\.RSVPLAY = \{[^}]*\};/,
+      `window.RSVPLAY = { SUPABASE_URL: '${CFG.SUPABASE_URL}', SUPABASE_ANON_KEY: '${CFG.SUPABASE_ANON_KEY}' };`);
   let p = await b.newPage({ viewport: { width: 390, height: 844 } });
   const seen = [];
   await p.route('**/rest/v1/rpc/record_demo_step', (r) => {
@@ -61,8 +61,8 @@ async function walk(page) {
   // afterwards; serving it also means the check still means something after
   // go-live.sh has written real keys into the file.
   const blank = fs.readFileSync(require('path').join(REPO, 'app/index.html'), 'utf8')
-    .replace(/window\.FORTYLOVE = \{[^}]*\};/,
-      "window.FORTYLOVE = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };");
+    .replace(/window\.RSVPLAY = \{[^}]*\};/,
+      "window.RSVPLAY = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };");
   p = await b.newPage({ viewport: { width: 390, height: 844 } });
   let calls = 0;
   p.on('request', (r) => { if (/supabase|record_demo_step/.test(r.url())) calls += 1; });

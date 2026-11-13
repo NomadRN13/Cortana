@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 40/LOVE — run the app state suite.
+# RSVPlay — run the app state suite.
 #
 #   ./scripts/test-app.sh
 #

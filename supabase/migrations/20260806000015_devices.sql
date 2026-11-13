@@ -1,4 +1,4 @@
--- 40/LOVE — remembered devices
+-- RSVPlay — remembered devices
 --
 -- Two things members expect and a dating app needs:
 --

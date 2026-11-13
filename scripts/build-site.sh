@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 40/LOVE — assemble the deployable website into site/
+# RSVPlay — assemble the deployable website into site/
 #   site/index.html        ← landing/index.html   (waitlist page)
 #   site/demo/index.html   ← app/index.html       (clickable prototype)
 #   site/safety/         ← landing/safety.html (safety tips; linked from the app)
@@ -48,8 +48,8 @@ ROBOTS
 # the entire point of having one. It defaults to where the site lives today
 # rather than being opt-in, because go-live.sh rebuilds without setting it and
 # the failure is invisible until someone pastes a link.
-#     SITE_URL=https://40love.app bash scripts/build-site.sh   # after a move
-BASE="${SITE_URL:-https://40-love.netlify.app}"
+#     SITE_URL=https://rsvplay.app bash scripts/build-site.sh   # after a move
+BASE="${SITE_URL:-https://rsvplay.netlify.app}"
 BASE="${BASE%/}"
 find site -name '*.html' -exec sed -i.bak \
   -e "s|content=\"/og.png\"|content=\"$BASE/og.png\"|g" "{}" +

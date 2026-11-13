@@ -1,4 +1,4 @@
--- 40/LOVE — deleting an account also takes the address off the waitlist
+-- RSVPlay — deleting an account also takes the address off the waitlist
 --
 -- delete_account() works by deleting the auth.users row and letting foreign
 -- keys cascade. That reaches every table keyed on the member's id, which is

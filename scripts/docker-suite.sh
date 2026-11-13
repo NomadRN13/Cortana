@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 40/LOVE — run one test suite INSIDE a container.
+# RSVPlay — run one test suite INSIDE a container.
 #
 # You don't call this directly: scripts/test-in-docker.ps1 (Windows) and
 # scripts/test-in-docker.sh (macOS/Linux) start the right container and run it.

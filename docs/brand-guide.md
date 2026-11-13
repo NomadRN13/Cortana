@@ -1,115 +1,123 @@
-# 40/LOVE — Brand & Design Guide
+# RSVPlay — Brand & Design Guide
 
-The single source of truth for how 40/LOVE looks, sounds, and feels. Every screen,
-page, and document in this repo derives from this guide.
+The single source of truth for how RSVPlay looks, sounds, and feels. Every
+screen, page, and document in this repo derives from this guide. The design
+canvases ("RSVPlay — Rebrand Mockups" and "RSVPlay — App Mockup") are built on
+the same tokens.
 
 ## 1. Positioning
 
-**Product:** 40/LOVE — a dating and social app for people who play racquet sports
-(tennis, pickleball, padel, racquetball, squash).
+**Product:** RSVPlay — an events-first social app for paddle and racquet sports
+(pickleball, tennis, padel, racquetball, squash).
 
-**One-liner:** 40/LOVE connects active singles through the racquet sports they
-already love, making the first date a game instead of dinner.
+**One-liner:** RSVP to a game, show up, play, and keep the people you meet.
 
-**Tagline:** *Love at first serve.*
+**Positioning line:** *The app for paddle and racquet sports.*
 
-**Three modes** (functional color coding — used consistently everywhere):
+**Tagline:** *Serve. Rally. Connect.*
 
-| Mode | Purpose | Color |
-|------|---------|-------|
-| ❤️ Date | Find romantic matches | Match Rose `#E15A72` |
-| 🎾 Play | Find hitting & practice partners | Optic `#CFE23F` |
-| 👥 Friends | Leagues, socials, community | Baseline Blue `#3E7C9B` |
+**Three modes**, in this order everywhere: **Play** (find players for your next
+match), **Date** (opt-in; find your perfect match), **Friends** (expand your
+circle on and off the court). Mode identity comes from icons — paddle, heart,
+people — never from per-mode colors.
 
 ## 2. The idea behind the identity
 
-The name is the brand: **"40" is sport, "Love" is romance.** The identity holds
-those two worlds in tension — crisp court geometry and scoreboard typography on
-the sport side, a warm serif italic and rose accent on the romance side. Neither
-wins; the pairing is the look.
+The name is the brand: **RSVP + Play.** You say yes to a game, and the game is
+where everything else starts. The identity is confident, plain-spoken and a
+little playful: a bold geometric wordmark, one lime accent, and the pickleball
+as the recurring mark — as the period after the name, as the app icon, and as
+the ball in every lockup.
 
-Visual world to draw from: court-line geometry (chalk-white 2px lines, service
-boxes, corner ticks), scoreboard numerals, optic-yellow felt, deep court green,
-club-house warmth. Not from: generic dating-app gradients, purple/pink neon.
+Visual world to draw from: court lines, paddles, the lime ball, night games
+under the lights. Not from: generic dating-app gradients, purple/pink neon,
+tennis-score puns (that was the old name's world).
 
 ## 3. Palette
 
 | Token | Hex | Use |
 |-------|-----|-----|
-| Court | `#0F3D2E` | Deep green ground — heroes, headers, dark surfaces |
-| Ink | `#132A21` | Text on light surfaces (green-black, never pure black) |
-| Chalk | `#F6F4EC` | Warm line-white — light ground, court lines on Court |
-| Optic | `#CFE23F` | Tennis-ball yellow — sport accent, Play mode, CTAs on dark |
-| Match Rose | `#E15A72` | Romance accent — Date mode, likes, "Love" in the wordmark |
-| Baseline Blue | `#3E7C9B` | Friends mode, secondary info accents |
+| Ink | `#14161C` | The ground on dark surfaces; text on light surfaces |
+| Court | `#F5F4EE` | Light ground; text on dark surfaces |
+| Optic | `#C8F04A` | The one accent: primary actions, active states, the lime P |
+| Court blue | `#2F5BFF` | Secondary accent: event headers, "Start a rematch", avatars |
+| Surface | `#1E2128` | Cards on Ink |
+| Surface 2 | `#272B33` | Chips and date boxes inside cards |
+| Line | `#2E323B` / `#3E434E` | Card borders / input and outlined-button borders |
+| Muted | `#C9CBD2` | Secondary text on dark |
+| Success | `#3DC96B` | Verified badges, confirmations |
+| Danger | `#E15A72` | Destructive and negative actions only |
 
-Rules: Optic is never used for body text on light grounds (contrast). Rose and
-Optic never sit directly on each other — separate with Court, Ink, or Chalk.
-Neutrals are green-biased (derive greys from Ink/Chalk), never pure `#888`.
+Light surfaces use Court as ground, `#FFFFFF` cards, `#DEDCD3` lines, and
+`#3A3F4B` / `#4A4F5C` for secondary text.
+
+Rules: Optic is never body text on a light ground. Court blue and Optic never
+sit directly on each other — separate them with Ink or Court. Text contrast
+is WCAG AA everywhere, including 11–12 px labels.
+
+In code the tokens live in `mobile/src/theme.js` (the app), the `:root` block
+of `app/index.html` (the prototype), `landing/index.html` and `admin/index.html`.
+Keep them identical.
 
 ## 4. Typography
 
-No webfonts (self-contained pages). The system carries it through treatment:
-
-- **Display / headings:** system sans (`system-ui`) at weight 800–900,
-  tight tracking (`letter-spacing: -0.02em`), `text-wrap: balance`. Uppercase
-  with `+0.08em` tracking for eyebrows/labels only.
-- **Romance voice:** `Georgia, 'Times New Roman', serif` in *italic* — used
-  sparingly for taglines and the "Love" half of the wordmark.
+- **Headlines, numbers, the wordmark:** Space Grotesk 700, tight tracking
+  (`letter-spacing: -0.02em`, `-0.03em` on the wordmark). The self-contained
+  pages fall back to the system sans at weight 800.
+- **Body, buttons, labels:** Inter (system sans fallback). Eyebrow labels are
+  11–12 px, uppercase, `+0.08em` tracking.
 - **Scoreboard numerals:** `font-variant-numeric: tabular-nums` wherever
   digits align (scores, stats, distances, dates).
-- Body text ~65ch max width, 1.6 line height.
+- Body text ~65ch max width, 1.45–1.6 line height.
 
 ## 5. Wordmark / logo
 
-Typographic wordmark, no complex artwork:
+Typographic wordmark plus the pickleball mark. The sanctioned lockups, from the
+brand boards:
 
-> **40**<span style="color:#CFE23F">/</span>*Love*
+- **A · The ball dot** — `RSVPlay` with the ball as the period. The default
+  (app bars, policy pages, the admin desk).
+- **D · Ball lockup** — ball first, name second. The ball alone is the app icon.
+- **F · Shared P** — `RSV` + Optic `P` + `lay`: the lime P belongs to both RSVP
+  and Play. Welcome screens and hero moments.
+- **H · Club badge** — round seal, `RSVPLAY` on top, `SERVE · RALLY · CONNECT`
+  underneath. Merch and wristbands.
+- **I · Stacked on lime** — `RSVP` over `Play` on Optic. Posters and signs.
 
-- "40" — heavy sans, Ink or Chalk depending on ground.
-- "/" — Optic, slightly oversized, the pivot between the two worlds.
-- "Love" — Georgia italic, Match Rose.
-
-Works at any size, in one color if needed (all-Chalk on Court). A roundel
-variant for app icons: Optic circle, Ink "40/L".
+The ball is defined once in `scripts/lib/ball.js`; `scripts/sync-mark.js`
+writes it into every page and `scripts/make-icons.js` renders the icons and the
+`ball.png` the phone app draws. Never redraw it by hand.
 
 ## 6. Structural motifs
 
-- **Court lines:** section dividers and card borders are crisp 2px Chalk (on
-  dark) or Ink at low alpha (on light) — straight lines, sharp corners or a
-  modest 10–14px radius. No soft blob shapes.
-- **Service box grid:** two-column bordered grids for feature/stat sections.
-- **Score chips:** small bordered pills showing paired values ("40–LOVE",
-  "NTRP 3.5", "2.1 mi") in tabular numerals.
-- **Corner ticks:** short L-shaped marks at section corners, like court corners.
+- Cards: 16–20 px radius, 1 px Line borders, no shadows on dark.
+- Pills: 44 px tall, fully rounded; primary buttons 54 px.
+- Date boxes, numbered steps and avatars are circles or soft squares in
+  Surface 2 with Optic numerals.
+- Overlapping avatar stacks for "who's going".
 
 ## 7. Voice & copy
 
-Warm, energetic, lightly punny — one pun per screen, never a pile-up.
-Controls say what they do ("Send request", "Join event"). Skill talk is real:
-NTRP for tennis, DUPR for pickleball, or Beginner / Intermediate / Advanced /
-Competitive when generic.
+Confident, plain-spoken, genuinely helpful. Warm and direct; at most one pun
+per piece, and none in safety copy. Controls say what they do ("RSVP",
+"Request to hit", "Send"). Skill talk is real: NTRP for tennis, DUPR for
+pickleball, or Beginner / Intermediate / Advanced / Competitive when generic.
 
-Sanctioned phrases: "Love at first serve." · "It's a Match Point!" (mutual
-match) · "Your serve" (your turn to reply) · "Meet on the court, not at a bar."
+Sanctioned phrases: "Serve. Rally. Connect." · "RSVP to a game and meet your
+people." · "It's a Match Point!" (mutual match) · "Your serve" (your turn to
+reply) · "Find a game. Find your people."
 
-## 8. The two surfaces
+Never: "40/LOVE", "Love at first serve", "the first date is a game" — those
+belong to the retired name.
 
-**The app — "Night Court" (founder-directed).** The product UI commits to a
-dark look set by the founder's reference design: near-black ground
-(`#0A0B0D`), dark cards (`#17191D`), a single bright Optic accent
-(`#D6F44F`) for actions and active states, white text. Mode identity comes
-from icons (heart / racquet / people), not per-mode colors. The wordmark on
-dark is white with the "o" in "Love" drawn as an Optic pickleball —
-holes, not seams (founder-directed, 2026-08-13);
-secondary tagline: **"Serve. Rally. Connect."** Verified badges use green
-`#3DC96B`; the pass/danger red `#E15A72` appears only for destructive or
-negative actions.
+## 8. The surfaces
 
-**The landing page** shares the Night Court world (founder-directed): night
-ground, Optic accents, the ball-o wordmark — one brand across the website
-and the app. The §3 court-green palette remains available for print/event
-materials where a daylight look fits.
+**The app and the website share one dark theme:** Ink ground, Surface cards,
+one Optic accent, Court text, the ball-dot wordmark. Verified badges are
+Success green; Danger red appears only for destructive or negative actions.
 
-Both surfaces are a deliberate single-theme commitment; keep contrast
-WCAG-legible everywhere.
+**Light screens** (home, event, crew in the mockups) use Court ground with
+white cards and Ink text; the same Optic accent carries across.
+
+**Print and event materials** use the same tokens; Stacked-on-lime and the club
+badge are the lockups meant for them.

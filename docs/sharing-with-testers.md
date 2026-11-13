@@ -1,4 +1,4 @@
-# Getting 40/LOVE in front of other people
+# Getting RSVPlay in front of other people
 
 Three different things get called "sending someone the app", and they cost very
 different amounts of time and money. This is the honest version of each.
@@ -39,7 +39,7 @@ Send them the prototype link. Nothing to install, nothing to sign up for.
 
 ## 2. Android — a real installable app, free
 
-This is the fastest route to someone genuinely *using* 40/LOVE on their phone.
+This is the fastest route to someone genuinely *using* RSVPlay on their phone.
 It needs a free Expo account and **no Google Play account at all**.
 
 **Do the backend first.** Without it every tester is in demo mode looking at the
@@ -125,16 +125,16 @@ Say which of the three it is, or testers will judge it against the wrong thing �
 someone who thinks the prototype is the finished app will report that "nothing
 saves" as a bug.
 
-> **Prototype:** "Here's a clickable demo of 40/LOVE — it's the real screens,
+> **Prototype:** "Here's a clickable demo of RSVPlay — it's the real screens,
 > but the players are made up and nothing you do is saved. Curious what you
 > think of the flow."
 
-> **Android build:** "Here's 40/LOVE. It's a real early build, so you'll sign up
+> **Android build:** "Here's RSVPlay. It's a real early build, so you'll sign up
 > properly and you'll be matching with the other people I've invited. Android
 > will warn you it's not from the Play Store — that's expected, tap through it."
 
 > **TestFlight:** "You'll get an email from TestFlight. Install that app first,
-> then 40/LOVE from inside it."
+> then RSVPlay from inside it."
 
 ---
 
@@ -148,7 +148,7 @@ over a free script: it reads the server logs Netlify already keeps, so there is
 nothing to install, no cookie banner to add, no third party receiving your
 visitors, and nothing that slows the page down. Turn it on:
 
-1. app.netlify.com → your **40-love** site → **Analytics**
+1. app.netlify.com → your **rsvplay** site → **Analytics**
 2. **Enable analytics** → confirm the charge
 
 It starts counting from the moment you enable it and backfills the previous 30

@@ -138,7 +138,7 @@ export default function ProfileScreen({ navigation }) {
             onBlur={() => app.updateBio(bio.trim())}
             multiline
             placeholder="Tell players what you're about — favorite courts, playing style, best post-match snack…"
-            placeholderTextColor="rgba(244,246,240,0.35)"
+            placeholderTextColor="rgba(245,244,238,0.35)"
           />
           <Text style={type.hint}>Saved automatically when you tap away.</Text>
         </View>
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2, paddingHorizontal: 7, borderRadius: 999, overflow: 'hidden',
   },
   photoTagMain: { bottom: 5, backgroundColor: colors.optic, color: colors.ink },
-  photoTagPending: { top: 5, backgroundColor: 'rgba(10,11,13,0.75)', color: colors.text },
+  photoTagPending: { top: 5, backgroundColor: 'rgba(20,22,28,0.75)', color: colors.text },
   stat: {
     flex: 1, alignItems: 'center', paddingVertical: 12,
     backgroundColor: colors.card, borderWidth: 2, borderColor: colors.line, borderRadius: 14,

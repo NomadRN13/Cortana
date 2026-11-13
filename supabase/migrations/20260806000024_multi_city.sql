@@ -1,4 +1,4 @@
--- 40/LOVE — a member can play in more than one city
+-- RSVPlay — a member can play in more than one city
 --
 -- Until now a profile had exactly one city, and both matching and meetups hung
 -- off it. Plenty of players split their time — Seattle and Spokane, LA and San

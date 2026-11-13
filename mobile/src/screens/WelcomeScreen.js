@@ -21,10 +21,10 @@ export default function WelcomeScreen({ navigation }) {
         <Text style={[type.eyebrow, { color: colors.optic }]}>Serve. Rally. Connect.</Text>
         <Wordmark size={54} bounce />
         <Text style={styles.line}>
-          Meet the racquet-sports people near you — the first date is a game, not dinner.
+          Racquet and paddle socials near you. Show up, play, and keep the people you meet.
         </Text>
         <View style={styles.score}>
-          <Text style={styles.scoreText}>40 – LOVE</Text>
+          <Text style={styles.scoreText}>RSVP · PLAY</Text>
         </View>
       </View>
       <View style={{ gap: 18 }}>
