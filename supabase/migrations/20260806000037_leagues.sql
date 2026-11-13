@@ -30,6 +30,13 @@
 --     can't be recorded against someone hidden from you.
 --   · A win moves the challenger up at most two rungs, however far the
 --     ladder shifted while the challenge was open.
+--   · A member's real rung is never handed over: the table is readable by
+--     the desk only, and join_league() answers with the rung on the ladder
+--     the caller sees. The gap between the two would count the people hidden
+--     from them.
+--   · Every path that renumbers a ladder takes the league's row lock first,
+--     so a suspension or a deleted account can't interleave with a join or a
+--     result.
 
 create table public.leagues (
   id uuid primary key default gen_random_uuid(),
@@ -79,7 +86,7 @@ create policy leagues_admin_update on public.leagues for update to authenticated
 create policy leagues_admin_delete on public.leagues for delete to authenticated using (public.is_admin());
 
 create policy league_members_select on public.league_members
-  for select to authenticated using (user_id = auth.uid() or public.is_admin());
+  for select to authenticated using (public.is_admin());
 create policy league_challenges_select on public.league_challenges
   for select to authenticated using (auth.uid() in (challenger_id, challenged_id) or public.is_admin());
 revoke insert, update, delete on public.league_members from anon, authenticated;
@@ -107,12 +114,15 @@ begin
     raise exception 'That league doesn''t exist.' using errcode = 'P0002';
   end if;
   select rung into v_rung from league_members where league_id = p_league and user_id = me;
-  if found then
-    return v_rung;
+  if not found then
+    select coalesce(max(rung), 0) + 1 into v_rung from league_members where league_id = p_league;
+    insert into league_members (league_id, user_id, rung) values (p_league, me, v_rung);
   end if;
-  select coalesce(max(rung), 0) + 1 into v_rung from league_members where league_id = p_league;
-  insert into league_members (league_id, user_id, rung) values (p_league, me, v_rung);
-  return v_rung;
+  -- The rung on the ladder the caller sees, never the real one: the gap
+  -- between the two would count the people hidden from them.
+  return (select count(*)::int from league_members m
+           where m.league_id = p_league and m.rung <= v_rung
+             and not public.hidden_from_me(m.user_id));
 end
 $$;
 
@@ -123,6 +133,9 @@ returns trigger
 language plpgsql security definer set search_path = public
 as $$
 begin
+  -- One writer per ladder at a time, whichever way the member left.
+  perform 1 from leagues
+    where id in (select league_id from gone) order by id for update;
   delete from league_challenges c
    using gone g
    where c.league_id = g.league_id and c.decided_at is null
@@ -279,6 +292,9 @@ returns trigger language plpgsql security definer set search_path = public
 as $$
 begin
   if new.suspended_at is not null and old.suspended_at is null then
+    perform 1 from leagues
+      where id in (select league_id from league_members where user_id = new.id)
+      order by id for update;
     delete from league_members where user_id = new.id;
   end if;
   return new;

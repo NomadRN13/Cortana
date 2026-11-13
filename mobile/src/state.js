@@ -212,7 +212,8 @@ function mapLeagueRow(row, standings, challenges) {
   const d = new Date(row.starts_at);
   const ladder = (Array.isArray(standings) ? standings : []).map((r) => ({
     rung: r.rung,
-    // No id for someone hidden from the member: they keep their rung, not their identity.
+    // The server leaves out anyone hidden from the member, so every row has an
+    // id and a name; the fallbacks only guard against a malformed row.
     id: r.user_id || null,
     name: r.first_name || 'Player',
     wins: r.wins || 0,

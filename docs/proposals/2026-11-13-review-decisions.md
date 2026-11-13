@@ -56,3 +56,40 @@ prototype and the phone app used to pre-select Date mode at signup. Both now
 pre-select Play; Date is something a member turns on. This follows the
 positioning ("dating is opt-in") and the review flagged the old default as a
 contradiction. Say so if you want Date pre-selected again.
+
+## 5. Who records a ladder result
+
+**What:** either of the two players records who won, once, and it cannot be
+changed. So a player can claim a win they did not earn, and the other player's
+only remedy is the desk.
+**Option A (the reviewer's):** a win is conceded, never claimed. Only the
+player who lost records the result (`report_league_result` refuses
+`p_winner = me`). The app's "You beat them?" button becomes "I lost".
+**Cost of A:** a sore loser can stall a result forever; the winner then needs
+the desk anyway. It also changes the rule printed on the challenge sheet
+("either of you records who won"), the phone app and the prototype.
+**Option B:** keep "either player", and add "dispute this result" to the
+report reasons so the desk can reverse it.
+**Recommendation:** A for the first league season; it is the convention most
+club ladders use. The database change is three lines plus a harness test.
+**Safety core:** no. **Effort:** small (migration 37, `EventsScreen.js`,
+`state.js`, the prototype, their tests).
+
+## 6. The two-rung cap is counted on the real ladder
+
+**What:** a challenge may reach two rungs up on the ladder the challenger
+*sees*, but a win moves them up at most two rungs on the *real* ladder. With a
+hidden member between the two, the winner lands one visible rung below the
+player they beat rather than on that player's rung.
+**Option A (the reviewer's):** count the cap on the challenger's visible
+ladder too, so the winner always takes the loser's rung.
+**Cost of A:** a member who can see everyone on the ladder may infer a block
+between two others from a three-rung move. A second account can already tell
+a block from a departure, so the exposure is small either way.
+**Recommendation:** A, together with decision 5, in one change to migration 37
+before any league is created.
+**Safety core:** yes (block visibility). **Effort:** small.
+
+Already done from the same finding, because it had no cost: a member's real
+rung is no longer readable (`league_members` is desk-only and `join_league()`
+answers with the visible rung).

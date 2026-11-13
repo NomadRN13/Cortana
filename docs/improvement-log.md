@@ -69,3 +69,32 @@ shipped. Agents append; nobody rewrites history.
 - **Left for the founder:** `docs/proposals/2026-11-13-review-decisions.md`.
 - **Verified:** `./scripts/healthcheck.sh --full` (result recorded in the
   commit that closes this entry).
+
+## 2026-11-13 — review, second pass: the low-severity findings
+
+- **Trigger:** the review's last verdicts came in after the hardening commit.
+  Most were already fixed by it; these were confirmed and still open.
+- **Fixed (migration 37, unreleased, edited in place):** a member's real rung
+  is no longer readable — `league_members` is desk-only and `join_league()`
+  answers with the rung on the ladder the caller sees; every path that
+  renumbers a ladder takes the league's row lock first (the leave trigger and
+  the suspension trigger).
+- **Tests added (harness section 10):** `crew_add` of a suspended member is
+  refused; the viewer's own half of the dating flag (not in Date mode, own age
+  range); each rate limit is pinned from both sides of its limit and its
+  window; members cannot update or delete ladder rows or write, decide or
+  delete challenges directly, and cannot read a challenge between two others;
+  a suspended member cannot challenge or record, her open challenge goes with
+  her, and nobody can see, challenge or record against her even if a row were
+  left behind; a catalog check that nothing added in migrations 33–38 is
+  callable by anon and that the internal helpers are callable by nobody
+  through the API (10f-ii).
+- **Health check:** fails closed when git cannot search the work tree (its
+  must-be-absent checks would otherwise pass on nothing); the quiet-hours
+  check requires the early return in `send-push`, not just the function name;
+  the dating-flag check pins the viewer-side clauses too.
+- **Left for the founder:** decisions 5 and 6 in
+  `docs/proposals/2026-11-13-review-decisions.md` (who records a ladder
+  result; counting the two-rung cap on the visible ladder).
+- **Verified:** `./scripts/test-backend.sh` — ALL BACKEND TESTS PASSED (41
+  migrations); full run recorded in the closing commit.

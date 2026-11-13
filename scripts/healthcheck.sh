@@ -24,6 +24,9 @@ for a in .claude/agents/*.md; do
 done
 
 echo "── brand"
+# The "must be absent" checks below are `! git grep`: if git cannot read this tree
+# (no .git, or "dubious ownership" in a container) they would pass on nothing.
+check "git can search this work tree (the must-be-absent checks depend on it)" git grep --untracked -q -e RSVPlay -- CLAUDE.md
 # the retired name must not come back anywhere but git history and the proposals/log that mention it by name
 residue=$(git grep --untracked -I -n -i -E "40 ?/ ?love|40%2Flove|fortylove|40love|40-love" -- . ':!presentations/' ':!scripts/healthcheck.sh' ':!docs/proposals/' ':!docs/improvement-log.md' ':!CLAUDE.md' ':!docs/brand-guide.md' ':!docs/rules-and-stops.md' ':!docs/business-plan.md' ':!docs/self-improvement-network.md' ':!netlify.toml' ':!docs/go-live-rename.md' 2>/dev/null | wc -l)
 if [ "$residue" = "0" ]; then pass "no 40/Love residue in product, docs, tests or agents"; else fail "40/Love residue: $residue line(s) (git grep -i '40/love|fortylove|40love|40-love')"; fi
@@ -64,13 +67,13 @@ check "check-in requires the waiver" grep -q "Accept the event waiver first" $M/
 check "waiver acceptances are kept on their own record" grep -q "insert into waiver_acceptances" $M/20260806000033_checkin_waiver_crew.sql
 check "five wrong check-in codes lock check-in" grep -q "max_tries constant int := 5" $M/20260806000033_checkin_waiver_crew.sql
 check "check-in codes have exactly one policy, and it is admin-only" bash -c "[ \"\$(cat $M/*.sql | grep -c 'on public.event_checkin_codes\$')\" = 1 ] && grep -A2 'create policy checkin_codes_admin' $M/20260806000033_checkin_waiver_crew.sql | grep -q 'using (public.is_admin()) with check (public.is_admin())'"
-check "crew dating flag is mutual, age-checked and server-decided" bash -c "grep -q 'p.gender = any (me.seeking) and me.gender = any (p.seeking)' $M/20260806000033_checkin_waiver_crew.sql && grep -q 'age_of(me.birthdate) between p.age_min and p.age_max' $M/20260806000033_checkin_waiver_crew.sql"
+check "crew dating flag is mutual, age-checked and server-decided" bash -c "grep -q 'p.gender = any (me.seeking) and me.gender = any (p.seeking)' $M/20260806000033_checkin_waiver_crew.sql && grep -q 'age_of(me.birthdate) between p.age_min and p.age_max' $M/20260806000033_checkin_waiver_crew.sql && grep -q \"'date' = any (me.modes) and 'date' = any (p.modes)\" $M/20260806000033_checkin_waiver_crew.sql && grep -q 'age_of(p.birthdate) between me.age_min and me.age_max' $M/20260806000033_checkin_waiver_crew.sql"
 check "crew, attempts, waiver record and rate log are not readable through the API" bash -c "for t in crew_adds event_checkin_attempts waiver_acceptances rate_events banned_phones app_settings; do cat $M/*.sql | grep -q \"revoke all on public.\$t from anon, authenticated\" || exit 1; cat $M/*.sql | grep -q -E \"create policy .* on public\\.\$t\" && exit 1; done; exit 0"
 check "a banned number never verifies" grep -q "exists (select 1 from banned_phones where phone_hash = public.phone_ban_hash(v_phone))" $M/20260806000034_phone_bans.sql
 check "a suspended member cannot shed it by deleting" grep -q "Deleted while suspended" $M/m23_ban_survives_deletion.sql
 check "rate limits pinned: 500 swipes/24h, 20 reports/24h, 60 messages/min" bash -c "grep -q \"'swipe', 500, interval '24 hours'\" $M/20260806000035_rate_limits.sql && grep -q \"'report', 20, interval '24 hours'\" $M/20260806000035_rate_limits.sql && grep -q \"'message', 60, interval '1 minute'\" $M/20260806000035_rate_limits.sql"
 check "rate limits use the server's clock" bash -c "grep -q 'new.created_at := now()' $M/20260806000035_rate_limits.sql && grep -q 'new.sent_at := now()' $M/20260806000035_rate_limits.sql"
-check "quiet hours pinned to 10pm-8am and enforced by the push function" bash -c "grep -q 'in_quiet_hours' supabase/functions/send-push/index.ts && grep -q '>= 22' $M/20260806000036_quiet_hours.sql && grep -q '< 8' $M/20260806000036_quiet_hours.sql"
+check "quiet hours pinned to 10pm-8am and enforced by the push function" bash -c "grep -q 'rpc(\"in_quiet_hours\"' supabase/functions/send-push/index.ts && grep -q 'if (quiet === true) return new Response' supabase/functions/send-push/index.ts && grep -q '>= 22' $M/20260806000036_quiet_hours.sql && grep -q '< 8' $M/20260806000036_quiet_hours.sql"
 check "ladder: two rungs, closes up on any departure, block ends a challenge" bash -c "grep -q 'greatest(hi, lo - 2)' $M/20260806000037_leagues.sql && grep -q 'create trigger league_members_close_up' $M/20260806000037_leagues.sql && grep -q 'create trigger blocks_end_league_challenges' $M/20260806000037_leagues.sql"
 check "members cannot set their own tier" grep -q "create trigger profiles_guard_tier" $M/20260806000038_membership_tiers.sql
 check "a verified phone is required to swipe, message, RSVP, enter or join" bash -c "for t in swipes messages event_rsvps tournament_entries league_members; do grep -q \"create trigger \${t}_require_phone\" $M/20260806000039_require_verified_phone.sql || exit 1; done"

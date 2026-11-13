@@ -3075,6 +3075,24 @@ set role authenticated;
 do $$ begin assert not (select also_open_to_dating from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000902'), 'flag true with their Date mode off'; end $$;
 reset role;
 update profiles set modes = '{date,play}' where id = '00000000-0000-4000-8000-000000000902';
+-- The viewer's own half. Until here the viewer was always in Date mode and in
+-- range, so nothing checked what someone outside Date mode is told.
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000903';  -- Moe: Play only, otherwise a fit for Kit
+do $$ begin
+  assert exists (select 1 from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000901'), 'Kit is missing from Moe''s crew';
+  assert not exists (select 1 from get_my_crew() where also_open_to_dating is not false),
+    'a member who is not in Date mode was told who in their crew is';
+end $$;
+reset role;
+update profiles set age_min = 18, age_max = 20 where id = '00000000-0000-4000-8000-000000000901';   -- Lou is outside Kit's age range
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
+do $$ begin assert not (select also_open_to_dating from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000902'), 'flag true outside my own age range'; end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000902';
+do $$ begin assert not (select also_open_to_dating from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000901'), 'flag true though I am outside their age range'; end $$;
+reset role;
+update profiles set age_min = 25, age_max = 55 where id = '00000000-0000-4000-8000-000000000901';
 set request.jwt.claim.sub = '';
 insert into blocks (blocker_id, blocked_id) values ('00000000-0000-4000-8000-000000000903', '00000000-0000-4000-8000-000000000901');  -- Moe blocks Kit
 set role authenticated;
@@ -3142,6 +3160,11 @@ end $$;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
 do $$ begin
   assert not exists (select 1 from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000902'), 'a suspended member is still in my crew';
+  begin
+    perform crew_add('00000000-0000-4000-8000-000000000902');
+    assert false, 'crew_add accepted a suspended member';
+  exception when invalid_parameter_value then null;
+  end;
   assert not unban_member('00000000-0000-4000-8000-000000000902'), 'a non-admin lifted a ban';
 end $$;
 reset role;
@@ -3283,9 +3306,14 @@ delete from reports where target_id = '00000000-0000-4000-8000-000000000901';
 
 -- ---- 10d. Rate limits (migration 35) ----
 insert into matches (id, user_a, user_b, mode) values ('00000000-0000-4000-8000-0000000009b1', '00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000904', 'play');
-insert into rate_events (user_id, kind) select '00000000-0000-4000-8000-000000000901', 'report'  from generate_series(1, 20);
-insert into rate_events (user_id, kind) select '00000000-0000-4000-8000-000000000901', 'message' from generate_series(1, 60);
-insert into rate_events (user_id, kind) select '00000000-0000-4000-8000-000000000901', 'swipe'   from generate_series(1, 500);
+-- One short of each limit just INSIDE its window, and a full limit's worth just
+-- OUTSIDE it: the next one must go through and the one after must not.
+insert into rate_events (user_id, kind, at) select '00000000-0000-4000-8000-000000000901', 'report',  now() - interval '23 hours 59 minutes' from generate_series(1, 19);
+insert into rate_events (user_id, kind, at) select '00000000-0000-4000-8000-000000000901', 'report',  now() - interval '24 hours 1 minute'   from generate_series(1, 20);
+insert into rate_events (user_id, kind, at) select '00000000-0000-4000-8000-000000000901', 'message', now() - interval '50 seconds'          from generate_series(1, 59);
+insert into rate_events (user_id, kind, at) select '00000000-0000-4000-8000-000000000901', 'message', now() - interval '2 minutes'           from generate_series(1, 60);
+insert into rate_events (user_id, kind, at) select '00000000-0000-4000-8000-000000000901', 'swipe',   now() - interval '23 hours 59 minutes' from generate_series(1, 499);
+insert into rate_events (user_id, kind, at) select '00000000-0000-4000-8000-000000000901', 'swipe',   now() - interval '24 hours 1 minute'   from generate_series(1, 500);
 set role authenticated;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
 do $$
@@ -3295,6 +3323,11 @@ begin
     assert false, 'a member can read the rate log';
   exception when insufficient_privilege then null;
   end;
+  -- The last one inside each limit goes through...
+  perform report_member('00000000-0000-4000-8000-000000000905', 'the twentieth');
+  insert into messages (match_id, sender_id, body) values ('00000000-0000-4000-8000-0000000009b1', '00000000-0000-4000-8000-000000000901', 'the sixtieth');
+  insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000909', 'play', 'pass');
+  -- ...and the next one does not.
   begin
     perform report_member('00000000-0000-4000-8000-000000000905', 'one too many');
     assert false, 'a 21st report in a day went through';
@@ -3341,6 +3374,7 @@ end $$;
 delete from rate_events;
 delete from reports where reporter_id in ('00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000904');
 delete from swipes where actor_id = '00000000-0000-4000-8000-000000000904';
+delete from swipes where actor_id = '00000000-0000-4000-8000-000000000901' and target_id = '00000000-0000-4000-8000-000000000909';
 delete from matches where id = '00000000-0000-4000-8000-0000000009b1';
 
 -- ---- 10e. Quiet hours (migration 36) ----
@@ -3412,8 +3446,12 @@ set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
 do $$
 declare c uuid;
 begin
-  assert join_league('00000000-0000-4000-8000-0000000009a1') = 5, 'a new member did not take the bottom rung';
-  assert join_league('00000000-0000-4000-8000-0000000009a1') = 5, 'joining twice moved the rung';
+  -- Fifth on the real ladder, fourth on the one Kit sees (no Moe): the answer
+  -- is the visible rung, or the difference would count who is hidden from her.
+  assert join_league('00000000-0000-4000-8000-0000000009a1') = 4, 'join_league handed over the real rung, or not the bottom one';
+  assert join_league('00000000-0000-4000-8000-0000000009a1') = 4, 'joining twice moved the rung';
+  assert join_league('00000000-0000-4000-8000-0000000009a1') = (select rung from get_league_standings('00000000-0000-4000-8000-0000000009a1') where is_me),
+    'join_league and the standings disagree about my rung';
   -- Kit's ladder has no Moe on it and no gap where he would be.
   assert (select array_agg(first_name order by rung) from get_league_standings('00000000-0000-4000-8000-0000000009a1'))
          = array['Oz', 'Sol', 'Nia', 'Kit'], 'the ladder shows someone hidden, or a masked row';
@@ -3436,12 +3474,43 @@ begin
     assert false, 'two open challenges between the same pair';
   exception when unique_violation then null;
   end;
-  assert (select count(*) from league_members) = 1, 'a member can read other members'' rows';
+  assert (select count(*) from league_members) = 0, 'a member can read ladder rows directly';
   begin
     insert into league_members (league_id, user_id, rung) values ('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000901', 1);
     assert false, 'a member wrote a ladder row';
   exception when insufficient_privilege then null;
   end;
+  begin
+    update league_members set rung = 1 where user_id = '00000000-0000-4000-8000-000000000901';
+    assert false, 'a member moved their own rung';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    delete from league_members where user_id = '00000000-0000-4000-8000-000000000901';
+    assert false, 'a member deleted a ladder row';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into league_challenges (league_id, challenger_id, challenged_id)
+    values ('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000905');
+    assert false, 'a member wrote a challenge directly';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update league_challenges set winner_id = '00000000-0000-4000-8000-000000000901', decided_at = now() where id = c;
+    assert false, 'a member decided a challenge directly';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    delete from league_challenges where id = c;
+    assert false, 'a member deleted a challenge';
+  exception when insufficient_privilege then null;
+  end;
+  assert (select count(*) from league_challenges) = 1, 'a player cannot see their own challenge';
+end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000904';
+do $$ begin
+  assert (select count(*) from league_challenges) = 0, 'a member can read a challenge between two other people';
 end $$;
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
 do $$ begin
@@ -3488,13 +3557,64 @@ end $$;
 delete from blocks where blocker_id = '00000000-0000-4000-8000-000000000909' and blocked_id = '00000000-0000-4000-8000-000000000901';
 -- Suspension, a deleted account and leaving all close the ladder up.
 set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000904';  -- Nia opens a challenge, then is suspended
+select set_config('test.nia_challenge', league_challenge('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000909')::text, false);
 set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000905';
 select suspend_member('00000000-0000-4000-8000-000000000904', 'test');
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000904';
+do $$ begin
+  begin
+    perform league_challenge('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000909');
+    assert false, 'a suspended member made a challenge';
+  exception when insufficient_privilege then
+    assert sqlerrm like '%suspended%', 'a suspended challenger was refused for another reason: ' || sqlerrm;
+  end;
+  begin
+    perform report_league_result(current_setting('test.nia_challenge')::uuid, '00000000-0000-4000-8000-000000000904');
+    assert false, 'a suspended member recorded a result';
+  exception when insufficient_privilege then
+    assert sqlerrm like '%suspended%', 'a suspended player was refused for another reason: ' || sqlerrm;
+  end;
+end $$;
 reset role;
 do $$ begin
+  assert not exists (select 1 from league_challenges where id = current_setting('test.nia_challenge')::uuid),
+    'a suspended member''s open challenge survived the suspension';
   assert (select array_agg(user_id order by rung) from league_members where league_id = '00000000-0000-4000-8000-0000000009a1')
          = array['00000000-0000-4000-8000-000000000905', '00000000-0000-4000-8000-000000000909', '00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000903']::uuid[], 'a suspended member stayed on the ladder';
   assert (select max(rung) from league_members where league_id = '00000000-0000-4000-8000-0000000009a1') = 4, 'suspension left a gap';
+end $$;
+-- The belt behind that brace: even if a suspended member were still on the
+-- ladder, nobody sees her, challenges her or records a result against her.
+insert into league_members (league_id, user_id, rung) values ('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000904', 5);
+insert into league_challenges (id, league_id, challenger_id, challenged_id)
+  values ('00000000-0000-4000-8000-0000000009c9', '00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000904');
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000903';
+do $$ begin
+  assert not exists (select 1 from get_league_standings('00000000-0000-4000-8000-0000000009a1') where user_id = '00000000-0000-4000-8000-000000000904'),
+    'a suspended member is named in the standings';
+  begin
+    perform league_challenge('00000000-0000-4000-8000-0000000009a1', '00000000-0000-4000-8000-000000000904');
+    assert false, 'a suspended member was challenged';
+  exception when invalid_parameter_value then
+    assert sqlerrm like '%isn''t someone%', 'a suspended target got its own answer: ' || sqlerrm;
+  end;
+end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
+do $$ begin
+  begin
+    perform report_league_result('00000000-0000-4000-8000-0000000009c9', '00000000-0000-4000-8000-000000000901');
+    assert false, 'a result was recorded against a suspended member';
+  exception when no_data_found then null;
+  end;
+end $$;
+reset role;
+set request.jwt.claim.sub = '';
+delete from league_members where league_id = '00000000-0000-4000-8000-0000000009a1' and user_id = '00000000-0000-4000-8000-000000000904';
+do $$ begin
+  assert (select count(*) from league_challenges where league_id = '00000000-0000-4000-8000-0000000009a1' and decided_at is null) = 0
+     and (select max(rung) from league_members where league_id = '00000000-0000-4000-8000-0000000009a1') = 4, 'the belt test did not clean up';
 end $$;
 set request.jwt.claim.sub = '';
 delete from auth.users where id = '00000000-0000-4000-8000-000000000909';
@@ -3522,6 +3642,37 @@ do $$ begin
   end;
 end $$;
 reset role;
+
+-- ---- 10f-ii. Nothing added in migrations 33-38 is callable by anon, and the
+-- internal helpers are callable by nobody through the API. Read from the
+-- catalog so a new RPC only has to be added to the list. ----
+do $$
+declare
+  rpcs text[] := array[
+    'accept_event_waiver', 'check_in_event', 'admin_check_in', 'get_my_event_stamps', 'current_waiver_version',
+    'set_event_checkin_code', 'get_my_crew', 'crew_add', 'crew_remove', 'ban_member', 'unban_member',
+    'report_member', 'set_my_timezone', 'join_league', 'leave_league', 'get_league_standings',
+    'league_challenge', 'report_league_result', 'set_member_tier'];
+  internal text[] := array[
+    'is_desk', 'shared_a_court', 'event_rsvps_guard_member_writes', 'phone_ban_hash', 'enforce_phone_ban',
+    'profiles_phone_ban', 'rate_limit_take', 'rate_limit_swipes', 'rate_limit_messages', 'in_quiet_hours',
+    'profiles_check_timezone', 'league_members_close_up', 'blocks_end_league_challenges',
+    'profiles_suspension_leaves_leagues', 'profiles_guard_tier', 'enforce_event_priority'];
+  bad text;
+begin
+  assert (select count(distinct proname) from pg_proc where pronamespace = 'public'::regnamespace and proname = any (rpcs || internal))
+         = cardinality(rpcs || internal), 'a function in the 10f-ii list no longer exists; update the list';
+  select string_agg(p.oid::regprocedure::text, ', ') into bad
+    from pg_proc p
+   where p.pronamespace = 'public'::regnamespace and p.proname = any (rpcs || internal)
+     and has_function_privilege('anon', p.oid, 'execute');
+  assert bad is null, format('anon can execute %s', bad);
+  select string_agg(p.oid::regprocedure::text, ', ') into bad
+    from pg_proc p
+   where p.pronamespace = 'public'::regnamespace and p.proname = any (internal)
+     and has_function_privilege('authenticated', p.oid, 'execute');
+  assert bad is null, format('a member can execute %s', bad);
+end $$;
 
 -- ---- 10g. Tiers and priority signup (migration 38) ----
 set request.jwt.claim.sub = '';

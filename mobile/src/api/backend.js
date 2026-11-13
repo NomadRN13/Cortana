@@ -657,8 +657,9 @@ export async function leaveLeague(leagueId) {
 
 // The ladder, top rung first.
 //   → [{ rung, user_id, first_name, wins, losses, is_me }]
-// Someone hidden from me (a block either way) keeps their rung but comes back
-// with no user_id and the name "Player".
+// Someone hidden from me (a block either way, or a suspension) is left out
+// altogether, and the rest are numbered 1, 2, 3 — the rung is the one on the
+// ladder I can see, never the real one.
 export async function fetchLeagueStandings(leagueId) {
   const { data, error } = await supabase.rpc('get_league_standings', { p_league: leagueId });
   if (error) throw error;
