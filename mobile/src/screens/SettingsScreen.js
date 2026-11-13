@@ -7,9 +7,8 @@ import { Chip } from '../components/ui';
 import { useApp, ageFromBirthdate, citiesOf } from '../state';
 import { parseBirthdate, formatBirthdateInput, birthdateToText } from '../lib/birthdate';
 import { CITIES, DEFAULT_CITY } from '../data/cities';
-import { isBackendConfigured } from '../lib/supabase';
-import * as api from '../api/backend';
 import { LINKS, openLink } from '../lib/links';
+import { confirmDeleteAccount } from '../lib/account';
 
 const GENDERS = [
   { key: 'woman', label: 'Woman' },
@@ -184,28 +183,7 @@ export default function SettingsScreen({ navigation }) {
     ]);
   };
 
-  const deleteAccount = () => {
-    Alert.alert(
-      'Delete your account?',
-      'This permanently deletes your profile, matches, and messages. It cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete forever',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              if (isBackendConfigured) await api.deleteAccount();
-              app.signOut();
-              navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
-            } catch (e) {
-              Alert.alert('Couldn’t delete your account', (e && e.message) || 'Check your connection and try again.');
-            }
-          },
-        },
-      ]
-    );
-  };
+  const deleteAccount = () => confirmDeleteAccount({ app, navigation });
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.night }} edges={['top']}>
@@ -501,6 +479,11 @@ export default function SettingsScreen({ navigation }) {
         </Group>
 
         <Group title="Safety and legal">
+          <Pressable onPress={() => navigation.navigate('Rules')} accessibilityRole="button" accessibilityLabel="House rules & safety">
+            <Row label="House rules & safety" sub="Seven rules, the same in every city">
+              <Ionicons name="chevron-forward" size={18} color={colors.dim} />
+            </Row>
+          </Pressable>
           {[
             { label: 'Safety tips', url: LINKS.safety, icon: 'shield-checkmark-outline' },
             { label: 'Terms of Service', url: LINKS.terms, icon: 'document-text-outline' },

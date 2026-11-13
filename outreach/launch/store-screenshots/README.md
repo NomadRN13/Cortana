@@ -1,16 +1,29 @@
-# Store screenshots — v0.1 listing set
+# Store screenshots — 1.0 listing set
 
-Five screenshots at **1290×2796** (Apple's required 6.7" iPhone size; Google
-Play accepts the same images):
+Rendered from the real phone app (`mobile/`), not the prototype: the Expo
+app's web build at phone size, in demo mode, walked from signup through
+check-in. The "Demo:" notes the demo build shows are hidden, because the live
+app never shows them. Sample players appear as initials, not photos.
 
-1. `01-welcome.png` — welcome with the three modes
-2. `02-discover.png` — the deck (card stack, distance, skill)
-3. `03-match.png` — It's a Match Point! moment
-4. `04-chat.png` — chat with a court-time proposal card
-5. `05-events.png` — Indy events with an expanded card
+| Set | Size | Use |
+|---|---|---|
+| `ios-*.png` | 1320 × 2868 | App Store, iPhone 6.9" (the one size Apple requires) |
+| `android-*.png` | 1080 × 2340 | Google Play, phone |
 
-**Provenance note:** captured from the design prototype, which the native app
-mirrors 1:1 by design. Before final store submission, retake these from the
-real app on a device or simulator (App Review expects screenshots that match
-the shipped binary) — same flows, same five moments. These are for preparing
-the listing now so submission day is copy-paste.
+Order, the same for both stores:
+
+1. `1-welcome` — Serve. Rally. Connect., the three modes, Date opt-in
+2. `2-home-events` — this week on the courts, RSVP first
+3. `3-event-detail` — an event: venue, how the night works, who's going
+4. `4-checked-in` — checked in with the host's code; see your crew
+5. `5-crew` — the people you shared a court with, then your matches
+6. `6-bracket` — a tournament bracket, round by round
+7. `7-ladder` — a ladder league's standings
+8. `8-profile` — your card, phone verified, photos
+
+Feature graphic (Play, 1024 × 500): `mobile/assets/play-feature-graphic.png`.
+
+To retake after an app change: rebuild the web export and run the screenshot
+script (ask any session to "retake the store screenshots"). Once real members
+with approved photos exist, a set taken on a device will look better; these
+are accurate to the shipped screens either way.

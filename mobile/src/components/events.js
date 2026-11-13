@@ -1,5 +1,7 @@
 // One event card, used by Home ("This week on the courts") and by the Events
 // tab — the same card and the same RSVP in both, so the two can't drift apart.
+// Tapping the card's title opens the event's own screen (EventDetailScreen),
+// which draws the same action from useEventAction below.
 // Under the card sits whichever step comes next:
 //   RSVP        → the waiver line, which has to be ticked before it counts
 //   Going       → Check in, with the code the host reads out at the event
@@ -10,7 +12,7 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, TextInput, Modal, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, type, radii } from '../theme';
-import { Tag, Avatar, Btn } from './ui';
+import { Tag, Btn } from './ui';
 import { cityLabel } from '../data/cities';
 import { WAIVER_INTRO, WAIVER_POINTS, WAIVER_VERSION } from '../data/waiver';
 
@@ -86,18 +88,19 @@ function WaiverLine({ ticked, onToggle, onRead }) {
   );
 }
 
-export function EventCard({ app, e, expanded, onToggle, showCity, onSeeCrew }) {
-  // Which step is open under the card: 'rsvp' (waiver line, not going yet) or
-  // 'checkin' (waiver line if there's none on record, then the code).
+// The action half of an event: the button on the right (RSVP / Going ✓ /
+// Checked in ✓) and whichever step sits under it (waiver line, check-in code,
+// the way through to the crew). The card and the event detail screen both draw
+// it from here, so the RSVP → waiver → check-in rules exist once.
+export function useEventAction({ app, e, onSeeCrew }) {
+  // Which step is open: 'rsvp' (waiver line, not going yet) or 'checkin'
+  // (waiver line if there's none on record, then the code).
   const [step, setStep] = useState(null);
   const [ticked, setTicked] = useState(false);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [reading, setReading] = useState(false);
 
-  const attendees = expanded ? app.eventAttendees(e.id) : [];
-  const price = priceLabel(e.priceCents);
-  const saving = clubSavingLabel(e.clubDiscountPct);
   const opensToAll = earlyAccessUntil(e);
   // Club members can RSVP during early access; everyone else waits. The
   // server enforces it — this only saves a tap that would be refused.
@@ -247,14 +250,25 @@ export function EventCard({ app, e, expanded, onToggle, showCity, onSeeCrew }) {
     );
   }
 
+  const sheet = <WaiverSheet visible={reading} onClose={() => setReading(false)} />;
+  return { side, below, sheet, open: !!step, opensToAll };
+}
+
+// Tapping the date and title opens the event's own screen (EventDetailScreen);
+// the action on the right works in place, exactly as it does there.
+export function EventCard({ app, e, onOpen, showCity, onSeeCrew }) {
+  const { side, below, sheet, open, opensToAll } = useEventAction({ app, e, onSeeCrew });
+  const price = priceLabel(e.priceCents);
+  const saving = clubSavingLabel(e.clubDiscountPct);
+
   return (
-    <View style={[styles.event, (expanded || !!step) && { borderColor: colors.optic }]}>
+    <View style={[styles.event, open && { borderColor: colors.optic }]}>
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <Pressable
           style={{ flex: 1, flexDirection: 'row', gap: 12 }}
-          onPress={onToggle}
+          onPress={onOpen}
           accessibilityRole="button"
-          accessibilityState={{ expanded: !!expanded }}
+          accessibilityLabel={`${e.title}: see the details`}
         >
           <View style={styles.date}>
             <Text style={{ fontSize: 10, fontWeight: '800', color: colors.dim, letterSpacing: 0.6 }}>{String(e.dow || '').toUpperCase()}</Text>
@@ -277,21 +291,6 @@ export function EventCard({ app, e, expanded, onToggle, showCity, onSeeCrew }) {
                 <Text style={{ color: colors.optic, fontWeight: '700', fontSize: 12.5 }}>{saving}</Text>
               </View>
             )}
-            {expanded && (
-              <View style={{ gap: 8, marginTop: 6 }}>
-                {!!e.desc && <Text style={[type.hint, { fontSize: 12.5 }]}>{e.desc}</Text>}
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  {attendees.map((a, i) => (
-                    <View key={a.id} style={{ marginLeft: i ? -10 : 0 }}>
-                      <Avatar id={a.id} name={a.name} size={26} />
-                    </View>
-                  ))}
-                  <Text style={[type.hint, { fontSize: 12, marginLeft: attendees.length ? 6 : 0 }]}>
-                    {attendees.length ? '+' : ''}{e.goingCount || 0} going{e.going ? ' · including you' : ''}
-                  </Text>
-                </View>
-              </View>
-            )}
           </View>
         </Pressable>
         <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', gap: 8 }}>
@@ -300,7 +299,7 @@ export function EventCard({ app, e, expanded, onToggle, showCity, onSeeCrew }) {
         </View>
       </View>
       {below}
-      <WaiverSheet visible={reading} onClose={() => setReading(false)} />
+      {sheet}
     </View>
   );
 }

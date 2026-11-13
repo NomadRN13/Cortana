@@ -317,22 +317,22 @@ review notes fields. Same substance for both.
 > city to add it, then tap Indianapolis to drop it, to see the scoping work
 > (the app keeps at least one city selected, so add before you drop).
 >
-> **Review account:** [FILL IN — email + fixed one-time code, once the
-> review account is seeded]
+> **Review account:** email `review@rsvplay.app`, code `[FILL IN — the
+> six digits set in docs/store-submission.md §4]`. Enter the email on the
+> sign-in screen, tap Send code, then type those six digits. No email is
+> sent to this address.
 >
 > **Sign-in note:** RSVPlay offers three ways in, all passwordless: an
 > emailed one-time code, Sign in with Apple, and Continue with Google.
 > Sign in with Apple is offered wherever Google is, per Guideline 4.8. So that you don't need access to a live inbox, the review
 > account above accepts the fixed code listed with the credentials at the
-> verification step. [FILL IN — confirm the fixed-OTP bypass is configured
-> for the review account before submission.]
+> verification step.
 >
 > **Phone verification note:** new signups verify a phone number by SMS
 > (anti-fake-account measure; the number is never shown to other members).
-> The review account is already past this step, so no phone or SMS access
-> is needed to review. [FILL IN — confirm the review account is seeded
-> with a verified phone, or configure Supabase's test-phone fixed OTP for
-> it, before submission.]
+> At the "Prove you're real" step, use the test number `(317) 555-0100`
+> and the code `[FILL IN — the fixed code from docs/store-submission.md
+> §4]`. No SMS is sent and no phone is needed.
 >
 > **Safety features, where to find them:**
 > - Block / Report: on any profile card in the Discover deck, and from any

@@ -46,6 +46,8 @@ echo
 node demo.test.js
 echo
 node screens.test.js
+echo
+node review.test.js
 
 echo
 echo "✅ App suites passed."

@@ -64,7 +64,7 @@ that get dating apps rejected, and how RSVPlay already answers them:
 | Account deletion **in the app** | Apple 5.1.1(v) · Play account-deletion policy | Must be a Settings button, not an email request. In the architecture (§9); make sure it ships in v1. |
 | Privacy questionnaires: declare every data type collected | App Privacy "nutrition labels" · Play Data Safety form | The architecture's minimal-PII design (coarse location only, no last names) makes these forms short and honest. Fill them accurately — mismatches trigger rejections. |
 | No surprise subscriptions | Both | MVP is free; when premium arrives it must use in-app purchase (stores take 15–30%), with clear pricing. |
-| Real content at review time | Apple 2.1 | Reviewers log into a dating app with a test account. Provide one pre-seeded with a few profiles in range and include notes: "Community launches city-by-city; review account is set to Indianapolis." |
+| Real content at review time | Apple 2.1 | Reviewers sign in with a test account (`docs/store-submission.md` §4) and must find something real: at least three real upcoming Indianapolis events, and real early members (you, your testers) with approved photos. Never seed invented people into the live project. Notes: "Community launches city-by-city; review account is set to Indianapolis." |
 
 One more Apple-specific note: thin apps that are just a website wrapper get
 rejected under guideline 4.2 (minimum functionality) — this is why the path

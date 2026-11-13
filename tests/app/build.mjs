@@ -38,7 +38,10 @@ const byBasename = {
 
 // The backend stub is generated from whatever state.js actually calls, so a new
 // api.something() doesn't quietly break the build — it just gets a stub too.
-const stateSrc = fs.readFileSync(path.join(src, 'state.js'), 'utf8');
+// That includes the screens and helpers bundled below (Settings and the house
+// rules screen delete an account through lib/account.js, not state.js).
+const apiUsers = ['state.js', 'lib/account.js'];
+const stateSrc = apiUsers.map((f) => fs.readFileSync(path.join(src, f), 'utf8')).join('\n');
 const names = [...new Set([...stateSrc.matchAll(/\bapi\.([a-zA-Z_]+)/g)].map((m) => m[1]))].sort();
 const SUBSCRIPTIONS = ['subscribeToMessages', 'subscribeToNotifications'];
 const apiStub = `
@@ -72,6 +75,11 @@ export { default as HomeScreen } from ${JSON.stringify(path.join(src, 'screens',
 export { default as EventsScreen } from ${JSON.stringify(path.join(src, 'screens', 'EventsScreen.js'))};
 export { default as MatchesScreen } from ${JSON.stringify(path.join(src, 'screens', 'MatchesScreen.js'))};
 export { default as ProfileScreen } from ${JSON.stringify(path.join(src, 'screens', 'ProfileScreen.js'))};
+export { default as EventDetailScreen, descSteps, shareText } from ${JSON.stringify(path.join(src, 'screens', 'EventDetailScreen.js'))};
+export { default as SettingsScreen } from ${JSON.stringify(path.join(src, 'screens', 'SettingsScreen.js'))};
+export { default as RulesScreen, HOUSE_RULES } from ${JSON.stringify(path.join(src, 'screens', 'RulesScreen.js'))};
+export { shares, opened } from 'react-native';
+export { priceLabel } from ${JSON.stringify(path.join(src, 'components', 'events.js'))};
 `;
 
 // `overrides` swaps individual stubs for one bundle — the demo build is the

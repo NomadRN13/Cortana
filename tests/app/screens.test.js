@@ -39,25 +39,33 @@ function textOf(node) {
 
 // A screen mounted inside the real provider, with helpers to read and press it.
 function harness(bundle) {
-  const h = { app: null, navs: [], renderer: null, alerts: bundle.alerts, calls: bundle.calls, impl: bundle.impl };
-  const navigation = { navigate: (name) => h.navs.push(name), addListener: () => () => {} };
+  const h = { app: null, navs: [], params: [], backs: 0, resets: [], renderer: null, alerts: bundle.alerts, calls: bundle.calls, impl: bundle.impl };
+  const navigation = {
+    navigate: (name, params) => { h.navs.push(name); h.params.push(params); },
+    goBack: () => { h.backs += 1; },
+    reset: (state) => h.resets.push(state),
+    addListener: () => () => {},
+  };
   // Nothing is drawn until there is a member, as in the app's navigator.
-  function Gate({ screen }) {
+  function Gate({ screen, route }) {
     const app = bundle.useApp();
     h.app = app;
-    return app.user && screen ? React.createElement(screen, { navigation }) : null;
+    return app.user && screen ? React.createElement(screen, { navigation, route }) : null;
   }
-  function Root({ screen }) {
-    return React.createElement(bundle.AppStateProvider, null, React.createElement(Gate, { screen }));
+  function Root({ screen, route }) {
+    return React.createElement(bundle.AppStateProvider, null, React.createElement(Gate, { screen, route }));
   }
   h.mount = async (screen) => {
     await act(async () => { h.renderer = TestRenderer.create(React.createElement(Root, { screen })); });
     await act(async () => { await tick(80); });
   };
-  h.show = async (screen) => {
-    await act(async () => { h.renderer.update(React.createElement(Root, { screen })); });
+  // `route` is what the navigator would hand the screen ({ params }).
+  h.show = async (screen, route) => {
+    await act(async () => { h.renderer.update(React.createElement(Root, { screen, route })); });
     await act(async () => { await tick(); });
   };
+  // Where the last navigate() went, and with what.
+  h.lastNav = () => ({ name: h.navs[h.navs.length - 1], params: h.params[h.params.length - 1] });
   h.text = () => textOf(h.renderer.toJSON());
   h.all = (type) => h.renderer.root.findAll((n) => n.type === type);
   const label = (n) => n.props.accessibilityLabel || '';
@@ -227,6 +235,90 @@ async function demo() {
   await h.show(B.ProfileScreen);
   check('the profile shows the member’s tier', h.text().includes('Free member'), h.text().slice(0, 200));
   check('the demo never called the backend', B.calls.length === 0, B.calls.map((c) => c.name));
+
+  // ---------- Event detail: opened from a card, same RSVP as the card ----------
+  await h.show(B.HomeScreen);
+  const ev = h.app.events[1];
+  check('the second event on Home is free and not yet joined (the setup this section needs)', ev.priceCents == null && !ev.going && !!ev.desc, ev);
+  await h.press(`${ev.title}: see the details`);
+  const nav = h.lastNav();
+  check('tapping an event card opens its detail screen', nav.name === 'EventDetail' && nav.params && nav.params.id === ev.id, nav);
+  await h.show(B.EventDetailScreen, { params: nav.params });
+  t = h.text();
+  check('the detail shows the event’s title, venue, day and time', t.includes(ev.title) && t.includes(ev.venue) && t.includes(`${ev.dow} ${ev.dom} · ${ev.time}`), t.slice(0, 300));
+  check('and its sport and level', t.includes(ev.sport) && t.includes(ev.level));
+  const steps = B.descSteps(ev.desc);
+  check('"How the night works" is the event’s own description, split only at sentence ends', t.includes('How the night works') && steps.length > 1 && steps.join(' ') === ev.desc && steps.every((x) => t.includes(x)), steps);
+  check('a sentence split never breaks a rating or an abbreviation', B.descSteps('NTRP 3.0–4.0 only. Int. and up welcome! Bring water.').length === 3 && B.descSteps('').length === 0 && B.descSteps('One line').join() === 'One line');
+  check('spots left and the show-up line are there', t.includes(`${ev.spotsLeft} spots left`) && t.includes('RSVP means show up. Check in with the host’s code when you arrive.'));
+  check('a free event shows no price and no Club saving', !/\$\d/.test(t) && !/Club members save/.test(t), t.match(/\$\d[\d.]*|Club members save \d+%/g));
+  B.shares.length = 0;
+  await h.press('Share event');
+  const msg = B.shares[0] && B.shares[0].message;
+  check('Share sends the title, day, time and venue, and no made-up link', !!msg && [ev.title, `${ev.dow} ${ev.dom}`, ev.time, ev.venue].every((x) => msg.includes(x)) && !/https?:/.test(msg), msg);
+
+  B.alerts.length = 0;
+  await h.press(`RSVP to ${ev.title}`);
+  check('RSVP on the detail opens the waiver line', h.text().includes('I’ve read the event waiver and code of conduct') && !h.app.events[1].going);
+  await h.press('Confirm RSVP');
+  check('without the tick it is refused, as on the card', !h.app.events[1].going && B.alerts.length === 1 && /Tick the box first/.test(B.alerts[0].title), B.alerts);
+  await h.press('I’ve read the event waiver and code of conduct');
+  await h.press('Confirm RSVP');
+  check('ticked and confirmed: going, waiver on record, "Going ✓"', h.app.events[1].going && h.app.events[1].waiverAccepted && h.text().includes('Going ✓'), h.app.events[1]);
+  check('and the count says it includes you', h.text().includes('going · including you'));
+  await h.press(`Check in to ${ev.title}`);
+  check('check-in asks for the host’s code', h.all('TextInput').length === 1 && h.text().includes('Host’s check-in code'));
+  await act(async () => { h.all('TextInput')[0].props.onChangeText('ab12'); await tick(); });
+  await h.press('Check in');
+  check('the code checks the member in, on the detail', h.app.events[1].checkedIn === true && h.text().includes('Checked in ✓'), h.app.events[1]);
+  await h.press('See your crew');
+  check('"See your crew" leads to the Matches tab', h.lastNav().name === 'Main' && h.lastNav().params.screen === 'Matches', h.lastNav());
+  await h.press('Back');
+  check('Back goes back', h.backs === 1, h.backs);
+  await h.show(B.HomeScreen);
+  const card = h.button(`${ev.title}: see the details`).parent.parent;
+  check('the card on Home shows the same check-in', h.textIn(card).includes('Checked in ✓') && !h.button(`RSVP to ${ev.title}`), h.textIn(card));
+
+  // a priced event: the price and the Club saving, from the same helpers as the card
+  const paid = h.app.events.find((x) => x.priceCents > 0 && x.clubDiscountPct > 0);
+  await h.show(B.EventDetailScreen, { params: { id: paid.id } });
+  t = h.text();
+  check('a priced event shows its price and the Club saving', t.includes(B.priceLabel(paid.priceCents)) && /^\$\d/.test(B.priceLabel(paid.priceCents)) && t.includes(`Club members save ${paid.clubDiscountPct}%`), t.match(/\$\d[\d.]*|Club members save \d+%/g));
+
+  // who's going: never someone blocked or reported
+  const faces = () => h.renderer.root.findAll((n) => n.props && n.props.size === 36 && n.props.id && n.props.name && typeof n.type === 'function').map((n) => n.props.id);
+  await h.show(B.EventDetailScreen, { params: { id: 'e1' } });
+  let shown = faces();
+  check('the going row shows the sample players, minus the one blocked from the crew', shown.length === 2 && !shown.includes(who.id), shown);
+  const gone = shown[0];
+  await act(async () => { h.app.report(gone, 'event'); await tick(); });
+  await h.show(B.EventDetailScreen, { params: { id: 'e1' } });
+  shown = faces();
+  check('someone reported leaves the going row at once', shown.length === 1 && !shown.includes(gone) && !shown.includes(who.id), shown);
+  await h.show(B.EventDetailScreen, { params: { id: 'nope' } });
+  check('an event no longer on the list says so instead of crashing', h.text().includes('This event isn’t on your list any more'));
+
+  // ---------- Settings → House rules & safety ----------
+  await h.show(B.SettingsScreen);
+  check('Settings has a "House rules & safety" row', h.text().includes('House rules & safety') && !!h.button('House rules & safety'));
+  await h.press('House rules & safety');
+  check('which opens the rules screen', h.lastNav().name === 'Rules', h.lastNav());
+  check('the safety tips link is still the website', h.text().includes('Safety tips'));
+  await h.show(B.RulesScreen);
+  t = h.text();
+  check('seven rules, numbered 1 to 7', B.HOUSE_RULES.length === 7 && B.HOUSE_RULES.every((r, i) => t.includes(`${i + 1} ${r.head}`) && t.includes(r.body)), t.slice(0, 400));
+  check('no rule promises what the app doesn’t do', !/Hosts can remove|re-rated by the desk/.test(t));
+  B.opened.length = 0;
+  await h.press('Privacy policy');
+  await h.press('Terms of use');
+  check('Privacy policy and Terms of use open the site pages', /\/privacy\/$/.test(B.opened[0] || '') && /\/terms\/$/.test(B.opened[1] || ''), B.opened);
+  B.alerts.length = 0;
+  await h.press('Delete account');
+  const del = B.alerts[0];
+  check('Delete account asks first, with the Settings delete flow', !!del && del.title === 'Delete your account?' && del.buttons.some((b) => b.text === 'Delete forever'), B.alerts);
+  await h.answer('Delete forever');
+  check('and confirmed, signs out and goes back to Welcome', !h.app.user && h.resets.length === 1 && h.resets[0].routes[0].name === 'Welcome', [h.app.user && h.app.user.name, h.resets]);
+  check('the demo still never called the backend', B.calls.length === 0, B.calls.map((c) => c.name));
   await h.unmount();
 }
 
@@ -272,6 +364,17 @@ async function live() {
   check('the price and the Club saving are shown', t.includes('$12.50') && t.includes('Club members save 20%'), t.match(/\$[\d.]+|Club members save \d+%/g));
   check('an event with no saving shows none', (t.match(/Club members save/g) || []).length === 1);
   check('an event still in Club early access is not offered to a Plus member', !h.button('RSVP to Club Night') && /Club members can RSVP now\. It opens to everyone/.test(t), t.match(/Club[^.]*\./g));
+  await h.press('Doubles Mixer: see the details');
+  check('live: a card opens the detail for that event', h.lastNav().name === 'EventDetail' && h.lastNav().params.id === 'ev-1', h.lastNav());
+  await h.show(B.EventDetailScreen, { params: { id: 'ev-1' } });
+  t = h.text();
+  check('live detail: title, venue, price and Club saving', t.includes('Doubles Mixer') && t.includes('Broad Ripple') && t.includes('$12.50') && t.includes('Club members save 20%'), t.slice(0, 400));
+  check('live detail: the server’s check-in shows, with the count and no faces', t.includes('Checked in ✓') && t.includes('1 going · including you') && h.renderer.root.findAll((n) => n.props && n.props.size === 36 && n.props.id && typeof n.type === 'function').length === 0, t.match(/\d+ going[^0-9]*/));
+  check('live detail: no description, so no invented steps', !t.includes('How the night works'));
+  await h.show(B.EventDetailScreen, { params: { id: 'ev-2' } });
+  t = h.text();
+  check('live detail: a free event shows no price', !/\$\d/.test(t) && !/Club members save/.test(t));
+  check('live detail: Club early access holds a Plus member here too', !h.button('RSVP to Club Night') && /Club members can RSVP now/.test(t));
   await h.show(B.ProfileScreen);
   check('the profile shows the tier the server gave', h.text().includes('Plus member'), h.text().slice(0, 200));
 

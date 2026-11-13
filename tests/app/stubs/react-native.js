@@ -26,4 +26,8 @@ export const FlatList = ({ data, renderItem, keyExtractor }) => React.createElem
   ))
 );
 export const StyleSheet = { create: (styles) => styles, flatten: (s) => Object.assign({}, ...[].concat(s || []).flat(Infinity).filter(Boolean)) };
-export const Linking = { openURL: () => Promise.resolve() };
+// Pages opened and things shared, so a screen test can see where a tap went.
+export const opened = [];
+export const Linking = { openURL: (url) => { opened.push(url); return Promise.resolve(); } };
+export const shares = [];
+export const Share = { share: (content) => { shares.push(content); return Promise.resolve({ action: 'sharedAction' }); } };

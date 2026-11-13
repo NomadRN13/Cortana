@@ -57,6 +57,11 @@ check "hard account deletion function exists" grep -q "function public.delete_ac
 check "app: under-18 stop" grep -q "RSVPlay is 18+" mobile/src/screens/OnboardingScreen.js
 check "app: phone verification required to continue" grep -q "Verify your phone number to continue" mobile/src/screens/OnboardingScreen.js
 check "app: coarse location permission only" grep -q "ACCESS_COARSE_LOCATION" mobile/app.json
+check "store: precise location, microphone and overlay are blocked on Android" bash -c "node -e \"const b=require('./mobile/app.json').expo.android.blockedPermissions||[];['ACCESS_FINE_LOCATION','ACCESS_BACKGROUND_LOCATION','RECORD_AUDIO','SYSTEM_ALERT_WINDOW'].forEach(x=>{if(!b.includes('android.permission.'+x))process.exit(1)})\""
+check "store: no Always-location or microphone prompt on iOS" bash -c "node -e \"const p=require('./mobile/app.json').expo.plugins;const l=p.find(x=>x[0]==='expo-location')[1],i=p.find(x=>x[0]==='expo-image-picker')[1];process.exit(l.locationAlwaysPermission===false&&l.locationAlwaysAndWhenInUsePermission===false&&i.microphonePermission===false?0:1)\""
+check "store: encryption answer and privacy manifest are declared for iOS" bash -c "node -e \"const i=require('./mobile/app.json').expo.ios;process.exit(i.config&&i.config.usesNonExemptEncryption===false&&i.privacyManifests&&i.privacyManifests.NSPrivacyAccessedAPITypes.length>=4?0:1)\""
+check "store: a production build refuses to start in demo mode" bash -c "cd mobile && ! EAS_BUILD_PROFILE=production EXPO_PUBLIC_SUPABASE_URL= EXPO_PUBLIC_SUPABASE_ANON_KEY= node -e \"require('./app.config.js')({config:require('./app.json').expo})\" 2>/dev/null"
+check "store: backend keys and Firebase file are never committed" bash -c "cd mobile && git check-ignore -q .env && git check-ignore -q google-services.json && git check-ignore -q play-service-account.json"
 check "agents: every agent keeps the humans-send rule or a never-runs line" bash -c 'for a in .claude/agents/*.md; do grep -q -i -E "draft|never (send|run|submit|publish|commit)|recommend" "$a" || exit 1; done'
 M=supabase/migrations
 check "check-in only by host code (member-write guard on RSVPs)" grep -q "create trigger event_rsvps_guard_member_writes" $M/20260806000033_checkin_waiver_crew.sql

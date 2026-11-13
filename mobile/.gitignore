@@ -9,3 +9,5 @@ web-build/
 *.mobileprovision
 play-service-account.json
 .env*.local
+.env
+google-services.json

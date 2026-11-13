@@ -12,6 +12,8 @@ export const colors = {
   ok: '#3DC96B',
   ink: '#14161C',
   danger: '#E15A72',
+  // Secondary accent (brand guide §3): event headers. Never directly on Optic.
+  courtBlue: '#2F5BFF',
 };
 
 export const radii = { sm: 10, md: 14, lg: 18, xl: 20, pill: 999 };

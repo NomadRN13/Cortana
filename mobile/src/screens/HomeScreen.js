@@ -41,7 +41,6 @@ export default function HomeScreen({ navigation }) {
   const [matchWith, setMatchWith] = useState(null);
   const [notifOpen, setNotifOpen] = useState(false);
   const [sheetP, setSheetP] = useState(null);
-  const [expanded, setExpanded] = useState({});
   const reducedMotion = useReduceMotion();
   // The next few events in the member's cities — the list is already soonest
   // first, and already scoped to the cities on their profile.
@@ -131,8 +130,7 @@ export default function HomeScreen({ navigation }) {
               key={e.id}
               app={app}
               e={e}
-              expanded={!!expanded[e.id]}
-              onToggle={() => setExpanded((x) => ({ ...x, [e.id]: !x[e.id] }))}
+              onOpen={() => navigation.navigate('EventDetail', { id: e.id })}
               showCity={app.eventCities.length > 1}
               onSeeCrew={() => navigation.navigate('Matches')}
             />

@@ -1876,12 +1876,14 @@ export function AppStateProvider({ children }) {
     checkedIn: !!joined[e.id] && !!demoCheckins[e.id],
   }));
 
-  // Demo-only attendee preview for expanded event cards (live shows counts).
+  // Demo-only attendee preview for the event detail screen (live shows counts).
+  // Someone the member blocked or reported is never shown, here or anywhere.
   const eventAttendees = (eventId) => {
     if (live) return [];
     const idx = EVENTS.findIndex((e) => e.id === eventId);
     if (idx === -1) return [];
-    return [0, 4, 8].map((o) => PROFILES[(idx * 3 + o) % PROFILES.length]);
+    return [0, 4, 8].map((o) => PROFILES[(idx * 3 + o) % PROFILES.length])
+      .filter((p) => !blocked[p.id] && !reported[p.id]);
   };
   const events = live ? (liveEvents || []) : demoEvents;
 

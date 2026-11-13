@@ -137,3 +137,31 @@ shipped. Agents append; nobody rewrites history.
   --full` — 96 passed, 0 failed (backend: 41 migrations, ALL BACKEND TESTS
   PASSED; app: all green; web: prototype 49, admin 12, admin-live 9, waitlist
   5, events 23, funnel 7, share 13).
+
+## 2026-11-13 — mockups applied, app made store-ready
+
+- **Screens from the mockups:** a full event detail page (opened from any
+  event card) and a House rules & safety page (from Settings). The RSVP,
+  waiver and check-in steps live in one shared hook used by the card and the
+  page. Mockup claims the app can't back were rewritten (no "hosts remove
+  players", no "re-rated by the desk", "accept" not "sign" the waiver).
+  The going row now leaves out anyone the member blocked or reported.
+- **Store fixes found by generating the native projects:** extra Android
+  permissions (precise and background location, microphone, overlay,
+  storage) are stripped; iOS lost its generic "always location" and
+  microphone prompts; the encryption answer and Apple's privacy manifest are
+  declared; version 1.0.0; two packages brought to the versions Expo 53
+  expects.
+- **Build guards:** a production build refuses to start without the Supabase
+  keys (it would otherwise ship in demo mode); Google sign-in's native setup
+  is added only when its ids are set (it crashed on tap otherwise); `.env`
+  and `google-services.json` are git-ignored.
+- **App Review sign-in:** one build-time review address whose six-digit code
+  is its password, so review needs no inbox; the phone step uses a Supabase
+  test number. Tested in `tests/app/review.test.js`.
+- **Store screenshots** retaken from the real app at Apple's 1320 × 2868 and
+  Play's 1080 × 2340, events first; the old swipe-first prototype set is gone.
+- **Runbook:** `docs/store-submission.md`, the ordered list of what only the
+  founder can run.
+- **Verified:** `./scripts/healthcheck.sh --full` — 101 passed, 0 failed;
+  iOS and Android JS bundles compile; `expo prebuild` output inspected.

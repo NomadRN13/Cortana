@@ -20,6 +20,8 @@ import ConversationScreen from './src/screens/ConversationScreen';
 import EventsScreen from './src/screens/EventsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import EventDetailScreen from './src/screens/EventDetailScreen';
+import RulesScreen from './src/screens/RulesScreen';
 
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
@@ -170,6 +172,8 @@ function Root() {
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       <Stack.Screen name="Main" component={MainTabs} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="EventDetail" component={EventDetailScreen} />
+      <Stack.Screen name="Rules" component={RulesScreen} />
     </Stack.Navigator>
   );
 }

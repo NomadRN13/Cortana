@@ -411,7 +411,6 @@ export default function EventsScreen({ navigation }) {
     if (!navigation || !navigation.addListener) return undefined;
     return navigation.addListener('focus', () => reloadRef.current && reloadRef.current());
   }, [navigation]);
-  const [expanded, setExpanded] = useState({});
   const weeks = [...new Set(app.events.map((e) => e.week))];
 
   return (
@@ -449,8 +448,7 @@ export default function EventsScreen({ navigation }) {
                 key={e.id}
                 app={app}
                 e={e}
-                expanded={!!expanded[e.id]}
-                onToggle={() => setExpanded((x) => ({ ...x, [e.id]: !x[e.id] }))}
+                onOpen={() => navigation.navigate('EventDetail', { id: e.id })}
                 showCity={app.eventCities.length > 1}
                 onSeeCrew={() => navigation.navigate('Matches')}
               />

@@ -7,13 +7,31 @@ import { revokeAppleAccount } from '../lib/socialAuth';
 
 // ---------- Auth ----------
 
+// The App Store / Play review account. App Review cannot read an inbox, and
+// Supabase has no fixed code for email sign-in, so for this ONE address (set
+// at build time as EXPO_PUBLIC_REVIEW_EMAIL; unset = this path does not exist)
+// no email is sent and the six digits typed at the code step are checked as
+// that account's password. The account is created by hand in the Supabase
+// dashboard with a random six-digit password (docs/store-submission.md); it
+// reaches nothing a new member couldn't. Rotate the password after review.
+const REVIEW_EMAIL = (process.env.EXPO_PUBLIC_REVIEW_EMAIL || '').trim().toLowerCase();
+export function isReviewEmail(email) {
+  return !!REVIEW_EMAIL && String(email || '').trim().toLowerCase() === REVIEW_EMAIL;
+}
+
 export async function signInWithEmail(email) {
   // Magic-link / OTP sign-in; no passwords to forget court-side.
+  if (isReviewEmail(email)) return; // the review code is the account's password: nothing to send
   const { error } = await supabase.auth.signInWithOtp({ email });
   if (error) throw error;
 }
 
 export async function verifyOtp(email, token) {
+  if (isReviewEmail(email)) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email: REVIEW_EMAIL, password: token });
+    if (error) throw error;
+    return data.session;
+  }
   const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
   if (error) throw error;
   return data.session;
