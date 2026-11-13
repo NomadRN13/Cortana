@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>40/LOVE — Safety</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+  :root { --night:#0A0B0D; --chalk:#F4F6F0; --dim:rgba(244,246,240,.62); --line:rgba(244,246,240,.14); --optic:#D6F44F; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; background:var(--night); color:var(--chalk); line-height:1.7; }
+  main { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+  h1 { font-size: 34px; letter-spacing:-.02em; margin: 8px 0 4px; }
+  h2 { font-size: 19px; letter-spacing:-.01em; margin: 34px 0 8px; }
+  p, li { font-size: 15.5px; color: var(--dim); }
+  strong { color: var(--chalk); }
+  a { color: var(--optic); }
+  ul { padding-left: 22px; margin: 8px 0; }
+  .eyebrow { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:var(--optic); }
+  .updated { font-size: 13px; color: var(--dim); }
+  .note { border: 2px solid var(--line); border-left: 3px solid var(--optic); border-radius: 12px; padding: 14px 16px; font-size: 13.5px; color: var(--dim); margin: 26px 0; }
+  .back { display:inline-block; margin-bottom: 26px; font-weight:800; font-size:14px; text-decoration:none; }
+  .wordmark { white-space: nowrap; }
+  .wordmark .ball { display: inline-block; width: 0.80em; height: 0.80em; vertical-align: -0.04em; margin: 0 0.015em; }
+  .wordmark .ball svg { width: 100%; height: 100%; display: block; }
+</style>
+</head>
+<body>
+<!--mark:defs-->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<radialGradient id="pb-body" cx="33%" cy="27%" r="80%">
+  <stop offset="0%" stop-color="#F6FFB0"/><stop offset="20%" stop-color="#E7FB74"/>
+  <stop offset="46%" stop-color="#D2F048"/><stop offset="72%" stop-color="#A9CE2F"/>
+  <stop offset="90%" stop-color="#74911E"/><stop offset="100%" stop-color="#516A14"/>
+</radialGradient>
+<radialGradient id="pb-term" cx="70%" cy="74%" r="48%">
+  <stop offset="0%" stop-color="#2E3C0C" stop-opacity=".3"/>
+  <stop offset="70%" stop-color="#2E3C0C" stop-opacity=".1"/>
+  <stop offset="100%" stop-color="#2E3C0C" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="pb-bounce" cx="78%" cy="82%" r="30%">
+  <stop offset="0%" stop-color="#CFE85E" stop-opacity="0"/>
+  <stop offset="78%" stop-color="#CFE85E" stop-opacity=".16"/>
+  <stop offset="100%" stop-color="#DDF17E" stop-opacity=".34"/>
+</radialGradient>
+<radialGradient id="pb-sheen" cx="50%" cy="50%" r="50%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".4"/>
+  <stop offset="55%" stop-color="#FFFFFF" stop-opacity=".12"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="pb-hot" cx="50%" cy="50%" r="50%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".92"/>
+  <stop offset="45%" stop-color="#FFFFFF" stop-opacity=".4"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+</radialGradient>
+<linearGradient id="pb-rim" x1="18%" y1="8%" x2="84%" y2="96%">
+  <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".45"/>
+  <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0"/>
+  <stop offset="100%" stop-color="#FFFFFF" stop-opacity=".12"/>
+</linearGradient>
+<linearGradient id="pb-hole-0" x1="22%" y1="12%" x2="82%" y2="94%"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-0" x1="22%" y1="12%" x2="82%" y2="94%"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-60" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-60 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-60" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-60 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-120" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-120 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-120" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-120 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-180" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-180 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-180" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-180 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-240" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-240 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-240" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-240 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-300" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-300 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-300" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-300 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-30" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-30 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-30" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-30 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-90" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-90 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-90" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-90 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-150" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-150 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-150" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-150 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-210" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-210 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-210" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-210 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-270" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-270 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-270" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-270 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient><linearGradient id="pb-hole-330" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-330 .5 .5)"><stop offset="0%" stop-color="#04060A"/><stop offset="54%" stop-color="#0F1507"/><stop offset="100%" stop-color="#44551A"/></linearGradient><linearGradient id="pb-lip-330" x1="22%" y1="12%" x2="82%" y2="94%" gradientTransform="rotate(-330 .5 .5)"><stop offset="0%" stop-color="#F7FFD2" stop-opacity=".45"/><stop offset="38%" stop-color="#F7FFD2" stop-opacity="0"/><stop offset="100%" stop-color="#1E2708" stop-opacity=".5"/></linearGradient>
+<symbol id="pb-mark" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="url(#pb-body)"/><circle cx="12" cy="12" r="11" fill="url(#pb-term)"/><circle cx="12" cy="12" r="11" fill="url(#pb-bounce)"/><ellipse cx="8.4" cy="7.6" rx="5.6" ry="4.3" fill="url(#pb-sheen)" transform="rotate(-30 8.4 7.6)"/><ellipse cx="7.5" cy="6.6" rx="2.2" ry="1.5" fill="url(#pb-hot)" transform="rotate(-30 7.5 6.6)"/><circle cx="12" cy="12" r="10.7" fill="none" stroke="url(#pb-rim)" stroke-width=".7"/><ellipse cx="12" cy="12" rx="1.750" ry="1.750" fill="url(#pb-hole-0)"/><ellipse cx="12" cy="12" rx="1.750" ry="1.750" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/><ellipse cx="18.2" cy="12" rx="1.446" ry="1.750" transform="rotate(0.00 18.2 12)" fill="url(#pb-hole-0)"/><ellipse cx="18.2" cy="12" rx="1.446" ry="1.750" transform="rotate(0.00 18.2 12)" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/><ellipse cx="15.1" cy="17.369" rx="1.446" ry="1.750" transform="rotate(60.00 15.1 17.369)" fill="url(#pb-hole-60)"/><ellipse cx="15.1" cy="17.369" rx="1.446" ry="1.750" transform="rotate(60.00 15.1 17.369)" fill="none" stroke="url(#pb-lip-60)" stroke-width=".26"/><ellipse cx="8.9" cy="17.369" rx="1.446" ry="1.750" transform="rotate(120.00 8.9 17.369)" fill="url(#pb-hole-120)"/><ellipse cx="8.9" cy="17.369" rx="1.446" ry="1.750" transform="rotate(120.00 8.9 17.369)" fill="none" stroke="url(#pb-lip-120)" stroke-width=".26"/><ellipse cx="5.8" cy="12" rx="1.446" ry="1.750" transform="rotate(180.00 5.8 12)" fill="url(#pb-hole-180)"/><ellipse cx="5.8" cy="12" rx="1.446" ry="1.750" transform="rotate(180.00 5.8 12)" fill="none" stroke="url(#pb-lip-180)" stroke-width=".26"/><ellipse cx="8.9" cy="6.631" rx="1.446" ry="1.750" transform="rotate(240.00 8.9 6.631)" fill="url(#pb-hole-240)"/><ellipse cx="8.9" cy="6.631" rx="1.446" ry="1.750" transform="rotate(240.00 8.9 6.631)" fill="none" stroke="url(#pb-lip-240)" stroke-width=".26"/><ellipse cx="15.1" cy="6.631" rx="1.446" ry="1.750" transform="rotate(300.00 15.1 6.631)" fill="url(#pb-hole-300)"/><ellipse cx="15.1" cy="6.631" rx="1.446" ry="1.750" transform="rotate(300.00 15.1 6.631)" fill="none" stroke="url(#pb-lip-300)" stroke-width=".26"/><ellipse cx="20.011" cy="16.625" rx="0.947" ry="1.750" transform="rotate(30.00 20.011 16.625)" fill="url(#pb-hole-30)"/><ellipse cx="20.011" cy="16.625" rx="0.947" ry="1.750" transform="rotate(30.00 20.011 16.625)" fill="none" stroke="url(#pb-lip-30)" stroke-width=".26"/><ellipse cx="16.625" cy="20.011" rx="0.947" ry="1.750" transform="rotate(60.00 16.625 20.011)" fill="url(#pb-hole-60)"/><ellipse cx="16.625" cy="20.011" rx="0.947" ry="1.750" transform="rotate(60.00 16.625 20.011)" fill="none" stroke="url(#pb-lip-60)" stroke-width=".26"/><ellipse cx="12" cy="21.25" rx="0.947" ry="1.750" transform="rotate(90.00 12 21.25)" fill="url(#pb-hole-90)"/><ellipse cx="12" cy="21.25" rx="0.947" ry="1.750" transform="rotate(90.00 12 21.25)" fill="none" stroke="url(#pb-lip-90)" stroke-width=".26"/><ellipse cx="7.375" cy="20.011" rx="0.947" ry="1.750" transform="rotate(120.00 7.375 20.011)" fill="url(#pb-hole-120)"/><ellipse cx="7.375" cy="20.011" rx="0.947" ry="1.750" transform="rotate(120.00 7.375 20.011)" fill="none" stroke="url(#pb-lip-120)" stroke-width=".26"/><ellipse cx="3.989" cy="16.625" rx="0.947" ry="1.750" transform="rotate(150.00 3.989 16.625)" fill="url(#pb-hole-150)"/><ellipse cx="3.989" cy="16.625" rx="0.947" ry="1.750" transform="rotate(150.00 3.989 16.625)" fill="none" stroke="url(#pb-lip-150)" stroke-width=".26"/><ellipse cx="2.75" cy="12" rx="0.947" ry="1.750" transform="rotate(180.00 2.75 12)" fill="url(#pb-hole-180)"/><ellipse cx="2.75" cy="12" rx="0.947" ry="1.750" transform="rotate(180.00 2.75 12)" fill="none" stroke="url(#pb-lip-180)" stroke-width=".26"/><ellipse cx="3.989" cy="7.375" rx="0.947" ry="1.750" transform="rotate(210.00 3.989 7.375)" fill="url(#pb-hole-210)"/><ellipse cx="3.989" cy="7.375" rx="0.947" ry="1.750" transform="rotate(210.00 3.989 7.375)" fill="none" stroke="url(#pb-lip-210)" stroke-width=".26"/><ellipse cx="7.375" cy="3.989" rx="0.947" ry="1.750" transform="rotate(240.00 7.375 3.989)" fill="url(#pb-hole-240)"/><ellipse cx="7.375" cy="3.989" rx="0.947" ry="1.750" transform="rotate(240.00 7.375 3.989)" fill="none" stroke="url(#pb-lip-240)" stroke-width=".26"/><ellipse cx="12" cy="2.75" rx="0.947" ry="1.750" transform="rotate(270.00 12 2.75)" fill="url(#pb-hole-270)"/><ellipse cx="12" cy="2.75" rx="0.947" ry="1.750" transform="rotate(270.00 12 2.75)" fill="none" stroke="url(#pb-lip-270)" stroke-width=".26"/><ellipse cx="16.625" cy="3.989" rx="0.947" ry="1.750" transform="rotate(300.00 16.625 3.989)" fill="url(#pb-hole-300)"/><ellipse cx="16.625" cy="3.989" rx="0.947" ry="1.750" transform="rotate(300.00 16.625 3.989)" fill="none" stroke="url(#pb-lip-300)" stroke-width=".26"/><ellipse cx="20.011" cy="7.375" rx="0.947" ry="1.750" transform="rotate(330.00 20.011 7.375)" fill="url(#pb-hole-330)"/><ellipse cx="20.011" cy="7.375" rx="0.947" ry="1.750" transform="rotate(330.00 20.011 7.375)" fill="none" stroke="url(#pb-lip-330)" stroke-width=".26"/><ellipse cx="21.25" cy="12" rx="0.947" ry="1.750" transform="rotate(0.00 21.25 12)" fill="url(#pb-hole-0)"/><ellipse cx="21.25" cy="12" rx="0.947" ry="1.750" transform="rotate(0.00 21.25 12)" fill="none" stroke="url(#pb-lip-0)" stroke-width=".26"/></symbol>
+</defs></svg>
+<!--/mark:defs-->
+<main>
+  <a class="back" href="/">← <span class="wordmark">40/L<span class="ball"><!--mark:ball--><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#pb-mark"/></svg><!--/mark:ball--></span>VE</span></a>
+  <p class="eyebrow">Safety</p>
+  <h1>Play it safe.</h1>
+  <p class="updated">November 2026 · For everyone meeting through 40/LOVE</p>
+
+  <div class="note"><strong>40/LOVE does not run criminal background checks or
+  identity checks.</strong> A verified phone number means a member has a working
+  phone, not that we know who they are. In an emergency, call 911 or your local
+  emergency number first.</div>
+
+  <h2>Before you meet</h2>
+  <ul>
+    <li><strong>Keep chatting in the app</strong> until you're comfortable. Don't
+    hand over your phone number, address, workplace or social accounts early.</li>
+    <li><strong>Look them up.</strong> A quick search of their name and photos can
+    catch a fake profile.</li>
+    <li><strong>Never send money</strong>, gift cards or financial details to anyone
+    you meet here, whatever the story. Report anyone who asks.</li>
+    <li><strong>A video call first</strong> is a good way to check someone is who
+    they say they are.</li>
+  </ul>
+
+  <h2>Meeting on court</h2>
+  <ul>
+    <li><strong>Meet at public courts</strong> in daylight or under good lights,
+    with other people around, for the first few times.</li>
+    <li><strong>Tell a friend</strong> where you're going, who you're meeting, and
+    when you'll be back.</li>
+    <li><strong>Get yourself there and back.</strong> Don't accept a ride from
+    someone you've just met, or let them follow you home.</li>
+    <li><strong>Keep your phone charged</strong> and your bag with you.</li>
+    <li><strong>Leave whenever you want.</strong> You never owe anyone another set.</li>
+  </ul>
+
+  <h2>Looking after your body</h2>
+  <ul>
+    <li>Warm up, bring water, and play at a level that suits you.</li>
+    <li>If you have a heart, joint or other health condition, check with a doctor
+    before you take up a new sport or step up how much you play.</li>
+    <li>Stop if you feel chest pain, dizziness or a sharp pain, and get help.</li>
+  </ul>
+
+  <h2>Reporting and blocking</h2>
+  <p>Every profile and chat has a <strong>Report</strong> and <strong>Block</strong>
+  option. A block is absolute: neither of you sees the other again, including in
+  tournament entry lists. Reports are confidential — the person you report is not
+  told who reported them. We aim to review every report within 24 hours. You can
+  also email <a href="mailto:hello@40love.app">hello@40love.app</a>.</p>
+  <p>If something happened in person, report it to the police too. Tell them you
+  met through 40/LOVE; we will cooperate with them.</p>
+
+  <h2>Where to get help</h2>
+  <ul>
+    <li><strong>Emergency:</strong> 911</li>
+    <li><strong>RAINN National Sexual Assault Hotline:</strong> 1-800-656-4673, or <a href="https://www.rainn.org">rainn.org</a></li>
+    <li><strong>National Domestic Violence Hotline:</strong> 1-800-799-7233, or text START to 88788</li>
+    <li><strong>988 Suicide &amp; Crisis Lifeline:</strong> call or text 988</li>
+    <li><strong>Scams:</strong> report to the FTC at <a href="https://reportfraud.ftc.gov">reportfraud.ftc.gov</a></li>
+  </ul>
+  <p>See also our <a href="/terms/">Terms of Service</a> and <a href="/privacy/">Privacy Policy</a>.</p>
+</main>
+</body>
+</html>
