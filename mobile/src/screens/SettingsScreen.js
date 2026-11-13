@@ -222,7 +222,7 @@ export default function SettingsScreen({ navigation }) {
           <Row label="Play Mode" sub="Find players for your next match">
             <Switch value={modeOn('play')} onValueChange={() => toggleMode('play')} trackColor={{ true: colors.opticDim }} thumbColor={modeOn('play') ? colors.optic : colors.dim} />
           </Row>
-          <Row label="Date Mode" sub="Find your perfect match">
+          <Row label="Date Mode" sub="Opt-in — meet people you’d like to date">
             <Switch value={modeOn('date')} onValueChange={() => toggleMode('date')} trackColor={{ true: colors.opticDim }} thumbColor={modeOn('date') ? colors.optic : colors.dim} />
           </Row>
           <Row label="Friends Mode" sub="Expand your circle">

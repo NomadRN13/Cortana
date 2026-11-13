@@ -17,7 +17,7 @@ the same tokens.
 **Tagline:** *Serve. Rally. Connect.*
 
 **Three modes**, in this order everywhere: **Play** (find players for your next
-match), **Date** (opt-in; find your perfect match), **Friends** (expand your
+match), **Date** (opt-in; meet people you’d like to date), **Friends** (expand your
 circle on and off the court). Mode identity comes from icons — paddle, heart,
 people — never from per-mode colors.
 

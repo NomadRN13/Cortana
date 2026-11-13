@@ -8,7 +8,7 @@ import { useApp } from '../state';
 
 const MODES = [
   { icon: 'tennisball-outline', name: 'Play Mode', desc: 'Find players for your next match.' },
-  { icon: 'heart-outline', name: 'Date Mode', desc: 'Find your perfect match.' },
+  { icon: 'heart-outline', name: 'Date Mode', desc: 'Opt-in — meet people you’d like to date.' },
   { icon: 'people-outline', name: 'Friends Mode', desc: 'Expand your circle on and off the court.' },
 ];
 

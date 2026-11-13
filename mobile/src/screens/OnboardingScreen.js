@@ -13,7 +13,7 @@ import { LINKS, openLink } from '../lib/links';
 
 const MODES = [
   { key: 'play', icon: 'tennisball-outline', name: 'Play Mode', desc: 'Find players for your next match' },
-  { key: 'date', icon: 'heart-outline', name: 'Date Mode', desc: 'Find your perfect match' },
+  { key: 'date', icon: 'heart-outline', name: 'Date Mode', desc: 'Opt-in — meet people you’d like to date' },
   { key: 'friends', icon: 'people-outline', name: 'Friends Mode', desc: 'Expand your circle on and off the court' },
 ];
 
