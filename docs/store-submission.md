@@ -34,15 +34,19 @@ submits or touches the live database is yours to run (CLAUDE.md, rule 1).
    - Run `supabase/go-live/1-status.sql`. It changes nothing; it shows which
      migrations the live project already has.
    - All false (a fresh project): paste `supabase/setup.sql`.
-   - Base and 30–32 true, 33–41 false: paste
-     `supabase/go-live/2-upgrade-33-41.sql`. It is all or nothing — if a
+   - Base and 30–32 true, the rest false: paste
+     `supabase/go-live/2-upgrade-from-32.sql`. It is all or nothing — if a
      statement fails, nothing changes.
+   - Only the last rows false (a project set up from an earlier
+     `setup.sql`): paste just those migrations from `supabase/migrations/`,
+     in order.
    - Anything else: send the result to Claude before pasting anything.
    - Run `1-status.sql` again; every row must read true.
    - Then deploy the push function from your computer:
      `supabase functions deploy send-push --no-verify-jwt`.
-2. **Domain and pages.** The privacy policy, terms and account-deletion URLs
-   must load (`docs/go-live-rename.md`). Both stores check them.
+2. **Domain and pages.** `rsvplayapp.com` is bought; point it at Netlify
+   and set the production branch (`docs/go-live-rename.md`). The privacy,
+   terms and account-deletion pages must load there; both stores check them.
 3. **Real events.** Create at least three real upcoming Indianapolis events
    from the desk. Never seed sample people into the live project — a store
    reviewer who finds invented members will reject the app, and rightly.
@@ -80,7 +84,7 @@ eas env:create --environment production --name EXPO_PUBLIC_SUPABASE_ANON_KEY --v
 ```
 
 ```bash
-eas env:create --environment production --name EXPO_PUBLIC_REVIEW_EMAIL --value review@rsvplay.app --visibility plaintext
+eas env:create --environment production --name EXPO_PUBLIC_REVIEW_EMAIL --value review@rsvplayapp.com --visibility plaintext
 ```
 
 Optional, for Continue with Google: `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` and
@@ -100,7 +104,7 @@ no email and checks the six digits typed at the code step as that account's
 password (`mobile/src/api/backend.js`; tested in `tests/app/review.test.js`).
 
 1. Supabase → Authentication → Users → **Add user** → email
-   `review@rsvplay.app`, a **random six-digit** password, "Auto confirm" on.
+   `review@rsvplayapp.com`, a **random six-digit** password, "Auto confirm" on.
 2. Supabase → Authentication → Providers → Phone → **Test phone numbers**:
    add `+13175550100` with a fixed code, e.g. `246810`. The reviewer uses it
    at the "Prove you're real" step; no SMS is sent.
@@ -152,11 +156,9 @@ for production (`google-play.md`).
   1320 × 2868; Android phone set, 1080 × 2340). Feature graphic:
   `mobile/assets/play-feature-graphic.png`.
 - **Privacy** — App Privacy (Apple) and Data safety (Play) answers:
-  `store-listing.md`. Privacy policy URL: `https://rsvplay.netlify.app/privacy/`; account
-  deletion URL (Play): `https://rsvplay.netlify.app/delete-account/`. Once
-  the site is on its own domain, use that instead and set
-  `EXPO_PUBLIC_SITE_URL` in the production environment so the app's links
-  match.
+  `store-listing.md`. Privacy policy URL: `https://rsvplayapp.com/privacy/`; account
+  deletion URL (Play): `https://rsvplayapp.com/delete-account/`. Both must
+  load before the forms are filed (`docs/go-live-rename.md`).
 - **Age rating** — 18+ on both. It is a social app with opt-in dating,
   user-to-user messaging and meeting in person; members must be 18.
 - **Reviewer notes** — `store-listing.md` §3, with the review account filled in.

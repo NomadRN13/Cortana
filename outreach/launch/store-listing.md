@@ -78,7 +78,7 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 > Washington, DC — and you see events and players in the cities you play in,
 > because a game needs people who are actually near you.
 >
-> Questions? hello@rsvplay.app
+> Questions? hello@rsvplayapp.com
 
 ### Keywords (100 char limit, comma-separated, no spaces)
 
@@ -222,7 +222,7 @@ installed), advertising data.
 > We're building RSVPlay city by city so there are real players at every
 > event — and Indy serves first.
 >
-> Questions? hello@rsvplay.app
+> Questions? hello@rsvplayapp.com
 
 ### Category
 
@@ -259,8 +259,8 @@ Global answers:
 - **Users can request data deletion:** Yes — in-app, Settings → Delete
   account.
 - **Account deletion URL** (Play requires a web page, not just the in-app
-  button): `https://rsvplay.netlify.app/delete-account/`
-  — the live site. `rsvplay.app` is not registered; paste a URL that 404s and
+  button): `https://rsvplayapp.com/delete-account/`
+  — the live site. `rsvplayapp.com` is not registered; paste a URL that 404s and
   the submission is rejected. Update this and the privacy URL below together
   if the site ever moves to a custom domain.
   (source: `landing/delete-account.html`, deployed by `scripts/build-site.sh`).
@@ -317,7 +317,7 @@ review notes fields. Same substance for both.
 > city to add it, then tap Indianapolis to drop it, to see the scoping work
 > (the app keeps at least one city selected, so add before you drop).
 >
-> **Review account:** email `review@rsvplay.app`, code `[FILL IN — the
+> **Review account:** email `review@rsvplayapp.com`, code `[FILL IN — the
 > six digits set in docs/store-submission.md §4]`. Enter the email on the
 > sign-in screen, tap Send code, then type those six digits. No email is
 > sent to this address.
@@ -351,7 +351,7 @@ review notes fields. Same substance for both.
 > the product), birthdate, sports/skill, photos, and an approximate location
 > rounded to ~1 km on the device — exact coordinates never reach our
 > servers. No ads, no tracking SDKs, no data sale. Privacy policy:
-> https://rsvplay.netlify.app/privacy/ · Support: hello@rsvplay.app
+> https://rsvplayapp.com/privacy/ · Support: hello@rsvplayapp.com
 
 ---
 
@@ -387,7 +387,7 @@ For both stores' "What's new" field:
    any new data type: **both privacy forms must be re-filed before the
    next release.**
    - Not triggered by the website. Netlify Analytics (server logs, on
-     rsvplay.netlify.app) and the demo funnel (`record_demo_step`, in the web
+     rsvplayapp.com) and the demo funnel (`record_demo_step`, in the web
      prototype) are both **website-only** — neither ships in the app binary,
      and `mobile/` contains no analytics call of any kind. Verified by grep,
      not assumed. Both store forms describe the app, so both stay as filed.

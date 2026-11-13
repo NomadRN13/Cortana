@@ -282,7 +282,7 @@ const PHOTO_TIMEOUT_MS = 30000;
 // apart so the failure reaches the person who can actually fix it.
 const RATE_LIMITED = /rate limit|too many|only request this after|429/i;
 const PROVIDER_FAULT = /provider|not enabled|disabled|unsupported|configur|sending sms|sending confirmation|twilio|messagebird|vonage/i;
-const NOT_CONFIGURED = 'Text messages aren’t switched on for RSVPlay yet — that’s on us, not your number. Email hello@rsvplay.app and we’ll get you in.';
+const NOT_CONFIGURED = 'Text messages aren’t switched on for RSVPlay yet — that’s on us, not your number. Email hello@rsvplayapp.com and we’ll get you in.';
 
 function phoneError(e, fallback) {
   const text = `${(e && (e.message || e.msg)) || ''} ${(e && (e.code || e.error_code)) || ''}`;
@@ -1727,7 +1727,7 @@ export function AppStateProvider({ children }) {
         refreshMatchesAndThreads();
         Alert.alert(
           'Couldn’t block them',
-          'Nothing was saved, so they can still see you. Check your connection and try again — if it keeps failing, email hello@rsvplay.app and we’ll do it for you.'
+          'Nothing was saved, so they can still see you. Check your connection and try again — if it keeps failing, email hello@rsvplayapp.com and we’ll do it for you.'
         );
       });
   };
@@ -1744,7 +1744,7 @@ export function AppStateProvider({ children }) {
       .catch(() => {
         Alert.alert(
           'Couldn’t send the report',
-          'It didn’t reach us, so nobody has seen it. Try again, or email hello@rsvplay.app — include their name and we’ll take it from there.'
+          'It didn’t reach us, so nobody has seen it. Try again, or email hello@rsvplayapp.com — include their name and we’ll take it from there.'
         );
       });
     // B-04: permanently hide a reported profile from the reporter's deck.

@@ -44,25 +44,25 @@ async function build(reviewEmail) {
   const calls = (globalThis.__authCalls = []);
   const names = () => calls.splice(0).map((c) => c.name).join(',');
 
-  const on = await build('Review@RSVPlay.app');
-  await on.signInWithEmail('review@rsvplay.app');
+  const on = await build('Review@RSVPlayApp.com');
+  await on.signInWithEmail('review@rsvplayapp.com');
   check('no email is sent for the review address', names() === '', calls);
-  let s = await on.verifyOtp('review@rsvplay.app', '739215');
+  let s = await on.verifyOtp('review@rsvplayapp.com', '739215');
   const pw = calls[0];
-  check('its six digits are checked as the password', s.via === 'signInWithPassword' && pw.args.password === '739215' && pw.args.email === 'review@rsvplay.app', calls);
+  check('its six digits are checked as the password', s.via === 'signInWithPassword' && pw.args.password === '739215' && pw.args.email === 'review@rsvplayapp.com', calls);
   names();
-  s = await on.verifyOtp('  REVIEW@rsvplay.app ', '739215');
+  s = await on.verifyOtp('  REVIEW@rsvplayapp.com ', '739215');
   check('case and spaces in the address do not matter', s.via === 'signInWithPassword', s); names();
   await on.signInWithEmail('someone@example.com');
   s = await on.verifyOtp('someone@example.com', '123456');
   check('everyone else is emailed a code and verifies it', names() === 'signInWithOtp,verifyOtp' && s.via === 'verifyOtp', s);
-  check('a near-miss address is not the review account', !on.isReviewEmail('review@rsvplay.app.evil.com') && !on.isReviewEmail('xreview@rsvplay.app') && !on.isReviewEmail(''), null);
+  check('a near-miss address is not the review account', !on.isReviewEmail('review@rsvplayapp.com.evil.com') && !on.isReviewEmail('xreview@rsvplayapp.com') && !on.isReviewEmail(''), null);
 
   const off = await build('');
-  await off.signInWithEmail('review@rsvplay.app');
-  s = await off.verifyOtp('review@rsvplay.app', '739215');
+  await off.signInWithEmail('review@rsvplayapp.com');
+  s = await off.verifyOtp('review@rsvplayapp.com', '739215');
   check('with no review address configured, the path does not exist', names() === 'signInWithOtp,verifyOtp' && s.via === 'verifyOtp', s);
-  check('and no address counts as the review account', !off.isReviewEmail('review@rsvplay.app') && !off.isReviewEmail(''), null);
+  check('and no address counts as the review account', !off.isReviewEmail('review@rsvplayapp.com') && !off.isReviewEmail(''), null);
 
   console.log(failed ? `\n${failed} failing` : '\nall green');
   process.exit(failed ? 1 : 0);

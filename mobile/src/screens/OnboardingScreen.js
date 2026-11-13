@@ -294,7 +294,7 @@ export default function OnboardingScreen({ navigation, route }) {
               </View>
               {cityDetected && !cities.length && (
                 <Text style={[type.hint, { marginTop: 8 }]}>
-                  We're not open where you are yet — pick any cities you'd travel to, or join the waitlist at rsvplay.app and we'll tell you when yours opens.
+                  We're not open where you are yet — pick any cities you'd travel to, or join the waitlist at rsvplayapp.com and we'll tell you when yours opens.
                 </Text>
               )}
               {cityDetected && cities.length > 0 && (

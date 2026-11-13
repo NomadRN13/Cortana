@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Rebuilds supabase/go-live/2-upgrade-33-41.sql from supabase/migrations/:
-# migrations 33–41 in order, inside one transaction, for a live project that
+# Rebuilds supabase/go-live/2-upgrade-from-32.sql from supabase/migrations/:
+# every migration after 32, in order, inside one transaction, for a live project that
 # was set up through migration 32. `--check` fails if the file is stale.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-OUT=supabase/go-live/2-upgrade-33-41.sql
+OUT=supabase/go-live/2-upgrade-from-32.sql
 TMP="$(mktemp)"
 {
 cat <<'SQL'
--- RSVPlay go-live, step 1b: UPGRADE A LIVE PROJECT FROM MIGRATION 32 TO 41
+-- RSVPlay go-live, step 1b: UPGRADE A LIVE PROJECT FROM MIGRATION 32 TO THE CURRENT ONE
 --
 -- Run 1-status.sql first. Paste this ONLY if it shows base and 30–32 true and
--- 33–41 false. For a fresh project, paste supabase/setup.sql instead.
+-- 33 onward false. For a fresh project, paste supabase/setup.sql instead.
 --
 -- All or nothing: it runs inside one transaction, so if any statement fails,
 -- nothing is changed and the database stays exactly as it was. Then run
@@ -21,7 +21,7 @@ cat <<'SQL'
 -- hand; never run it twice.
 begin;
 SQL
-for f in supabase/migrations/2026080600003[3-9]_*.sql supabase/migrations/2026080600004[01]_*.sql; do
+for f in supabase/migrations/2026080600003[3-9]_*.sql supabase/migrations/2026080600004[0-9]_*.sql; do
   printf '\n-- ======================================================================\n-- %s\n-- ======================================================================\n' "$(basename "$f")"
   cat "$f"
 done

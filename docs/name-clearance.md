@@ -19,7 +19,7 @@ to be done by the founder or counsel.
 
 - [ ] USPTO search (tmsearch.uspto.gov) for RSVPLAY and RSVP PLAY in classes 9 (software), 41 (sports events) and 45 (social networking / dating)
 - [ ] Ask counsel specifically about **RSVPay**
-- [ ] Domains: rsvplay.com, rsvplay.app (the kit assumes `.app`)
+- [x] Domains: rsvplay.com was taken; **rsvplayapp.com** bought 2026-11-13 (Namecheap)
 - [ ] Handles: @rsvplay on Instagram and TikTok (the social agents already write it)
 - [ ] App Store and Google Play name search on a device
 - [ ] File an intent-to-use application once counsel clears it

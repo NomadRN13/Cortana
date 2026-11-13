@@ -48,8 +48,8 @@ ROBOTS
 # the entire point of having one. It defaults to where the site lives today
 # rather than being opt-in, because go-live.sh rebuilds without setting it and
 # the failure is invisible until someone pastes a link.
-#     SITE_URL=https://rsvplay.app bash scripts/build-site.sh   # after a move
-BASE="${SITE_URL:-https://rsvplay.netlify.app}"
+#     SITE_URL=https://rsvplayapp.com bash scripts/build-site.sh   # after a move
+BASE="${SITE_URL:-https://rsvplayapp.com}"
 BASE="${BASE%/}"
 find site -name '*.html' -exec sed -i.bak \
   -e "s|content=\"/og.png\"|content=\"$BASE/og.png\"|g" "{}" +

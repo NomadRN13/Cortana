@@ -240,7 +240,7 @@ function friendly(e, method) {
   const msg = (e && e.message) || '';
   const code = (e && e.code) || '';
   const onEmail = method === 'email';
-  const ours = 'That’s on us, not you — email hello@rsvplay.app and we’ll get you in.';
+  const ours = 'That’s on us, not you — email hello@rsvplayapp.com and we’ll get you in.';
   // Supabase's built-in mailer allows only a handful of codes an hour, so
   // "wait a minute" would be wrong advice for the one people actually hit.
   if (/email rate limit/i.test(msg)) {

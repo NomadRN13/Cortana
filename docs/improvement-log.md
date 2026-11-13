@@ -165,3 +165,19 @@ shipped. Agents append; nobody rewrites history.
   founder can run.
 - **Verified:** `./scripts/healthcheck.sh --full` — 101 passed, 0 failed;
   iOS and Android JS bundles compile; `expo prebuild` output inspected.
+
+## 2026-11-13 — going live: the database and the domain
+
+- **Live database:** the founder created the Supabase project and applied
+  `setup.sql` (migrations through 41). From here on, applied migrations are
+  never edited; every change is a new migration, and `supabase/go-live/`
+  carries a read-only status check and an all-or-nothing upgrade bundle.
+- **Domain:** rsvplay.com was taken; `rsvplayapp.com` was bought at
+  Namecheap. The kit now uses it everywhere (links, the support address,
+  the store listing, the pages). The four database messages that named
+  the old address are re-created with the new one in migration 42, which is
+  pending on the live project. The bundle id `com.rsvplay.app` is unchanged.
+- **Found on the way:** Supabase's built-in email sender cannot edit
+  templates, so member sign-in codes need custom SMTP (Resend) on the new
+  domain before launch. Recorded in `docs/store-submission.md`.
+- **Verified:** `./scripts/healthcheck.sh --full` — 102 passed, 0 failed.

@@ -16,7 +16,7 @@ Last updated: 2026-11-11 · App version: 0.1.0 (`mobile/app.json`)
 | 1.1 | Run the demo on your phone with Expo Go (`mobile/README.md`) | not started (unconfirmed) | founder | 5 minutes, free. No way to verify from the repo — founder to confirm. |
 | 1.2 | Request D-U-N-S number (if launching as an LLC) | not started (unconfirmed) | founder | Only needed for company enrollment with Apple; free but slow — request first. Individual enrollment skips this and can migrate later (playbook §1). |
 | 1.3 | Enroll: Apple Developer ($99/yr) + Google Play Console ($25) + Expo account | not started (unconfirmed) | founder | Longest lead time in the whole plan (1–2 days Apple, up to 2 weeks as a company; 1–3 days Play). Play note: new personal accounts must run a closed test with 12+ testers for 14 days before production — the mixer alpha satisfies this (playbook §1). |
-| 1.4 | Privacy policy + support email on the RSVPlay site | in progress (today) | dev | `landing/privacy.html` exists (support email hello@rsvplay.app inside; matches the code's actual collection). **Gaps:** no `landing/terms.html` yet; `scripts/build-site.sh` does not copy either page into `site/`, so neither is deployed at `/privacy` / `/terms`. Netlify CI (`netlify.toml`) will auto-deploy once the build script includes them. Playbook §1: budget a legal review pass before public launch (the policy's own founder-note says the same). |
+| 1.4 | Privacy policy + support email on the RSVPlay site | in progress (today) | dev | `landing/privacy.html` exists (support email hello@rsvplayapp.com inside; matches the code's actual collection). **Gaps:** no `landing/terms.html` yet; `scripts/build-site.sh` does not copy either page into `site/`, so neither is deployed at `/privacy` / `/terms`. Netlify CI (`netlify.toml`) will auto-deploy once the build script includes them. Playbook §1: budget a legal review pass before public launch (the policy's own founder-note says the same). |
 
 ## Phase 2 — Before submission (with the backend)
 
@@ -538,8 +538,8 @@ a device or a card:
   its own title and description; the demo's says plainly that it's a demo.
 - **Absolute URLs, always.** Facebook, LinkedIn and iMessage don't resolve a
   relative `og:image`, so `build-site.sh` stamps them absolute on every build —
-  defaulting to `https://rsvplay.netlify.app`, where the site lives. Override
-  it after a domain move: `SITE_URL=https://rsvplay.app bash scripts/build-site.sh`.
+  defaulting to `https://rsvplayapp.com`, where the site lives. Override
+  it after a domain move: `SITE_URL=https://rsvplayapp.com bash scripts/build-site.sh`.
   (It used to be opt-in, and `go-live.sh` rebuilds without setting it, so a
   launch build would have shipped previews that render as a grey box — B-40.)
 - **`robots.txt`** now ships, keeping `/admin/` out of search results. The desk
@@ -788,7 +788,7 @@ neither is fixed yet.
   now says "By tapping Step on court you confirm you're 18 or older and agree
   to our Terms of Service and Privacy Policy", with links, in the app and the
   prototype. Settings has a Safety and legal group. Links use
-  `EXPO_PUBLIC_SITE_URL` (default `https://rsvplay.netlify.app`).
+  `EXPO_PUBLIC_SITE_URL` (default `https://rsvplayapp.com`).
 - **Small notices** in the tournament card (players record results, the
   organiser decides, no prizes, own risk), the places list (no venue
   affiliation), and the Settings partner form (partner is 18+ and agreed).

@@ -101,15 +101,15 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
       .readFileSync(require('path').join(REPO, 'landing/index.html'), 'utf8')
       .replace(/window\.RSVPLAY = \{[^}]*\};/,
         "window.RSVPLAY = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '' };");
-    await page.route('https://rsvplay.app/', (route) =>
+    await page.route('https://rsvplayapp.com/', (route) =>
       route.fulfill({ status: 200, contentType: 'text/html', body: unconfigured }));
-    await page.goto('https://rsvplay.app/');
+    await page.goto('https://rsvplayapp.com/');
     await page.fill('#hero-email', 'stranger@example.com');
     await page.click('#hero-form button');
     await page.waitForFunction(() => document.getElementById('hero-error').textContent.length > 0, { timeout: 3000 });
     const err = await page.textContent('#hero-error');
     if (!/waitlist isn/i.test(err)) throw new Error('wrong copy: ' + err);
-    if (!/hello@rsvplay\.app/.test(await page.innerHTML('#hero-error'))) throw new Error('no way to reach us offered');
+    if (!/hello@rsvplayapp\.com/.test(await page.innerHTML('#hero-error'))) throw new Error('no way to reach us offered');
     const shown = await page.$eval('#hero-success', (e) => getComputedStyle(e).display !== 'none');
     if (shown) throw new Error('claimed success with no backend on a real host');
     const stored = await page.evaluate(() => localStorage.getItem('rsvplay.waitlist'));

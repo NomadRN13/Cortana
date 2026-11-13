@@ -39,9 +39,8 @@ build step. It runs in two modes:
    (Step 1's Supabase keys go into `landing/index.html` — commit and push
    on the connected flow, or rebuild + re-drag on the manual flow.)
 
-3. **Custom domain** (recommended before promoting it): buy `rsvplay.app`
-   or similar (~$15/yr) and point it at the host. Update the Instagram/
-   TikTok bio links to it.
+3. **Custom domain:** `rsvplayapp.com` is bought; `docs/go-live-rename.md`
+   has the Netlify and Namecheap steps. Use it in the Instagram/TikTok bios.
 
 4. **Read your signups** — Supabase Dashboard → Table Editor → `waitlist`.
    Export CSV anytime for the `waitlist-community` agent to draft welcome

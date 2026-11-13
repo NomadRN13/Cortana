@@ -169,9 +169,9 @@ social — make yours undeniable here.
 > - *Pre-seed:* raising **$[X]k** for 18 months of runway —
 >   ~50% product · ~30% community & events · ~20% ops
 > - *Partners:* clubs & organizers — co-host a RSVPlay Mixer
-> - *Everyone:* join the waitlist — **rsvplay.app**
+> - *Everyone:* join the waitlist — **rsvplayapp.com**
 >
-> ### hello@rsvplay.app
+> ### hello@rsvplayapp.com
 
 **Speaker notes:** Tune the ask to the room — investors get the raise slide,
 clubs get the partnership slide, a demo-day crowd gets the waitlist. End the

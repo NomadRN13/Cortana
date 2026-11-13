@@ -101,9 +101,14 @@ they measure with `./scripts/healthcheck.sh`, propose in `docs/proposals/`,
 repair only outside the safety core, and log in `docs/improvement-log.md`.
 A weekly scheduled audit runs the loop on Mondays.
 
-## Live infrastructure to rename when going live
+## Live infrastructure (state as of 2026-11-13)
 
-The Netlify site is still named `40-love` (URL `40-love.netlify.app`); this
-kit now references `rsvplay.netlify.app` and `hello@rsvplay.app`. Rename the
-Netlify site, set its production branch to this branch, and claim the domain
-and mailbox before the store forms are filed — see `docs/launch-runbook.html`.
+- **Domain:** `rsvplayapp.com`, bought at Namecheap (rsvplay.com was taken).
+  Every link and the support address `hello@rsvplayapp.com` use it. The app's
+  bundle id stays `com.rsvplay.app`; it is an identifier, not a domain.
+- **Database:** the live Supabase project is set up from `setup.sql`
+  (migrations through 41 applied; 42 pending). Applied migrations are never
+  edited: a change is a new migration, pasted from `supabase/go-live/`.
+- **Website:** the Netlify site is still named `40-love` with the wrong
+  production branch; `docs/go-live-rename.md` has the steps to point it at
+  this branch and at the domain.

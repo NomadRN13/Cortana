@@ -145,7 +145,7 @@ function Suspended({ reason, onSignOut }) {
         {' '}You can’t be seen or send messages while it’s paused.
       </Text>
       <Text style={[type.hint, { textAlign: 'center' }]}>
-        If you think this is a mistake, email hello@rsvplay.app and a person will read it.
+        If you think this is a mistake, email hello@rsvplayapp.com and a person will read it.
       </Text>
       <Pressable onPress={onSignOut} style={{ backgroundColor: colors.optic, borderRadius: 999, paddingVertical: 13, paddingHorizontal: 30, marginTop: 14 }}>
         <Text style={{ color: colors.ink, fontWeight: '800', fontSize: 15 }}>Sign out</Text>

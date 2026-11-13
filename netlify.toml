@@ -27,6 +27,6 @@
 # The live site. Set here so the build stamps absolute URLs into the
 # og:image tags — some link-preview scrapers won't resolve a relative one,
 # and a link with no card is the difference between a tap and a scroll past.
-# Change this when a custom domain replaces the netlify.app one.
+# The custom domain (docs/go-live-rename.md). Change only if the domain changes.
 [build.environment]
-  SITE_URL = "https://rsvplay.netlify.app"
+  SITE_URL = "https://rsvplayapp.com"
