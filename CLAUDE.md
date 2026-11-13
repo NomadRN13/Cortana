@@ -103,12 +103,13 @@ A weekly scheduled audit runs the loop on Mondays.
 
 ## Live infrastructure (state as of 2026-11-13)
 
-- **Domain:** `rsvplayapp.com`, bought at Namecheap (rsvplay.com was taken).
+- **Domain:** `rsvplayapp.com`, registered at Cloudflare, which also runs its DNS (rsvplay.com was taken).
   Every link and the support address `hello@rsvplayapp.com` use it. The app's
   bundle id stays `com.rsvplay.app`; it is an identifier, not a domain.
 - **Database:** the live Supabase project is set up from `setup.sql`
   (migrations through 41 applied; 42 pending). Applied migrations are never
   edited: a change is a new migration, pasted from `supabase/go-live/`.
-- **Website:** the Netlify site is still named `40-love` with the wrong
-  production branch; `docs/go-live-rename.md` has the steps to point it at
-  this branch and at the domain.
+- **Website:** published by Netlify (project `rsvplay`, production branch
+  set to this one). Its free build credits ran out on day one, so new deploys
+  are paused until the founder picks a host; `docs/go-live-rename.md` has
+  the Cloudflare DNS steps.

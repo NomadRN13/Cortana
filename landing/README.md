@@ -40,7 +40,7 @@ build step. It runs in two modes:
    on the connected flow, or rebuild + re-drag on the manual flow.)
 
 3. **Custom domain:** `rsvplayapp.com` is bought; `docs/go-live-rename.md`
-   has the Netlify and Namecheap steps. Use it in the Instagram/TikTok bios.
+   has the Netlify and Cloudflare steps. Use it in the Instagram/TikTok bios.
 
 4. **Read your signups** — Supabase Dashboard → Table Editor → `waitlist`.
    Export CSV anytime for the `waitlist-community` agent to draft welcome

@@ -1,6 +1,6 @@
 # Putting the website on rsvplayapp.com
 
-The domain is bought (Namecheap, 2026-11-13). The kit already uses
+The domain is registered at Cloudflare (2026-11-13), and Cloudflare runs its DNS. The kit already uses
 `https://rsvplayapp.com` and `hello@rsvplayapp.com` everywhere. What remains
 is in two dashboards, and only the account owner can do it.
 
@@ -22,25 +22,27 @@ is in two dashboards, and only the account owner can do it.
 will show it as awaiting DNS; it also adds `www.rsvplayapp.com` and redirects
 it to the bare domain.
 
-## 3. Namecheap: point the domain at Netlify
+## 3. Cloudflare: point the domain at Netlify
 
-Keep Namecheap's own DNS (**Nameservers: Namecheap BasicDNS**), because the
-free email forwarding below only works there. Then **Advanced DNS → Host
-Records**, delete the parking records, and add:
+dash.cloudflare.com → **rsvplayapp.com** → **DNS → Records**. Delete any
+existing `A`, `AAAA` or `CNAME` records for `rsvplayapp.com` and `www`, then add:
 
-| Type | Host | Value | TTL |
+| Type | Name | Target | Proxy status |
 |---|---|---|---|
-| A | `@` | `75.2.60.5` | Automatic |
-| CNAME | `www` | `rsvplayapp.netlify.app` (or the site's current `*.netlify.app` name) | Automatic |
+| CNAME | `@` | `rsvplay.netlify.app` | **DNS only** (grey cloud) |
+| CNAME | `www` | `rsvplay.netlify.app` | **DNS only** (grey cloud) |
 
-Within an hour Netlify shows the domain as verified and issues the HTTPS
-certificate itself. Open `https://rsvplayapp.com/privacy/` and
+Cloudflare allows a CNAME on the bare domain (it "flattens" it). Proxy status
+must be **DNS only**: with the orange cloud on, Netlify cannot issue the HTTPS
+certificate. Within an hour Netlify shows the domain as verified and issues
+the certificate itself. Open `https://rsvplayapp.com/privacy/` and
 `https://rsvplayapp.com/delete-account/`; both stores check those pages.
 
-## 4. Namecheap: the mailbox, free
+## 4. Cloudflare: the mailbox, free
 
-**Domain List → Manage → Email Forwarding** (or **Redirect Email**) → add
-`hello` → forward to the inbox you already read. Mail *to* hello@ arrives
+**rsvplayapp.com → Email → Email Routing → Get started** → add the address
+`hello` → destination: the inbox you already read (Cloudflare emails it a
+confirmation link). Let Cloudflare add the MX and TXT records it offers. Mail *to* hello@ arrives
 there. Mail *from* hello@ (sign-in codes, the desk's replies) goes out through
 Resend: `docs/store-submission.md` §1.
 
