@@ -4549,6 +4549,10 @@ as $$
    where me.id = auth.uid()
      and me.suspended_at is null
      and not public.hidden_from_me(p.id)
+     -- Someone I reported leaves my crew at once. (Not hidden_from_me():
+     -- the conversation stays, as a record for the desk.)
+     and not exists (select 1 from reports r
+                      where r.reporter_id = me.id and r.target_id = p.id)
    order by p.id, e.starts_at desc
 $$;
 
@@ -4565,10 +4569,12 @@ begin
   if public.i_am_suspended() then
     raise exception 'Your account is suspended.' using errcode = '42501';
   end if;
-  -- One answer for "not someone you played with", "blocked" and "doesn't
-  -- exist", so the function can't be used to probe any of them.
+  -- One answer for "not someone you played with", "blocked", "reported by
+  -- you" and "doesn't exist", so the function can't be used to probe any of
+  -- them.
   if p_member is null or p_member = me
      or public.hidden_from_me(p_member)
+     or exists (select 1 from reports r where r.reporter_id = me and r.target_id = p_member)
      or not public.shared_a_court(me, p_member) then
     raise exception 'You can add people you''ve shared a court with.' using errcode = '22023';
   end if;

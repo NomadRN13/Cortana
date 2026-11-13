@@ -98,3 +98,8 @@ shipped. Agents append; nobody rewrites history.
   result; counting the two-rung cap on the visible ladder).
 - **Verified:** `./scripts/test-backend.sh` — ALL BACKEND TESTS PASSED (41
   migrations); full run recorded in the closing commit.
+- **Also fixed (migration 33, unreleased):** reporting someone from the crew
+  list changed nothing. A member you reported now leaves your crew at once and
+  cannot be added back (`get_my_crew()`, `crew_add()`); the phone app drops
+  them from the list on the spot. The conversation stays, as a record for the
+  desk. Harness 10b and `tests/app/checkin.test.js` assert it.

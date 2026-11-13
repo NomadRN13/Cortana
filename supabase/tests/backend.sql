@@ -3108,6 +3108,30 @@ begin
   exception when invalid_parameter_value then null;
   end;
 end $$;
+-- Someone I reported leaves my crew at once, and comes back only if the
+-- report is gone. Nothing changes for them.
+do $$ begin
+  perform report_member('00000000-0000-4000-8000-000000000902', 'harassed me at the event', 'event');
+  assert not exists (select 1 from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000902'),
+    'someone I reported is still in my crew';
+  begin
+    perform crew_add('00000000-0000-4000-8000-000000000902');
+    assert false, 'added someone I reported';
+  exception when invalid_parameter_value then null;
+  end;
+end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000902';
+do $$ begin
+  assert exists (select 1 from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000901'), 'being reported changed the reported member''s own crew';
+end $$;
+reset role;
+delete from reports where reporter_id = '00000000-0000-4000-8000-000000000901';
+delete from rate_events where user_id = '00000000-0000-4000-8000-000000000901';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000901';
+do $$ begin
+  assert exists (select 1 from get_my_crew() where user_id = '00000000-0000-4000-8000-000000000902'), 'the crew test did not put Lou back';
+end $$;
 reset role;
 set role anon;
 do $$ begin

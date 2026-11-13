@@ -211,6 +211,7 @@ async function main() {
   await act(async () => { app.report('u-grace', 'event'); await tick(); });
   const rep = named('reportUser').pop();
   check('a report from the crew list is filed as met at an event', rep && rep.args[0] === 'u-grace' && rep.args[2] === 'event', rep && rep.args);
+  check('someone reported leaves the crew at once', !app.crew.some((c) => c.id === 'u-grace'), app.crew.map((c) => c.id));
 
   // ---- checked in is a record: it isn't un-RSVP'd ----
   calls.length = 0;

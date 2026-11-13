@@ -324,6 +324,9 @@ export function AppStateProvider({ children }) {
 
   const [saved, setSaved] = useState({});
   const [blocked, setBlocked] = useState({});
+  // People this member has reported this session: gone from the crew at once.
+  // (The server leaves them out of get_my_crew() from then on.)
+  const [reported, setReported] = useState({});
   const [seen, setSeen] = useState({});
   const [matches, setMatches] = useState(['maya', 'sam', 'priya']);
   const [threads, setThreads] = useState(THREADS);
@@ -1161,6 +1164,7 @@ export function AppStateProvider({ children }) {
     setDeckError(false);
     setSaved({});
     setBlocked({});
+    setReported({});
     setSeen({});
     setMatches(['maya', 'sam', 'priya']);
     setThreads(THREADS);
@@ -1733,6 +1737,8 @@ export function AppStateProvider({ children }) {
   const report = (id, where) => {
     const fromDeck = where === true || where === 'deck';
     if (fromDeck) setSeen((s) => ({ ...s, [id]: true }));
+    // Wherever the report came from, they leave the crew list at once.
+    setReported((r) => ({ ...r, [id]: true }));
     if (!live) return;
     api.reportUser(id, 'Reported in-app', fromDeck ? 'deck' : where === 'event' ? 'event' : 'chat')
       .catch(() => {
@@ -2014,14 +2020,15 @@ export function AppStateProvider({ children }) {
   // Demo crew: for each event the member has "checked in" to, the sample
   // players shown as attending it, in the shape get_my_crew returns. There is
   // no server in the demo, so this plays its part — including its rule for the
-  // dating flag: both people in Date mode and each what the other is looking
-  // for, or false. Everything downstream (mapCrewRow, the screens) only ever
+  // dating flag: both people in Date mode, each what the other is looking
+  // for, and inside the member's age range, or false. Everything downstream (mapCrewRow, the screens) only ever
   // reads the flag, exactly as it does live.
   const demoCrew = (() => {
     const mutual = (p) => (
       !!user && !user.isTeam && (user.modes || []).includes('date') && !!user.gender
       && DEMO_DATE_MODE_ON[p.id] === true && !!p.gender
       && (user.seeking || []).includes(p.gender) && (p.seeking || []).includes(user.gender)
+      && (typeof p.age !== 'number' || (p.age >= prefs.ageMin && p.age <= prefs.ageMax))
     );
     const rows = [];
     const taken = {};
@@ -2041,7 +2048,7 @@ export function AppStateProvider({ children }) {
   })();
 
   // Someone you block leaves the list at once, before the next refresh.
-  const crew = (live ? (liveCrew || []) : demoCrew).filter((c) => !blocked[c.id]);
+  const crew = (live ? (liveCrew || []) : demoCrew).filter((c) => !blocked[c.id] && !reported[c.id]);
 
   // Keep someone on the crew list, or take them off. Shown at once; put back,
   // with the reason, if the server refuses.

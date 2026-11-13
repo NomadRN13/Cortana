@@ -108,7 +108,8 @@ export const LEAGUES = [
 // server's "also open to dating" answer. Live, the server works that out (it is
 // mutual or it is nothing) and the app only shows what it is told. In the demo
 // there is no server, so the demo plays its part with the same rule: both
-// people in Date mode, and each what the other is looking for.
+// people in Date mode, each what the other is looking for, and inside the
+// member's age range.
 export const DEMO_DATE_MODE_ON = { maya: true, priya: true, jordan: true, grace: true, chris: true, theo: true, lena: true };
 
 export const COURTS = ['Riverside Park Tennis Complex', 'Tarkington Park', 'Broad Ripple Park'];
