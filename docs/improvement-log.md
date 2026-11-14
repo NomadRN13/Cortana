@@ -181,3 +181,31 @@ shipped. Agents append; nobody rewrites history.
   templates, so member sign-in codes need custom SMTP (Resend) on the new
   domain before launch. Recorded in `docs/store-submission.md`.
 - **Verified:** `./scripts/healthcheck.sh --full` — 102 passed, 0 failed.
+
+## 2026-11-14 — a cyber security team, and encryption on the phone
+
+- **Asked for:** "a cyber security team with 256 encryption", and billing
+  plans with forms of payment.
+- **Security team:** four agents (`security-lead`, `appsec-engineer`,
+  `penetration-tester`, `incident-responder`), `docs/security.md` (what is
+  encrypted where, with proof; the threat model; the owner's checklist; the
+  honest gaps) and `docs/incident-response.md` (the runbook).
+- **Encryption:** the database was already AES-256 at rest and TLS in transit
+  (Supabase). The gap was the phone: the session and the cached profile were
+  in plain storage. They now live in the phone's encrypted store
+  (`mobile/src/lib/secureStorage.js`): Keychain on iPhone, AES-256-GCM under
+  an Android Keystore key on Android. The app ships no cipher of its own.
+- **Website:** security headers and `security.txt`, tested by serving the
+  built site under them (`tests/web/headers.test.js`).
+- **Database:** migration 43 takes TRUNCATE away from the API roles; the
+  harness now asserts every table has row-level security and no stranger can
+  write (§11). `supabase/go-live/2-upgrade-from-41.sql` is the one paste for
+  the live project (42 and 43).
+- **First review:** `outreach/safety/security-review-2026-11-14.md`. No
+  secret in the tree or history.
+- **Payments: not built.** It reverses rule 4 and depends on what is sold;
+  the plan and the five decisions are in
+  `docs/proposals/2026-11-14-payments.md`.
+- **Verified:** `./scripts/healthcheck.sh --full` — 123 passed, 0 failed
+  (backend on 43 migrations; app suites incl. secure storage; web suites
+  incl. the site under its headers). iOS, Android and web bundles compile.

@@ -6,6 +6,7 @@
 --   · Every row false (or "base schema" false): a fresh project. Paste the
 --     whole of supabase/setup.sql instead of 2-upgrade-from-32.sql.
 --   · base and 30–32 true, 33 onward false: paste 2-upgrade-from-32.sql.
+--   · Everything true up to 41, the rest false: paste 2-upgrade-from-41.sql.
 --   · A mix: paste only the missing migrations, from supabase/migrations/,
 --     in order — or send this result to Claude and ask what to run.
 select step, applied from (values
@@ -20,6 +21,7 @@ select step, applied from (values
   (9,  '39 verified phone required',           exists (select 1 from pg_proc where proname = 'require_verified_phone')),
   (10, '40 deletion clears the waitlist',      exists (select 1 from pg_proc where proname = 'delete_account' and prosrc like '%waitlist%')),
   (11, '41 a ban survives deletion',           exists (select 1 from pg_proc where proname = 'delete_account' and prosrc like '%Deleted while suspended%')),
-  (12, '42 support address rsvplayapp.com',     exists (select 1 from pg_proc where proname = 'report_member' and prosrc like '%hello@rsvplayapp.com%'))
+  (12, '42 support address rsvplayapp.com',     exists (select 1 from pg_proc where proname = 'report_member' and prosrc like '%hello@rsvplayapp.com%')),
+  (13, '43 no truncate for API roles',           not has_table_privilege('anon', 'public.profiles', 'TRUNCATE'))
 ) as t(n, step, applied)
 order by n;

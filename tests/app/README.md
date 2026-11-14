@@ -75,6 +75,14 @@ be added there too.
   waiver → check-in → crew; "Your crew" sits above the matches; a drawn
   tournament is a bracket by rounds with the winner's row lit and the score
   right-aligned; the tier shows on the profile.
+- `review.test.js` — the App Review sign-in: the one review address sends no
+  email and its six digits are checked as the password; every other address,
+  and every address when no review address is configured, gets an emailed code.
+- `secure-storage.test.js` — `lib/secureStorage.js` against a fake of the
+  phone's secure store: nothing about the member is left in plain storage, a
+  value of any size comes back exactly, a failed write leaves the old value
+  whole, overlapping writes cannot interleave, deleting the app signs the
+  phone out, and a value an older build left unencrypted is moved and erased.
 
 The backend stub is generated at build time from whatever `state.js` actually
 calls, so adding an `api.something()` doesn't break the build. Every call is

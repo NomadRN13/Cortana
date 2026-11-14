@@ -34,6 +34,12 @@ cp admin/index.html site/admin/index.html
 cp mobile/assets/favicon.png site/favicon.png
 cp mobile/assets/og.png site/og.png
 
+# Security headers for every page (Netlify and Cloudflare Pages read _headers),
+# and where to report a security problem (RFC 9116).
+cp landing/_headers site/_headers
+mkdir -p site/.well-known
+cp landing/security.txt site/.well-known/security.txt
+
 # Keep the moderation desk out of search results. It is safe to deploy — every
 # action is authorised by the database's admin list — but there is no reason for
 # it to be indexed, and /demo is the link worth ranking, not a crawler's guess.

@@ -18,7 +18,7 @@ echo "── structure"
 for f in CLAUDE.md docs/rules-and-stops.md docs/brand-guide.md docs/networking-team.md docs/self-improvement-network.md README.md netlify.toml; do
   check "$f exists" test -f "$f"
 done
-check ".claude/agents has the ten core agents + the network agents" bash -c '[ "$(ls .claude/agents/*.md | wc -l)" -ge 13 ]'
+check ".claude/agents has the ten core agents, the network agents and the security team" bash -c '[ "$(ls .claude/agents/*.md | wc -l)" -ge 17 ]'
 for a in .claude/agents/*.md; do
   check "$(basename "$a") has frontmatter name + description" bash -c "head -1 '$a' | grep -q '^---$' && grep -q '^name: ' '$a' && grep -q '^description: ' '$a'"
 done
@@ -39,6 +39,24 @@ check "site/ matches landing/, app/ and admin/" bash -c 'for p in "landing/index
 check "the go-live upgrade (everything after 32) matches the migrations" ./scripts/build-go-live.sh --check
 check "brand/tokens.json current and all surfaces agree" node scripts/build-tokens.js --check
 check "every page carries the shared ball mark" bash -c 'for f in landing/index.html app/index.html admin/index.html; do grep -q "mark:defs" "$f" || exit 1; done'
+
+echo "── security (docs/security.md)"
+for f in docs/security.md docs/incident-response.md landing/_headers landing/security.txt; do
+  check "$f exists" test -f "$f"
+done
+check "security team: lead, appsec, penetration tester and incident responder exist" bash -c 'for a in security-lead appsec-engineer penetration-tester incident-responder; do test -f .claude/agents/$a.md || exit 1; done'
+check "security team never works against production" bash -c 'for a in security-lead appsec-engineer penetration-tester incident-responder; do grep -q -i -E "never (run|runs|sign|signs|test|tests|touch|touches)[^.]*(real|live|production)|never touch production|never (sign in|act)" .claude/agents/$a.md || exit 1; done'
+check "phone: the sign-in session is kept in the encrypted secure store" grep -q "storage: secureStorage" mobile/src/lib/supabase.js
+check "phone: the profile cache never uses plain storage" bash -c '! grep -q "AsyncStorage" mobile/src/state.js mobile/src/lib/supabase.js'
+check "phone: secure-store values stay on this device" grep -q "AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY" mobile/src/lib/secureStorage.js
+check "phone: Android backups are off and the secure-store module is configured" bash -c "node -e \"const e=require('./mobile/app.json').expo;process.exit(e.android.allowBackup===false&&e.plugins.some(p=>Array.isArray(p)&&p[0]==='expo-secure-store')?0:1)\""
+check "phone: the app ships no encryption code of its own (export answer stays exempt)" bash -c '! grep -q -E "\"(aes-js|crypto-js|tweetnacl|node-forge|react-native-aes-crypto)\"" mobile/package.json'
+check "website: HTTPS-only, no framing, and a content policy without eval" bash -c "grep -q 'Strict-Transport-Security: max-age=31536000' landing/_headers && grep -q \"frame-ancestors 'none'\" landing/_headers && grep -q \"default-src 'self'\" landing/_headers && ! grep -q 'unsafe-eval' landing/_headers"
+check "website: the built site carries the headers and security.txt" bash -c 'cmp -s landing/_headers site/_headers && cmp -s landing/security.txt site/.well-known/security.txt'
+check "no secret is committed (keys, tokens, private files)" bash -c '! git grep --untracked -I -q -E "sk_live_[A-Za-z0-9]{8,}|sk_test_[A-Za-z0-9]{8,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|xox[bp]-[A-Za-z0-9-]{20,}|eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}" -- . && ! git ls-files | grep -q -i -E "(^|/)\.env$|\.pem$|\.p8$|\.p12$|\.jks$|service-account.*\.json$|google-services\.json$"'
+check "the master key is named nowhere in the app or the website's code" bash -c '! grep -rq "service_role" mobile/src landing/index.html app/index.html'
+check "every table has row-level security and strangers can write to none (harness section 11)" grep -q "tables without row-level security" supabase/tests/backend.sql
+check "the app suite runs the secure-storage tests" grep -q "secure-storage.test.js" scripts/test-app.sh
 
 echo "── rules and stops still enforced (docs/rules-and-stops.md vs the code)"
 for m in 20260806000033 20260806000034 20260806000035 20260806000036 20260806000037 20260806000038 20260806000039 20260805000001 20260806000003 20260806000006 20260806000007 20260806000008 20260806000009 20260806000014 20260806000015 20260806000017 20260806000019 20260806000020 20260806000023 20260806000024 20260806000027 20260806000029 20260806000030 20260806000031 20260806000032; do

@@ -42,7 +42,9 @@ the certificate itself. Open `https://rsvplayapp.com/privacy/` and
 
 **rsvplayapp.com → Email → Email Routing → Get started** → add the address
 `hello` → destination: the inbox you already read (Cloudflare emails it a
-confirmation link). Let Cloudflare add the MX and TXT records it offers. Mail *to* hello@ arrives
+confirmation link). Let Cloudflare add the MX and TXT records it offers.
+Add `security` the same way: it is the address `/.well-known/security.txt`
+and the privacy policy give for reporting a security problem. Mail *to* hello@ arrives
 there. Mail *from* hello@ (sign-in codes, the desk's replies) goes out through
 Resend: `docs/store-submission.md` §1.
 

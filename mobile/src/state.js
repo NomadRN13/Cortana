@@ -7,7 +7,9 @@
 // (B-01…B-17); fixes are tagged inline.
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// The cached profile, saved list and settings are about the member, so they go
+// in the phone's encrypted store, not plain storage (lib/secureStorage.js).
+import storage from './lib/secureStorage';
 import { PROFILES, THREADS, CANNED_REPLIES, NOTIFICATIONS, EVENTS, TOURNAMENTS, TOURNAMENT_PLAYERS, LEAGUES, DEMO_DATE_MODE_ON } from './data/seed';
 import { buildBracket, bracketRecord, bracketShuffle } from './lib/bracket';
 import { ladderJoin, ladderLeave, ladderChallengeProblem, ladderRecord, LADDER_REACH } from './lib/ladder';
@@ -424,7 +426,7 @@ export function AppStateProvider({ children }) {
   // ---------- hydration ----------
 
   useEffect(() => {
-    Promise.all([AsyncStorage.getItem(STORE_KEY), AsyncStorage.getItem(SAVED_KEY), AsyncStorage.getItem(PREFS_KEY)])
+    Promise.all([storage.getItem(STORE_KEY), storage.getItem(SAVED_KEY), storage.getItem(PREFS_KEY)])
       .then(([rawUser, rawSaved, rawPrefs]) => {
         if (rawPrefs) {
           const p = JSON.parse(rawPrefs);
@@ -448,7 +450,7 @@ export function AppStateProvider({ children }) {
 
   const persistSaved = (next) => {
     setSaved(next);
-    AsyncStorage.setItem(SAVED_KEY, JSON.stringify(next)).catch(() => {});
+    storage.setItem(SAVED_KEY, JSON.stringify(next)).catch(() => {});
   };
 
   useEffect(() => {
@@ -728,7 +730,7 @@ export function AppStateProvider({ children }) {
         setUser((u) => {
           if (!u || u.timezone === tz) return u;
           const next = { ...u, timezone: tz };
-          AsyncStorage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
+          storage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
           return next;
         });
       }).catch(() => {});
@@ -822,7 +824,7 @@ export function AppStateProvider({ children }) {
       setUser((u) => {
         if (!u || u.tier === tierOf(remote)) return u;
         const next = { ...u, tier: tierOf(remote) };
-        AsyncStorage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
+        storage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
         return next;
       });
     }).catch(() => {});
@@ -879,7 +881,7 @@ export function AppStateProvider({ children }) {
 
   const saveUser = (u) => {
     setUser(u);
-    AsyncStorage.setItem(STORE_KEY, JSON.stringify(u)).catch(() => {});
+    storage.setItem(STORE_KEY, JSON.stringify(u)).catch(() => {});
   };
 
   // A settings write the server refused is worse than one that never happened:
@@ -919,7 +921,7 @@ export function AppStateProvider({ children }) {
       setUser((u) => {
         if (!u) return u;
         const next = { ...u, photo: list[0] ? list[0].url : null };
-        AsyncStorage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
+        storage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
         return next;
       });
     } catch (e) { /* keep current */ }
@@ -1025,7 +1027,7 @@ export function AppStateProvider({ children }) {
             setUser((u) => {
               if (!u) return u;
               const next = { ...u, city: back[0], cities: back };
-              AsyncStorage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
+              storage.setItem(STORE_KEY, JSON.stringify(next)).catch(() => {});
               return next;
             });
             Alert.alert('Couldn\u2019t save that', `${back.length > 1 ? 'Your cities' : 'Your city'} didn\u2019t save, so nothing changed. Check your connection and try again.`);
@@ -1130,7 +1132,7 @@ export function AppStateProvider({ children }) {
     const prev = prefs;
     const persist = (p) => {
       setPrefs(p);
-      AsyncStorage.setItem(PREFS_KEY, JSON.stringify(p)).catch(() => {});
+      storage.setItem(PREFS_KEY, JSON.stringify(p)).catch(() => {});
     };
     persist(clean);
     if (live) {
@@ -1152,8 +1154,8 @@ export function AppStateProvider({ children }) {
     // Also clear the native Google session, so the next sign-in offers the
     // account picker instead of silently reusing the last account.
     social.signOutProviders().catch(() => {});
-    AsyncStorage.removeItem(STORE_KEY).catch(() => {});
-    AsyncStorage.removeItem(SAVED_KEY).catch(() => {});
+    storage.removeItem(STORE_KEY).catch(() => {});
+    storage.removeItem(SAVED_KEY).catch(() => {});
     setUser(null);
     setMode('play');
     setDeckPos(0);
@@ -1170,7 +1172,7 @@ export function AppStateProvider({ children }) {
     setThreads(THREADS);
     setNotifs(NOTIFICATIONS.map((n) => ({ ...n })));
     setPrefs(DEFAULT_PREFS);
-    AsyncStorage.removeItem(PREFS_KEY).catch(() => {});
+    storage.removeItem(PREFS_KEY).catch(() => {});
     setLiveEvents(null);
     setLiveCourts(null);
     setLiveTournaments(null);

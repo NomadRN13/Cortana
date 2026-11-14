@@ -3776,4 +3776,33 @@ delete from banned_phones;
 delete from admins where user_id = '00000000-0000-4000-8000-000000000905';
 delete from auth.users where id in ('00000000-0000-4000-8000-000000000901', '00000000-0000-4000-8000-000000000902', '00000000-0000-4000-8000-000000000903', '00000000-0000-4000-8000-000000000904', '00000000-0000-4000-8000-000000000905', '00000000-0000-4000-8000-000000000906', '00000000-0000-4000-8000-00000000090a');
 
+-- ==== 11. Security floor: no table is reachable without a rule ====
+-- Row-level security is on for every table in public, so a table added later
+-- without it fails here rather than shipping open. (docs/security.md §2.)
+do $$
+declare bad text;
+begin
+  select string_agg(c.relname, ', ' order by c.relname) into bad
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity;
+  assert bad is null, format('tables without row-level security: %s', bad);
+  -- A stranger (anon) can write to no table directly. Supabase grants table
+  -- privileges to anon by default and relies on policies, so the thing to
+  -- check is the policies: none lets anon (or "public", which includes anon)
+  -- insert, update or delete. The waitlist and every other anonymous action
+  -- goes through a function that checks its input.
+  select string_agg(tablename || '.' || policyname, ', ' order by tablename) into bad
+    from pg_policies
+   where schemaname = 'public' and cmd in ('INSERT', 'UPDATE', 'DELETE', 'ALL')
+     and roles && array['anon', 'public']::name[];
+  assert bad is null, format('a policy lets a stranger write: %s', bad);
+  -- Row-level security does not cover TRUNCATE, so the privilege itself is gone
+  -- for both API roles (migration 43), on every table.
+  select string_agg(distinct grantee || ' on ' || table_name, ', ') into bad
+    from information_schema.role_table_grants
+   where table_schema = 'public' and grantee in ('anon', 'authenticated')
+     and privilege_type in ('TRUNCATE', 'REFERENCES', 'TRIGGER');
+  assert bad is null, format('an API role can truncate or alter: %s', bad);
+end $$;
+
 select 'ALL BACKEND TESTS PASSED' as result;

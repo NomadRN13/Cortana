@@ -255,7 +255,9 @@ Expected result: **Mature 17+**.
 ### Data Safety form
 
 Global answers:
-- **Data encrypted in transit:** Yes (HTTPS to Supabase).
+- **Data encrypted in transit:** Yes (HTTPS/TLS to Supabase). Also encrypted
+  at rest (AES-256, Supabase) and, on the phone, the session and cached
+  profile sit in the Keychain / Android Keystore. Evidence: `docs/security.md`.
 - **Users can request data deletion:** Yes — in-app, Settings → Delete
   account.
 - **Account deletion URL** (Play requires a web page, not just the in-app

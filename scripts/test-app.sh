@@ -48,6 +48,8 @@ echo
 node screens.test.js
 echo
 node review.test.js
+echo
+node secure-storage.test.js
 
 echo
 echo "✅ App suites passed."

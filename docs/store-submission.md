@@ -26,6 +26,10 @@ submits or touches the live database is yours to run (CLAUDE.md, rule 1).
 - Google sign-in's native setup is added only when its client ids are set;
   otherwise the button never shows.
 - A review sign-in path (below) so App Review never needs an inbox.
+- The sign-in session and the cached profile are kept in the phone's
+  encrypted store (Keychain / Android Keystore, AES-256), Android backups are
+  off, and the app ships no encryption code of its own, so the export answer
+  stays "exempt" (`docs/security.md`).
 - `./scripts/healthcheck.sh` pins all of the above.
 
 ## 1. Before any build (one time)
@@ -37,9 +41,8 @@ submits or touches the live database is yours to run (CLAUDE.md, rule 1).
    - Base and 30–32 true, the rest false: paste
      `supabase/go-live/2-upgrade-from-32.sql`. It is all or nothing — if a
      statement fails, nothing changes.
-   - Only the last rows false (a project set up from an earlier
-     `setup.sql`): paste just those migrations from `supabase/migrations/`,
-     in order.
+   - True through 41 and false after (the live project as first set up):
+     paste `supabase/go-live/2-upgrade-from-41.sql`.
    - Anything else: send the result to Claude before pasting anything.
    - Run `1-status.sql` again; every row must read true.
    - Then deploy the push function from your computer:

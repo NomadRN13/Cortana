@@ -88,7 +88,7 @@ icons, splash, share card and `mobile/assets/ball.png`
 
 ## The agent team
 
-Thirteen agents in `.claude/agents/`: two crews of ten, described in
+Seventeen agents in `.claude/agents/`: two crews of ten, described in
 `docs/networking-team.md`: networking (`community-scout`,
 `club-partnerships`, `social-content`, `waitlist-community`,
 `mixer-coordinator`, `validation-analyst`) and product & launch
@@ -99,7 +99,11 @@ three are the self-improvement network (`network-auditor`, `rules-sentinel`,
 `self-repair`; `docs/self-improvement-network.md`, the `self-improve` skill):
 they measure with `./scripts/healthcheck.sh`, propose in `docs/proposals/`,
 repair only outside the safety core, and log in `docs/improvement-log.md`.
-A weekly scheduled audit runs the loop on Mondays.
+A weekly scheduled audit runs the loop on Mondays. The last four are the
+cyber security team (`security-lead`, `appsec-engineer`,
+`penetration-tester`, `incident-responder`; `docs/security.md`,
+`docs/incident-response.md`): they review weekly, attack only the local test
+database and local builds, and never touch production.
 
 ## Live infrastructure (state as of 2026-11-13)
 
@@ -107,7 +111,8 @@ A weekly scheduled audit runs the loop on Mondays.
   Every link and the support address `hello@rsvplayapp.com` use it. The app's
   bundle id stays `com.rsvplay.app`; it is an identifier, not a domain.
 - **Database:** the live Supabase project is set up from `setup.sql`
-  (migrations through 41 applied; 42 pending). Applied migrations are never
+  (migrations through 41 applied; 42 and 43 pending, in
+  `supabase/go-live/2-upgrade-from-41.sql`). Applied migrations are never
   edited: a change is a new migration, pasted from `supabase/go-live/`.
 - **Website:** published by Netlify (project `rsvplay`, production branch
   set to this one). Its free build credits ran out on day one, so new deploys

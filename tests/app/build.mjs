@@ -28,6 +28,10 @@ const byPackage = {
 };
 const byBasename = {
   supabase: path.join(stubs, 'supabase.js'),
+  // state.js keeps the profile in lib/secureStorage.js. Here it is the same
+  // in-memory store the suites reset between mounts; the real module is
+  // tested on its own, against a fake secure store (secure-storage.test.js).
+  secureStorage: path.join(stubs, 'async-storage.js'),
   socialAuth: path.join(stubs, 'native.js'),
   device: path.join(stubs, 'native.js'),
   push: path.join(stubs, 'native.js'),

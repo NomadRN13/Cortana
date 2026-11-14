@@ -1,0 +1,26 @@
+# RSVPlay — security headers for every page of the website.
+# Copied to site/_headers by scripts/build-site.sh. Netlify and Cloudflare
+# Pages both read this file. tests/web/headers.test.js serves the built site
+# with exactly these headers and fails if a page breaks under them.
+#
+# - HTTPS only, for a year, on every subdomain.
+# - No page may be framed by another site (clickjacking), and browsers may not
+#   guess a file's type.
+# - The pages load nothing from anywhere but this site, and may only talk to
+#   the Supabase project. 'unsafe-inline' is there because each page carries
+#   its own script and styles in the file; no page uses eval, an inline
+#   handler, an outside font or an outside script.
+# - The pages never ask for the camera, microphone, location or payment.
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Cross-Origin-Opener-Policy: same-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+
+# The moderation desk: never indexed, never cached by a shared computer.
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
