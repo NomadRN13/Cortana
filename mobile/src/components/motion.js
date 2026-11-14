@@ -20,8 +20,14 @@ export function useReduceMotion() {
 
 // Drag-to-swipe wrapper for the top deck card. Children render the card
 // itself; LIKE/PASS stamps fade in with the drag. Taps (no movement) call
-// onTap, so buttons inside the card keep working.
-export function SwipeableCard({ children, onSwipeRight, onSwipeLeft, onTap, disabled }) {
+// onTap, so buttons inside the card keep working. With canSwipeRight false
+// (no Date likes left today) a right swipe springs back and calls
+// onBlockedRight instead of flinging the card away.
+export function SwipeableCard({ children, onSwipeRight, onSwipeLeft, onTap, disabled, canSwipeRight = true, onBlockedRight }) {
+  const rightOk = useRef(canSwipeRight);
+  rightOk.current = canSwipeRight;
+  const blocked = useRef(onBlockedRight);
+  blocked.current = onBlockedRight;
   const pan = useRef(new Animated.ValueXY()).current;
   const moved = useRef(false);
 
@@ -43,7 +49,10 @@ export function SwipeableCard({ children, onSwipeRight, onSwipeLeft, onTap, disa
         pan.setValue({ x: g.dx, y: g.dy * 0.15 });
       },
       onPanResponderRelease: (_e, g) => {
-        if (g.dx > 110) fling(1, onSwipeRight);
+        if (g.dx > 110 && !rightOk.current) {
+          Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 6, useNativeDriver: true }).start();
+          if (blocked.current) blocked.current();
+        } else if (g.dx > 110) fling(1, onSwipeRight);
         else if (g.dx < -110) fling(-1, onSwipeLeft);
         else Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 6, useNativeDriver: true }).start();
       },

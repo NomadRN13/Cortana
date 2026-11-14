@@ -37,6 +37,10 @@ export default function MatchesScreen({ navigation }) {
   const likeFromSaved = async (id) => {
     const p = app.profileById(id);
     const matched = await app.likeSaved(id);
+    if (matched === 'limited') {
+      Alert.alert('That’s today’s likes', `You get ${app.dateLikes.allowance} likes a day in Date mode. ${p ? p.name : 'They'} stays in your saved list for tomorrow.`);
+      return;
+    }
     if (matched) {
       Alert.alert("It's a Match Point!", `You and ${p.name} matched. The court is the icebreaker.`, [
         { text: 'Send a message', onPress: () => navigation.navigate('Chat', { screen: 'Conversation', params: { id }, initial: false }) },

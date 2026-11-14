@@ -23,6 +23,10 @@ import { registerForPush } from './lib/push';
 import { getCoarseLocation } from './lib/location';
 import { distanceReason } from './lib/distance';
 
+// Date mode: likes per rolling 24 hours. The real number comes from the server
+// (app_settings.date_likes_per_day, migration 44); the demo build uses this.
+export const DEMO_DATE_LIKES_PER_DAY = 3;
+const DAY_MS = 24 * 60 * 60 * 1000;
 const STORE_KEY = 'rsvplay.profile';
 const SAVED_KEY = 'rsvplay.saved';
 // Discovery prefs used to live only in memory, so a member set their age
@@ -1511,6 +1515,33 @@ export function AppStateProvider({ children }) {
     ensureThread(id);
   };
 
+  // ---------- Date-mode likes: a few a day ----------
+  // The database decides (migration 44): a like or an ace in Date mode counts,
+  // a pass never does, Play and Friends are not limited. The app mirrors the
+  // count so the member is told before the card moves, not after.
+  //   remaining: likes left now; nextAt: when the next one comes back (ms) or null.
+  const [dateLikes, setDateLikes] = useState({ allowance: DEMO_DATE_LIKES_PER_DAY, remaining: DEMO_DATE_LIKES_PER_DAY, nextAt: null });
+  const demoDateLikesRef = useRef([]);   // demo: when each like was made, in ms
+  const demoDateLikeState = () => {
+    const now = Date.now();
+    demoDateLikesRef.current = demoDateLikesRef.current.filter((t) => t > now - DAY_MS);
+    const used = demoDateLikesRef.current.length;
+    const remaining = Math.max(DEMO_DATE_LIKES_PER_DAY - used, 0);
+    return { allowance: DEMO_DATE_LIKES_PER_DAY, remaining, nextAt: remaining === 0 ? demoDateLikesRef.current[0] + DAY_MS : null };
+  };
+  const refreshDateLikes = async () => {
+    if (!live) { setDateLikes(demoDateLikeState()); return; }
+    try {
+      const r = await api.getMyDateLikes();
+      if (r) setDateLikes({ allowance: r.allowance, remaining: r.remaining, nextAt: r.next_at ? new Date(r.next_at).getTime() : null });
+    } catch (e) { /* keep the last known count; the server still enforces it */ }
+  };
+  useEffect(() => { if (mode === 'date') refreshDateLikes(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [live, mode]);
+  // In Date mode, with none left, a like is not even tried: the card stays put.
+  const dateLikeBlocked = (m = mode) => m === 'date' && dateLikes.remaining <= 0
+    && !(dateLikes.nextAt && dateLikes.nextAt <= Date.now());
+  const isDateLimit = (e) => !!e && (e.code === '54000' || /today.s likes/i.test(e.message || ''));
+
   const registerLike = (id, ace) => {
     const n = likeCount + 1;
     setLikeCount(n);
@@ -1519,11 +1550,22 @@ export function AppStateProvider({ children }) {
     return isMatch;
   };
 
+  // → true (matched), false (sent, no match yet) or 'limited' (Date mode, none
+  // left today: nothing was sent and the card did not move).
   const swipeLike = async (p, ace) => {
+    if (dateLikeBlocked()) return 'limited';
+    if (mode === 'date' && !live) {
+      demoDateLikesRef.current.push(Date.now());
+      setDateLikes(demoDateLikeState());
+    }
     if (live) {
+      const before = liveIndex;
+      const inDate = mode === 'date';
+      if (inDate) setDateLikes((d) => ({ ...d, remaining: Math.max(d.remaining - 1, 0) }));
       advance();
       try {
         const match = await api.swipe(p.id, mode, ace ? 'ace' : 'like');
+        if (inDate) refreshDateLikes();
         if (match) {
           cacheRef.current[p.id] = p;
           matchIdsRef.current[p.id] = match.id; // B-01: matchId known immediately
@@ -1532,7 +1574,16 @@ export function AppStateProvider({ children }) {
           refreshMatchesAndThreads();
           return true;
         }
-      } catch (e) { /* offline: deck refresh will resurface them */ }
+      } catch (e) {
+        // Over today's Date likes: put the card back, so nobody is lost.
+        if (inDate && isDateLimit(e)) {
+          setLiveIndex(before);
+          setDateLikes((d) => ({ ...d, remaining: 0 }));
+          refreshDateLikes();
+          return 'limited';
+        }
+        /* offline: deck refresh will resurface them */
+      }
       return false;
     }
     const matched = registerLike(p.id, ace);
@@ -1546,11 +1597,17 @@ export function AppStateProvider({ children }) {
   };
 
   const likeSaved = async (id) => {
+    if (dateLikeBlocked()) return 'limited';
+    if (mode === 'date' && !live) {
+      demoDateLikesRef.current.push(Date.now());
+      setDateLikes(demoDateLikeState());
+    }
     persistSaved({ ...saved, [id]: false });
     setSeen((s) => ({ ...s, [id]: true }));
     if (live) {
       try {
         const match = await api.swipe(id, mode, 'like');
+        if (mode === 'date') refreshDateLikes();
         if (match) {
           matchIdsRef.current[id] = match.id;
           celebratedRef.current[match.id] = true; // B-21 dedupe
@@ -1558,7 +1615,14 @@ export function AppStateProvider({ children }) {
           refreshMatchesAndThreads();
           return true;
         }
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        if (mode === 'date' && isDateLimit(e)) {
+          persistSaved({ ...saved, [id]: true });   // still saved, nothing lost
+          setDateLikes((d) => ({ ...d, remaining: 0 }));
+          refreshDateLikes();
+          return 'limited';
+        }
+      }
       return false;
     }
     return registerLike(id, false);
@@ -2247,6 +2311,7 @@ export function AppStateProvider({ children }) {
     currentProfile, advance, rewind, deckError, peekNext, resetDeck,
     retryDeck: () => refreshDeck(mode),
     swipeLike, swipePass, likeSaved, registerLike,
+    dateLikes, dateLikeBlocked, refreshDateLikes,
     saved, setSaved: persistSaved, seen, setSeen, blocked, block, report,
     matches, threads: visibleThreads, profileById, ensureThread,
     sendMessage, retryMessage, discardMessage, subscribeThread, respondCourt, markRead,

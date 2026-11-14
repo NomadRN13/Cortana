@@ -107,8 +107,10 @@ Court rental, host time and event insurance have to come out of ticket money.
 
 - **Always free:** phone verification, block, report, the human report desk,
   account deletion, check-in, waivers, crew, messaging.
-- **Dating is never paywalled.** Likes in dating mode stay unlimited for
-  everyone. Any daily cap applies only to partner and friend requests.
+- **Date likes: 3 a day, free (founder's decision, 2026-11-14).** More likes
+  come from a like pack or a membership: `docs/proposals/2026-11-14-like-packs.md`.
+  Dating stays a mode, never the headline: no paid feature is marketed as
+  dating first.
 - **No fee kept from a no-show.** A paid ticket for someone who doesn't come
   becomes a credit, or is refunded. Never kept.
 - **No pricing by gender or age.** Tinder paid a reported $60.5M settlement in

@@ -209,3 +209,20 @@ shipped. Agents append; nobody rewrites history.
 - **Verified:** `./scripts/healthcheck.sh --full` — 123 passed, 0 failed
   (backend on 43 migrations; app suites incl. secure storage; web suites
   incl. the site under its headers). iOS, Android and web bundles compile.
+
+## 2026-11-14 — three Date likes a day
+
+- **Founder's decision:** in Date mode, 3 likes per rolling 24 hours for now;
+  more likes later through like packs or a membership.
+- **Built:** migration 44 (counted on the server; an ace counts, a pass and
+  Play/Friends don't; undo gives nothing back; the number is a setting).
+  The app shows "N of 3 likes left today", refuses before the card moves,
+  and puts the card back if the server refuses. Harness §12 and
+  `tests/app/datelikes.test.js`.
+- **Plan:** `docs/proposals/2026-11-14-like-packs.md`. The pricing options
+  now say Date likes are limited, not unlimited.
+- **Debugged:** the full run found one failure, a retired-name mention in the
+  security review note; reworded.
+- **Verified:** `./scripts/healthcheck.sh --full`, all suites green; iOS and
+  Android bundles compile. `supabase/go-live/2-upgrade-from-41.sql` now
+  carries 42, 43 and 44.

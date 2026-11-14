@@ -62,6 +62,9 @@ alter default privileges in schema public grant execute on functions to anon, au
 -- create members without one, so it is switched off here and switched ON for
 -- its own test (10c-ii). Only the database owner can touch this switch.
 update public.app_settings set require_verified_phone = false;
+-- Likewise the three-a-day Date like limit (migration 44): the older sections
+-- like freely, and section 12 turns the limit back on and tests it.
+update public.app_settings set date_likes_per_day = 1000;
 
 grant all on all tables in schema storage to anon, authenticated;
 grant usage, select on all sequences in schema public to anon, authenticated;
@@ -3804,5 +3807,96 @@ begin
      and privilege_type in ('TRUNCATE', 'REFERENCES', 'TRIGGER');
   assert bad is null, format('an API role can truncate or alter: %s', bad);
 end $$;
+
+-- ==== 12. Three likes a day in Date mode (migration 44) ====
+do $$ begin
+  assert (select column_default from information_schema.columns
+           where table_schema = 'public' and table_name = 'app_settings' and column_name = 'date_likes_per_day') = '3',
+    'migration 44 no longer ships three likes a day';
+end $$;
+update app_settings set date_likes_per_day = 3;   -- what migration 44 ships
+insert into auth.users (id, email) select ('00000000-0000-4000-8000-000000000c0' || n)::uuid, 'dl' || n || '@example.com' from generate_series(1, 5) n;
+insert into profiles (id, first_name, birthdate, city, phone_verified_at)
+  select ('00000000-0000-4000-8000-000000000c0' || n)::uuid, 'Dl' || n, '1990-01-01', 'phoenix', now() from generate_series(1, 5) n;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000c01';
+do $$
+declare r record;
+begin
+  select * into r from get_my_date_likes();
+  assert r.allowance = 3 and r.used = 0 and r.remaining = 3 and r.next_at is null, format('fresh member: %s', r);
+  -- Play and Friends are not capped by this.
+  insert into swipes (actor_id, target_id, mode, action) select '00000000-0000-4000-8000-000000000c01', ('00000000-0000-4000-8000-000000000c0' || n)::uuid, 'play', 'like' from generate_series(2, 5) n;
+  insert into swipes (actor_id, target_id, mode, action) select '00000000-0000-4000-8000-000000000c01', ('00000000-0000-4000-8000-000000000c0' || n)::uuid, 'friends', 'like' from generate_series(2, 5) n;
+  assert (select remaining from get_my_date_likes()) = 3, 'a Play or Friends like used up a Date like';
+  -- Three in Date mode: a like, an ace and a like.
+  insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000c01', '00000000-0000-4000-8000-000000000c02', 'date', 'like');
+  insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000c01', '00000000-0000-4000-8000-000000000c03', 'date', 'ace');
+  insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000c01', '00000000-0000-4000-8000-000000000c04', 'date', 'like');
+  select * into r from get_my_date_likes();
+  assert r.used = 3 and r.remaining = 0 and r.next_at > now() + interval '23 hours', format('after three: %s', r);
+  -- The fourth is refused, a like or an ace.
+  begin
+    insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000c01', '00000000-0000-4000-8000-000000000c05', 'date', 'like');
+    assert false, 'a fourth Date like in a day went through';
+  exception when program_limit_exceeded then
+    assert sqlerrm like '%today''s likes%', 'the fourth like was refused with the wrong words: ' || sqlerrm;
+  end;
+  begin
+    insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000c01', '00000000-0000-4000-8000-000000000c05', 'date', 'ace');
+    assert false, 'an ace got round the Date like limit';
+  exception when program_limit_exceeded then null;
+  end;
+  -- A pass is never limited.
+  insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000c01', '00000000-0000-4000-8000-000000000c05', 'date', 'pass');
+  -- Undoing a like does not give it back.
+  perform undo_swipe('00000000-0000-4000-8000-000000000c02', 'date');
+  begin
+    insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000c01', '00000000-0000-4000-8000-000000000c02', 'date', 'like');
+    assert false, 'undoing a like gave it back';
+  exception when program_limit_exceeded then null;
+  end;
+  -- A member cannot read the allowance function or the log directly.
+  begin
+    perform date_like_allowance('00000000-0000-4000-8000-000000000c01');
+    assert false, 'a member can call date_like_allowance';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+-- One member's likes are not another's.
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000c02';
+do $$ begin
+  assert (select remaining from get_my_date_likes()) = 3, 'another member''s likes were counted against me';
+end $$;
+reset role;
+-- The number comes from app_settings: raise it and the same member can like again.
+update app_settings set date_likes_per_day = 5;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000c01';
+do $$ begin
+  assert (select remaining from get_my_date_likes()) = 2, 'the allowance did not follow app_settings';
+  insert into swipes (actor_id, target_id, mode, action) values ('00000000-0000-4000-8000-000000000c01', '00000000-0000-4000-8000-000000000c02', 'date', 'like');
+end $$;
+reset role;
+update app_settings set date_likes_per_day = 3;
+-- Likes older than 24 hours no longer count.
+update rate_events set at = now() - interval '25 hours' where user_id = '00000000-0000-4000-8000-000000000c01' and kind = 'date_like';
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000c01';
+do $$ begin
+  assert (select remaining from get_my_date_likes()) = 3, 'likes older than a day still counted';
+end $$;
+reset role;
+set role anon;
+do $$ begin
+  begin
+    perform * from get_my_date_likes();
+    assert false, 'anon can call get_my_date_likes';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+set request.jwt.claim.sub = '';
+delete from auth.users where id in ('00000000-0000-4000-8000-000000000c01', '00000000-0000-4000-8000-000000000c02', '00000000-0000-4000-8000-000000000c03', '00000000-0000-4000-8000-000000000c04', '00000000-0000-4000-8000-000000000c05');
 
 select 'ALL BACKEND TESTS PASSED' as result;

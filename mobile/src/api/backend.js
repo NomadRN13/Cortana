@@ -364,6 +364,15 @@ export async function swipe(targetId, mode, action) {
   return data; // null = no match yet; row = It's a Match Point!
 }
 
+// Date mode allows a limited number of likes per rolling 24 hours (migration
+// 44). → { allowance, used, remaining, next_at } — next_at is when the next
+// like comes back, or null while some are left.
+export async function getMyDateLikes() {
+  const { data, error } = await supabase.rpc('get_my_date_likes');
+  if (error) throw error;
+  return Array.isArray(data) ? data[0] || null : data;
+}
+
 export async function undoSwipe(targetId, mode) {
   // Takes back the last swipe on this person in this mode; false when a
   // conversation already exists (the server never deletes those).

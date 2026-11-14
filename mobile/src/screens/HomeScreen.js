@@ -64,8 +64,22 @@ export default function HomeScreen({ navigation }) {
     return `Good ${part}${app.user ? `, ${app.user.name}` : ''} 👋`;
   };
 
+  // Date mode: a few likes a day. Said before the card moves, with when the
+  // next one comes back.
+  const outOfLikes = () => {
+    const d = app.dateLikes;
+    const when = d.nextAt
+      ? new Date(d.nextAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+      : null;
+    Alert.alert(
+      'That’s today’s likes',
+      `You get ${d.allowance} likes a day in Date mode${when ? `. Your next one is back at ${when}` : ''}. `
+        + 'Passing is unlimited, and Play and Friends have no daily limit.'
+    );
+  };
   const likeProfile = async (prof, ace) => {
     const matched = await app.swipeLike(prof, ace);
+    if (matched === 'limited') { outOfLikes(); return; }
     if (matched) setMatchWith(prof);
   };
   const onLike = (ace) => { if (p) likeProfile(p, ace); };
@@ -256,6 +270,8 @@ export default function HomeScreen({ navigation }) {
               key={p.id}
               onSwipeRight={() => onLike(false)}
               onSwipeLeft={() => app.swipePass(p)}
+              canSwipeRight={!app.dateLikeBlocked()}
+              onBlockedRight={outOfLikes}
               onTap={() => setSheetP(p)}
             >
               <DeckCard p={p} app={app} onLike={() => onLike(false)} onMore={onMore} />
@@ -289,6 +305,16 @@ export default function HomeScreen({ navigation }) {
           </View>
         )}
 
+        {p && app.mode === 'date' && (
+          <Text
+            style={[type.hint, { textAlign: 'center', marginTop: 10 }, app.dateLikes.remaining === 0 && { color: colors.optic }]}
+            accessibilityLiveRegion="polite"
+          >
+            {app.dateLikes.remaining === 0
+              ? 'No likes left today in Date mode'
+              : `${app.dateLikes.remaining} of ${app.dateLikes.allowance} likes left today`}
+          </Text>
+        )}
         {p && (
           <View style={styles.actions}>
             <ActionBtn icon="refresh" label="Rewind last card" onPress={onRewind} />

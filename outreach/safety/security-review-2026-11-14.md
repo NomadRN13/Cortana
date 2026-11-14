@@ -20,7 +20,7 @@ website or any vendor console.
 ## Checked and held
 
 - **Secrets:** none in the working tree, and none in the 115 commits of the
-  three branches scanned (the launch branch, the earlier 40/Love branch and
+  three branches scanned (the launch branch, the earlier pre-rename branch and
   one presentations branch): keys, tokens, private keys, JWT-shaped strings,
   env and key files. The `main` branch was not in this copy and was not
   scanned.
