@@ -3,8 +3,8 @@
 **Status:** the free limit is built: 3 likes a day in Date mode (migration
 44). **Decided 2026-11-15:** offer both like packs and the membership, at the
 prices below. They ship with the paid version, after the free 1.0 launch.
-RSVPlay+ gets 10 Date likes a day (decided 2026-11-15). Still open: the pricing
-option for RSVPlay+ itself. Nothing below is built yet.
+RSVPlay+ gets 10 Date likes a day and costs **$4.99 a month or $39.99 a year**
+(both decided 2026-11-15). Nothing below is built yet.
 
 ## What members get free
 

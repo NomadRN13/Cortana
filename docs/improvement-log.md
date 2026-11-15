@@ -240,3 +240,5 @@ shipped. Agents append; nobody rewrites history.
   signup); like packs 5/$2.99, 15/$6.99, 30/$11.99. RSVPlay+'s own price is
   still the founder's to set.
 - **Verified:** `./scripts/healthcheck.sh --full` — 124 passed, 0 failed.
+- **Price set (founder, 2026-11-15):** RSVPlay+ is $4.99 a month or $39.99 a
+  year (about 33% off for the year).

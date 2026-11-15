@@ -4,7 +4,11 @@
 it was "Club"; the database tier stays `club`). Option B below keeps its
 original two-tier labels because it was not chosen.
 
-**Status:** for the founder to choose. Version 1.0 launches free (decided
+**Status (2026-11-15):** the membership is chosen. RSVPlay+ costs **$4.99 a
+month or $39.99 a year**, with Option C's benefits (early event signup,
+first claim on full events, no booking fee) plus 10 Date likes a day. Like
+packs: 5 for $2.99, 15 for $6.99, 30 for $11.99. Still open: ticket prices
+for RSVPlay-run events, and the launch offers. Version 1.0 launches free (decided
 2026-11-14). Nothing here is built. Payments still need rule 4 changed by the
 founder (`docs/proposals/2026-11-14-payments.md`).
 
