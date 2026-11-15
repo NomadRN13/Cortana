@@ -229,12 +229,12 @@ async function main() {
   check('so check-in asks for the waiver again', ok === false && named('checkInToEvent').length === 0 && /waiver/i.test(alerts[0].message || ''), alerts);
 
   // ---- an RSVP the server refuses on purpose says why, and no waiver is sent ----
-  impl.rsvp = () => { throw refuse('Club members can RSVP now. Everyone else from Friday.', '42501'); };
+  impl.rsvp = () => { throw refuse('RSVPlay+ members can RSVP now. Everyone else from Friday.', '42501'); };
   calls.length = 0;
   alerts.length = 0;
   await act(async () => { ok = await app.rsvpWithWaiver('event-2'); await tick(); });
   check('a refused RSVP is not left showing as going', ok === false && ev('event-2').going !== true, [ok, ev('event-2').going]);
-  check('it says why, in the server’s words', alerts.length === 1 && /Club members can RSVP now/.test(alerts[0].message || ''), alerts);
+  check('it says why, in the server’s words', alerts.length === 1 && /RSVPlay\+ members can RSVP now/.test(alerts[0].message || ''), alerts);
   check('and no waiver is recorded for an RSVP that didn’t happen', named('acceptEventWaiver').length === 0, named('acceptEventWaiver').length);
 
   // ---- nothing here is written by the member directly ----

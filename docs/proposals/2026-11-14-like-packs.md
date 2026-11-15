@@ -3,8 +3,8 @@
 **Status:** the free limit is built: 3 likes a day in Date mode (migration
 44). **Decided 2026-11-15:** offer both like packs and the membership, at the
 prices below. They ship with the paid version, after the free 1.0 launch.
-Club gets 10 Date likes a day (decided 2026-11-15). Still open: the pricing
-option for Club itself. Nothing below is built yet.
+RSVPlay+ gets 10 Date likes a day (decided 2026-11-15). Still open: the pricing
+option for RSVPlay+ itself. Nothing below is built yet.
 
 ## What members get free
 
@@ -35,12 +35,12 @@ purchase; Apple and Google take about 15%).
 ### 2. A membership with more likes
 
 Fits any pricing option in `docs/proposals/2026-11-14-pricing-options.md`.
-Recommended with Option C's Club ($4.99/month or $39.99/year):
+Recommended with Option C's RSVPlay+ ($4.99/month or $39.99/year):
 
 | Plan | Date likes a day | Also |
 |---|---|---|
 | Free | 3 | Everything about playing and safety |
-| Club | 10 | Early event signup, first claim on full events, no booking fee |
+| RSVPlay+ | 10 | Early event signup, first claim on full events, no booking fee |
 
 Not unlimited: a cap keeps likes meaning something, which is the point of
 the free limit.
@@ -61,7 +61,7 @@ the free limit.
 
 - `date_like_allowance(member)` is the one place that answers "how many".
   Today it returns the setting (3). With payments it becomes: the setting,
-  or the Club number for members with an active Club plan, plus any bought
+  or the RSVPlay+ number for members with an active RSVPlay+ plan, plus any bought
   likes still unused.
 - Bought likes go in a new table, written only by the billing function after
   Apple or Google confirms the purchase, never by the app.
@@ -73,7 +73,7 @@ the free limit.
 1. ~~Packs, membership, or both?~~ **Both (decided 2026-11-15).**
 2. ~~Pack sizes and prices~~ **5 for $2.99, 15 for $6.99, 30 for $11.99
    (approved 2026-11-15).**
-3. ~~The Club allowance~~ **10 Date likes a day (decided 2026-11-15).**
+3. ~~The RSVPlay+ allowance~~ **10 Date likes a day (decided 2026-11-15).**
 4. Test first: during the free launch, count how often members hit the
    limit and come back the next day. If most never hit 3, the limit is
    doing its job and packs will sell slowly.

@@ -124,7 +124,7 @@ async function demo() {
   check('the mode pills are under "Find a game", in the order Play, Date, Friends', pills[0] > at('Find a game') && pills[0] < pills[1] && pills[1] < pills[2], pills);
   const first = h.app.currentProfile();
   check('the deck is there, below the pills', !!first && at(first.name) > pills[2], [first && first.name, at(first.name)]);
-  check('a Club saving shows on the event that has one, and only there', (t.match(/Club members save 15%/g) || []).length === 1 && !/Club members save 0%/.test(t), t.match(/Club members save \d+%/g));
+  check('a Club saving shows on the event that has one, and only there', (t.match(/RSVPlay\+ members save 15%/g) || []).length === 1 && !/RSVPlay\+ members save 0%/.test(t), t.match(/RSVPlay\+ members save \d+%/g));
 
   // the deck keeps working exactly as before
   await h.press(`Pass on ${first.name}`);
@@ -251,7 +251,7 @@ async function demo() {
   check('"How the night works" is the event’s own description, split only at sentence ends', t.includes('How the night works') && steps.length > 1 && steps.join(' ') === ev.desc && steps.every((x) => t.includes(x)), steps);
   check('a sentence split never breaks a rating or an abbreviation', B.descSteps('NTRP 3.0–4.0 only. Int. and up welcome! Bring water.').length === 3 && B.descSteps('').length === 0 && B.descSteps('One line').join() === 'One line');
   check('spots left and the show-up line are there', t.includes(`${ev.spotsLeft} spots left`) && t.includes('RSVP means show up. Check in with the host’s code when you arrive.'));
-  check('a free event shows no price and no Club saving', !/\$\d/.test(t) && !/Club members save/.test(t), t.match(/\$\d[\d.]*|Club members save \d+%/g));
+  check('a free event shows no price and no Club saving', !/\$\d/.test(t) && !/RSVPlay\+ members save/.test(t), t.match(/\$\d[\d.]*|RSVPlay\+ members save \d+%/g));
   B.shares.length = 0;
   await h.press('Share event');
   const msg = B.shares[0] && B.shares[0].message;
@@ -283,7 +283,7 @@ async function demo() {
   const paid = h.app.events.find((x) => x.priceCents > 0 && x.clubDiscountPct > 0);
   await h.show(B.EventDetailScreen, { params: { id: paid.id } });
   t = h.text();
-  check('a priced event shows its price and the Club saving', t.includes(B.priceLabel(paid.priceCents)) && /^\$\d/.test(B.priceLabel(paid.priceCents)) && t.includes(`Club members save ${paid.clubDiscountPct}%`), t.match(/\$\d[\d.]*|Club members save \d+%/g));
+  check('a priced event shows its price and the Club saving', t.includes(B.priceLabel(paid.priceCents)) && /^\$\d/.test(B.priceLabel(paid.priceCents)) && t.includes(`RSVPlay\+ members save ${paid.clubDiscountPct}%`), t.match(/\$\d[\d.]*|RSVPlay\+ members save \d+%/g));
 
   // who's going: never someone blocked or reported
   const faces = () => h.renderer.root.findAll((n) => n.props && n.props.size === 36 && n.props.id && n.props.name && typeof n.type === 'function').map((n) => n.props.id);
@@ -361,20 +361,20 @@ async function live() {
   let t = h.text();
   check('live Home also leads with events, then "Find a game"', t.indexOf('This week on the courts') >= 0 && t.indexOf('Doubles Mixer') > t.indexOf('This week on the courts') && t.indexOf('Find a game') > t.indexOf('Doubles Mixer'), [t.indexOf('This week on the courts'), t.indexOf('Doubles Mixer'), t.indexOf('Find a game')]);
   check('a member with Date and Play opens on Play, and only their modes are offered', h.app.mode === 'play' && t.indexOf('Play Mode') < t.indexOf('Date Mode') && !t.includes('Friends Mode'), [h.app.mode, t.indexOf('Play Mode'), t.indexOf('Date Mode')]);
-  check('the price and the Club saving are shown', t.includes('$12.50') && t.includes('Club members save 20%'), t.match(/\$[\d.]+|Club members save \d+%/g));
-  check('an event with no saving shows none', (t.match(/Club members save/g) || []).length === 1);
-  check('an event still in Club early access is not offered to a Plus member', !h.button('RSVP to Club Night') && /Club members can RSVP now\. It opens to everyone/.test(t), t.match(/Club[^.]*\./g));
+  check('the price and the Club saving are shown', t.includes('$12.50') && t.includes('RSVPlay+ members save 20%'), t.match(/\$[\d.]+|RSVPlay\+ members save \d+%/g));
+  check('an event with no saving shows none', (t.match(/RSVPlay\+ members save/g) || []).length === 1);
+  check('an event still in Club early access is not offered to a Plus member', !h.button('RSVP to Club Night') && /RSVPlay\+ members can RSVP now\. It opens to everyone/.test(t), t.match(/Club[^.]*\./g));
   await h.press('Doubles Mixer: see the details');
   check('live: a card opens the detail for that event', h.lastNav().name === 'EventDetail' && h.lastNav().params.id === 'ev-1', h.lastNav());
   await h.show(B.EventDetailScreen, { params: { id: 'ev-1' } });
   t = h.text();
-  check('live detail: title, venue, price and Club saving', t.includes('Doubles Mixer') && t.includes('Broad Ripple') && t.includes('$12.50') && t.includes('Club members save 20%'), t.slice(0, 400));
+  check('live detail: title, venue, price and Club saving', t.includes('Doubles Mixer') && t.includes('Broad Ripple') && t.includes('$12.50') && t.includes('RSVPlay+ members save 20%'), t.slice(0, 400));
   check('live detail: the server’s check-in shows, with the count and no faces', t.includes('Checked in ✓') && t.includes('1 going · including you') && h.renderer.root.findAll((n) => n.props && n.props.size === 36 && n.props.id && typeof n.type === 'function').length === 0, t.match(/\d+ going[^0-9]*/));
   check('live detail: no description, so no invented steps', !t.includes('How the night works'));
   await h.show(B.EventDetailScreen, { params: { id: 'ev-2' } });
   t = h.text();
-  check('live detail: a free event shows no price', !/\$\d/.test(t) && !/Club members save/.test(t));
-  check('live detail: Club early access holds a Plus member here too', !h.button('RSVP to Club Night') && /Club members can RSVP now/.test(t));
+  check('live detail: a free event shows no price', !/\$\d/.test(t) && !/RSVPlay\+ members save/.test(t));
+  check('live detail: Club early access holds a Plus member here too', !h.button('RSVP to Club Night') && /RSVPlay\+ members can RSVP now/.test(t));
   await h.show(B.ProfileScreen);
   check('the profile shows the tier the server gave', h.text().includes('Plus member'), h.text().slice(0, 200));
 
@@ -434,7 +434,7 @@ async function live() {
   await h2.show(B.EventsScreen);
   check('a Club member can RSVP during early access', !!h2.button('RSVP to Club Night') && h2.app.tier === 'club', h2.app.tier);
   await h2.show(B.ProfileScreen);
-  check('and their profile says Club member', h2.text().includes('Club member'), h2.text().slice(0, 200));
+  check('and their profile says RSVPlay+ member', h2.text().includes('RSVPlay+ member'), h2.text().slice(0, 200));
   await h2.unmount();
 }
 

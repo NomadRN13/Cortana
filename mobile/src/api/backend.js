@@ -461,7 +461,7 @@ export function subscribeToMessages(matchId, onEvent) {
 // runs its own calendar, so cities are required: asking without any returns
 // nothing rather than quietly falling back to every city in the country.
 // Each row carries price_cents (null when there is nothing to pay),
-// club_discount_pct and general_opens_at (before it, only Club members can
+// club_discount_pct and general_opens_at (before it, only RSVPlay+ members can
 // RSVP), and its RSVPs as { user_id, status }.
 //
 // Whether someone actually turned up, and when they accepted the waiver, is

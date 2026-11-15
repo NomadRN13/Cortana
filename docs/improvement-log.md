@@ -226,3 +226,17 @@ shipped. Agents append; nobody rewrites history.
 - **Verified:** `./scripts/healthcheck.sh --full`, all suites green; iOS and
   Android bundles compile. `supabase/go-live/2-upgrade-from-41.sql` now
   carries 42, 43 and 44.
+
+## 2026-11-15 — the membership is called RSVPlay+
+
+- **Founder's decision:** the paid membership is named RSVPlay+ (was "Club").
+  Chosen over Rally Pass, RSVPro and Big Dill: RSVPro and Big Dill are
+  already used by other businesses (a 2025 RSVP app; a pickleball gear
+  brand), and RSVPlay+ strengthens searches for the app's own name.
+- **Changed:** every member-facing "Club" in the app, the privacy policy,
+  the rules doc and the plan docs. Migration 45 re-words the one refusal the
+  database writes itself. The database tier value stays `club`.
+- **Plan so far:** Free (3 Date likes a day); RSVPlay+ (10 a day, early event
+  signup); like packs 5/$2.99, 15/$6.99, 30/$11.99. RSVPlay+'s own price is
+  still the founder's to set.
+- **Verified:** `./scripts/healthcheck.sh --full` — 124 passed, 0 failed.

@@ -24,13 +24,13 @@ export function priceLabel(cents) {
   return `$${Number.isInteger(dollars) ? dollars : dollars.toFixed(2)}`;
 }
 
-// "Club members save 15%", only when there is a saving to speak of.
+// "RSVPlay+ members save 15%", only when there is a saving to speak of.
 export function clubSavingLabel(pct) {
-  return pct > 0 ? `Club members save ${pct}%` : '';
+  return pct > 0 ? `RSVPlay+ members save ${pct}%` : '';
 }
 
 // When an event opens to everyone, if it hasn't yet: before general_opens_at
-// only Club members can RSVP. Worked out at draw time rather than when the
+// only RSVPlay+ members (tier 'club') can RSVP. Worked out at draw time rather than when the
 // list loaded, so a card left on screen unlocks when the moment passes.
 // Null once it is open to all (or always was).
 export function earlyAccessUntil(e) {
@@ -102,7 +102,7 @@ export function useEventAction({ app, e, onSeeCrew }) {
   const [reading, setReading] = useState(false);
 
   const opensToAll = earlyAccessUntil(e);
-  // Club members can RSVP during early access; everyone else waits. The
+  // RSVPlay+ members (tier 'club') can RSVP during early access; everyone else waits. The
   // server enforces it — this only saves a tap that would be refused.
   const locked = !!opensToAll && app.tier !== 'club' && !e.going;
   const needsTick = () => Alert.alert('Tick the box first', 'Every RSVP comes with the event waiver and code of conduct.');
@@ -139,7 +139,7 @@ export function useEventAction({ app, e, onSeeCrew }) {
   if (e.checkedIn) {
     side = <Tag label="Checked in ✓" accent />;
   } else if (locked) {
-    side = <Text style={[type.hint, { fontSize: 11.5, textAlign: 'right' }]}>Club only{'\n'}for now</Text>;
+    side = <Text style={[type.hint, { fontSize: 11.5, textAlign: 'right' }]}>RSVPlay+ only{'\n'}for now</Text>;
   } else if (e.going) {
     side = (
       <Pressable
@@ -233,7 +233,7 @@ export function useEventAction({ app, e, onSeeCrew }) {
   } else if (locked) {
     below = (
       <View style={styles.below}>
-        <Text style={[type.hint, { fontSize: 12.5 }]}>Club members can RSVP now. It opens to everyone {opensToAll}.</Text>
+        <Text style={[type.hint, { fontSize: 12.5 }]}>RSVPlay+ members can RSVP now. It opens to everyone {opensToAll}.</Text>
       </View>
     );
   } else if (step === 'rsvp') {
@@ -283,7 +283,7 @@ export function EventCard({ app, e, onOpen, showCity, onSeeCrew }) {
               {!!price && <Tag label={price} />}
               {/* which city, once the list spans more than one */}
               {showCity && !!e.city && <Tag label={cityLabel(e.city)} />}
-              {!!opensToAll && <Tag label="Club early access" />}
+              {!!opensToAll && <Tag label="RSVPlay+ early access" />}
             </View>
             {!!saving && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>

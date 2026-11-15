@@ -592,7 +592,7 @@ export function AppStateProvider({ children }) {
           // null: nothing to pay, or the organiser hasn't said.
           priceCents: typeof e.price_cents === 'number' ? e.price_cents : null,
           clubDiscountPct: discount > 0 ? discount : 0,
-          // Before this moment only Club members can RSVP; null means open to all.
+          // Before this moment only RSVPlay+ members can RSVP; null means open to all.
           generalOpensAt: e.general_opens_at || null,
           // On record with the server — or accepted a moment ago on this phone,
           // while this list was already on its way back without it.
@@ -816,8 +816,8 @@ export function AppStateProvider({ children }) {
 
   // A profile cached on the phone is not fetched again at launch, so the one
   // thing on it that only the desk changes — the membership tier — would stay
-  // as it was at the last sign-in, and a member just made Club would still be
-  // held out of Club early access. Read it again, quietly; a failure leaves
+  // as it was at the last sign-in, and a member just given RSVPlay+ would still be
+  // held out of RSVPlay+ early access. Read it again, quietly; a failure leaves
   // the cached tier standing. (With no cached profile, boot fetches the whole
   // row anyway.) Its own effect because it needs the cache to have been read:
   // the session can be known before local storage is.
@@ -1981,7 +1981,7 @@ export function AppStateProvider({ children }) {
         full ? 'That event just filled up' : 'Couldn’t update your RSVP',
         full
           ? 'Someone took the last spot first. Nothing was booked — try another event, or check back in case a spot opens.'
-          // The database's own reason when it refused on purpose (Club early
+          // The database's own reason when it refused on purpose (RSVPlay+ early
           // access, a suspension); otherwise it was the connection.
           : serverSaid(err) || 'Check your connection and try again.'
       );

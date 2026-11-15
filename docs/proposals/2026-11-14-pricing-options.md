@@ -1,5 +1,9 @@
 # Pricing options for RSVPlay's paid version (researched 2026-11-14)
 
+**Name:** the paid membership is called **RSVPlay+** (decided 2026-11-15;
+it was "Club"; the database tier stays `club`). Option B below keeps its
+original two-tier labels because it was not chosen.
+
 **Status:** for the founder to choose. Version 1.0 launches free (decided
 2026-11-14). Nothing here is built. Payments still need rule 4 changed by the
 founder (`docs/proposals/2026-11-14-payments.md`).
@@ -71,7 +75,7 @@ publicly.
 
 - **The whole social app stays free:** connecting, filters, stats, travel
   mode, dating mode, messaging.
-- **Club: $4.99/month or $39.99/year.** Signup 48 hours early on capped
+- **RSVPlay+: $4.99/month or $39.99/year.** Signup 48 hours early on capped
   RSVPlay events, first offer on full events, and no booking fee on partner
   tickets.
 - **Tickets, through Stripe:**
@@ -79,7 +83,7 @@ publicly.
   - Six-week ladder season: **$99**, about $16.50 a night, below the local
     $115–148 leagues. That benchmark is reported, not tested.
   - Partner-hosted events: the venue's own price, plus at most a small booking
-    fee that Club waives. A fee like PickleballBrackets' $5 per event is the
+    fee that RSVPlay+ waives. A fee like PickleballBrackets' $5 per event is the
     only researched benchmark.
 - **Why it sells:** players already pay to play, so the money comes from
   where they already spend. Tickets avoid the 15% store fee. The free app stays
@@ -96,7 +100,7 @@ conversion are all unknown until v1.0 is live.
 |---|---|---|
 | A: Plus at 2% (benchmark) | about $400/yr | about $400/yr |
 | B: Plus 2% + Club 1% | about $2,000/yr | plus mixers below |
-| C: Club at 2% | about $800/yr | plus tickets below |
+| C: RSVPlay+ at 2% | about $800/yr | plus tickets below |
 | One mixer: 24 players × $15 | $360 gross | before court, host, insurance and card fees |
 | One ladder season: 24 players × $99 | $2,376 gross | same costs apply |
 
@@ -125,17 +129,17 @@ Court rental, host time and event insurance have to come out of ticket money.
 
 ## Launch offers (pick a few, all apply equally to everyone)
 
-- **Founding Club, $19.99 for the first year** (half price) for everyone
+- **Founding RSVPlay+, $19.99 for the first year** (half price) for everyone
   active in free v1.0. Delivered by offer code, by email or in the app. Apple
   allows only one introductory offer per person, so this replaces a free
   trial; it isn't stacked on one.
-- **Or a 30-day free trial** of Club for new members, instead of the founding
+- **Or a 30-day free trial** of RSVPlay+ for new members, instead of the founding
   price.
 - **First mixer free:** a $15 ticket credit, capped at the first 200 members,
   so its cost is known in advance.
 - **Bring a player:** a $5 ticket credit each when an invited friend checks
   in at their first paid event.
-- **Venue codes:** a free month of Club for members who join at a partner
+- **Venue codes:** a free month of RSVPlay+ for members who join at a partner
   venue, using Apple's offer codes.
 
 ## How to test prices during free v1.0, without charging anyone
@@ -147,7 +151,7 @@ Court rental, host time and event insurance have to come out of ticket money.
    Agents draft it; you send it.
 2. **Price-test mixers.** Run free RSVPlay mixers and ask at check-out what a
    fair price would have been. Ask again after the second event.
-3. **"Coming soon" page on the website,** not in the app: it shows Club and
+3. **"Coming soon" page on the website,** not in the app: it shows RSVPlay+ and
    its price with a "tell me when it launches" button. Apple can reject an
    app build that shows features or prices that don't exist yet, which is why
    this goes on the website.
@@ -157,7 +161,7 @@ Decide when the survey and the mixers have real answers, not before.
 ## Open checks before building
 
 - Google Play's payments policy on in-person event tickets.
-- App Review: a Club discount or fee waiver applied to a Stripe ticket, when
-  the Club membership was bought in the app.
+- App Review: a RSVPlay+ discount or fee waiver applied to a Stripe ticket, when
+  the RSVPlay+ membership was bought in the app.
 - Event insurance and who is merchant of record for partner tickets.
 - Rule 4 rewritten by the founder (`docs/proposals/2026-11-14-payments.md`).

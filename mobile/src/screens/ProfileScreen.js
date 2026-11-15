@@ -10,7 +10,9 @@ import { useApp } from '../state';
 
 // The member's tier, as the desk set it. Shown, never sold: there is no
 // purchase flow in the app.
-const TIER_LABELS = { free: 'Free member', plus: 'Plus member', club: 'Club member' };
+// The paid membership is called RSVPlay+ (tier 'club' in the database). The
+// 'plus' slot is reserved, not sold and not assigned.
+const TIER_LABELS = { free: 'Free member', plus: 'Plus member', club: 'RSVPlay+ member' };
 
 // One main photo plus five more. Matches profile_photos.position 0..5.
 const PHOTO_SLOTS = 6;
@@ -84,7 +86,7 @@ export default function ProfileScreen({ navigation }) {
             </Text>
           </View>
           {app.tier === 'club' && (
-            <Text style={[type.hint, { fontSize: 12, textAlign: 'center' }]}>Club members get early RSVPs and save on events that offer a Club price.</Text>
+            <Text style={[type.hint, { fontSize: 12, textAlign: 'center' }]}>RSVPlay+ members get early RSVPs and save on events that offer an RSVPlay+ price.</Text>
           )}
           {u.phoneVerified && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
