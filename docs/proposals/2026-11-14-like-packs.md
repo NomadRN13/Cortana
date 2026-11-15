@@ -1,8 +1,10 @@
 # Plan — buying more Date likes, or a membership (2026-11-14)
 
-**Status:** the free limit is built and live in the code: 3 likes a day in
-Date mode (migration 44). Buying more is a plan for the paid version, after
-the free 1.0 launch. Nothing below is built.
+**Status:** the free limit is built: 3 likes a day in Date mode (migration
+44). **Decided 2026-11-15:** offer both like packs and the membership, at the
+prices below. They ship with the paid version, after the free 1.0 launch.
+Still open: the Club allowance (15 a day is assumed) and the pricing option
+for Club itself. Nothing below is built yet.
 
 ## What members get free
 
@@ -68,9 +70,9 @@ the free limit.
 
 ## Decisions for the founder
 
-1. Packs, membership, or both? *Recommendation: both, launched together, so
-   the "out of likes" message can offer either.*
-2. Pack sizes and prices (above is a starting point, not researched demand).
+1. ~~Packs, membership, or both?~~ **Both (decided 2026-11-15).**
+2. ~~Pack sizes and prices~~ **5 for $2.99, 15 for $6.99, 30 for $11.99
+   (approved 2026-11-15).**
 3. The Club allowance: 15 a day, or a different number.
 4. Test first: during the free launch, count how often members hit the
    limit and come back the next day. If most never hit 3, the limit is
