@@ -110,6 +110,10 @@ database and local builds, and never touch production.
 - **Domain:** `rsvplayapp.com`, registered at Cloudflare, which also runs its DNS (rsvplay.com was taken).
   Every link and the support address `hello@rsvplayapp.com` use it. The app's
   bundle id stays `com.rsvplay.app`; it is an identifier, not a domain.
+- **Legal entity:** 40 Love Collective LLC (founder, 2026-11-16), with an EIN
+  and a D-U-N-S number in progress. The EIN never goes in the repo. The name
+  is not yet on any public page: the stores show it as the seller, and the
+  founder is deciding whether to rename the LLC first.
 - **Database:** the live Supabase project is set up from `setup.sql`
   and upgraded on 2026-11-16 (migrations through 45 applied, confirmed by the
   founder with the status check). Applied migrations are never
