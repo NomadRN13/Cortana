@@ -111,9 +111,10 @@ database and local builds, and never touch production.
   Every link and the support address `hello@rsvplayapp.com` use it. The app's
   bundle id stays `com.rsvplay.app`; it is an identifier, not a domain.
 - **Legal entity:** 40 Love Collective LLC (founder, 2026-11-16), with an EIN
-  and a D-U-N-S number in progress. The EIN never goes in the repo. The name
-  is not yet on any public page: the stores show it as the seller, and the
-  founder is deciding whether to rename the LLC first.
+  and a D-U-N-S number in progress. The EIN never goes in the repo. The
+  founder chose to keep this name for now (2026-11-16), so it is the operator
+  in the privacy policy and terms, the website footer, and the seller on both
+  stores. It is the only place the old brand may appear in public.
 - **Database:** the live Supabase project is set up from `setup.sql`
   and upgraded on 2026-11-16 (migrations through 45 applied, confirmed by the
   founder with the status check). Applied migrations are never

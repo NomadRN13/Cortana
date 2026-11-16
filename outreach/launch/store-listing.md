@@ -8,6 +8,13 @@ Version and dates come from the founder; the app is 0.1.0 per `mobile/app.json`.
 
 ---
 
+## Seller (both stores)
+
+- **Legal entity:** 40 Love Collective LLC. Apple shows it under the app's
+  name as the seller, and Google Play as the developer; both take it from the
+  D-U-N-S record, so it must match exactly.
+- **Copyright line (App Store):** © 2026 40 Love Collective LLC
+
 ## 1. Apple App Store
 
 ### Name (30 char limit)
