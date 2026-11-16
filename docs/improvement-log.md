@@ -246,3 +246,6 @@ shipped. Agents append; nobody rewrites history.
   $15, six-week ladder $99; founding members get the first year of RSVPlay+
   for $19.99 by offer code. Pricing decisions are complete; nothing is built
   until the paid version.
+- **Live database (2026-11-16):** the founder pasted
+  `supabase/go-live/2-upgrade-from-41.sql`; the status check passed.
+  Migrations 42–45 are live. The next change needs a new upgrade bundle.

@@ -111,8 +111,8 @@ database and local builds, and never touch production.
   Every link and the support address `hello@rsvplayapp.com` use it. The app's
   bundle id stays `com.rsvplay.app`; it is an identifier, not a domain.
 - **Database:** the live Supabase project is set up from `setup.sql`
-  (migrations through 41 applied; 42–45 pending, in
-  `supabase/go-live/2-upgrade-from-41.sql`). Applied migrations are never
+  and upgraded on 2026-11-16 (migrations through 45 applied, confirmed by the
+  founder with the status check). Applied migrations are never
   edited: a change is a new migration, pasted from `supabase/go-live/`.
 - **Website:** published by Netlify (project `rsvplay`, production branch
   set to this one). Its free build credits ran out on day one, so new deploys
