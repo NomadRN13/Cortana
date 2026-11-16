@@ -7,8 +7,19 @@ original two-tier labels because it was not chosen.
 **Status (2026-11-15):** the membership is chosen. RSVPlay+ costs **$4.99 a
 month or $39.99 a year**, with Option C's benefits (early event signup,
 first claim on full events, no booking fee) plus 10 Date likes a day. Like
-packs: 5 for $2.99, 15 for $6.99, 30 for $11.99. Still open: ticket prices
-for RSVPlay-run events, and the launch offers. Version 1.0 launches free (decided
+packs: 5 for $2.99, 15 for $6.99, 30 for $11.99.
+
+**Also decided, 2026-11-16:**
+- **Tickets for RSVPlay-run events:** social mixer $15; six-week ladder
+  season $99.
+- **Founding offer:** everyone active during the free 1.0 launch gets the
+  first year of RSVPlay+ for $19.99 (half price), then $39.99 a year. It is
+  delivered by offer code, the same for every founding member, and replaces
+  a free trial (Apple allows one introductory offer per person).
+
+The pricing decisions are complete. Open before building: the checks at the
+end of this document, and rule 4 rewritten by the founder
+(`docs/proposals/2026-11-14-payments.md`). Version 1.0 launches free (decided
 2026-11-14). Nothing here is built. Payments still need rule 4 changed by the
 founder (`docs/proposals/2026-11-14-payments.md`).
 

@@ -242,3 +242,7 @@ shipped. Agents append; nobody rewrites history.
 - **Verified:** `./scripts/healthcheck.sh --full` — 124 passed, 0 failed.
 - **Price set (founder, 2026-11-15):** RSVPlay+ is $4.99 a month or $39.99 a
   year (about 33% off for the year).
+- **Tickets and founding offer (founder, 2026-11-16):** RSVPlay-run mixers
+  $15, six-week ladder $99; founding members get the first year of RSVPlay+
+  for $19.99 by offer code. Pricing decisions are complete; nothing is built
+  until the paid version.
