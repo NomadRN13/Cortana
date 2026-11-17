@@ -105,8 +105,6 @@ over. Tick each when done; `security-lead` re-asks weekly.
   2 high and 16 moderate findings, all in tools that run on the build machine
   (Expo CLI, Metro, glob, postcss, image-size), none in code that ships in
   the app. The fix is moving to a newer Expo SDK; planned, not urgent.
-- **Member sign-in email** still needs its own sender (custom SMTP) before
-  codes can be sent at volume.
 - **Messages are not end-to-end encrypted.** They are encrypted in transit
   and at rest, and the desk can read a reported conversation; that is what
   makes moderation possible, and the privacy policy says so.

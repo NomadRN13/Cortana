@@ -115,6 +115,8 @@ database and local builds, and never touch production.
   founder chose to keep this name for now (2026-11-16), so it is the operator
   in the privacy policy and terms, the website footer, and the seller on both
   stores. It is the only place the old brand may appear in public.
+- **Email:** sign-in codes are sent through Resend from `hello@rsvplayapp.com`
+  (custom SMTP in Supabase, set up by the founder 2026-11-17).
 - **Database:** the live Supabase project is set up from `setup.sql`
   and upgraded on 2026-11-16 (migrations through 45 applied, confirmed by the
   founder with the status check). Applied migrations are never
