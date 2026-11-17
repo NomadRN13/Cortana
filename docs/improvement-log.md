@@ -252,6 +252,3 @@ shipped. Agents append; nobody rewrites history.
 - **Legal entity (founder, 2026-11-16):** keep 40 Love Collective LLC for now.
   Named as operator in the privacy policy and terms, in the website footer,
   and as seller in the store listing.
-- **Sign-in email (founder, 2026-11-17):** Resend is set up as Supabase's
-  sender for `rsvplayapp.com`; member codes no longer depend on Supabase's
-  test sender.
