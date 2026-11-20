@@ -43,6 +43,8 @@ submits or touches the live database is yours to run (CLAUDE.md, rule 1).
      statement fails, nothing changes.
    - True through 41 and false after (the live project as first set up):
      paste `supabase/go-live/2-upgrade-from-41.sql`.
+   - True through 45 and false after (the live project since 2026-11-16):
+     paste `supabase/go-live/2-upgrade-from-45.sql`.
    - Anything else: send the result to Claude before pasting anything.
    - Run `1-status.sql` again; every row must read true.
    - Then deploy the push function from your computer:

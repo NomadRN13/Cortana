@@ -4,11 +4,12 @@
 # inside one transaction.
 #   2-upgrade-from-32.sql   a live project set up before the 2026-11 additions
 #   2-upgrade-from-41.sql   the live project as first set up on 2026-11-13
+#   2-upgrade-from-45.sql   the live project after the 2026-11-16 upgrade
 # `--check` fails if either file is stale.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 status=0
-for base in 32 41; do
+for base in 32 41 45; do
   OUT="supabase/go-live/2-upgrade-from-$base.sql"
   TMP="$(mktemp)"
   {

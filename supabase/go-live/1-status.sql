@@ -7,6 +7,7 @@
 --     whole of supabase/setup.sql instead of 2-upgrade-from-32.sql.
 --   · base and 30–32 true, 33 onward false: paste 2-upgrade-from-32.sql.
 --   · Everything true up to 41, the rest false: paste 2-upgrade-from-41.sql.
+--   · Everything true up to 45, the rest false: paste 2-upgrade-from-45.sql.
 --   · A mix: paste only the missing migrations, from supabase/migrations/,
 --     in order — or send this result to Claude and ask what to run.
 select step, applied from (values
@@ -22,6 +23,9 @@ select step, applied from (values
   (10, '40 deletion clears the waitlist',      exists (select 1 from pg_proc where proname = 'delete_account' and prosrc like '%waitlist%')),
   (11, '41 a ban survives deletion',           exists (select 1 from pg_proc where proname = 'delete_account' and prosrc like '%Deleted while suspended%')),
   (12, '42 support address rsvplayapp.com',     exists (select 1 from pg_proc where proname = 'report_member' and prosrc like '%hello@rsvplayapp.com%')),
-  (13, '43 no truncate for API roles',           not has_table_privilege('anon', 'public.profiles', 'TRUNCATE'))
+  (13, '43 no truncate for API roles',           not has_table_privilege('anon', 'public.profiles', 'TRUNCATE')),
+  (14, '44 date likes per day',                  exists (select 1 from pg_proc where proname = 'get_my_date_likes')),
+  (15, '45 RSVPlay+ name',                       exists (select 1 from pg_proc where proname = 'enforce_event_priority' and prosrc like '%RSVPlay+%')),
+  (16, '46 one city vote per phone',             to_regclass('public.city_votes') is not null)
 ) as t(n, step, applied)
 order by n;

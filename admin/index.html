@@ -379,6 +379,12 @@
       <p class="hint" style="margin-top:10px">Newest first, most recent 50:</p>
       <div id="wl-list"></div>
 
+      <h1 style="margin-top:26px; font-size:17px">City votes</h1>
+      <p class="hint">"Not on the list? Tell us where you play" on the website. One vote per
+      phone number, one city each; the numbers themselves are never stored.</p>
+      <div id="cv-summary" class="hint">loading…</div>
+      <div id="cv-list"></div>
+
       <h1 style="margin-top:26px; font-size:17px">Demo funnel <span class="hint" style="font-weight:400">· last 30 days</span></h1>
       <p class="hint">How far people get in the clickable prototype. Each row is a share
       of the people who landed, so the biggest drop is where the flow is losing them.</p>
@@ -470,6 +476,7 @@
       { email: 'marcus@example.com', city: 'seattle', created_at: new Date(Date.now() - 26 * 3600000).toISOString() },
       { email: 'priya@example.com', city: 'indianapolis', created_at: new Date(Date.now() - 3 * 86400000).toISOString() }
     ],
+    cityVotes: [ { city: 'Chicago', votes: 14 }, { city: 'Austin', votes: 9 }, { city: 'Columbus, OH', votes: 3 } ],
     funnel: { landed: 42, start_signup: 24, phone_verified: 18, sports_picked: 17, skill_picked: 16, finished_signup: 14, swiped: 11, matched: 4, opened_chat: 3 },
     photos: [
       { id: 'd1', user: 'Maya', created_at: new Date(Date.now() - 42 * 60000).toISOString(), grad: 'linear-gradient(135deg,#2E5A45,#C8F04A)' },
@@ -547,6 +554,22 @@
     }).join('') || '<p class="hint">Nothing yet.</p>';
   }
 
+  function renderCityVotes(rows) {
+    rows = rows || [];
+    var total = rows.reduce(function (n, r) { return n + Number(r.votes || 0); }, 0);
+    $('#cv-summary').textContent = total
+      ? total + (total === 1 ? ' vote' : ' votes') + ' across ' + rows.length + (rows.length === 1 ? ' city.' : ' cities.')
+      : 'No votes yet.';
+    var top = rows.length ? Number(rows[0].votes) : 0;
+    $('#cv-list').innerHTML = rows.map(function (r) {
+      var pct = top ? Math.round((Number(r.votes) / top) * 100) : 0;
+      return '<div class="item"><div class="body">' +
+        '<div class="name">' + esc(r.city) + '<span class="pill">' + Number(r.votes) + '</span></div>' +
+        '<div class="meta" style="margin-top:6px"><span style="display:inline-block;height:6px;border-radius:3px;background:var(--optic);width:' + pct + '%;min-width:2px"></span></div>' +
+        '</div></div>';
+    }).join('');
+  }
+
   function renderFunnel(counts) {
     var top = counts.landed || 0;
     $('#funnel').innerHTML = FUNNEL_STEPS.map(function (pair) {
@@ -566,11 +589,15 @@
     if (!LIVE) {
       renderWaitlist(demo.waitlist);
       renderFunnel(demo.funnel);
+      renderCityVotes(demo.cityVotes);
       return;
     }
     rest('GET', '/rest/v1/waitlist?select=email,city,created_at&order=created_at.desc&limit=500')
       .then(renderWaitlist)
       .catch(function (e) { $('#wl-summary').textContent = 'Could not load the waitlist — ' + e.message; });
+    rest('POST', '/rest/v1/rpc/city_vote_tally', {})
+      .then(renderCityVotes)
+      .catch(function (e) { $('#cv-summary').textContent = 'Could not load city votes — ' + e.message; });
     rest('POST', '/rest/v1/rpc/demo_funnel', { p_days: 30 })
       .then(function (c) { renderFunnel(c || {}); })
       .catch(function (e) { $('#funnel').innerHTML = '<p class="hint">Could not load the funnel — ' + esc(e.message) + '</p>'; });

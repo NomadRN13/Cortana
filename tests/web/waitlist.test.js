@@ -117,5 +117,66 @@ const { launch, step, fail, watch, finish, fileUrl, REPO } = require('./lib/harn
     await page.close();
   });
 
+  // 6. City votes: one city per phone number.
+  await step('city vote: no per-click counts, a vote needs a phone number', async () => {
+    const page = await browser.newPage();
+    await page.goto(URL);
+    if (await page.$('#vote-list .count')) throw new Error('the per-click counters are still on the page');
+    await page.click('#vote-list [data-city="Chicago"]');
+    await page.waitForSelector('#vote-form', { state: 'visible', timeout: 2000 });
+    await page.fill('#vote-phone', '555-0142');
+    await page.click('#vote-form button');
+    if (!/10-digit/.test(await page.textContent('#vote-error'))) throw new Error('a short number was not refused');
+    await page.close();
+  });
+
+  await step('city vote: live mode sends the phone and city to cast_city_vote, once', async () => {
+    const page = await browser.newPage();
+    const calls = [];
+    await page.route('**/rest/v1/rpc/cast_city_vote', (route) => {
+      calls.push(route.request().postDataJSON());
+      route.fulfill({ status: 204, body: '' });
+    });
+    await page.goto(URL);
+    await page.evaluate((cfg) => { window.RSVPLAY = cfg; }, CFG);
+    await page.click('#vote-list [data-city="Chicago"]');
+    await page.fill('#vote-phone', '(317) 555-0142');
+    await page.click('#vote-form button');
+    await page.waitForFunction(() => /is in/.test(document.getElementById('vote-thanks').textContent), { timeout: 3000 });
+    if (calls.length !== 1) throw new Error('expected one vote request, got ' + calls.length);
+    if (calls[0].p_phone !== '13175550142' || calls[0].p_city !== 'Chicago') throw new Error('wrong body: ' + JSON.stringify(calls[0]));
+    if (await page.getAttribute('#vote-list [data-city="Chicago"]', 'aria-pressed') !== 'true') throw new Error('Chicago not marked as voted');
+    // Changing the vote moves the mark: one city total.
+    await page.click('#vote-list [data-city="Denver"]');
+    await page.fill('#vote-phone', '3175550142');
+    await page.click('#vote-form button');
+    await page.waitForFunction(() => /Denver is in/.test(document.getElementById('vote-thanks').textContent), { timeout: 3000 });
+    const pressed = await page.$$eval('#vote-list [aria-pressed="true"]', (els) => els.map((e) => e.getAttribute('data-city')));
+    if (pressed.length !== 1 || pressed[0] !== 'Denver') throw new Error('more than one city marked: ' + pressed);
+    // A typed city.
+    await page.click('#vote-list [data-city=""]');
+    await page.fill('#vote-city', 'Columbus, OH');
+    await page.fill('#vote-phone', '3175550142');
+    await page.click('#vote-form button');
+    await page.waitForFunction(() => /Columbus, OH is in/.test(document.getElementById('vote-thanks').textContent), { timeout: 3000 });
+    if (calls[2].p_city !== 'Columbus, OH') throw new Error('typed city not sent: ' + JSON.stringify(calls[2]));
+    if (/\d/.test(await page.textContent('#vote-list'))) throw new Error('vote counts are shown to visitors');
+    await page.close();
+  });
+
+  await step('city vote: the rate limit is explained', async () => {
+    const page = await browser.newPage();
+    await page.route('**/rest/v1/rpc/cast_city_vote', (route) =>
+      route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ code: '54000', message: 'too many votes' }) }));
+    await page.goto(URL);
+    await page.evaluate((cfg) => { window.RSVPLAY = cfg; }, CFG);
+    await page.click('#vote-list [data-city="Austin"]');
+    await page.fill('#vote-phone', '3175550142');
+    await page.click('#vote-form button');
+    await page.waitForFunction(() => /Too many votes/.test(document.getElementById('vote-error').textContent), { timeout: 3000 });
+    if (await page.$eval('#vote-form button', (b) => b.disabled)) throw new Error('button stayed disabled');
+    await page.close();
+  });
+
   await finish(browser);
 })();

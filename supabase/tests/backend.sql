@@ -3899,4 +3899,93 @@ reset role;
 set request.jwt.claim.sub = '';
 delete from auth.users where id in ('00000000-0000-4000-8000-000000000c01', '00000000-0000-4000-8000-000000000c02', '00000000-0000-4000-8000-000000000c03', '00000000-0000-4000-8000-000000000c04', '00000000-0000-4000-8000-000000000c05');
 
+-- ============================================================
+-- 13. City votes: one city per phone number (migration 46)
+-- ============================================================
+set role anon;
+set request.headers = '{"x-forwarded-for": "203.0.113.7"}';
+do $$ begin
+  perform cast_city_vote('(317) 555-0142', 'Chicago');
+  -- The same number again, written differently: still one vote, moved to Denver.
+  perform cast_city_vote('+1 317 555 0142', 'Denver');
+  perform cast_city_vote('317.555.0142', 'Denver');
+  perform cast_city_vote('3175550199', '  chicago ');
+  begin
+    perform cast_city_vote('555-0142', 'Chicago');
+    assert false, 'a short number was accepted';
+  exception when invalid_parameter_value then null;
+  end;
+  begin
+    perform cast_city_vote('3175550142', '  ');
+    assert false, 'a blank city was accepted';
+  exception when invalid_parameter_value then null;
+  end;
+  -- Anon cannot read the votes, the hashes or the tally.
+  begin
+    perform 1 from city_votes;
+    assert false, 'anon can read city_votes';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform * from city_vote_tally();
+    assert false, 'anon can read the tally';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform normalize_vote_phone('3175550142');
+    assert false, 'anon can call normalize_vote_phone';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+do $$ begin
+  assert (select count(*) from city_votes) = 2, 'one number got more than one vote';
+  assert (select count(*) from city_votes where city = 'Denver') = 1, 'a second vote did not move the first';
+  assert not exists (select 1 from city_votes where phone_hash like '%3175550142%'), 'a phone number was stored in the clear';
+end $$;
+-- The tally is for admins only, and groups spellings together.
+insert into auth.users (id, email) values ('00000000-0000-4000-8000-000000000d01', 'vote-admin@example.com'), ('00000000-0000-4000-8000-000000000d02', 'vote-member@example.com');
+insert into admins (user_id) values ('00000000-0000-4000-8000-000000000d01');
+insert into city_votes (phone_hash, city) values ('x1', 'chicago'), ('x2', 'Chicago');
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000d02';
+do $$ begin
+  begin
+    perform * from city_vote_tally();
+    assert false, 'a member can read the tally';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+set request.jwt.claim.sub = '00000000-0000-4000-8000-000000000d01';
+do $$ begin
+  assert (select votes from city_vote_tally() where lower(city) = 'chicago') = 3, 'spellings of one city were not counted together';
+  assert (select votes from city_vote_tally() where city = 'Denver') = 1, 'the Denver vote is missing from the tally';
+end $$;
+reset role;
+-- Ten votes a day from one network, then refused; another network is unaffected.
+delete from city_vote_events;
+set role anon;
+set request.headers = '{"x-forwarded-for": "198.51.100.9, 10.0.0.1"}';
+do $$ begin
+  for i in 1..10 loop
+    perform cast_city_vote('31755501' || lpad(i::text, 2, '0'), 'Austin');
+  end loop;
+  begin
+    perform cast_city_vote('3175550111', 'Austin');
+    assert false, 'an eleventh vote from one network was accepted';
+  exception when program_limit_exceeded then null;
+  end;
+end $$;
+set request.headers = '{"x-forwarded-for": "198.51.100.10"}';
+do $$ begin
+  perform cast_city_vote('3175550111', 'Austin');
+end $$;
+reset role;
+reset request.headers;
+set request.jwt.claim.sub = '';
+delete from city_votes;
+delete from city_vote_events;
+delete from admins where user_id = '00000000-0000-4000-8000-000000000d01';
+delete from auth.users where id in ('00000000-0000-4000-8000-000000000d01', '00000000-0000-4000-8000-000000000d02');
+
 select 'ALL BACKEND TESTS PASSED' as result;

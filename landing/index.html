@@ -388,14 +388,6 @@
     font-weight: 700;
   }
   .city:hover { border-color: var(--optic); }
-  .city .count {
-    font-size: 12.5px;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    color: var(--optic);
-    min-width: 2ch;
-    text-align: center;
-  }
   .city-launch {
     border-color: var(--optic);
     color: var(--optic);
@@ -408,6 +400,12 @@
     letter-spacing: 0.08em;
   }
   .cities-note { margin-top: 16px; font-size: 13.5px; color: var(--chalk-dim); }
+  .city[aria-pressed="true"] { border-color: var(--optic); background: var(--optic); color: var(--ink); }
+  .city .voted { font-size: 12.5px; font-weight: 800; }
+  .vote-form { margin-top: 18px; }
+  .vote-form[hidden], .vote-form input[hidden] { display: none; }
+  .vote-title { flex: 1 1 100%; margin: 0; font-weight: 800; }
+  .vote-thanks { margin-top: 14px; font-weight: 700; color: var(--optic); min-height: 1.2em; }
 
   /* FAQ */
   .faq { display: flex; flex-direction: column; border: 2px solid var(--chalk-line); }
@@ -700,14 +698,22 @@
     </div>
     <p class="cities-note" style="margin-bottom:14px">Not on the list? Tell us where you play and we'll come to you:</p>
     <div class="cities reveal" id="vote-list">
-      <button class="city" data-city="Chicago">Chicago <span class="count">0</span></button>
-      <button class="city" data-city="New York">New York <span class="count">0</span></button>
-      <button class="city" data-city="Atlanta">Atlanta <span class="count">0</span></button>
-      <button class="city" data-city="Denver">Denver <span class="count">0</span></button>
-      <button class="city" data-city="Austin">Austin <span class="count">0</span></button>
-      <button class="city" data-city="Your city?">Your city? <span class="count">0</span></button>
+      <button type="button" class="city" data-city="Chicago" aria-pressed="false">Chicago</button>
+      <button type="button" class="city" data-city="New York" aria-pressed="false">New York</button>
+      <button type="button" class="city" data-city="Atlanta" aria-pressed="false">Atlanta</button>
+      <button type="button" class="city" data-city="Denver" aria-pressed="false">Denver</button>
+      <button type="button" class="city" data-city="Austin" aria-pressed="false">Austin</button>
+      <button type="button" class="city" data-city="" aria-pressed="false">Your city?</button>
     </div>
-    <p class="cities-note">Votes are stored on this device in this demo — the live site will count them for real.</p>
+    <form class="waitlist vote-form" id="vote-form" novalidate hidden>
+      <p class="vote-title" id="vote-title">Vote for your city</p>
+      <input type="text" id="vote-city" placeholder="City, state" aria-label="Your city and state" maxlength="60" autocomplete="address-level2" hidden>
+      <input type="tel" id="vote-phone" placeholder="Mobile number" aria-label="Mobile number" inputmode="tel" autocomplete="tel-national">
+      <button type="submit">Cast my vote</button>
+    </form>
+    <p class="form-error" id="vote-error" role="alert" aria-live="polite"></p>
+    <p class="vote-thanks" id="vote-thanks" aria-live="polite"></p>
+    <p class="cities-note">One vote per person, for one city. Your phone number only keeps it to one vote: we don’t text it, show it or share it.</p>
   </div>
 </section>
 
@@ -908,18 +914,126 @@
   wireForm('hero-form', 'hero-email', 'hero-success', 'hero-error', 'hero-city');
   wireForm('join-form', 'join-email', 'join-success', 'join-error', 'join-city');
 
-  /* City votes */
-  var votes = readJson(VOTE_KEY, {});
-  var cityButtons = document.querySelectorAll('#vote-list button.city[data-city]');
-  Array.prototype.forEach.call(cityButtons, function (btn) {
-    var name = btn.getAttribute('data-city');
-    var count = btn.querySelector('.count');
-    count.textContent = votes[name] || 0;
-    btn.addEventListener('click', function () {
-      votes[name] = (votes[name] || 0) + 1;
-      writeJson(VOTE_KEY, votes);
-      count.textContent = votes[name];
+  /* City votes — one city per phone number. The database keeps only a
+     one-way hash of the number, and answers the same for a first vote and a
+     changed one, so this page can't be used to ask whether a number voted. */
+  var voteList = document.getElementById('vote-list');
+  var voteForm = document.getElementById('vote-form');
+  var voteTitle = document.getElementById('vote-title');
+  var voteCity = document.getElementById('vote-city');
+  var votePhone = document.getElementById('vote-phone');
+  var voteError = document.getElementById('vote-error');
+  var voteThanks = document.getElementById('vote-thanks');
+  var voteBtn = voteForm.querySelector('button');
+  var cityButtons = voteList.querySelectorAll('button.city');
+  var chosen = null;
+
+  function phoneDigits(v) {
+    var d = String(v || '').replace(/[^0-9]/g, '');
+    if (d.length === 10) d = '1' + d;
+    return /^1[2-9][0-9]{2}[2-9][0-9]{6}$/.test(d) ? d : null;
+  }
+  // Marks the city this browser last voted for. One city total: a new vote
+  // moves the mark, the same way the database moves the vote.
+  function markVoted(city) {
+    Array.prototype.forEach.call(cityButtons, function (b) {
+      var name = b.getAttribute('data-city');
+      var on = !!city && (name ? name === city : !isListed(city));
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      var tick = b.querySelector('.voted');
+      if (on && !tick) { tick = document.createElement('span'); tick.className = 'voted'; tick.textContent = '✓'; b.appendChild(tick); }
+      if (!on && tick) tick.remove();
     });
+  }
+  function isListed(city) {
+    return Array.prototype.some.call(cityButtons, function (b) { return b.getAttribute('data-city') === city; });
+  }
+  var myVote = readJson(VOTE_KEY, null);
+  if (typeof myVote !== 'string') myVote = null;   // the old per-click counts
+  markVoted(myVote);
+
+  Array.prototype.forEach.call(cityButtons, function (btn) {
+    btn.addEventListener('click', function () {
+      chosen = btn.getAttribute('data-city');
+      voteError.textContent = '';
+      voteThanks.textContent = '';
+      voteCity.hidden = !!chosen;
+      voteCity.value = chosen ? '' : (myVote && !isListed(myVote) ? myVote : '');
+      voteTitle.textContent = chosen ? 'Vote for ' + chosen : 'Where do you play?';
+      voteForm.hidden = false;
+      (chosen ? votePhone : voteCity).focus();
+    });
+  });
+
+  function castRemote(phone, city) {
+    var cfg = window.RSVPLAY;
+    return fetch(cfg.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/rpc/cast_city_vote', {
+      method: 'POST',
+      headers: {
+        'apikey': cfg.SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ p_phone: phone, p_city: city })
+    }).then(function (res) {
+      if (res.ok) return;
+      return res.json().catch(function () { return {}; }).then(function (b) {
+        var err = new Error('HTTP ' + res.status);
+        err.code = b && b.code;
+        throw err;
+      });
+    });
+  }
+
+  function voted(city) {
+    myVote = city;
+    writeJson(VOTE_KEY, city);
+    markVoted(city);
+    voteForm.hidden = true;
+    votePhone.value = '';
+    voteThanks.textContent = 'Thanks — your vote for ' + city + ' is in. Vote again with the same number to change it.';
+  }
+
+  voteForm.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var city = chosen || voteCity.value.replace(/\s+/g, ' ').trim();
+    if (!/[A-Za-zÀ-ɏ]/.test(city) || city.length < 2) {
+      voteError.textContent = 'Type the city you play in, like “Columbus, OH”.';
+      voteCity.focus();
+      return;
+    }
+    var phone = phoneDigits(votePhone.value);
+    if (!phone) {
+      voteError.textContent = 'Enter a 10-digit US mobile number.';
+      votePhone.focus();
+      return;
+    }
+    voteError.textContent = '';
+
+    if (backendReady()) {
+      var prev = voteBtn.textContent;
+      voteBtn.disabled = true;
+      voteBtn.textContent = 'Voting…';
+      castRemote(phone, city)
+        .then(function () { voted(city); })
+        .catch(function (e) {
+          voteError.textContent = e.code === '54000'
+            ? 'Too many votes from this network today. Try again tomorrow.'
+            : e.code === '22023'
+              ? 'That number or city doesn’t look right — check it and try again.'
+              : 'Couldn’t save your vote right now — check your connection and try again.';
+        })
+        .then(function () { voteBtn.disabled = false; voteBtn.textContent = prev; });
+      return;
+    }
+    // Deployed with no backend: don't pretend a vote was counted.
+    if (!localPreview()) {
+      voteError.innerHTML = 'Voting isn’t open yet — email '
+        + '<a href="mailto:hello@rsvplayapp.com?subject=City%20vote">hello@rsvplayapp.com</a>'
+        + ' and tell us where you play.';
+      return;
+    }
+    voted(city);   // local preview: this browser only
   });
 
   /* Scroll reveal */
